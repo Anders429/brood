@@ -1,0 +1,8 @@
+[package]
+name = "brood"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hashbrown = "0.11.2"
+unsafe-any = "0.4.2"
