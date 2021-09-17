@@ -1,4 +1,8 @@
-use crate::{component::Component, entity::{NullEntities, NullEntity}, registry::Registry};
+use crate::{
+    component::Component,
+    entity::{NullEntities, NullEntity},
+    registry::Registry,
+};
 use alloc::vec::Vec;
 use core::{
     any::TypeId,
@@ -41,7 +45,6 @@ impl EntityStorage for NullEntity {
         components: &mut [(*mut u8, usize)],
         length: usize,
     ) {
-
     }
     unsafe fn free_components(components: &[(*mut u8, usize)], length: usize) {}
     unsafe fn to_key<R>(key: &mut [u8; (R::LEN + 7) / 8], component_map: &HashMap<TypeId, usize>)
@@ -141,17 +144,23 @@ pub trait EntitiesStorage {
     unsafe fn into_buffer(self, buffer: *mut u8, component_map: &HashMap<TypeId, usize>);
     unsafe fn to_key<R>(key: &mut [u8; (R::LEN + 7) / 8], component_map: &HashMap<TypeId, usize>)
     where
-        R: Registry,;
+        R: Registry;
 }
 
 impl EntitiesStorage for NullEntities {
     unsafe fn into_buffer(self, buffer: *mut u8, component_map: &HashMap<TypeId, usize>) {}
     unsafe fn to_key<R>(key: &mut [u8; (R::LEN + 7) / 8], component_map: &HashMap<TypeId, usize>)
     where
-        R: Registry, {}
+        R: Registry,
+    {
+    }
 }
 
-impl<C, E> EntitiesStorage for (Vec<C>, E) where C: Component, E: EntitiesStorage {
+impl<C, E> EntitiesStorage for (Vec<C>, E)
+where
+    C: Component,
+    E: EntitiesStorage,
+{
     unsafe fn into_buffer(self, buffer: *mut u8, component_map: &HashMap<TypeId, usize>) {
         core::ptr::write(
             buffer

@@ -1,8 +1,14 @@
 mod byte_length;
+mod debug;
 mod length;
 mod storage;
 
-use crate::{component::Component, entity::{NullEntities, NullEntity}};
+pub(crate) use debug::EntityDebug;
+
+use crate::{
+    component::Component,
+    entity::{NullEntities, NullEntity},
+};
 use alloc::vec::Vec;
 use byte_length::EntityByteLength;
 use length::{EntitiesLength, EntityLength};
@@ -23,4 +29,9 @@ pub trait EntitiesSeal: EntitiesLength + EntitiesStorage {}
 
 impl EntitiesSeal for NullEntities {}
 
-impl<C, E> EntitiesSeal for (Vec<C>, E) where C: Component, E: EntitiesSeal, {}
+impl<C, E> EntitiesSeal for (Vec<C>, E)
+where
+    C: Component,
+    E: EntitiesSeal,
+{
+}

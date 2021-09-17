@@ -1,6 +1,9 @@
-use crate::{component::Component, internal::entity::{EntitiesSeal, EntitySeal}};
-use core::any::Any;
+use crate::{
+    component::Component,
+    internal::entity::{EntitiesSeal, EntitySeal},
+};
 use alloc::vec::Vec;
+use core::any::Any;
 
 pub struct NullEntity;
 
@@ -31,7 +34,12 @@ pub trait Entities: EntitiesSeal {}
 
 impl Entities for NullEntities {}
 
-impl<C, E> Entities for (Vec<C>, E) where C: Component, E: Entities {}
+impl<C, E> Entities for (Vec<C>, E)
+where
+    C: Component,
+    E: Entities,
+{
+}
 
 #[macro_export]
 macro_rules! entities {

@@ -1,6 +1,14 @@
-use crate::entity::{Entities, Entity};
+use crate::{
+    entity::{Entities, Entity},
+    internal::entity::EntityDebug,
+};
 use alloc::vec::Vec;
-use core::{any::TypeId, marker::PhantomData, mem::ManuallyDrop};
+use core::{
+    any::TypeId,
+    fmt::{self, Debug},
+    marker::PhantomData,
+    mem::ManuallyDrop,
+};
 use hashbrown::HashMap;
 
 pub(crate) struct Archetype<E>
@@ -69,7 +77,11 @@ where
             entity.into_buffer(self.entity_buffer.as_mut_ptr(), &self.offset_map);
         }
 
-        E::push_components_from_buffer(self.entity_buffer.as_ptr(), &mut self.components, self.length);
+        E::push_components_from_buffer(
+            self.entity_buffer.as_ptr(),
+            &mut self.components,
+            self.length,
+        );
 
         self.length += 1;
     }
@@ -86,7 +98,11 @@ where
         }
 
         // Push the components all at once.
-        E::extend_components_from_buffer(self.entities_buffer.as_ptr(), &mut self.components, self.length);
+        E::extend_components_from_buffer(
+            self.entities_buffer.as_ptr(),
+            &mut self.components,
+            self.length,
+        );
 
         self.length += component_len;
     }
@@ -100,6 +116,15 @@ where
         unsafe {
             E::free_components(&self.components, self.length);
         }
+    }
+}
+
+impl<E> Debug for Archetype<E>
+where
+    E: EntityDebug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unsafe { E::debug(&self.components, self.length, &mut f.debug_map()) }.finish()
     }
 }
 

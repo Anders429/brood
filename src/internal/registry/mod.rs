@@ -1,5 +1,8 @@
+mod debug;
 mod length;
 mod storage;
+
+pub(crate) use debug::RegistryDebug;
 
 use crate::{component::Component, registry::NullRegistry};
 use length::RegistryLength;

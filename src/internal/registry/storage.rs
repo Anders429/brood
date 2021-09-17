@@ -78,14 +78,15 @@ impl RegistryStorage for NullRegistry {
     ) where
         E1: Entities,
         E2: Entity,
-        R2: Registry {
-            unsafe {
-                archetypes
-                    .entry(key)
-                    .or_insert(Box::new(Archetype::<E2>::new()))
-                    .downcast_mut_unchecked::<Archetype<E2>>()
-                    .extend(entities);
-            }
+        R2: Registry,
+    {
+        unsafe {
+            archetypes
+                .entry(key)
+                .or_insert(Box::new(Archetype::<E2>::new()))
+                .downcast_mut_unchecked::<Archetype<E2>>()
+                .extend(entities);
+        }
     }
 }
 
@@ -154,35 +155,36 @@ where
     ) where
         E1: Entities,
         E2: Entity,
-        R2: Registry {
-            let mut new_bit = bit + 1;
-            let new_index = if bit >= 8 {
-                new_bit %= 8;
-                index + 1
-            } else {
-                index
-            };
-    
-            if key.get_unchecked(index) & (1 << bit) != 0 {
-                R1::extend::<E1, (C, E2), R2>(
-                    entities,
-                    key,
-                    archetypes,
-                    new_index,
-                    new_bit,
-                    PhantomData,
-                    PhantomData,
-                );
-            } else {
-                R1::extend::<E1, E2, R2>(
-                    entities,
-                    key,
-                    archetypes,
-                    new_index,
-                    new_bit,
-                    PhantomData,
-                    PhantomData,
-                );
-            }
+        R2: Registry,
+    {
+        let mut new_bit = bit + 1;
+        let new_index = if bit >= 8 {
+            new_bit %= 8;
+            index + 1
+        } else {
+            index
+        };
+
+        if key.get_unchecked(index) & (1 << bit) != 0 {
+            R1::extend::<E1, (C, E2), R2>(
+                entities,
+                key,
+                archetypes,
+                new_index,
+                new_bit,
+                PhantomData,
+                PhantomData,
+            );
+        } else {
+            R1::extend::<E1, E2, R2>(
+                entities,
+                key,
+                archetypes,
+                new_index,
+                new_bit,
+                PhantomData,
+                PhantomData,
+            );
+        }
     }
 }
