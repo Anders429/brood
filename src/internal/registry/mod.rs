@@ -1,8 +1,10 @@
 mod debug;
+mod eq;
 mod length;
 mod storage;
 
 pub(crate) use debug::RegistryDebug;
+pub(crate) use eq::{RegistryEq, RegistryPartialEq};
 
 use crate::{component::Component, registry::NullRegistry};
 use length::RegistryLength;

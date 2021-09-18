@@ -1,9 +1,11 @@
 mod byte_length;
 mod debug;
+mod eq;
 mod length;
 mod storage;
 
 pub(crate) use debug::EntityDebug;
+pub(crate) use eq::{EntityEq, EntityPartialEq};
 
 use crate::{
     component::Component,

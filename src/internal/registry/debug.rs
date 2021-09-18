@@ -22,7 +22,7 @@ pub trait RegistryDebug: Registry {
         registry: PhantomData<R>,
     ) where
         R: Registry,
-        E: EntityDebug,;
+        E: EntityDebug;
 }
 
 impl RegistryDebug for NullRegistry {

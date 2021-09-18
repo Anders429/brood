@@ -1,17 +1,13 @@
 mod impl_debug;
 mod impl_drop;
+mod impl_eq;
 
 use crate::{
     entity::{Entities, Entity},
     internal::entity::EntityDebug,
 };
 use alloc::vec::Vec;
-use core::{
-    any::TypeId,
-    fmt::{self, Debug},
-    marker::PhantomData,
-    mem::ManuallyDrop,
-};
+use core::{any::TypeId, marker::PhantomData, mem::ManuallyDrop};
 use hashbrown::HashMap;
 
 pub(crate) struct Archetype<E>

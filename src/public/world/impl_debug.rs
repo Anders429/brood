@@ -1,6 +1,9 @@
-use crate::{entity::NullEntity, internal::registry::RegistryDebug};
 use super::World;
-use core::{fmt::{self, Debug}, marker::PhantomData};
+use crate::{entity::NullEntity, internal::registry::RegistryDebug};
+use core::{
+    fmt::{self, Debug},
+    marker::PhantomData,
+};
 
 impl<R> Debug for World<R>
 where

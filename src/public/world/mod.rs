@@ -1,4 +1,5 @@
 mod impl_debug;
+mod impl_eq;
 
 use crate::{
     entity::{Entities, Entity, NullEntity},
