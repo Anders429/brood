@@ -5,4 +5,5 @@ edition = "2021"
 
 [dependencies]
 hashbrown = "0.11.2"
+serde = {version = "1.0.130", default-features = false, optional = true}
 unsafe-any = "0.4.2"

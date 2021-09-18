@@ -1,8 +1,12 @@
 mod debug;
 mod eq;
 mod length;
+#[cfg(feature = "serde")]
+mod serde;
 mod storage;
 
+#[cfg(feature = "serde")]
+pub(crate) use self::serde::{RegistryDeserialize, RegistrySerialize};
 pub(crate) use debug::RegistryDebug;
 pub(crate) use eq::{RegistryEq, RegistryPartialEq};
 

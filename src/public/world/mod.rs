@@ -1,5 +1,7 @@
 mod impl_debug;
 mod impl_eq;
+#[cfg(feature = "serde")]
+mod impl_serde;
 
 use crate::{
     entity::{Entities, Entity, NullEntity},
@@ -27,15 +29,19 @@ where
     R: Registry,
     [(); (R::LEN + 7) / 8]: Sized,
 {
-    pub fn new() -> Self {
+    fn from_archetypes(archetypes: HashMap<[u8; (R::LEN + 7) / 8], Box<dyn Any>>) -> Self {
         let mut component_map = HashMap::new();
         R::create_component_map(&mut component_map, 0);
 
         Self {
             registry: PhantomData,
-            archetypes: HashMap::new(),
+            archetypes,
             component_map,
         }
+    }
+
+    pub fn new() -> Self {
+        Self::from_archetypes(HashMap::new())
     }
 
     pub fn push<E>(&mut self, entity: E)

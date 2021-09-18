@@ -2,8 +2,12 @@ mod byte_length;
 mod debug;
 mod eq;
 mod length;
+#[cfg(feature = "serde")]
+mod serde;
 mod storage;
 
+#[cfg(feature = "serde")]
+pub(crate) use self::serde::{EntityDeserialize, EntitySerialize};
 pub(crate) use debug::EntityDebug;
 pub(crate) use eq::{EntityEq, EntityPartialEq};
 

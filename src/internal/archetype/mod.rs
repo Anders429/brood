@@ -1,10 +1,11 @@
 mod impl_debug;
 mod impl_drop;
 mod impl_eq;
+#[cfg(feature = "serde")]
+mod impl_serde;
 
 use crate::{
     entity::{Entities, Entity},
-    internal::entity::EntityDebug,
 };
 use alloc::vec::Vec;
 use core::{any::TypeId, marker::PhantomData, mem::ManuallyDrop};
@@ -30,13 +31,10 @@ impl<E> Archetype<E>
 where
     E: Entity,
 {
-    pub(crate) fn new() -> Self {
-        let mut components = Vec::new();
-        for _ in 0..E::LEN {
-            let mut v = ManuallyDrop::new(Vec::new());
-            components.push((v.as_mut_ptr(), v.capacity()));
-        }
-
+    pub(crate) fn from_components_and_length(
+        components: Vec<(*mut u8, usize)>,
+        length: usize,
+    ) -> Self {
         let mut component_map = HashMap::new();
         E::create_component_map(&mut component_map, 0);
 
@@ -57,7 +55,7 @@ where
             entity: PhantomData,
 
             components,
-            length: 0,
+            length,
 
             component_map,
             offset_map,
@@ -65,6 +63,16 @@ where
             entity_buffer,
             entities_buffer,
         }
+    }
+
+    pub(crate) fn new() -> Self {
+        let mut components = Vec::new();
+        for _ in 0..E::LEN {
+            let mut v = ManuallyDrop::new(Vec::new());
+            components.push((v.as_mut_ptr(), v.capacity()));
+        }
+
+        Self::from_components_and_length(components, 0)
     }
 
     pub(crate) unsafe fn push<F>(&mut self, entity: F)
