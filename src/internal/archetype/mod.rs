@@ -1,3 +1,6 @@
+mod impl_debug;
+mod impl_drop;
+
 use crate::{
     entity::{Entities, Entity},
     internal::entity::EntityDebug,
@@ -105,26 +108,6 @@ where
         );
 
         self.length += component_len;
-    }
-}
-
-impl<E> Drop for Archetype<E>
-where
-    E: Entity,
-{
-    fn drop(&mut self) {
-        unsafe {
-            E::free_components(&self.components, self.length);
-        }
-    }
-}
-
-impl<E> Debug for Archetype<E>
-where
-    E: EntityDebug,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        unsafe { E::debug(&self.components, self.length, &mut f.debug_map()) }.finish()
     }
 }
 
