@@ -159,5 +159,30 @@ where
 
 #[cfg(test)]
 mod tests {
-    // TODO
+    use super::World;
+    use crate::{registry, entity};
+    use serde_test::{assert_ser_tokens, assert_tokens, Token};
+    use alloc::string::String;
+
+    #[test]
+    fn world_ser_de() {
+        let mut world = World::<registry!(usize, bool, (), String)>::new();
+
+        world.push(entity!(1_usize));
+
+        assert_tokens(
+            &world,
+            &[
+                Token::Map {len: Some(1)},
+                Token::Tuple {len: 1},
+                Token::U8(1),
+                Token::TupleEnd,
+                Token::Tuple {len: 2},
+                Token::U64(1),
+                Token::U64(1),
+                Token::TupleEnd,
+                Token::MapEnd,
+            ]
+        );
+    }
 }

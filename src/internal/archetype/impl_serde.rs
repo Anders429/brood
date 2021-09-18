@@ -80,5 +80,24 @@ where
 
 #[cfg(test)]
 mod tests {
-    // TODO
+    use super::Archetype;
+    use crate::{entity, entity::NullEntity};
+    use serde_test::{Token, assert_tokens};
+
+    #[test]
+    fn archetype_ser_de() {
+        let mut archetype = Archetype::<(usize, NullEntity)>::new();
+
+        unsafe {archetype.push(entity!(1_usize))};
+
+        assert_tokens(
+            &archetype,
+            &[
+                Token::Tuple {len: 2},
+                Token::U64(1),
+                Token::U64(1),
+                Token::TupleEnd,
+            ]
+        );
+    }
 }

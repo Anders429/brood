@@ -104,7 +104,7 @@ where
         let mut component_column = components.get_unchecked_mut(0);
         let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
             component_column.0.cast::<C>(),
-            length,
+            0,
             component_column.1,
         ));
         v.reserve(length);
