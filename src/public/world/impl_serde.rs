@@ -89,7 +89,7 @@ where
             map.serialize_key(&KeySerializer::<R> {
                 key,
                 registry: PhantomData,
-            });
+            })?;
             unsafe {
                 R::serialize::<NullEntity, R, _>(
                     key,

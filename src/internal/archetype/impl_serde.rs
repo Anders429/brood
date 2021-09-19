@@ -65,7 +65,7 @@ where
                     components.push((v.as_mut_ptr(), v.capacity()));
                 }
                 unsafe {
-                    E::deserialize(&mut components, length, &mut seq);
+                    E::deserialize(&mut components, length, &mut seq)?;
                 }
 
                 Ok(Archetype::from_components_and_length(components, length))
