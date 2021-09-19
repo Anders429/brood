@@ -78,7 +78,6 @@ impl<'de, R> Deserialize<'de> for KeyDeserializer<R> where R: Registry {
 impl<R> Serialize for World<R>
 where
     R: RegistrySerialize,
-    [(); (R::LEN + 7) / 8]: Sized,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
