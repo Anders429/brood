@@ -24,9 +24,9 @@ pub trait EntitySerialize: Entity {
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl EntitySerialize for NullEntity {
     unsafe fn serialize<S>(
-        components: &[(*mut u8, usize)],
-        length: usize,
-        seq: &mut S,
+        _components: &[(*mut u8, usize)],
+        _length: usize,
+        _seq: &mut S,
     ) -> Result<(), S::Error>
     where
         S: SerializeSeq,
@@ -76,9 +76,9 @@ pub trait EntityDeserialize<'de>: Entity + 'de {
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl<'de> EntityDeserialize<'de> for NullEntity {
     unsafe fn deserialize<V>(
-        components: &mut [(*mut u8, usize)],
-        length: usize,
-        seq_access: &mut V,
+        _components: &mut [(*mut u8, usize)],
+        _length: usize,
+        _seq_access: &mut V,
     ) -> Result<(), V::Error>
     where
         V: SeqAccess<'de>,

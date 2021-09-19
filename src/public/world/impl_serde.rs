@@ -163,7 +163,7 @@ where
 mod tests {
     use super::World;
     use crate::{registry, entity};
-    use serde_test::{assert_ser_tokens, assert_tokens, Token};
+    use serde_test::{assert_tokens, Token};
     use alloc::string::String;
 
     #[test]

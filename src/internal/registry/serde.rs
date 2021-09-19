@@ -28,13 +28,13 @@ pub trait RegistrySerialize: Registry {
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl RegistrySerialize for NullRegistry {
     unsafe fn serialize<E, R, S>(
-        key: &[u8],
-        index: usize,
-        bit: usize,
+        _key: &[u8],
+        _index: usize,
+        _bit: usize,
         archetype: &Box<dyn Any>,
         map: &mut S,
-        entity: PhantomData<E>,
-        registry: PhantomData<R>,
+        _entity: PhantomData<E>,
+        _registry: PhantomData<R>,
     ) -> Result<(), S::Error>
     where
         E: EntitySerialize,
@@ -57,8 +57,8 @@ where
         bit: usize,
         archetype: &Box<dyn Any>,
         map: &mut S,
-        entity: PhantomData<E>,
-        registry: PhantomData<R2>,
+        _entity: PhantomData<E>,
+        _registry: PhantomData<R2>,
     ) -> Result<(), S::Error>
     where
         E: EntitySerialize,
@@ -112,12 +112,12 @@ pub trait RegistryDeserialize<'de>: Registry + 'de {
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl<'de> RegistryDeserialize<'de> for NullRegistry {
     unsafe fn deserialize<E, R, V>(
-        key: &[u8],
-        index: usize,
-        bit: usize,
+        _key: &[u8],
+        _index: usize,
+        _bit: usize,
         map: &mut V,
-        entity: PhantomData<E>,
-        registry: PhantomData<R>,
+        _entity: PhantomData<E>,
+        _registry: PhantomData<R>,
     ) -> Result<Box<dyn Any>, V::Error> where E: EntityDeserialize<'de>, R: Registry, V: MapAccess<'de> {
         Ok(Box::new(map.next_value::<Archetype<E>>()?))
     }
@@ -134,8 +134,8 @@ where
         index: usize,
         bit: usize,
         map: &mut V,
-        entity: PhantomData<E>,
-        registry: PhantomData<R2>,
+        _entity: PhantomData<E>,
+        _registry: PhantomData<R2>,
     ) -> Result<Box<dyn Any>, V::Error> where E: EntityDeserialize<'de>, R2: Registry, V: MapAccess<'de> { 
         let mut new_bit = bit + 1;
         let new_index = if bit >= 8 {
