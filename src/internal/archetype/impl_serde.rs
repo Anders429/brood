@@ -93,10 +93,10 @@ mod tests {
         assert_tokens(
             &archetype,
             &[
-                Token::Tuple {len: 2},
+                Token::Seq {len: Some(2)},
                 Token::U64(1),
                 Token::U64(1),
-                Token::TupleEnd,
+                Token::SeqEnd,
             ]
         );
     }

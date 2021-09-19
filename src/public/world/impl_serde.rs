@@ -180,10 +180,10 @@ mod tests {
                 Token::Tuple {len: 1},
                 Token::U8(1),
                 Token::TupleEnd,
-                Token::Tuple {len: 2},
+                Token::Seq {len: Some(2)},
                 Token::U64(1),
                 Token::U64(1),
-                Token::TupleEnd,
+                Token::SeqEnd,
                 Token::MapEnd,
             ]
         );
