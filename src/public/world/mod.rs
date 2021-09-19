@@ -7,7 +7,7 @@ use crate::{
     entity::{Entities, Entity, NullEntity},
     registry::Registry,
 };
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec, vec::Vec};
 use core::{
     any::{Any, TypeId},
     marker::PhantomData,
@@ -17,19 +17,17 @@ use hashbrown::HashMap;
 pub struct World<R>
 where
     R: Registry,
-    [(); (R::LEN + 7) / 8]: Sized,
 {
     registry: PhantomData<R>,
-    archetypes: HashMap<[u8; (R::LEN + 7) / 8], Box<dyn Any>>,
+    archetypes: HashMap<Vec<u8>, Box<dyn Any>>,
     component_map: HashMap<TypeId, usize>,
 }
 
 impl<R> World<R>
 where
     R: Registry,
-    [(); (R::LEN + 7) / 8]: Sized,
 {
-    fn from_archetypes(archetypes: HashMap<[u8; (R::LEN + 7) / 8], Box<dyn Any>>) -> Self {
+    fn from_archetypes(archetypes: HashMap<Vec<u8>, Box<dyn Any>>) -> Self {
         let mut component_map = HashMap::new();
         R::create_component_map(&mut component_map, 0);
 
@@ -48,9 +46,9 @@ where
     where
         E: Entity,
     {
-        let mut key = [0; (R::LEN + 7) / 8];
+        let mut key = vec![0; (R::LEN + 7) / 8];
         unsafe {
-            E::to_key::<R>(&mut key, &self.component_map);
+            E::to_key(&mut key, &self.component_map);
         }
 
         unsafe {
@@ -70,9 +68,9 @@ where
     where
         E: Entities,
     {
-        let mut key = [0; (R::LEN + 7) / 8];
+        let mut key = vec![0; (R::LEN + 7) / 8];
         unsafe {
-            E::to_key::<R>(&mut key, &self.component_map);
+            E::to_key(&mut key, &self.component_map);
         }
 
         unsafe {

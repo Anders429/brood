@@ -11,7 +11,7 @@ use unsafe_any::UnsafeAnyExt;
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 pub trait RegistrySerialize: Registry {
     unsafe fn serialize<E, R, S>(
-        key: &[u8; (R::LEN + 7) / 8],
+        key: &[u8],
         index: usize,
         bit: usize,
         archetype: &Box<dyn Any>,
@@ -28,7 +28,7 @@ pub trait RegistrySerialize: Registry {
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl RegistrySerialize for NullRegistry {
     unsafe fn serialize<E, R, S>(
-        key: &[u8; (R::LEN + 7) / 8],
+        key: &[u8],
         index: usize,
         bit: usize,
         archetype: &Box<dyn Any>,
@@ -52,7 +52,7 @@ where
     R1: RegistrySerialize,
 {
     unsafe fn serialize<E, R2, S>(
-        key: &[u8; (R2::LEN + 7) / 8],
+        key: &[u8],
         index: usize,
         bit: usize,
         archetype: &Box<dyn Any>,
@@ -100,7 +100,7 @@ where
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 pub trait RegistryDeserialize<'de>: Registry + 'de {
     unsafe fn deserialize<E, R, V>(
-        key: &[u8; (R::LEN + 7) / 8],
+        key: &[u8],
         index: usize,
         bit: usize,
         map: &mut V,
@@ -112,7 +112,7 @@ pub trait RegistryDeserialize<'de>: Registry + 'de {
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl<'de> RegistryDeserialize<'de> for NullRegistry {
     unsafe fn deserialize<E, R, V>(
-        key: &[u8; (R::LEN + 7) / 8],
+        key: &[u8],
         index: usize,
         bit: usize,
         map: &mut V,
@@ -130,7 +130,7 @@ where
     R1: RegistryDeserialize<'de>,
 {
     unsafe fn deserialize<E, R2, V>(
-        key: &[u8; (R2::LEN + 7) / 8],
+        key: &[u8],
         index: usize,
         bit: usize,
         map: &mut V,

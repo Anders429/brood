@@ -4,7 +4,7 @@ use crate::{
     internal::archetype::Archetype,
     registry::{NullRegistry, Registry},
 };
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec::Vec};
 use core::{
     any::{Any, TypeId},
     marker::PhantomData,
@@ -17,8 +17,8 @@ pub trait RegistryStorage {
 
     unsafe fn push<E1, E2, R2>(
         entity: E1,
-        key: [u8; (R2::LEN + 7) / 8],
-        archetypes: &mut HashMap<[u8; (R2::LEN + 7) / 8], Box<dyn Any>>,
+        key: Vec<u8>,
+        archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
         bit: u8,
         canonical_entity: PhantomData<E2>,
@@ -30,8 +30,8 @@ pub trait RegistryStorage {
 
     unsafe fn extend<E1, E2, R2>(
         entities: E1,
-        key: [u8; (R2::LEN + 7) / 8],
-        archetypes: &mut HashMap<[u8; (R2::LEN + 7) / 8], Box<dyn Any>>,
+        key: Vec<u8>,
+        archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
         bit: u8,
         canonical_entity: PhantomData<E2>,
@@ -47,8 +47,8 @@ impl RegistryStorage for NullRegistry {
 
     unsafe fn push<E1, E2, R2>(
         entity: E1,
-        key: [u8; (R2::LEN + 7) / 8],
-        archetypes: &mut HashMap<[u8; (R2::LEN + 7) / 8], Box<dyn Any>>,
+        key: Vec<u8>,
+        archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
         bit: u8,
         canonical_entity: PhantomData<E2>,
@@ -69,8 +69,8 @@ impl RegistryStorage for NullRegistry {
 
     unsafe fn extend<E1, E2, R2>(
         entities: E1,
-        key: [u8; (R2::LEN + 7) / 8],
-        archetypes: &mut HashMap<[u8; (R2::LEN + 7) / 8], Box<dyn Any>>,
+        key: Vec<u8>,
+        archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
         bit: u8,
         canonical_entity: PhantomData<E2>,
@@ -102,8 +102,8 @@ where
 
     unsafe fn push<E1, E2, R2>(
         entity: E1,
-        key: [u8; (R2::LEN + 7) / 8],
-        archetypes: &mut HashMap<[u8; (R2::LEN + 7) / 8], Box<dyn Any>>,
+        key: Vec<u8>,
+        archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
         bit: u8,
         canonical_entity: PhantomData<E2>,
@@ -146,8 +146,8 @@ where
 
     unsafe fn extend<E1, E2, R2>(
         entities: E1,
-        key: [u8; (R2::LEN + 7) / 8],
-        archetypes: &mut HashMap<[u8; (R2::LEN + 7) / 8], Box<dyn Any>>,
+        key: Vec<u8>,
+        archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
         bit: u8,
         canonical_entity: PhantomData<E2>,

@@ -25,9 +25,7 @@ pub trait EntityStorage {
         length: usize,
     );
     unsafe fn free_components(components: &[(*mut u8, usize)], length: usize);
-    unsafe fn to_key<R>(key: &mut [u8; (R::LEN + 7) / 8], component_map: &HashMap<TypeId, usize>)
-    where
-        R: Registry;
+    unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>);
 }
 
 impl EntityStorage for NullEntity {
@@ -47,9 +45,7 @@ impl EntityStorage for NullEntity {
     ) {
     }
     unsafe fn free_components(components: &[(*mut u8, usize)], length: usize) {}
-    unsafe fn to_key<R>(key: &mut [u8; (R::LEN + 7) / 8], component_map: &HashMap<TypeId, usize>)
-    where
-        R: Registry,
+    unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>)
     {
     }
 }
@@ -126,9 +122,7 @@ where
         E::free_components(components.get_unchecked(1..), length);
     }
 
-    unsafe fn to_key<R>(key: &mut [u8; (R::LEN + 7) / 8], component_map: &HashMap<TypeId, usize>)
-    where
-        R: Registry,
+    unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>)
     {
         let component_index = component_map.get(&TypeId::of::<C>()).unwrap();
         let index = component_index / 8;
@@ -136,22 +130,18 @@ where
 
         *key.get_unchecked_mut(index) |= 1 << bit;
 
-        E::to_key::<R>(key, component_map);
+        E::to_key(key, component_map);
     }
 }
 
 pub trait EntitiesStorage {
     unsafe fn into_buffer(self, buffer: *mut u8, component_map: &HashMap<TypeId, usize>);
-    unsafe fn to_key<R>(key: &mut [u8; (R::LEN + 7) / 8], component_map: &HashMap<TypeId, usize>)
-    where
-        R: Registry;
+    unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>);
 }
 
 impl EntitiesStorage for NullEntities {
     unsafe fn into_buffer(self, buffer: *mut u8, component_map: &HashMap<TypeId, usize>) {}
-    unsafe fn to_key<R>(key: &mut [u8; (R::LEN + 7) / 8], component_map: &HashMap<TypeId, usize>)
-    where
-        R: Registry,
+    unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>)
     {
     }
 }
@@ -171,9 +161,7 @@ where
         E::into_buffer(self.1, buffer, component_map);
     }
 
-    unsafe fn to_key<R>(key: &mut [u8; (R::LEN + 7) / 8], component_map: &HashMap<TypeId, usize>)
-    where
-        R: Registry,
+    unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>)
     {
         let component_index = component_map.get(&TypeId::of::<C>()).unwrap();
         let index = component_index / 8;
@@ -181,6 +169,6 @@ where
 
         *key.get_unchecked_mut(index) |= 1 << bit;
 
-        E::to_key::<R>(key, component_map);
+        E::to_key(key, component_map);
     }
 }

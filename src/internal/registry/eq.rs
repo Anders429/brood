@@ -9,7 +9,7 @@ use unsafe_any::UnsafeAnyExt;
 
 pub trait RegistryPartialEq: Registry {
     unsafe fn eq<E, R>(
-        key: &[u8; (R::LEN + 7) / 8],
+        key: &[u8],
         index: usize,
         bit: usize,
         archetype_a: &Box<dyn Any>,
@@ -24,7 +24,7 @@ pub trait RegistryPartialEq: Registry {
 
 impl RegistryPartialEq for NullRegistry {
     unsafe fn eq<E, R>(
-        key: &[u8; (R::LEN + 7) / 8],
+        key: &[u8],
         index: usize,
         bit: usize,
         archetype_a: &Box<dyn Any>,
@@ -47,7 +47,7 @@ where
     R1: RegistryPartialEq,
 {
     unsafe fn eq<E, R2>(
-        key: &[u8; (R2::LEN + 7) / 8],
+        key: &[u8],
         index: usize,
         bit: usize,
         archetype_a: &Box<dyn Any>,

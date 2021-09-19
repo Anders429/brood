@@ -4,7 +4,7 @@ use crate::{
 };
 use ::serde::{
     de::{self, SeqAccess},
-    ser::SerializeTuple,
+    ser::SerializeSeq,
     Deserialize, Serialize,
 };
 use alloc::vec::Vec;
@@ -15,10 +15,10 @@ pub trait EntitySerialize: Entity {
     unsafe fn serialize<S>(
         components: &[(*mut u8, usize)],
         length: usize,
-        tuple: &mut S,
+        seq: &mut S,
     ) -> Result<(), S::Error>
     where
-        S: SerializeTuple;
+        S: SerializeSeq;
 }
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
@@ -26,10 +26,10 @@ impl EntitySerialize for NullEntity {
     unsafe fn serialize<S>(
         components: &[(*mut u8, usize)],
         length: usize,
-        tuple: &mut S,
+        seq: &mut S,
     ) -> Result<(), S::Error>
     where
-        S: SerializeTuple,
+        S: SerializeSeq,
     {
         Ok(())
     }
@@ -44,10 +44,10 @@ where
     unsafe fn serialize<S>(
         components: &[(*mut u8, usize)],
         length: usize,
-        tuple: &mut S,
+        seq: &mut S,
     ) -> Result<(), S::Error>
     where
-        S: SerializeTuple,
+        S: SerializeSeq,
     {
         let component_column = components.get_unchecked(0);
         let v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
@@ -56,9 +56,9 @@ where
             component_column.1,
         ));
         for element in &*v {
-            tuple.serialize_element(&element)?;
+            seq.serialize_element(&element)?;
         }
-        E::serialize(components.get_unchecked(1..), length, tuple)
+        E::serialize(components.get_unchecked(1..), length, seq)
     }
 }
 

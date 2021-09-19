@@ -8,7 +8,6 @@ use core::marker::PhantomData;
 impl<R> PartialEq for World<R>
 where
     R: RegistryPartialEq,
-    [(); (R::LEN + 7) / 8]: Sized,
 {
     fn eq(&self, other: &Self) -> bool {
         if self.archetypes.len() == other.archetypes.len()
@@ -42,7 +41,6 @@ where
 impl<R> Eq for World<R>
 where
     R: RegistryEq,
-    [(); (R::LEN + 7) / 8]: Sized,
 {
 }
 

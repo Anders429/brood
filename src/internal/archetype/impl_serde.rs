@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 use core::{fmt, marker::PhantomData, mem::ManuallyDrop};
 use serde::{
     de::{self, SeqAccess, Visitor},
-    ser::SerializeTuple,
+    ser::SerializeSeq,
     Deserialize, Deserializer, Serialize, Serializer,
 };
 
@@ -16,13 +16,13 @@ where
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
-    {
-        let mut tuple = serializer.serialize_tuple(self.length * E::LEN + 1)?;
-        tuple.serialize_element(&self.length)?;
+    {   
+        let mut seq = serializer.serialize_seq(Some(self.length * E::LEN + 1))?;
+        seq.serialize_element(&self.length)?;
         unsafe {
-            E::serialize(&self.components, self.length, &mut tuple)?;
+            E::serialize(&self.components, self.length, &mut seq)?;
         }
-        tuple.end()
+        seq.end()
     }
 }
 

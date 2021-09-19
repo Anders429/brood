@@ -4,6 +4,7 @@ use crate::{
     internal::registry::{RegistryDeserialize, RegistrySerialize},
     registry::Registry,
 };
+use alloc::{vec::Vec, vec};
 use core::{fmt, marker::PhantomData};
 use hashbrown::HashMap;
 use serde::{
@@ -13,12 +14,12 @@ use serde::{
 };
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
-struct KeyWrapper<R> where R: Registry, [(); (R::LEN + 7) / 8]: Sized {
-    key: [u8; (R::LEN + 7) / 8],
+struct KeySerializer<'a, R> where R: Registry {
+    key: &'a [u8],
     registry: PhantomData<R>,
 }
 
-impl<R> Serialize for KeyWrapper<R> where R: Registry, [(); (R::LEN + 7) / 8]: Sized {
+impl<R> Serialize for KeySerializer<'_, R> where R: Registry {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
         let mut tuple = serializer.serialize_tuple((R::LEN + 7) / 8)?;
         for byte in self.key {
@@ -28,25 +29,30 @@ impl<R> Serialize for KeyWrapper<R> where R: Registry, [(); (R::LEN + 7) / 8]: S
     }
 }
 
-impl<'de, R> Deserialize<'de> for KeyWrapper<R> where R: Registry, [(); (R::LEN + 7) / 8]: Sized {
+#[cfg_attr(doc, doc(cfg(feature = "serde")))]
+struct KeyDeserializer<R> where R: Registry {
+    key: Vec<u8>,
+    registry: PhantomData<R>,
+}
+
+impl<'de, R> Deserialize<'de> for KeyDeserializer<R> where R: Registry {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
-        struct KeyWrapperVisitor<R> where R: Registry, [(); (R::LEN + 7) / 8]: Sized {
+        struct KeyDeserializerVisitor<R> where R: Registry {
             registry: PhantomData<R>,
         }
 
-        impl<'de, R> Visitor<'de> for KeyWrapperVisitor<R> where R: Registry, [(); (R::LEN + 7) / 8] : Sized {
-            type Value = KeyWrapper<R>;
+        impl<'de, R> Visitor<'de> for KeyDeserializerVisitor<R> where R: Registry {
+            type Value = KeyDeserializer<R>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("[u8; (R::LEN + 7) / 8]")
             }
 
             fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error> where V: SeqAccess<'de> {
-                // TODO: use maybeuninit.
-                let mut key = [0; (R::LEN + 7) / 8];
+                let mut key = vec![0; (R::LEN + 7) / 8];
 
                 for i in 0..((R::LEN + 7) / 8) {
-                    if let Some(byte) = seq.next_element()? {
+                    if let Some(byte) = seq.next_element::<u8>()? {
                         unsafe {
                             *key.get_unchecked_mut(i) = byte;
                         }
@@ -55,14 +61,14 @@ impl<'de, R> Deserialize<'de> for KeyWrapper<R> where R: Registry, [(); (R::LEN 
                     }
                 }
 
-                Ok(KeyWrapper::<R> {
+                Ok(KeyDeserializer::<R> {
                     key,
                     registry: PhantomData,
                 })
             }
         }
 
-        deserializer.deserialize_seq(KeyWrapperVisitor::<R> {
+        deserializer.deserialize_tuple((R::LEN + 7) / 8, KeyDeserializerVisitor::<R> {
             registry: PhantomData,
         })
     }
@@ -80,8 +86,8 @@ where
     {
         let mut map = serializer.serialize_map(Some(self.archetypes.len()))?;
         for (key, archetype) in &self.archetypes {
-            map.serialize_key(&KeyWrapper::<R> {
-                key: *key,
+            map.serialize_key(&KeySerializer::<R> {
+                key,
                 registry: PhantomData,
             });
             unsafe {
@@ -104,7 +110,6 @@ where
 impl<'de, R> Deserialize<'de> for World<R>
 where
     R: RegistryDeserialize<'de>,
-    [(); (R::LEN + 7) / 8]: Sized,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -113,7 +118,6 @@ where
         struct WorldVisitor<'de, R>
         where
             R: RegistryDeserialize<'de>,
-            [(); (R::LEN + 7) / 8]: Sized,
         {
             registry: PhantomData<&'de R>,
         }
@@ -121,7 +125,6 @@ where
         impl<'de, R> Visitor<'de> for WorldVisitor<'de, R>
         where
             R: RegistryDeserialize<'de>,
-            [(); (R::LEN + 7) / 8]: Sized,
         {
             type Value = World<R>;
 
@@ -133,8 +136,8 @@ where
             where
                 V: MapAccess<'de>,
             {
-                let mut archetypes = HashMap::new();
-                while let Some(key) = map.next_key::<KeyWrapper<R>>()? {
+                let mut archetypes = HashMap::with_capacity(map.size_hint().unwrap_or(0));
+                while let Some(key) = map.next_key::<KeyDeserializer<R>>()? {
                     let archetype = unsafe {
                         R::deserialize::<NullEntity, R, V>(
                             &key.key,

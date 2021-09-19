@@ -13,7 +13,7 @@ use unsafe_any::UnsafeAnyExt;
 
 pub trait RegistryDebug: Registry {
     unsafe fn debug<'a, 'b, E, R>(
-        key: &[u8; (R::LEN + 7) / 8],
+        key: &[u8],
         index: usize,
         bit: usize,
         archetype: &Box<dyn Any>,
@@ -27,7 +27,7 @@ pub trait RegistryDebug: Registry {
 
 impl RegistryDebug for NullRegistry {
     unsafe fn debug<'a, 'b, E, R>(
-        key: &[u8; (R::LEN + 7) / 8],
+        key: &[u8],
         index: usize,
         bit: usize,
         archetype: &Box<dyn Any>,
@@ -51,7 +51,7 @@ where
     R1: RegistryDebug,
 {
     unsafe fn debug<'a, 'b, E, R2>(
-        key: &[u8; (R2::LEN + 7) / 8],
+        key: &[u8],
         index: usize,
         bit: usize,
         archetype: &Box<dyn Any>,

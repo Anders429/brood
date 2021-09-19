@@ -8,7 +8,6 @@ use core::{
 impl<R> Debug for World<R>
 where
     R: RegistryDebug,
-    [(); (R::LEN + 7) / 8]: Sized,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut debug_map = f.debug_map();
