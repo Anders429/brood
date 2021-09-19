@@ -65,6 +65,10 @@ where
         }
     }
 
+    // TODO: This is currently not sound. It assumes entities has `Vec`s of the same length, but
+    // there is no way that can be guaranteed.
+    // `Entities` should be instead provided in a wrapper class that guarantees the length of the
+    // component `Vec`s.
     pub fn extend<E>(&mut self, entities: E)
     where
         E: Entities,
