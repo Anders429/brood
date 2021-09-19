@@ -10,35 +10,31 @@ use unsafe_any::UnsafeAnyExt;
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 pub trait RegistrySerialize: Registry {
-    unsafe fn serialize<E, R, S>(
+    unsafe fn serialize<E, S>(
         key: &[u8],
         index: usize,
         bit: usize,
         archetype: &Box<dyn Any>,
         map: &mut S,
         entity: PhantomData<E>,
-        registry: PhantomData<R>,
     ) -> Result<(), S::Error>
     where
         E: EntitySerialize,
-        R: Registry,
         S: SerializeMap;
 }
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl RegistrySerialize for NullRegistry {
-    unsafe fn serialize<E, R, S>(
+    unsafe fn serialize<E, S>(
         _key: &[u8],
         _index: usize,
         _bit: usize,
         archetype: &Box<dyn Any>,
         map: &mut S,
         _entity: PhantomData<E>,
-        _registry: PhantomData<R>,
     ) -> Result<(), S::Error>
     where
         E: EntitySerialize,
-        R: Registry,
         S: SerializeMap,
     {
         map.serialize_value(archetype.downcast_ref_unchecked::<Archetype<E>>())
@@ -46,23 +42,21 @@ impl RegistrySerialize for NullRegistry {
 }
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
-impl<C, R1> RegistrySerialize for (C, R1)
+impl<C, R> RegistrySerialize for (C, R)
 where
     C: Component + Serialize,
-    R1: RegistrySerialize,
+    R: RegistrySerialize,
 {
-    unsafe fn serialize<E, R2, S>(
+    unsafe fn serialize<E, S>(
         key: &[u8],
         index: usize,
         bit: usize,
         archetype: &Box<dyn Any>,
         map: &mut S,
         _entity: PhantomData<E>,
-        _registry: PhantomData<R2>,
     ) -> Result<(), S::Error>
     where
         E: EntitySerialize,
-        R2: Registry,
         S: SerializeMap,
     {
         let mut new_bit = bit + 1;
@@ -74,23 +68,21 @@ where
         };
 
         if key.get_unchecked(index) & (1 << bit) != 0 {
-            R1::serialize::<(C, E), R2, S>(
+            R::serialize::<(C, E), S>(
                 key,
                 new_index,
                 new_bit,
                 archetype,
                 map,
-                PhantomData,
                 PhantomData,
             )
         } else {
-            R1::serialize::<E, R2, S>(
+            R::serialize::<E, S>(
                 key,
                 new_index,
                 new_bit,
                 archetype,
                 map,
-                PhantomData,
                 PhantomData,
             )
         }
@@ -99,44 +91,41 @@ where
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 pub trait RegistryDeserialize<'de>: Registry + 'de {
-    unsafe fn deserialize<E, R, V>(
+    unsafe fn deserialize<E, V>(
         key: &[u8],
         index: usize,
         bit: usize,
         map: &mut V,
         entity: PhantomData<E>,
-        registry: PhantomData<R>,
-    ) -> Result<Box<dyn Any>, V::Error> where E: EntityDeserialize<'de>, R: Registry, V: MapAccess<'de>;
+    ) -> Result<Box<dyn Any>, V::Error> where E: EntityDeserialize<'de>, V: MapAccess<'de>;
 }
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl<'de> RegistryDeserialize<'de> for NullRegistry {
-    unsafe fn deserialize<E, R, V>(
+    unsafe fn deserialize<E, V>(
         _key: &[u8],
         _index: usize,
         _bit: usize,
         map: &mut V,
         _entity: PhantomData<E>,
-        _registry: PhantomData<R>,
-    ) -> Result<Box<dyn Any>, V::Error> where E: EntityDeserialize<'de>, R: Registry, V: MapAccess<'de> {
+    ) -> Result<Box<dyn Any>, V::Error> where E: EntityDeserialize<'de>, V: MapAccess<'de> {
         Ok(Box::new(map.next_value::<Archetype<E>>()?))
     }
 }
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
-impl<'de, C, R1> RegistryDeserialize<'de> for (C, R1)
+impl<'de, C, R> RegistryDeserialize<'de> for (C, R)
 where
     C: Component + Deserialize<'de>,
-    R1: RegistryDeserialize<'de>,
+    R: RegistryDeserialize<'de>,
 {
-    unsafe fn deserialize<E, R2, V>(
+    unsafe fn deserialize<E, V>(
         key: &[u8],
         index: usize,
         bit: usize,
         map: &mut V,
         _entity: PhantomData<E>,
-        _registry: PhantomData<R2>,
-    ) -> Result<Box<dyn Any>, V::Error> where E: EntityDeserialize<'de>, R2: Registry, V: MapAccess<'de> { 
+    ) -> Result<Box<dyn Any>, V::Error> where E: EntityDeserialize<'de>, V: MapAccess<'de> { 
         let mut new_bit = bit + 1;
         let new_index = if bit >= 8 {
             new_bit %= 8;
@@ -146,21 +135,19 @@ where
         };
 
         if key.get_unchecked(index) & (1 << bit) != 0 {
-            R1::deserialize::<(C, E), R2, V>(
+            R::deserialize::<(C, E), V>(
                 key,
                 new_index,
                 new_bit,
                 map,
-                PhantomData,
                 PhantomData,
             )
         } else {
-            R1::deserialize::<E, R2, V>(
+            R::deserialize::<E, V>(
                 key,
                 new_index,
                 new_bit,
                 map,
-                PhantomData,
                 PhantomData,
             )
         }

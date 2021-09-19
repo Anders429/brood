@@ -18,13 +18,12 @@ where
         {
             for key in self.archetypes.keys() {
                 if !unsafe {
-                    R::eq::<NullEntity, R>(
+                    R::eq::<NullEntity>(
                         key,
                         0,
                         0,
                         &self.archetypes[key],
                         &other.archetypes[key],
-                        PhantomData,
                         PhantomData,
                     )
                 } {

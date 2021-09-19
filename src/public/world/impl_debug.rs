@@ -13,13 +13,12 @@ where
         let mut debug_map = f.debug_map();
         for (key, archetype) in &self.archetypes {
             unsafe {
-                R::debug::<NullEntity, R>(
+                R::debug::<NullEntity>(
                     &key,
                     0,
                     0,
                     &archetype,
                     &mut debug_map,
-                    PhantomData,
                     PhantomData,
                 )
             }

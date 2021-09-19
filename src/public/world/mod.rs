@@ -53,13 +53,12 @@ where
         }
 
         unsafe {
-            R::push::<E, NullEntity, R>(
+            R::push::<E, NullEntity>(
                 entity,
                 key,
                 &mut self.archetypes,
                 0,
                 0,
-                PhantomData,
                 PhantomData,
             );
         }
@@ -79,13 +78,12 @@ where
         }
 
         unsafe {
-            R::extend::<E, NullEntity, R>(
+            R::extend::<E, NullEntity>(
                 entities,
                 key,
                 &mut self.archetypes,
                 0,
                 0,
-                PhantomData,
                 PhantomData,
             );
         }

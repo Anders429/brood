@@ -90,13 +90,12 @@ where
                 registry: PhantomData,
             })?;
             unsafe {
-                R::serialize::<NullEntity, R, _>(
+                R::serialize::<NullEntity, _>(
                     key,
                     0,
                     0,
                     archetype,
                     &mut map,
-                    PhantomData,
                     PhantomData,
                 )?;
             }
@@ -138,12 +137,11 @@ where
                 let mut archetypes = HashMap::with_capacity(map.size_hint().unwrap_or(0));
                 while let Some(key) = map.next_key::<KeyDeserializer<R>>()? {
                     let archetype = unsafe {
-                        R::deserialize::<NullEntity, R, V>(
+                        R::deserialize::<NullEntity, V>(
                             &key.key,
                             0,
                             0,
                             &mut map,
-                            PhantomData,
                             PhantomData,
                         )?
                     };

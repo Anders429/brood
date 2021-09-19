@@ -12,30 +12,26 @@ use core::{
 use unsafe_any::UnsafeAnyExt;
 
 pub trait RegistryDebug: Registry {
-    unsafe fn debug<'a, 'b, E, R>(
+    unsafe fn debug<'a, 'b, E>(
         key: &[u8],
         index: usize,
         bit: usize,
         archetype: &Box<dyn Any>,
         debug_map: &mut DebugMap<'a, 'b>,
         entity: PhantomData<E>,
-        registry: PhantomData<R>,
     ) where
-        R: Registry,
         E: EntityDebug;
 }
 
 impl RegistryDebug for NullRegistry {
-    unsafe fn debug<'a, 'b, E, R>(
+    unsafe fn debug<'a, 'b, E>(
         _key: &[u8],
         _index: usize,
         _bit: usize,
         archetype: &Box<dyn Any>,
         debug_map: &mut DebugMap<'a, 'b>,
         _entity: PhantomData<E>,
-        _registry: PhantomData<R>,
     ) where
-        R: Registry,
         E: EntityDebug,
     {
         debug_map.entry(
@@ -45,21 +41,19 @@ impl RegistryDebug for NullRegistry {
     }
 }
 
-impl<C, R1> RegistryDebug for (C, R1)
+impl<C, R> RegistryDebug for (C, R)
 where
     C: Component + Debug,
-    R1: RegistryDebug,
+    R: RegistryDebug,
 {
-    unsafe fn debug<'a, 'b, E, R2>(
+    unsafe fn debug<'a, 'b, E>(
         key: &[u8],
         index: usize,
         bit: usize,
         archetype: &Box<dyn Any>,
         debug_map: &mut DebugMap<'a, 'b>,
         _entity: PhantomData<E>,
-        _registry: PhantomData<R2>,
     ) where
-        R2: Registry,
         E: EntityDebug,
     {
         let mut new_bit = bit + 1;
@@ -71,23 +65,21 @@ where
         };
 
         if key.get_unchecked(index) & (1 << bit) != 0 {
-            R1::debug::<(C, E), R2>(
+            R::debug::<(C, E)>(
                 key,
                 new_index,
                 new_bit,
                 archetype,
                 debug_map,
-                PhantomData,
                 PhantomData,
             );
         } else {
-            R1::debug::<E, R2>(
+            R::debug::<E>(
                 key,
                 new_index,
                 new_bit,
                 archetype,
                 debug_map,
-                PhantomData,
                 PhantomData,
             );
         }

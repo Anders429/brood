@@ -3,7 +3,7 @@ use crate::{
     entities::Entities,
     entity::Entity,
     internal::archetype::Archetype,
-    registry::{NullRegistry, Registry},
+    registry::NullRegistry,
 };
 use alloc::{boxed::Box, vec::Vec};
 use core::{
@@ -16,48 +16,42 @@ use unsafe_any::UnsafeAnyExt;
 pub trait RegistryStorage {
     fn create_component_map(component_map: &mut HashMap<TypeId, usize>, index: usize);
 
-    unsafe fn push<E1, E2, R2>(
+    unsafe fn push<E1, E2>(
         entity: E1,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
         bit: u8,
         canonical_entity: PhantomData<E2>,
-        registry: PhantomData<R2>,
     ) where
         E1: Entity,
-        E2: Entity,
-        R2: Registry;
+        E2: Entity,;
 
-    unsafe fn extend<E1, E2, R2>(
+    unsafe fn extend<E1, E2>(
         entities: E1,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
         bit: u8,
         canonical_entity: PhantomData<E2>,
-        registry: PhantomData<R2>,
     ) where
         E1: Entities,
-        E2: Entity,
-        R2: Registry;
+        E2: Entity,;
 }
 
 impl RegistryStorage for NullRegistry {
     fn create_component_map(_component_map: &mut HashMap<TypeId, usize>, _index: usize) {}
 
-    unsafe fn push<E1, E2, R2>(
+    unsafe fn push<E1, E2>(
         entity: E1,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         _index: usize,
         _bit: u8,
         _canonical_entity: PhantomData<E2>,
-        _registry: PhantomData<R2>,
     ) where
         E1: Entity,
         E2: Entity,
-        R2: Registry,
     {
         unsafe {
             archetypes
@@ -68,18 +62,16 @@ impl RegistryStorage for NullRegistry {
         }
     }
 
-    unsafe fn extend<E1, E2, R2>(
+    unsafe fn extend<E1, E2>(
         entities: E1,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         _index: usize,
         _bit: u8,
         _canonical_entity: PhantomData<E2>,
-        _registry: PhantomData<R2>,
     ) where
         E1: Entities,
         E2: Entity,
-        R2: Registry,
     {
         unsafe {
             archetypes
@@ -91,28 +83,26 @@ impl RegistryStorage for NullRegistry {
     }
 }
 
-impl<C, R1> RegistryStorage for (C, R1)
+impl<C, R> RegistryStorage for (C, R)
 where
     C: Component,
-    R1: RegistryStorage,
+    R: RegistryStorage,
 {
     fn create_component_map(component_map: &mut HashMap<TypeId, usize>, index: usize) {
         component_map.insert(TypeId::of::<C>(), index);
-        R1::create_component_map(component_map, index + 1);
+        R::create_component_map(component_map, index + 1);
     }
 
-    unsafe fn push<E1, E2, R2>(
+    unsafe fn push<E1, E2>(
         entity: E1,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
         bit: u8,
         _canonical_entity: PhantomData<E2>,
-        _registry: PhantomData<R2>,
     ) where
         E1: Entity,
         E2: Entity,
-        R2: Registry,
     {
         let mut new_bit = bit + 1;
         let new_index = if bit >= 8 {
@@ -123,40 +113,36 @@ where
         };
 
         if key.get_unchecked(index) & (1 << bit) != 0 {
-            R1::push::<E1, (C, E2), R2>(
+            R::push::<E1, (C, E2)>(
                 entity,
                 key,
                 archetypes,
                 new_index,
                 new_bit,
-                PhantomData,
                 PhantomData,
             );
         } else {
-            R1::push::<E1, E2, R2>(
+            R::push::<E1, E2>(
                 entity,
                 key,
                 archetypes,
                 new_index,
                 new_bit,
-                PhantomData,
                 PhantomData,
             );
         }
     }
 
-    unsafe fn extend<E1, E2, R2>(
+    unsafe fn extend<E1, E2>(
         entities: E1,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
         bit: u8,
         _canonical_entity: PhantomData<E2>,
-        _registry: PhantomData<R2>,
     ) where
         E1: Entities,
         E2: Entity,
-        R2: Registry,
     {
         let mut new_bit = bit + 1;
         let new_index = if bit >= 8 {
@@ -167,23 +153,21 @@ where
         };
 
         if key.get_unchecked(index) & (1 << bit) != 0 {
-            R1::extend::<E1, (C, E2), R2>(
+            R::extend::<E1, (C, E2)>(
                 entities,
                 key,
                 archetypes,
                 new_index,
                 new_bit,
-                PhantomData,
                 PhantomData,
             );
         } else {
-            R1::extend::<E1, E2, R2>(
+            R::extend::<E1, E2>(
                 entities,
                 key,
                 archetypes,
                 new_index,
                 new_bit,
-                PhantomData,
                 PhantomData,
             );
         }
