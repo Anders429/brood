@@ -4,7 +4,8 @@ mod impl_eq;
 mod impl_serde;
 
 use crate::{
-    entity::{Entities, Entity, NullEntity},
+    entities::Entities,
+    entity::{Entity, NullEntity},
     registry::Registry,
 };
 use alloc::{boxed::Box, vec, vec::Vec};

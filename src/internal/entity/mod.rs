@@ -13,12 +13,12 @@ pub(crate) use eq::{EntityEq, EntityPartialEq};
 
 use crate::{
     component::Component,
-    entity::{NullEntities, NullEntity},
+    entity::NullEntity,
 };
 use alloc::vec::Vec;
 use byte_length::EntityByteLength;
-use length::{EntitiesLength, EntityLength};
-use storage::{EntitiesStorage, EntityStorage};
+use length::EntityLength;
+use storage::EntityStorage;
 
 pub trait EntitySeal: EntityByteLength + EntityLength + EntityStorage {}
 
@@ -28,16 +28,5 @@ impl<C, E> EntitySeal for (C, E)
 where
     C: Component,
     E: EntitySeal,
-{
-}
-
-pub trait EntitiesSeal: EntitiesLength + EntitiesStorage {}
-
-impl EntitiesSeal for NullEntities {}
-
-impl<C, E> EntitiesSeal for (Vec<C>, E)
-where
-    C: Component,
-    E: EntitiesSeal,
 {
 }

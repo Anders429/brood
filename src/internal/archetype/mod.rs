@@ -5,7 +5,8 @@ mod impl_eq;
 mod impl_serde;
 
 use crate::{
-    entity::{Entities, Entity},
+    entities::Entities,
+    entity::Entity,
 };
 use alloc::vec::Vec;
 use core::{any::TypeId, marker::PhantomData, mem::ManuallyDrop};

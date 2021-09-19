@@ -1,8 +1,7 @@
 use crate::{
     component::Component,
-    internal::entity::{EntitiesSeal, EntitySeal},
+    internal::entity::EntitySeal,
 };
-use alloc::vec::Vec;
 use core::any::Any;
 
 pub struct NullEntity;
@@ -25,32 +24,5 @@ macro_rules! entity {
     };
     () => {
         $crate::entity::NullEntity
-    };
-}
-
-pub struct NullEntities;
-
-pub trait Entities: EntitiesSeal {}
-
-impl Entities for NullEntities {}
-
-impl<C, E> Entities for (Vec<C>, E)
-where
-    C: Component,
-    E: Entities,
-{
-}
-
-#[macro_export]
-macro_rules! entities {
-    (($component:expr $(,$components:expr)* $(,)?); $n:expr) => {
-        ($crate::reexports::vec![$component; $n], entities!(($($components),*); $n))
-    };
-    ($($($components:expr),*),*) => {};
-    ((); $n:expr) => {
-        $crate::entity::NullEntities
-    };
-    () => {
-        $crate::entity::NullEntities
     };
 }

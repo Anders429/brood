@@ -1,6 +1,7 @@
 use crate::{
     component::Component,
-    entity::{Entities, Entity},
+    entities::Entities,
+    entity::Entity,
     internal::archetype::Archetype,
     registry::{NullRegistry, Registry},
 };
