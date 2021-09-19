@@ -15,7 +15,6 @@ use crate::{
     component::Component,
     entity::NullEntity,
 };
-use alloc::vec::Vec;
 use byte_length::EntityByteLength;
 use length::EntityLength;
 use storage::EntityStorage;

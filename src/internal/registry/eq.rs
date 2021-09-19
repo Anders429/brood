@@ -24,13 +24,13 @@ pub trait RegistryPartialEq: Registry {
 
 impl RegistryPartialEq for NullRegistry {
     unsafe fn eq<E, R>(
-        key: &[u8],
-        index: usize,
-        bit: usize,
+        _key: &[u8],
+        _index: usize,
+        _bit: usize,
         archetype_a: &Box<dyn Any>,
         archetype_b: &Box<dyn Any>,
-        entity: PhantomData<E>,
-        registry: PhantomData<R>,
+        _entity: PhantomData<E>,
+        _registry: PhantomData<R>,
     ) -> bool
     where
         E: EntityPartialEq,
@@ -52,8 +52,8 @@ where
         bit: usize,
         archetype_a: &Box<dyn Any>,
         archetype_b: &Box<dyn Any>,
-        entity: PhantomData<E>,
-        registry: PhantomData<R2>,
+        _entity: PhantomData<E>,
+        _registry: PhantomData<R2>,
     ) -> bool
     where
         E: EntityPartialEq,

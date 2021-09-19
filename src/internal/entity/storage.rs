@@ -1,7 +1,6 @@
 use crate::{
     component::Component,
     entity::NullEntity,
-    registry::Registry,
 };
 use alloc::vec::Vec;
 use core::{
@@ -39,13 +38,13 @@ impl EntityStorage for NullEntity {
     ) {
     }
     unsafe fn extend_components_from_buffer(
-        buffer: *const u8,
-        components: &mut [(*mut u8, usize)],
-        length: usize,
+        _buffer: *const u8,
+        _components: &mut [(*mut u8, usize)],
+        _length: usize,
     ) {
     }
-    unsafe fn free_components(components: &[(*mut u8, usize)], length: usize) {}
-    unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>)
+    unsafe fn free_components(_components: &[(*mut u8, usize)], _length: usize) {}
+    unsafe fn to_key(_key: &mut [u8], _component_map: &HashMap<TypeId, usize>)
     {
     }
 }

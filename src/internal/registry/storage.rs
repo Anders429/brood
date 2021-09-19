@@ -44,16 +44,16 @@ pub trait RegistryStorage {
 }
 
 impl RegistryStorage for NullRegistry {
-    fn create_component_map(component_map: &mut HashMap<TypeId, usize>, index: usize) {}
+    fn create_component_map(_component_map: &mut HashMap<TypeId, usize>, _index: usize) {}
 
     unsafe fn push<E1, E2, R2>(
         entity: E1,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
-        index: usize,
-        bit: u8,
-        canonical_entity: PhantomData<E2>,
-        registry: PhantomData<R2>,
+        _index: usize,
+        _bit: u8,
+        _canonical_entity: PhantomData<E2>,
+        _registry: PhantomData<R2>,
     ) where
         E1: Entity,
         E2: Entity,
@@ -72,10 +72,10 @@ impl RegistryStorage for NullRegistry {
         entities: E1,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
-        index: usize,
-        bit: u8,
-        canonical_entity: PhantomData<E2>,
-        registry: PhantomData<R2>,
+        _index: usize,
+        _bit: u8,
+        _canonical_entity: PhantomData<E2>,
+        _registry: PhantomData<R2>,
     ) where
         E1: Entities,
         E2: Entity,
@@ -107,8 +107,8 @@ where
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
         bit: u8,
-        canonical_entity: PhantomData<E2>,
-        registry: PhantomData<R2>,
+        _canonical_entity: PhantomData<E2>,
+        _registry: PhantomData<R2>,
     ) where
         E1: Entity,
         E2: Entity,
@@ -151,8 +151,8 @@ where
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
         bit: u8,
-        canonical_entity: PhantomData<E2>,
-        registry: PhantomData<R2>,
+        _canonical_entity: PhantomData<E2>,
+        _registry: PhantomData<R2>,
     ) where
         E1: Entities,
         E2: Entity,

@@ -27,13 +27,13 @@ pub trait RegistryDebug: Registry {
 
 impl RegistryDebug for NullRegistry {
     unsafe fn debug<'a, 'b, E, R>(
-        key: &[u8],
-        index: usize,
-        bit: usize,
+        _key: &[u8],
+        _index: usize,
+        _bit: usize,
         archetype: &Box<dyn Any>,
         debug_map: &mut DebugMap<'a, 'b>,
-        entity: PhantomData<E>,
-        registry: PhantomData<R>,
+        _entity: PhantomData<E>,
+        _registry: PhantomData<R>,
     ) where
         R: Registry,
         E: EntityDebug,
@@ -56,8 +56,8 @@ where
         bit: usize,
         archetype: &Box<dyn Any>,
         debug_map: &mut DebugMap<'a, 'b>,
-        entity: PhantomData<E>,
-        registry: PhantomData<R2>,
+        _entity: PhantomData<E>,
+        _registry: PhantomData<R2>,
     ) where
         R2: Registry,
         E: EntityDebug,

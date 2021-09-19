@@ -19,8 +19,8 @@ pub trait EntityDebug: Entity {
 
 impl EntityDebug for NullEntity {
     unsafe fn debug<'a, 'b, 'c>(
-        components: &[(*mut u8, usize)],
-        length: usize,
+        _components: &[(*mut u8, usize)],
+        _length: usize,
         debug_map: &'c mut DebugMap<'a, 'b>,
     ) -> &'c mut DebugMap<'a, 'b> {
         debug_map

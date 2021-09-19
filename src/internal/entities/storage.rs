@@ -1,6 +1,6 @@
 use crate::{component::Component, entities::NullEntities};
 use alloc::vec::Vec;
-use core::{any::TypeId, mem::ManuallyDrop};
+use core::any::TypeId;
 use hashbrown::HashMap;
 
 pub trait EntitiesStorage {
@@ -9,8 +9,8 @@ pub trait EntitiesStorage {
 }
 
 impl EntitiesStorage for NullEntities {
-    unsafe fn into_buffer(self, buffer: *mut u8, component_map: &HashMap<TypeId, usize>) {}
-    unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>)
+    unsafe fn into_buffer(self, _buffer: *mut u8, _component_map: &HashMap<TypeId, usize>) {}
+    unsafe fn to_key(_key: &mut [u8], _component_map: &HashMap<TypeId, usize>)
     {
     }
 }

@@ -2,7 +2,6 @@ use crate::{
     component::Component,
     entity::NullEntity,
 };
-use alloc::vec::Vec;
 
 pub trait EntityLength {
     const LEN: usize;

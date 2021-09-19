@@ -15,9 +15,9 @@ pub trait EntityPartialEq: Entity {
 
 impl EntityPartialEq for NullEntity {
     unsafe fn eq(
-        components_a: &[(*mut u8, usize)],
-        components_b: &[(*mut u8, usize)],
-        length: usize,
+        _components_a: &[(*mut u8, usize)],
+        _components_b: &[(*mut u8, usize)],
+        _length: usize,
     ) -> bool {
         true
     }
