@@ -6,6 +6,7 @@ use alloc::vec::Vec;
 use core::{
     any::TypeId,
     mem::{size_of, ManuallyDrop},
+    ptr,
 };
 use hashbrown::HashMap;
 
@@ -65,7 +66,7 @@ where
     }
 
     unsafe fn into_buffer(self, buffer: *mut u8, offset_map: &HashMap<TypeId, isize>) {
-        core::ptr::write(
+        ptr::write(
             buffer
                 .offset(*offset_map.get(&TypeId::of::<C>()).unwrap())
                 .cast::<C>(),
@@ -108,7 +109,7 @@ where
         v.extend(buffer.cast::<Vec<C>>().read());
         *component_column = (v.as_mut_ptr().cast::<u8>(), v.capacity());
         E::extend_components_from_buffer(
-            buffer.offset(24),
+            buffer.offset(size_of::<Vec<()>>() as isize),
             components.get_unchecked_mut(1..),
             length,
         );

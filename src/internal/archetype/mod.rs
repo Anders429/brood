@@ -9,7 +9,7 @@ use crate::{
     entity::Entity,
 };
 use alloc::vec::Vec;
-use core::{any::TypeId, marker::PhantomData, mem::ManuallyDrop};
+use core::{any::TypeId, marker::PhantomData, mem::{size_of, ManuallyDrop}};
 use hashbrown::HashMap;
 
 pub(crate) struct Archetype<E>
@@ -47,9 +47,9 @@ where
             entity_buffer.set_len(E::BYTE_LEN);
         }
 
-        let mut entities_buffer = Vec::with_capacity(24 * E::LEN);
+        let mut entities_buffer = Vec::with_capacity(size_of::<Vec<()>>() * E::LEN);
         unsafe {
-            entities_buffer.set_len(24 * E::LEN);
+            entities_buffer.set_len(size_of::<Vec<()>>() * E::LEN);
         }
 
         Self {

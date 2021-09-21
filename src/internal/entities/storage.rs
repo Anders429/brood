@@ -1,6 +1,6 @@
 use crate::{component::Component, entities::NullEntities};
 use alloc::vec::Vec;
-use core::any::TypeId;
+use core::{any::TypeId,mem::size_of, ptr};
 use hashbrown::HashMap;
 
 pub trait EntitiesStorage {
@@ -21,9 +21,9 @@ where
     E: EntitiesStorage,
 {
     unsafe fn into_buffer(self, buffer: *mut u8, component_map: &HashMap<TypeId, usize>) {
-        core::ptr::write(
+        ptr::write(
             buffer
-                .offset((*component_map.get(&TypeId::of::<C>()).unwrap() * 24) as isize)
+                .offset((*component_map.get(&TypeId::of::<C>()).unwrap() * size_of::<Vec<()>>()) as isize)
                 .cast::<Vec<C>>(),
             self.0,
         );
