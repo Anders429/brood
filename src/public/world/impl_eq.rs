@@ -37,11 +37,7 @@ where
     }
 }
 
-impl<R> Eq for World<R>
-where
-    R: RegistryEq,
-{
-}
+impl<R> Eq for World<R> where R: RegistryEq {}
 
 #[cfg(test)]
 mod tests {

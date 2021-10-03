@@ -1,5 +1,5 @@
-use alloc::vec::Vec;
 use crate::{component::Component, entities::NullEntities};
+use alloc::vec::Vec;
 
 pub trait EntitiesLength {
     fn component_len(&self) -> usize;

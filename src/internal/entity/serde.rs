@@ -102,19 +102,17 @@ where
         V: SeqAccess<'de>,
     {
         let mut component_column = components.get_unchecked_mut(0);
-        let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
-            component_column.0.cast::<C>(),
-            0,
-            component_column.1,
-        ));
+        let mut v = Vec::<C>::from_raw_parts(component_column.0.cast::<C>(), 0, component_column.1);
         v.reserve(length);
         for i in 0..length {
             v.push(seq_access.next_element()?.ok_or_else(|| {
                 de::Error::invalid_length(i, &"`length` components for each column")
             })?);
         }
+        let mut v = ManuallyDrop::new(v);
         component_column.0 = v.as_mut_ptr().cast::<u8>();
         component_column.1 = v.capacity();
+
         let result = E::deserialize(components.get_unchecked_mut(1..), length, seq_access);
         if result.is_err() {
             ManuallyDrop::drop(&mut v);

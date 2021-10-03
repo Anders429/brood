@@ -65,23 +65,9 @@ where
         };
 
         if key.get_unchecked(index) & (1 << bit) != 0 {
-            R::debug::<(C, E)>(
-                key,
-                new_index,
-                new_bit,
-                archetype,
-                debug_map,
-                PhantomData,
-            );
+            R::debug::<(C, E)>(key, new_index, new_bit, archetype, debug_map, PhantomData);
         } else {
-            R::debug::<E>(
-                key,
-                new_index,
-                new_bit,
-                archetype,
-                debug_map,
-                PhantomData,
-            );
+            R::debug::<E>(key, new_index, new_bit, archetype, debug_map, PhantomData);
         }
     }
 }

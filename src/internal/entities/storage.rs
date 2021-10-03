@@ -1,6 +1,6 @@
 use crate::{component::Component, entities::NullEntities};
 use alloc::vec::Vec;
-use core::{any::TypeId,mem::size_of, ptr};
+use core::{any::TypeId, mem::size_of, ptr};
 use hashbrown::HashMap;
 
 pub trait EntitiesStorage {
@@ -10,9 +10,7 @@ pub trait EntitiesStorage {
 
 impl EntitiesStorage for NullEntities {
     unsafe fn into_buffer(self, _buffer: *mut u8, _component_map: &HashMap<TypeId, usize>) {}
-    unsafe fn to_key(_key: &mut [u8], _component_map: &HashMap<TypeId, usize>)
-    {
-    }
+    unsafe fn to_key(_key: &mut [u8], _component_map: &HashMap<TypeId, usize>) {}
 }
 
 impl<C, E> EntitiesStorage for (Vec<C>, E)
@@ -23,15 +21,17 @@ where
     unsafe fn into_buffer(self, buffer: *mut u8, component_map: &HashMap<TypeId, usize>) {
         ptr::write(
             buffer
-                .offset((*component_map.get(&TypeId::of::<C>()).unwrap() * size_of::<Vec<()>>()) as isize)
+                .offset(
+                    (*component_map.get(&TypeId::of::<C>()).unwrap() * size_of::<Vec<()>>())
+                        as isize,
+                )
                 .cast::<Vec<C>>(),
             self.0,
         );
         E::into_buffer(self.1, buffer, component_map);
     }
 
-    unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>)
-    {
+    unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>) {
         let component_index = component_map.get(&TypeId::of::<C>()).unwrap();
         let index = component_index / 8;
         let bit = component_index % 8;

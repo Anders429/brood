@@ -1,7 +1,4 @@
-use crate::{
-    component::Component,
-    entity::NullEntity,
-};
+use crate::{component::Component, entity::NullEntity};
 
 pub trait EntityLength {
     const LEN: usize;

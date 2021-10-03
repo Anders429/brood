@@ -1,9 +1,12 @@
 use crate::{
     component::Component,
-    internal::{archetype::Archetype, entity::{EntityDeserialize, EntitySerialize}},
+    internal::{
+        archetype::Archetype,
+        entity::{EntityDeserialize, EntitySerialize},
+    },
     registry::{NullRegistry, Registry},
 };
-use ::serde::{ser::SerializeMap, de::MapAccess, Deserialize, Serialize};
+use ::serde::{de::MapAccess, ser::SerializeMap, Deserialize, Serialize};
 use alloc::boxed::Box;
 use core::{any::Any, marker::PhantomData};
 use unsafe_any::UnsafeAnyExt;
@@ -68,23 +71,9 @@ where
         };
 
         if key.get_unchecked(index) & (1 << bit) != 0 {
-            R::serialize::<(C, E), S>(
-                key,
-                new_index,
-                new_bit,
-                archetype,
-                map,
-                PhantomData,
-            )
+            R::serialize::<(C, E), S>(key, new_index, new_bit, archetype, map, PhantomData)
         } else {
-            R::serialize::<E, S>(
-                key,
-                new_index,
-                new_bit,
-                archetype,
-                map,
-                PhantomData,
-            )
+            R::serialize::<E, S>(key, new_index, new_bit, archetype, map, PhantomData)
         }
     }
 }
@@ -97,7 +86,10 @@ pub trait RegistryDeserialize<'de>: Registry + 'de {
         bit: usize,
         map: &mut V,
         entity: PhantomData<E>,
-    ) -> Result<Box<dyn Any>, V::Error> where E: EntityDeserialize<'de>, V: MapAccess<'de>;
+    ) -> Result<Box<dyn Any>, V::Error>
+    where
+        E: EntityDeserialize<'de>,
+        V: MapAccess<'de>;
 }
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
@@ -108,7 +100,11 @@ impl<'de> RegistryDeserialize<'de> for NullRegistry {
         _bit: usize,
         map: &mut V,
         _entity: PhantomData<E>,
-    ) -> Result<Box<dyn Any>, V::Error> where E: EntityDeserialize<'de>, V: MapAccess<'de> {
+    ) -> Result<Box<dyn Any>, V::Error>
+    where
+        E: EntityDeserialize<'de>,
+        V: MapAccess<'de>,
+    {
         Ok(Box::new(map.next_value::<Archetype<E>>()?))
     }
 }
@@ -125,7 +121,11 @@ where
         bit: usize,
         map: &mut V,
         _entity: PhantomData<E>,
-    ) -> Result<Box<dyn Any>, V::Error> where E: EntityDeserialize<'de>, V: MapAccess<'de> { 
+    ) -> Result<Box<dyn Any>, V::Error>
+    where
+        E: EntityDeserialize<'de>,
+        V: MapAccess<'de>,
+    {
         let mut new_bit = bit + 1;
         let new_index = if bit >= 8 {
             new_bit %= 8;
@@ -135,21 +135,9 @@ where
         };
 
         if key.get_unchecked(index) & (1 << bit) != 0 {
-            R::deserialize::<(C, E), V>(
-                key,
-                new_index,
-                new_bit,
-                map,
-                PhantomData,
-            )
+            R::deserialize::<(C, E), V>(key, new_index, new_bit, map, PhantomData)
         } else {
-            R::deserialize::<E, V>(
-                key,
-                new_index,
-                new_bit,
-                map,
-                PhantomData,
-            )
+            R::deserialize::<E, V>(key, new_index, new_bit, map, PhantomData)
         }
     }
 }

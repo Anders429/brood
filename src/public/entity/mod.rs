@@ -1,7 +1,8 @@
-use crate::{
-    component::Component,
-    internal::entity::EntitySeal,
-};
+mod identifier;
+
+pub use identifier::EntityIdentifier;
+
+use crate::{component::Component, internal::entity::EntitySeal};
 use core::any::Any;
 
 pub struct NullEntity;

@@ -6,6 +6,7 @@ mod impl_serde;
 use crate::{
     entities::Entities,
     entity::{Entity, NullEntity},
+    internal::entity_allocator::EntityAllocator,
     registry::Registry,
 };
 use alloc::{boxed::Box, vec, vec::Vec};
@@ -19,8 +20,10 @@ pub struct World<R>
 where
     R: Registry,
 {
-    registry: PhantomData<R>,
     archetypes: HashMap<Vec<u8>, Box<dyn Any>>,
+    entity_allocator: EntityAllocator,
+
+    registry: PhantomData<R>,
     component_map: HashMap<TypeId, usize>,
 }
 
@@ -33,8 +36,10 @@ where
         R::create_component_map(&mut component_map, 0);
 
         Self {
-            registry: PhantomData,
             archetypes,
+            entity_allocator: EntityAllocator::new(),
+
+            registry: PhantomData,
             component_map,
         }
     }
@@ -52,9 +57,12 @@ where
             E::to_key(&mut key, &self.component_map);
         }
 
+        let entity_identifier = unsafe { self.entity_allocator.allocate(key.as_ptr()) };
+
         unsafe {
             R::push::<E, NullEntity>(
                 entity,
+                entity_identifier,
                 key,
                 &mut self.archetypes,
                 0,
@@ -77,9 +85,15 @@ where
             E::to_key(&mut key, &self.component_map);
         }
 
+        let entity_identifiers = unsafe {
+            self.entity_allocator
+                .allocate_batch(key.as_ptr(), entities.component_len())
+        };
+
         unsafe {
-            R::extend::<E, NullEntity>(
+            R::extend::<E, NullEntity, _>(
                 entities,
+                entity_identifiers,
                 key,
                 &mut self.archetypes,
                 0,

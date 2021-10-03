@@ -17,7 +17,7 @@ pub trait RegistryPartialEq: Registry {
         entity: PhantomData<E>,
     ) -> bool
     where
-        E: EntityPartialEq,;
+        E: EntityPartialEq;
 }
 
 impl RegistryPartialEq for NullRegistry {

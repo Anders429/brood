@@ -6,10 +6,14 @@ mod impl_serde;
 
 use crate::{
     entities::Entities,
-    entity::Entity,
+    entity::{Entity, EntityIdentifier},
 };
 use alloc::vec::Vec;
-use core::{any::TypeId, marker::PhantomData, mem::{size_of, ManuallyDrop}};
+use core::{
+    any::TypeId,
+    marker::PhantomData,
+    mem::{size_of, ManuallyDrop},
+};
 use hashbrown::HashMap;
 
 pub(crate) struct Archetype<E>
@@ -18,6 +22,7 @@ where
 {
     entity: PhantomData<E>,
 
+    entity_identifiers: (*mut EntityIdentifier, usize),
     components: Vec<(*mut u8, usize)>,
     length: usize,
 
@@ -32,7 +37,8 @@ impl<E> Archetype<E>
 where
     E: Entity,
 {
-    pub(crate) fn from_components_and_length(
+    pub(crate) fn from_raw_parts(
+        entity_identifiers: (*mut EntityIdentifier, usize),
         components: Vec<(*mut u8, usize)>,
         length: usize,
     ) -> Self {
@@ -55,6 +61,7 @@ where
         Self {
             entity: PhantomData,
 
+            entity_identifiers,
             components,
             length,
 
@@ -67,16 +74,25 @@ where
     }
 
     pub(crate) fn new() -> Self {
+        let mut entity_identifiers = ManuallyDrop::new(Vec::new());
+
         let mut components = Vec::new();
         for _ in 0..E::LEN {
             let mut v = ManuallyDrop::new(Vec::new());
             components.push((v.as_mut_ptr(), v.capacity()));
         }
 
-        Self::from_components_and_length(components, 0)
+        Self::from_raw_parts(
+            (
+                entity_identifiers.as_mut_ptr(),
+                entity_identifiers.capacity(),
+            ),
+            components,
+            0,
+        )
     }
 
-    pub(crate) unsafe fn push<F>(&mut self, entity: F)
+    pub(crate) unsafe fn push<F>(&mut self, entity: F, entity_identifier: EntityIdentifier)
     where
         F: Entity,
     {
@@ -91,12 +107,24 @@ where
             self.length,
         );
 
+        let mut entity_identifiers = ManuallyDrop::new(Vec::from_raw_parts(
+            self.entity_identifiers.0,
+            self.length,
+            self.entity_identifiers.1,
+        ));
+        entity_identifiers.push(entity_identifier);
+        self.entity_identifiers = (
+            entity_identifiers.as_mut_ptr(),
+            entity_identifiers.capacity(),
+        );
+
         self.length += 1;
     }
 
-    pub(crate) unsafe fn extend<F>(&mut self, entities: F)
+    pub(crate) unsafe fn extend<F, I>(&mut self, entities: F, entity_identifiers: I)
     where
         F: Entities,
+        I: Iterator<Item = EntityIdentifier>,
     {
         let component_len = entities.component_len();
 
@@ -112,6 +140,17 @@ where
             self.length,
         );
 
+        let mut entity_identifiers_v = ManuallyDrop::new(Vec::from_raw_parts(
+            self.entity_identifiers.0,
+            self.length,
+            self.entity_identifiers.1,
+        ));
+        entity_identifiers_v.extend(entity_identifiers);
+        self.entity_identifiers = (
+            entity_identifiers_v.as_mut_ptr(),
+            entity_identifiers_v.capacity(),
+        );
+
         self.length += component_len;
     }
 }
@@ -119,19 +158,28 @@ where
 #[cfg(test)]
 mod tests {
     use super::Archetype;
-    use crate::{entities, entity, entity::NullEntity};
-    use alloc::{borrow::ToOwned, string::String};
+    use crate::{
+        entities, entity,
+        entity::{EntityIdentifier, NullEntity},
+    };
+    use alloc::{borrow::ToOwned, string::String, vec};
 
     #[test]
     fn push() {
         let mut archetype = Archetype::<(usize, (bool, NullEntity))>::new();
 
         unsafe {
-            archetype.push(entity!(1_usize, false));
-            archetype.push(entity!(1_usize, false, 2_usize));
-            archetype.push(entity!(false, 3_usize));
-            archetype.push(entity!(1_usize, false, 2_usize));
-            archetype.push(entity!(false, 3_usize));
+            archetype.push(entity!(1_usize, false), EntityIdentifier::new(0, 0));
+            archetype.push(
+                entity!(1_usize, false, 2_usize),
+                EntityIdentifier::new(1, 0),
+            );
+            archetype.push(entity!(false, 3_usize), EntityIdentifier::new(2, 0));
+            archetype.push(
+                entity!(1_usize, false, 2_usize),
+                EntityIdentifier::new(3, 0),
+            );
+            archetype.push(entity!(false, 3_usize), EntityIdentifier::new(4, 0));
         }
     }
 
@@ -140,7 +188,7 @@ mod tests {
         let mut archetype = Archetype::<(String, NullEntity)>::new();
 
         unsafe {
-            archetype.push(entity!("foo".to_owned()));
+            archetype.push(entity!("foo".to_owned()), EntityIdentifier::new(0, 0));
         }
     }
 
@@ -149,7 +197,10 @@ mod tests {
         let mut archetype = Archetype::<(usize, (bool, NullEntity))>::new();
 
         unsafe {
-            archetype.extend(entities!((1_usize, false); 100));
+            archetype.extend(
+                entities!((1_usize, false); 100),
+                vec![EntityIdentifier::new(0, 0); 100].into_iter(),
+            );
         }
     }
 }

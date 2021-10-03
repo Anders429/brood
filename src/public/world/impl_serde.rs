@@ -4,7 +4,7 @@ use crate::{
     internal::registry::{RegistryDeserialize, RegistrySerialize},
     registry::Registry,
 };
-use alloc::{vec::Vec, vec};
+use alloc::{vec, vec::Vec};
 use core::{fmt, marker::PhantomData};
 use hashbrown::HashMap;
 use serde::{
@@ -14,13 +14,22 @@ use serde::{
 };
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
-struct KeySerializer<'a, R> where R: Registry {
+struct KeySerializer<'a, R>
+where
+    R: Registry,
+{
     key: &'a [u8],
     registry: PhantomData<R>,
 }
 
-impl<R> Serialize for KeySerializer<'_, R> where R: Registry {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+impl<R> Serialize for KeySerializer<'_, R>
+where
+    R: Registry,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         let mut tuple = serializer.serialize_tuple((R::LEN + 7) / 8)?;
         for byte in self.key {
             tuple.serialize_element(&byte)?;
@@ -30,25 +39,43 @@ impl<R> Serialize for KeySerializer<'_, R> where R: Registry {
 }
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
-struct KeyDeserializer<R> where R: Registry {
+struct KeyDeserializer<R>
+where
+    R: Registry,
+{
     key: Vec<u8>,
     registry: PhantomData<R>,
 }
 
-impl<'de, R> Deserialize<'de> for KeyDeserializer<R> where R: Registry {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
-        struct KeyDeserializerVisitor<R> where R: Registry {
+impl<'de, R> Deserialize<'de> for KeyDeserializer<R>
+where
+    R: Registry,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct KeyDeserializerVisitor<R>
+        where
+            R: Registry,
+        {
             registry: PhantomData<R>,
         }
 
-        impl<'de, R> Visitor<'de> for KeyDeserializerVisitor<R> where R: Registry {
+        impl<'de, R> Visitor<'de> for KeyDeserializerVisitor<R>
+        where
+            R: Registry,
+        {
             type Value = KeyDeserializer<R>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("[u8; (R::LEN + 7) / 8]")
             }
 
-            fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error> where V: SeqAccess<'de> {
+            fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
+            where
+                V: SeqAccess<'de>,
+            {
                 let mut key = vec![0; (R::LEN + 7) / 8];
 
                 for i in 0..((R::LEN + 7) / 8) {
@@ -68,9 +95,12 @@ impl<'de, R> Deserialize<'de> for KeyDeserializer<R> where R: Registry {
             }
         }
 
-        deserializer.deserialize_tuple((R::LEN + 7) / 8, KeyDeserializerVisitor::<R> {
-            registry: PhantomData,
-        })
+        deserializer.deserialize_tuple(
+            (R::LEN + 7) / 8,
+            KeyDeserializerVisitor::<R> {
+                registry: PhantomData,
+            },
+        )
     }
 }
 
@@ -90,14 +120,7 @@ where
                 registry: PhantomData,
             })?;
             unsafe {
-                R::serialize::<NullEntity, _>(
-                    key,
-                    0,
-                    0,
-                    archetype,
-                    &mut map,
-                    PhantomData,
-                )?;
+                R::serialize::<NullEntity, _>(key, 0, 0, archetype, &mut map, PhantomData)?;
             }
         }
         map.end()
@@ -137,13 +160,7 @@ where
                 let mut archetypes = HashMap::with_capacity(map.size_hint().unwrap_or(0));
                 while let Some(key) = map.next_key::<KeyDeserializer<R>>()? {
                     let archetype = unsafe {
-                        R::deserialize::<NullEntity, V>(
-                            &key.key,
-                            0,
-                            0,
-                            &mut map,
-                            PhantomData,
-                        )?
+                        R::deserialize::<NullEntity, V>(&key.key, 0, 0, &mut map, PhantomData)?
                     };
                     archetypes.insert(key.key, archetype);
                 }
@@ -160,9 +177,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::World;
-    use crate::{registry, entity};
-    use serde_test::{assert_tokens, Token};
+    use crate::{entity, registry};
     use alloc::string::String;
+    use serde_test::{assert_tokens, Token};
 
     #[test]
     fn world_ser_de() {
@@ -173,16 +190,16 @@ mod tests {
         assert_tokens(
             &world,
             &[
-                Token::Map {len: Some(1)},
-                Token::Tuple {len: 1},
+                Token::Map { len: Some(1) },
+                Token::Tuple { len: 1 },
                 Token::U8(1),
                 Token::TupleEnd,
-                Token::Seq {len: Some(2)},
+                Token::Seq { len: Some(2) },
                 Token::U64(1),
                 Token::U64(1),
                 Token::SeqEnd,
                 Token::MapEnd,
-            ]
+            ],
         );
     }
 }

@@ -11,10 +11,7 @@ pub(crate) use self::serde::{EntityDeserialize, EntitySerialize};
 pub(crate) use debug::EntityDebug;
 pub(crate) use eq::{EntityEq, EntityPartialEq};
 
-use crate::{
-    component::Component,
-    entity::NullEntity,
-};
+use crate::{component::Component, entity::NullEntity};
 use byte_length::EntityByteLength;
 use length::EntityLength;
 use storage::EntityStorage;

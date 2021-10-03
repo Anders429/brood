@@ -1,7 +1,4 @@
-use crate::{
-    component::Component,
-    entity::NullEntity,
-};
+use crate::{component::Component, entity::NullEntity};
 use alloc::vec::Vec;
 use core::{
     any::TypeId,
@@ -45,9 +42,7 @@ impl EntityStorage for NullEntity {
     ) {
     }
     unsafe fn free_components(_components: &[(*mut u8, usize)], _length: usize) {}
-    unsafe fn to_key(_key: &mut [u8], _component_map: &HashMap<TypeId, usize>)
-    {
-    }
+    unsafe fn to_key(_key: &mut [u8], _component_map: &HashMap<TypeId, usize>) {}
 }
 
 impl<C, E> EntityStorage for (C, E)
@@ -122,8 +117,7 @@ where
         E::free_components(components.get_unchecked(1..), length);
     }
 
-    unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>)
-    {
+    unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>) {
         let component_index = component_map.get(&TypeId::of::<C>()).unwrap();
         let index = component_index / 8;
         let bit = component_index % 8;

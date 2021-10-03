@@ -12,16 +12,7 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut debug_map = f.debug_map();
         for (key, archetype) in &self.archetypes {
-            unsafe {
-                R::debug::<NullEntity>(
-                    &key,
-                    0,
-                    0,
-                    &archetype,
-                    &mut debug_map,
-                    PhantomData,
-                )
-            }
+            unsafe { R::debug::<NullEntity>(&key, 0, 0, &archetype, &mut debug_map, PhantomData) }
         }
         debug_map.finish()
     }

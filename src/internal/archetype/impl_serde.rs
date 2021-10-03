@@ -16,9 +16,19 @@ where
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
-    {   
-        let mut seq = serializer.serialize_seq(Some(self.length * E::LEN + 1))?;
+    {
+        let mut seq = serializer.serialize_seq(Some(self.length * (E::LEN + 1) + 1))?;
         seq.serialize_element(&self.length)?;
+        let entity_identifiers = ManuallyDrop::new(unsafe {
+            Vec::from_raw_parts(
+                self.entity_identifiers.0,
+                self.length,
+                self.entity_identifiers.1,
+            )
+        });
+        for entity_identifier in entity_identifiers.iter() {
+            seq.serialize_element(&entity_identifier)?;
+        }
         unsafe {
             E::serialize(&self.components, self.length, &mut seq)?;
         }
@@ -59,6 +69,15 @@ where
                 let length = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(0, &self))?;
+
+                let mut entity_identifiers = Vec::with_capacity(length);
+                for i in 0..length {
+                    entity_identifiers.push(seq.next_element()?.ok_or_else(|| {
+                        de::Error::invalid_length(i, &"`length` entity identifiers")
+                    })?);
+                }
+                let mut entity_identifiers = ManuallyDrop::new(entity_identifiers);
+
                 let mut components = Vec::new();
                 for _ in 0..E::LEN {
                     let mut v = ManuallyDrop::new(Vec::new());
@@ -68,7 +87,14 @@ where
                     E::deserialize(&mut components, length, &mut seq)?;
                 }
 
-                Ok(Archetype::from_components_and_length(components, length))
+                Ok(Archetype::from_raw_parts(
+                    (
+                        entity_identifiers.as_mut_ptr(),
+                        entity_identifiers.capacity(),
+                    ),
+                    components,
+                    length,
+                ))
             }
         }
 
@@ -81,23 +107,35 @@ where
 #[cfg(test)]
 mod tests {
     use super::Archetype;
-    use crate::{entity, entity::NullEntity};
-    use serde_test::{Token, assert_tokens};
+    use crate::{
+        entity,
+        entity::{EntityIdentifier, NullEntity},
+    };
+    use serde_test::{assert_tokens, Token};
 
     #[test]
     fn archetype_ser_de() {
         let mut archetype = Archetype::<(usize, NullEntity)>::new();
 
-        unsafe {archetype.push(entity!(1_usize))};
+        unsafe { archetype.push(entity!(1_usize), EntityIdentifier::new(0, 0)) };
 
         assert_tokens(
             &archetype,
             &[
-                Token::Seq {len: Some(2)},
+                Token::Seq { len: Some(3) },
                 Token::U64(1),
+                Token::Struct {
+                    name: "EntityIdentifier",
+                    len: 2,
+                },
+                Token::Str("index"),
+                Token::U64(0),
+                Token::Str("generation"),
+                Token::U64(0),
+                Token::StructEnd,
                 Token::U64(1),
                 Token::SeqEnd,
-            ]
+            ],
         );
     }
 }

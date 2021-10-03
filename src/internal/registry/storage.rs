@@ -1,7 +1,7 @@
 use crate::{
     component::Component,
     entities::Entities,
-    entity::Entity,
+    entity::{Entity, EntityIdentifier},
     internal::archetype::Archetype,
     registry::NullRegistry,
 };
@@ -18,6 +18,7 @@ pub trait RegistryStorage {
 
     unsafe fn push<E1, E2>(
         entity: E1,
+        entity_identifier: EntityIdentifier,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
@@ -25,10 +26,11 @@ pub trait RegistryStorage {
         canonical_entity: PhantomData<E2>,
     ) where
         E1: Entity,
-        E2: Entity,;
+        E2: Entity;
 
-    unsafe fn extend<E1, E2>(
+    unsafe fn extend<E1, E2, I>(
         entities: E1,
+        entity_identifiers: I,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
@@ -36,7 +38,8 @@ pub trait RegistryStorage {
         canonical_entity: PhantomData<E2>,
     ) where
         E1: Entities,
-        E2: Entity,;
+        E2: Entity,
+        I: Iterator<Item = EntityIdentifier>;
 }
 
 impl RegistryStorage for NullRegistry {
@@ -44,6 +47,7 @@ impl RegistryStorage for NullRegistry {
 
     unsafe fn push<E1, E2>(
         entity: E1,
+        entity_identifier: EntityIdentifier,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         _index: usize,
@@ -58,12 +62,13 @@ impl RegistryStorage for NullRegistry {
                 .entry(key)
                 .or_insert(Box::new(Archetype::<E2>::new()))
                 .downcast_mut_unchecked::<Archetype<E2>>()
-                .push(entity);
+                .push(entity, entity_identifier);
         }
     }
 
-    unsafe fn extend<E1, E2>(
+    unsafe fn extend<E1, E2, I>(
         entities: E1,
+        entity_identifiers: I,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         _index: usize,
@@ -72,13 +77,14 @@ impl RegistryStorage for NullRegistry {
     ) where
         E1: Entities,
         E2: Entity,
+        I: Iterator<Item = EntityIdentifier>,
     {
         unsafe {
             archetypes
                 .entry(key)
                 .or_insert(Box::new(Archetype::<E2>::new()))
                 .downcast_mut_unchecked::<Archetype<E2>>()
-                .extend(entities);
+                .extend(entities, entity_identifiers);
         }
     }
 }
@@ -95,6 +101,7 @@ where
 
     unsafe fn push<E1, E2>(
         entity: E1,
+        entity_identifier: EntityIdentifier,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
@@ -115,6 +122,7 @@ where
         if key.get_unchecked(index) & (1 << bit) != 0 {
             R::push::<E1, (C, E2)>(
                 entity,
+                entity_identifier,
                 key,
                 archetypes,
                 new_index,
@@ -124,6 +132,7 @@ where
         } else {
             R::push::<E1, E2>(
                 entity,
+                entity_identifier,
                 key,
                 archetypes,
                 new_index,
@@ -133,8 +142,9 @@ where
         }
     }
 
-    unsafe fn extend<E1, E2>(
+    unsafe fn extend<E1, E2, I>(
         entities: E1,
+        entity_identifiers: I,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
@@ -143,6 +153,7 @@ where
     ) where
         E1: Entities,
         E2: Entity,
+        I: Iterator<Item = EntityIdentifier>,
     {
         let mut new_bit = bit + 1;
         let new_index = if bit >= 8 {
@@ -153,8 +164,9 @@ where
         };
 
         if key.get_unchecked(index) & (1 << bit) != 0 {
-            R::extend::<E1, (C, E2)>(
+            R::extend::<E1, (C, E2), I>(
                 entities,
+                entity_identifiers,
                 key,
                 archetypes,
                 new_index,
@@ -162,8 +174,9 @@ where
                 PhantomData,
             );
         } else {
-            R::extend::<E1, E2>(
+            R::extend::<E1, E2, I>(
                 entities,
+                entity_identifiers,
                 key,
                 archetypes,
                 new_index,
