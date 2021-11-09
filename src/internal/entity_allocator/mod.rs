@@ -5,10 +5,10 @@ use crate::entity::EntityIdentifier;
 use alloc::{collections::VecDeque, vec::Vec};
 
 #[derive(Clone, Debug)]
-struct Slot {
-    generation: u64,
-    active: bool,
-    key: *const u8,
+pub(crate) struct Slot {
+    pub(crate) generation: u64,
+    pub(crate) active: bool,
+    pub(crate) key: *const u8,
 }
 
 impl Slot {
@@ -28,9 +28,9 @@ impl Slot {
 }
 
 #[derive(Debug)]
-pub(crate) struct EntityAllocator {
-    slots: Vec<Slot>,
-    free: VecDeque<usize>,
+pub struct EntityAllocator {
+    pub(crate) slots: Vec<Slot>,
+    pub(crate) free: VecDeque<usize>,
 }
 
 impl EntityAllocator {

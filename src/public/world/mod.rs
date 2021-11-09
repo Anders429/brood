@@ -31,13 +31,16 @@ impl<R> World<R>
 where
     R: Registry,
 {
-    fn from_archetypes(archetypes: HashMap<Vec<u8>, Box<dyn Any>>) -> Self {
+    fn from_raw_parts(
+        archetypes: HashMap<Vec<u8>, Box<dyn Any>>,
+        entity_allocator: EntityAllocator,
+    ) -> Self {
         let mut component_map = HashMap::new();
         R::create_component_map(&mut component_map, 0);
 
         Self {
             archetypes,
-            entity_allocator: EntityAllocator::new(),
+            entity_allocator,
 
             registry: PhantomData,
             component_map,
@@ -45,7 +48,7 @@ where
     }
 
     pub fn new() -> Self {
-        Self::from_archetypes(HashMap::new())
+        Self::from_raw_parts(HashMap::new(), EntityAllocator::new())
     }
 
     pub fn push<E>(&mut self, entity: E)
@@ -57,12 +60,10 @@ where
             E::to_key(&mut key, &self.component_map);
         }
 
-        let entity_identifier = unsafe { self.entity_allocator.allocate(key.as_ptr()) };
-
         unsafe {
             R::push::<E, NullEntity>(
                 entity,
-                entity_identifier,
+                &mut self.entity_allocator,
                 key,
                 &mut self.archetypes,
                 0,
@@ -85,15 +86,10 @@ where
             E::to_key(&mut key, &self.component_map);
         }
 
-        let entity_identifiers = unsafe {
-            self.entity_allocator
-                .allocate_batch(key.as_ptr(), entities.component_len())
-        };
-
         unsafe {
-            R::extend::<E, NullEntity, _>(
+            R::extend::<E, NullEntity>(
                 entities,
-                entity_identifiers,
+                &mut self.entity_allocator,
                 key,
                 &mut self.archetypes,
                 0,

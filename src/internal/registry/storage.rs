@@ -1,8 +1,8 @@
 use crate::{
     component::Component,
     entities::Entities,
-    entity::{Entity, EntityIdentifier},
-    internal::archetype::Archetype,
+    entity::Entity,
+    internal::{archetype::Archetype, entity_allocator::EntityAllocator},
     registry::NullRegistry,
 };
 use alloc::{boxed::Box, vec::Vec};
@@ -18,7 +18,7 @@ pub trait RegistryStorage {
 
     unsafe fn push<E1, E2>(
         entity: E1,
-        entity_identifier: EntityIdentifier,
+        entity_allocator: &mut EntityAllocator,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
@@ -28,9 +28,9 @@ pub trait RegistryStorage {
         E1: Entity,
         E2: Entity;
 
-    unsafe fn extend<E1, E2, I>(
+    unsafe fn extend<E1, E2>(
         entities: E1,
-        entity_identifiers: I,
+        entity_allocator: &mut EntityAllocator,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
@@ -38,8 +38,7 @@ pub trait RegistryStorage {
         canonical_entity: PhantomData<E2>,
     ) where
         E1: Entities,
-        E2: Entity,
-        I: Iterator<Item = EntityIdentifier>;
+        E2: Entity;
 }
 
 impl RegistryStorage for NullRegistry {
@@ -47,7 +46,7 @@ impl RegistryStorage for NullRegistry {
 
     unsafe fn push<E1, E2>(
         entity: E1,
-        entity_identifier: EntityIdentifier,
+        entity_allocator: &mut EntityAllocator,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         _index: usize,
@@ -57,18 +56,19 @@ impl RegistryStorage for NullRegistry {
         E1: Entity,
         E2: Entity,
     {
-        unsafe {
-            archetypes
-                .entry(key)
-                .or_insert(Box::new(Archetype::<E2>::new()))
-                .downcast_mut_unchecked::<Archetype<E2>>()
-                .push(entity, entity_identifier);
-        }
+        let archetype_entry = archetypes.entry(key);
+
+        let entity_identifier = entity_allocator.allocate(archetype_entry.key().as_ptr());
+
+        archetype_entry
+            .or_insert(Box::new(Archetype::<E2>::new()))
+            .downcast_mut_unchecked::<Archetype<E2>>()
+            .push(entity, entity_identifier);
     }
 
-    unsafe fn extend<E1, E2, I>(
+    unsafe fn extend<E1, E2>(
         entities: E1,
-        entity_identifiers: I,
+        entity_allocator: &mut EntityAllocator,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         _index: usize,
@@ -77,15 +77,16 @@ impl RegistryStorage for NullRegistry {
     ) where
         E1: Entities,
         E2: Entity,
-        I: Iterator<Item = EntityIdentifier>,
     {
-        unsafe {
-            archetypes
-                .entry(key)
-                .or_insert(Box::new(Archetype::<E2>::new()))
-                .downcast_mut_unchecked::<Archetype<E2>>()
-                .extend(entities, entity_identifiers);
-        }
+        let archetype_entry = archetypes.entry(key);
+
+        let entity_identifiers = entity_allocator
+            .allocate_batch(archetype_entry.key().as_ptr(), entities.component_len());
+
+        archetype_entry
+            .or_insert(Box::new(Archetype::<E2>::new()))
+            .downcast_mut_unchecked::<Archetype<E2>>()
+            .extend(entities, entity_identifiers);
     }
 }
 
@@ -101,7 +102,7 @@ where
 
     unsafe fn push<E1, E2>(
         entity: E1,
-        entity_identifier: EntityIdentifier,
+        entity_allocator: &mut EntityAllocator,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
@@ -122,7 +123,7 @@ where
         if key.get_unchecked(index) & (1 << bit) != 0 {
             R::push::<E1, (C, E2)>(
                 entity,
-                entity_identifier,
+                entity_allocator,
                 key,
                 archetypes,
                 new_index,
@@ -132,7 +133,7 @@ where
         } else {
             R::push::<E1, E2>(
                 entity,
-                entity_identifier,
+                entity_allocator,
                 key,
                 archetypes,
                 new_index,
@@ -142,9 +143,9 @@ where
         }
     }
 
-    unsafe fn extend<E1, E2, I>(
+    unsafe fn extend<E1, E2>(
         entities: E1,
-        entity_identifiers: I,
+        entity_allocator: &mut EntityAllocator,
         key: Vec<u8>,
         archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
         index: usize,
@@ -153,7 +154,6 @@ where
     ) where
         E1: Entities,
         E2: Entity,
-        I: Iterator<Item = EntityIdentifier>,
     {
         let mut new_bit = bit + 1;
         let new_index = if bit >= 8 {
@@ -164,9 +164,9 @@ where
         };
 
         if key.get_unchecked(index) & (1 << bit) != 0 {
-            R::extend::<E1, (C, E2), I>(
+            R::extend::<E1, (C, E2)>(
                 entities,
-                entity_identifiers,
+                entity_allocator,
                 key,
                 archetypes,
                 new_index,
@@ -174,9 +174,9 @@ where
                 PhantomData,
             );
         } else {
-            R::extend::<E1, E2, I>(
+            R::extend::<E1, E2>(
                 entities,
-                entity_identifiers,
+                entity_allocator,
                 key,
                 archetypes,
                 new_index,

@@ -1,15 +1,18 @@
 use super::World;
 use crate::{
     entity::NullEntity,
-    internal::registry::{RegistryDeserialize, RegistrySerialize},
+    internal::{
+        entity_allocator::{EntityAllocator, Slot},
+        registry::{RegistryDeserialize, RegistrySerialize},
+    },
     registry::Registry,
 };
 use alloc::{vec, vec::Vec};
 use core::{fmt, marker::PhantomData};
 use hashbrown::HashMap;
 use serde::{
-    de::{self, MapAccess, SeqAccess, Visitor},
-    ser::{SerializeMap, SerializeTuple},
+    de::{self, Error, SeqAccess, Visitor},
+    ser::{SerializeSeq, SerializeTuple},
     Deserialize, Deserializer, Serialize, Serializer,
 };
 
@@ -113,17 +116,30 @@ where
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(self.archetypes.len()))?;
-        for (key, archetype) in &self.archetypes {
-            map.serialize_key(&KeySerializer::<R> {
+        let mut seq = serializer.serialize_seq(Some(
+            self.archetypes.len() * 2 + self.entity_allocator.slots.len() + 1,
+        ))?;
+        // Serialize number of archetype tables.
+        seq.serialize_element(&self.archetypes.len())?;
+        let mut keys = HashMap::with_capacity(self.archetypes.len());
+
+        for (i, (key, archetype)) in self.archetypes.iter().enumerate() {
+            seq.serialize_element(&KeySerializer::<R> {
                 key,
                 registry: PhantomData,
             })?;
             unsafe {
-                R::serialize::<NullEntity, _>(key, 0, 0, archetype, &mut map, PhantomData)?;
+                R::serialize::<NullEntity, _>(key, 0, 0, archetype, &mut seq, PhantomData)?;
             }
+            keys.insert(key.as_ptr(), i);
         }
-        map.end()
+
+        for slot in &self.entity_allocator.slots {
+            let key_index = keys[&slot.key];
+            seq.serialize_element(&(slot.generation, slot.active, key_index))?;
+        }
+
+        seq.end()
     }
 }
 
@@ -153,22 +169,50 @@ where
                 formatter.write_str("World")
             }
 
-            fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
+            fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
             where
-                V: MapAccess<'de>,
+                V: SeqAccess<'de>,
             {
-                let mut archetypes = HashMap::with_capacity(map.size_hint().unwrap_or(0));
-                while let Some(key) = map.next_key::<KeyDeserializer<R>>()? {
+                let archetypes_len = seq.next_element()?.unwrap_or(0);
+                let mut archetypes = HashMap::with_capacity(archetypes_len);
+                let mut keys = Vec::with_capacity(archetypes_len);
+                for i in 0..archetypes_len {
+                    let key = seq.next_element::<KeyDeserializer<R>>()?.ok_or(
+                        V::Error::invalid_length(
+                            i,
+                            &"should have at least 2 times the first element elements",
+                        ),
+                    )?;
                     let archetype = unsafe {
-                        R::deserialize::<NullEntity, V>(&key.key, 0, 0, &mut map, PhantomData)?
+                        R::deserialize::<NullEntity, V>(&key.key, 0, 0, &mut seq, PhantomData)?
                     };
-                    archetypes.insert(key.key, archetype);
+                    let entry = archetypes.entry(key.key).insert(archetype);
+                    keys.push(entry.key().as_ptr());
                 }
-                Ok(World::<R>::from_archetypes(archetypes))
+
+                let mut entity_allocator = EntityAllocator::new();
+                while let Some(slot_tuple) = seq.next_element::<(u64, bool, usize)>()? {
+                    let key = *keys.get(slot_tuple.2).ok_or(V::Error::invalid_length(
+                        slot_tuple.2,
+                        &"index less than number of archetypes",
+                    ))?;
+                    entity_allocator.slots.push(Slot {
+                        generation: slot_tuple.0,
+                        active: slot_tuple.1,
+                        key,
+                    });
+                    if !slot_tuple.1 {
+                        entity_allocator
+                            .free
+                            .push_back(entity_allocator.slots.len());
+                    }
+                }
+
+                Ok(World::<R>::from_raw_parts(archetypes, entity_allocator))
             }
         }
 
-        deserializer.deserialize_map(WorldVisitor::<R> {
+        deserializer.deserialize_seq(WorldVisitor::<R> {
             registry: PhantomData,
         })
     }
@@ -190,15 +234,30 @@ mod tests {
         assert_tokens(
             &world,
             &[
-                Token::Map { len: Some(1) },
+                Token::Seq { len: Some(4) },
+                Token::U64(1),
                 Token::Tuple { len: 1 },
                 Token::U8(1),
                 Token::TupleEnd,
-                Token::Seq { len: Some(2) },
+                Token::Seq { len: Some(3) },
                 Token::U64(1),
+                Token::Struct {
+                    name: "EntityIdentifier",
+                    len: 2,
+                },
+                Token::Str("index"),
+                Token::U64(0),
+                Token::Str("generation"),
+                Token::U64(0),
+                Token::StructEnd,
                 Token::U64(1),
                 Token::SeqEnd,
-                Token::MapEnd,
+                Token::Tuple { len: 3 },
+                Token::U64(0),
+                Token::Bool(true),
+                Token::U64(0),
+                Token::TupleEnd,
+                Token::SeqEnd,
             ],
         );
     }

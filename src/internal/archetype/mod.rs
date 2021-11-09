@@ -97,9 +97,7 @@ where
         F: Entity,
     {
         // Load the components of `entity` into the buffer.
-        unsafe {
-            entity.into_buffer(self.entity_buffer.as_mut_ptr(), &self.offset_map);
-        }
+        entity.into_buffer(self.entity_buffer.as_mut_ptr(), &self.offset_map);
 
         E::push_components_from_buffer(
             self.entity_buffer.as_ptr(),
@@ -129,9 +127,7 @@ where
         let component_len = entities.component_len();
 
         // Load the component `Vec`s of `entities` into the buffer.
-        unsafe {
-            entities.into_buffer(self.entities_buffer.as_mut_ptr(), &self.component_map);
-        }
+        entities.into_buffer(self.entities_buffer.as_mut_ptr(), &self.component_map);
 
         // Push the components all at once.
         E::extend_components_from_buffer(
