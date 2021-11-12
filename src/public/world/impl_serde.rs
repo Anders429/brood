@@ -2,13 +2,13 @@ use super::World;
 use crate::{
     entity::NullEntity,
     internal::{
-        entity_allocator::{EntityAllocator, Slot},
+        entity_allocator::{Allocation, EntityAllocator, Slot},
         registry::{RegistryDeserialize, RegistrySerialize},
     },
     registry::Registry,
 };
 use alloc::{vec, vec::Vec};
-use core::{fmt, marker::PhantomData};
+use core::{fmt, marker::PhantomData, ptr};
 use hashbrown::HashMap;
 use serde::{
     de::{self, Error, SeqAccess, Visitor},
@@ -135,8 +135,15 @@ where
         }
 
         for slot in &self.entity_allocator.slots {
-            let key_index = keys[&slot.key];
-            seq.serialize_element(&(slot.generation, slot.active, key_index))?;
+            let key_index = match slot.allocation {
+                Allocation::Active {key} => {
+                    Some(keys[&(key.as_ptr() as *const u8)])
+                }
+                Allocation::Inactive => {
+                    None
+                }
+            };
+            seq.serialize_element(&(slot.generation, key_index))?;
         }
 
         seq.end()
@@ -191,17 +198,24 @@ where
                 }
 
                 let mut entity_allocator = EntityAllocator::new();
-                while let Some(slot_tuple) = seq.next_element::<(u64, bool, usize)>()? {
-                    let key = *keys.get(slot_tuple.2).ok_or(V::Error::invalid_length(
-                        slot_tuple.2,
-                        &"index less than number of archetypes",
-                    ))?;
+                while let Some(slot_tuple) = seq.next_element::<(u64, Option<usize>)>()? {
+                    let allocation = match slot_tuple.1 {
+                        Some(key_index) => {
+                            Allocation::Active {key: unsafe {ptr::NonNull::new_unchecked(*keys.get(key_index).ok_or(V::Error::invalid_length(
+                                key_index,
+                                &"index less than number of archetypes",
+                            ))? as *mut u8)}}
+                        }
+                        None => {
+                            Allocation::Inactive
+                        }
+                    };
+                    let inactive = matches!(allocation, Allocation::Inactive);
                     entity_allocator.slots.push(Slot {
                         generation: slot_tuple.0,
-                        active: slot_tuple.1,
-                        key,
+                        allocation,
                     });
-                    if !slot_tuple.1 {
+                    if inactive {
                         entity_allocator
                             .free
                             .push_back(entity_allocator.slots.len());
@@ -252,9 +266,9 @@ mod tests {
                 Token::StructEnd,
                 Token::U64(1),
                 Token::SeqEnd,
-                Token::Tuple { len: 3 },
+                Token::Tuple { len: 2 },
                 Token::U64(0),
-                Token::Bool(true),
+                Token::Some,
                 Token::U64(0),
                 Token::TupleEnd,
                 Token::SeqEnd,

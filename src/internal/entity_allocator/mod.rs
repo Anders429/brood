@@ -1,29 +1,36 @@
-// #[cfg(feature = "serde")]
-// mod impl_serde;
-
 use crate::entity::EntityIdentifier;
 use alloc::{collections::VecDeque, vec::Vec};
+use core::ptr;
+
+#[derive(Clone, Debug)]
+pub(crate) enum Allocation {
+    Active {
+        key: ptr::NonNull<u8>,
+    },
+    Inactive,
+}
 
 #[derive(Clone, Debug)]
 pub(crate) struct Slot {
     pub(crate) generation: u64,
-    pub(crate) active: bool,
-    pub(crate) key: *const u8,
+    pub(crate) allocation: Allocation,
 }
 
 impl Slot {
-    unsafe fn new(key: *const u8) -> Self {
+    unsafe fn new(key: ptr::NonNull<u8>) -> Self {
         Self {
             generation: 0,
-            active: true,
-            key,
+            allocation: Allocation::Active {
+                key,
+            }
         }
     }
 
-    unsafe fn activate_unchecked(&mut self, key: *const u8) {
+    unsafe fn activate_unchecked(&mut self, key: ptr::NonNull<u8>) {
         self.generation = self.generation.wrapping_add(1);
-        self.active = true;
-        self.key = key;
+        self.allocation = Allocation::Active {
+            key,
+        };
     }
 }
 
@@ -41,7 +48,7 @@ impl EntityAllocator {
         }
     }
 
-    pub(crate) unsafe fn allocate(&mut self, key: *const u8) -> EntityIdentifier {
+    pub(crate) unsafe fn allocate(&mut self, key: ptr::NonNull<u8>) -> EntityIdentifier {
         let (index, generation) = if let Some(index) = self.free.pop_front() {
             let slot = self.slots.get_unchecked_mut(index);
             slot.activate_unchecked(key);
@@ -58,7 +65,7 @@ impl EntityAllocator {
 
     pub(crate) unsafe fn allocate_batch(
         &mut self,
-        key: *const u8,
+        key: ptr::NonNull<u8>,
         mut batch_size: usize,
     ) -> impl Iterator<Item = EntityIdentifier> {
         let mut identifiers = Vec::with_capacity(batch_size);

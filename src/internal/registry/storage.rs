@@ -9,6 +9,7 @@ use alloc::{boxed::Box, vec::Vec};
 use core::{
     any::{Any, TypeId},
     marker::PhantomData,
+    ptr,
 };
 use hashbrown::HashMap;
 use unsafe_any::UnsafeAnyExt;
@@ -58,7 +59,7 @@ impl RegistryStorage for NullRegistry {
     {
         let archetype_entry = archetypes.entry(key);
 
-        let entity_identifier = entity_allocator.allocate(archetype_entry.key().as_ptr());
+        let entity_identifier = entity_allocator.allocate(ptr::NonNull::new_unchecked(archetype_entry.key().as_ptr() as *mut u8));
 
         archetype_entry
             .or_insert(Box::new(Archetype::<E2>::new()))
@@ -81,7 +82,7 @@ impl RegistryStorage for NullRegistry {
         let archetype_entry = archetypes.entry(key);
 
         let entity_identifiers = entity_allocator
-            .allocate_batch(archetype_entry.key().as_ptr(), entities.component_len());
+            .allocate_batch(ptr::NonNull::new_unchecked(archetype_entry.key().as_ptr() as *mut u8), entities.component_len());
 
         archetype_entry
             .or_insert(Box::new(Archetype::<E2>::new()))
