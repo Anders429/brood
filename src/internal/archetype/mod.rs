@@ -194,7 +194,7 @@ mod tests {
 
         unsafe {
             archetype.extend(
-                entities!((1_usize, false); 100),
+                entities!(@internal (1_usize, false); 100),
                 vec![EntityIdentifier::new(0, 0); 100].into_iter(),
             );
         }

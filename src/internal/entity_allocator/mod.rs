@@ -4,9 +4,7 @@ use core::ptr;
 
 #[derive(Clone, Debug)]
 pub(crate) enum Allocation {
-    Active {
-        key: ptr::NonNull<u8>,
-    },
+    Active { key: ptr::NonNull<u8> },
     Inactive,
 }
 
@@ -20,17 +18,13 @@ impl Slot {
     unsafe fn new(key: ptr::NonNull<u8>) -> Self {
         Self {
             generation: 0,
-            allocation: Allocation::Active {
-                key,
-            }
+            allocation: Allocation::Active { key },
         }
     }
 
     unsafe fn activate_unchecked(&mut self, key: ptr::NonNull<u8>) {
         self.generation = self.generation.wrapping_add(1);
-        self.allocation = Allocation::Active {
-            key,
-        };
+        self.allocation = Allocation::Active { key };
     }
 }
 

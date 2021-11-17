@@ -4,7 +4,7 @@ mod impl_eq;
 mod impl_serde;
 
 use crate::{
-    entities::Entities,
+    entities::{Entities, EntitiesIter},
     entity::{Entity, NullEntity},
     internal::entity_allocator::EntityAllocator,
     registry::Registry,
@@ -73,11 +73,7 @@ where
         }
     }
 
-    // TODO: This is currently not sound. It assumes entities has `Vec`s of the same length, but
-    // there is no way that can be guaranteed.
-    // `Entities` should be instead provided in a wrapper class that guarantees the length of the
-    // component `Vec`s.
-    pub fn extend<E>(&mut self, entities: E)
+    pub fn extend<E>(&mut self, entities: EntitiesIter<E>)
     where
         E: Entities,
     {
@@ -88,7 +84,7 @@ where
 
         unsafe {
             R::extend::<E, NullEntity>(
-                entities,
+                entities.entities,
                 &mut self.entity_allocator,
                 key,
                 &mut self.archetypes,

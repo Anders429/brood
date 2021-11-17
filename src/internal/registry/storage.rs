@@ -59,7 +59,9 @@ impl RegistryStorage for NullRegistry {
     {
         let archetype_entry = archetypes.entry(key);
 
-        let entity_identifier = entity_allocator.allocate(ptr::NonNull::new_unchecked(archetype_entry.key().as_ptr() as *mut u8));
+        let entity_identifier = entity_allocator.allocate(ptr::NonNull::new_unchecked(
+            archetype_entry.key().as_ptr() as *mut u8,
+        ));
 
         archetype_entry
             .or_insert(Box::new(Archetype::<E2>::new()))
@@ -81,8 +83,10 @@ impl RegistryStorage for NullRegistry {
     {
         let archetype_entry = archetypes.entry(key);
 
-        let entity_identifiers = entity_allocator
-            .allocate_batch(ptr::NonNull::new_unchecked(archetype_entry.key().as_ptr() as *mut u8), entities.component_len());
+        let entity_identifiers = entity_allocator.allocate_batch(
+            ptr::NonNull::new_unchecked(archetype_entry.key().as_ptr() as *mut u8),
+            entities.component_len(),
+        );
 
         archetype_entry
             .or_insert(Box::new(Archetype::<E2>::new()))
