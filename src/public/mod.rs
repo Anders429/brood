@@ -3,3 +3,5 @@ pub mod entities;
 pub mod entity;
 pub mod registry;
 pub mod world;
+
+pub use world::World;

@@ -136,8 +136,12 @@ where
 
         for slot in &self.entity_allocator.slots {
             let key_index = match slot.allocation {
-                Allocation::Active { key } => Some(keys[&(key.as_ptr() as *const u8)]),
-                Allocation::Inactive => None,
+                Allocation::Active {key} => {
+                    Some(keys[&(key.as_ptr() as *const u8)])
+                }
+                Allocation::Inactive => {
+                    None
+                }
             };
             seq.serialize_element(&(slot.generation, key_index))?;
         }
@@ -196,18 +200,15 @@ where
                 let mut entity_allocator = EntityAllocator::new();
                 while let Some(slot_tuple) = seq.next_element::<(u64, Option<usize>)>()? {
                     let allocation = match slot_tuple.1 {
-                        Some(key_index) => Allocation::Active {
-                            key: unsafe {
-                                ptr::NonNull::new_unchecked(*keys.get(key_index).ok_or(
-                                    V::Error::invalid_length(
-                                        key_index,
-                                        &"index less than number of archetypes",
-                                    ),
-                                )?
-                                    as *mut u8)
-                            },
-                        },
-                        None => Allocation::Inactive,
+                        Some(key_index) => {
+                            Allocation::Active {key: unsafe {ptr::NonNull::new_unchecked(*keys.get(key_index).ok_or(V::Error::invalid_length(
+                                key_index,
+                                &"index less than number of archetypes",
+                            ))? as *mut u8)}}
+                        }
+                        None => {
+                            Allocation::Inactive
+                        }
                     };
                     let inactive = matches!(allocation, Allocation::Inactive);
                     entity_allocator.slots.push(Slot {
