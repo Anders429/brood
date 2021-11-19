@@ -3,28 +3,27 @@ use alloc::{collections::VecDeque, vec::Vec};
 use core::ptr;
 
 #[derive(Clone, Debug)]
-pub(crate) enum Allocation {
-    Active { key: ptr::NonNull<u8> },
-    Inactive,
+pub(crate) struct Location {
+    pub(crate) key: ptr::NonNull<u8>,
 }
 
 #[derive(Clone, Debug)]
 pub(crate) struct Slot {
     pub(crate) generation: u64,
-    pub(crate) allocation: Allocation,
+    pub(crate) location: Option<Location>,
 }
 
 impl Slot {
     unsafe fn new(key: ptr::NonNull<u8>) -> Self {
         Self {
             generation: 0,
-            allocation: Allocation::Active { key },
+            location: Some(Location { key })
         }
     }
 
     unsafe fn activate_unchecked(&mut self, key: ptr::NonNull<u8>) {
         self.generation = self.generation.wrapping_add(1);
-        self.allocation = Allocation::Active { key };
+        self.location = Some(Location { key });
     }
 }
 
