@@ -10,6 +10,7 @@ use crate::{
     entities::{Entities, EntitiesIter},
     entity::{Entity, EntityIdentifier, NullEntity},
     internal::entity_allocator::EntityAllocator,
+    query::Query,
     registry::Registry,
 };
 use alloc::{boxed::Box, vec, vec::Vec};
@@ -97,6 +98,10 @@ where
             );
         }
     }
+
+    // pub fn query<V, F>(&mut self, query: Query<V, F>) -> ! where V: Views, F: Filter {
+
+    // }
 
     pub fn entry(&mut self, entity_identifier: EntityIdentifier) -> Option<Entry<R>> {
         self.entity_allocator

@@ -14,6 +14,7 @@ where
 {
 }
 
+// TODO: Bikeshed this name. Yuck.
 pub struct EntitiesIter<E>
 where
     E: Entities,
