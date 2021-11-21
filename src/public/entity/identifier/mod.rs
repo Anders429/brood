@@ -3,8 +3,8 @@ mod impl_serde;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct EntityIdentifier {
-    index: usize,
-    generation: u64,
+    pub(crate) index: usize,
+    pub(crate) generation: u64,
 }
 
 impl EntityIdentifier {

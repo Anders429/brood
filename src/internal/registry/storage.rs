@@ -59,14 +59,12 @@ impl RegistryStorage for NullRegistry {
     {
         let archetype_entry = archetypes.entry(key);
 
-        let entity_identifier = entity_allocator.allocate(ptr::NonNull::new_unchecked(
-            archetype_entry.key().as_ptr() as *mut u8,
-        ));
+        let key_ptr = ptr::NonNull::new_unchecked(archetype_entry.key().as_ptr() as *mut u8);
 
         archetype_entry
             .or_insert(Box::new(Archetype::<E2>::new()))
             .downcast_mut_unchecked::<Archetype<E2>>()
-            .push(entity, entity_identifier);
+            .push(entity, entity_allocator, key_ptr);
     }
 
     unsafe fn extend<E1, E2>(
@@ -83,15 +81,12 @@ impl RegistryStorage for NullRegistry {
     {
         let archetype_entry = archetypes.entry(key);
 
-        let entity_identifiers = entity_allocator.allocate_batch(
-            ptr::NonNull::new_unchecked(archetype_entry.key().as_ptr() as *mut u8),
-            entities.component_len(),
-        );
+        let key_ptr = ptr::NonNull::new_unchecked(archetype_entry.key().as_ptr() as *mut u8);
 
         archetype_entry
             .or_insert(Box::new(Archetype::<E2>::new()))
             .downcast_mut_unchecked::<Archetype<E2>>()
-            .extend(entities, entity_identifiers);
+            .extend(entities, entity_allocator, key_ptr);
     }
 }
 

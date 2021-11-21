@@ -1,11 +1,14 @@
+mod entry;
 mod impl_debug;
 mod impl_eq;
 #[cfg(feature = "serde")]
 mod impl_serde;
 
+pub use entry::Entry;
+
 use crate::{
     entities::{Entities, EntitiesIter},
-    entity::{Entity, NullEntity},
+    entity::{Entity, EntityIdentifier, NullEntity},
     internal::entity_allocator::EntityAllocator,
     registry::Registry,
 };
@@ -93,6 +96,12 @@ where
                 PhantomData,
             );
         }
+    }
+
+    pub fn entry(&mut self, entity_identifier: EntityIdentifier) -> Option<Entry<R>> {
+        self.entity_allocator
+            .get(entity_identifier)
+            .map(|location| Entry::new(self, location))
     }
 }
 

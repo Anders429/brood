@@ -7,12 +7,14 @@ mod impl_serde;
 use crate::{
     entities::Entities,
     entity::{Entity, EntityIdentifier},
+    internal::entity_allocator::{EntityAllocator, Location},
 };
 use alloc::vec::Vec;
 use core::{
     any::TypeId,
     marker::PhantomData,
     mem::{size_of, ManuallyDrop},
+    ptr,
 };
 use hashbrown::HashMap;
 
@@ -92,8 +94,12 @@ where
         )
     }
 
-    pub(crate) unsafe fn push<F>(&mut self, entity: F, entity_identifier: EntityIdentifier)
-    where
+    pub(crate) unsafe fn push<F>(
+        &mut self,
+        entity: F,
+        entity_allocator: &mut EntityAllocator,
+        key: ptr::NonNull<u8>,
+    ) where
         F: Entity,
     {
         // Load the components of `entity` into the buffer.
@@ -110,7 +116,10 @@ where
             self.length,
             self.entity_identifiers.1,
         ));
-        entity_identifiers.push(entity_identifier);
+        entity_identifiers.push(entity_allocator.allocate(Location {
+            key,
+            index: self.length,
+        }));
         self.entity_identifiers = (
             entity_identifiers.as_mut_ptr(),
             entity_identifiers.capacity(),
@@ -119,10 +128,13 @@ where
         self.length += 1;
     }
 
-    pub(crate) unsafe fn extend<F, I>(&mut self, entities: F, entity_identifiers: I)
-    where
+    pub(crate) unsafe fn extend<F>(
+        &mut self,
+        entities: F,
+        entity_allocator: &mut EntityAllocator,
+        key: ptr::NonNull<u8>,
+    ) where
         F: Entities,
-        I: Iterator<Item = EntityIdentifier>,
     {
         let component_len = entities.component_len();
 
@@ -141,7 +153,9 @@ where
             self.length,
             self.entity_identifiers.1,
         ));
-        entity_identifiers_v.extend(entity_identifiers);
+        entity_identifiers_v.extend(entity_allocator.allocate_batch(
+            (self.length..(self.length + component_len)).map(|index| Location { key, index }),
+        ));
         self.entity_identifiers = (
             entity_identifiers_v.as_mut_ptr(),
             entity_identifiers_v.capacity(),

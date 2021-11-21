@@ -2,7 +2,7 @@ use super::World;
 use crate::{
     entity::NullEntity,
     internal::{
-        entity_allocator::{Location, EntityAllocator, Slot},
+        entity_allocator::{EntityAllocator, Location, Slot},
         registry::{RegistryDeserialize, RegistrySerialize},
     },
     registry::Registry,
@@ -137,7 +137,7 @@ where
         for slot in &self.entity_allocator.slots {
             let key_index = match &slot.location {
                 Some(location) => {
-                    Some(keys[&(location.key.as_ptr() as *const u8)])
+                    Some((keys[&(location.key.as_ptr() as *const u8)], location.index))
                 }
                 None => None,
             };
@@ -196,17 +196,21 @@ where
                 }
 
                 let mut entity_allocator = EntityAllocator::new();
-                while let Some(slot_tuple) = seq.next_element::<(u64, Option<usize>)>()? {
+                while let Some(slot_tuple) = seq.next_element::<(u64, Option<(usize, usize)>)>()? {
                     let location = match slot_tuple.1 {
-                        Some(key_index) => {
-                            Some(Location {key: unsafe {ptr::NonNull::new_unchecked(*keys.get(key_index).ok_or(V::Error::invalid_length(
-                                key_index,
-                                &"index less than number of archetypes",
-                            ))? as *mut u8)}})
-                        }
-                        None => {
-                            None
-                        }
+                        Some(key_index) => Some(Location {
+                            key: unsafe {
+                                ptr::NonNull::new_unchecked(*keys.get(key_index.0).ok_or(
+                                    V::Error::invalid_length(
+                                        key_index.0,
+                                        &"index less than number of archetypes",
+                                    ),
+                                )?
+                                    as *mut u8)
+                            },
+                            index: key_index.1,
+                        }),
+                        None => None,
                     };
                     let inactive = location.is_none();
                     entity_allocator.slots.push(Slot {
