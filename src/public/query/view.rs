@@ -1,8 +1,9 @@
 use crate::component::Component;
-use core::marker::PhantomData;
+use core::{iter, marker::PhantomData};
+use alloc::vec;
 
 pub trait View<'a> {
-    type Item;
+    type Item: 'a;
 }
 
 pub struct Read<C> where C: Component {
@@ -32,5 +33,5 @@ impl<'a> Views<'a> for NullViews {
 }
 
 impl<'a, V, W> Views<'a> for (V, W) where V: View<'a>, W: Views<'a> {
-    type Results = (V::Item, W::Results);
+    type Results = (iter::Flatten<vec::IntoIter<&'a [V::Item]>>, W::Results);
 }
