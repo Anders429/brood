@@ -1,25 +1,37 @@
-use crate::component::Component;
-use core::{iter, marker::PhantomData};
+use crate::{component::Component, query::NullResult};
 use alloc::vec;
+use core::{iter, marker::PhantomData, slice};
 
 pub trait View<'a> {
-    type Item: 'a;
+    type Result: IntoIterator;
 }
 
-pub struct Read<C> where C: Component {
+pub struct Read<C>
+where
+    C: Component,
+{
     component: PhantomData<C>,
 }
 
-impl<'a, C> View<'a> for Read<C> where C: Component {
-    type Item = &'a C;
+impl<'a, C> View<'a> for Read<C>
+where
+    C: Component,
+{
+    type Result = slice::Iter<'a, C>;
 }
 
-pub struct Write<C> where C: Component {
+pub struct Write<C>
+where
+    C: Component,
+{
     component: PhantomData<C>,
 }
 
-impl<'a, C> View<'a> for Write<C> where C: Component {
-    type Item = &'a mut C;
+impl<'a, C> View<'a> for Write<C>
+where
+    C: Component,
+{
+    type Result = slice::IterMut<'a, C>;
 }
 
 pub struct NullViews;
@@ -29,9 +41,13 @@ pub trait Views<'a> {
 }
 
 impl<'a> Views<'a> for NullViews {
-    type Results = (); 
+    type Results = iter::Repeat<NullResult>;
 }
 
-impl<'a, V, W> Views<'a> for (V, W) where V: View<'a>, W: Views<'a> {
-    type Results = (iter::Flatten<vec::IntoIter<&'a [V::Item]>>, W::Results);
+impl<'a, V, W> Views<'a> for (V, W)
+where
+    V: View<'a>,
+    W: Views<'a>,
+{
+    type Results = iter::Zip<iter::Flatten<vec::IntoIter<V::Result>>, W::Results>;
 }

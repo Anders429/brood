@@ -99,7 +99,18 @@ where
         }
     }
 
-    pub fn query<'a, V, F>(&'a mut self, query: Query<'a, V, F>) -> V::Results where V: Views<'a>, F: Filter {
+    pub fn query<'a, V, F>(&'a mut self, query: Query<'a, V, F>) -> V::Results
+    where
+        V: Views<'a>,
+        F: Filter,
+    {
+        // 1. Construct key for filter.
+        // 2. Iterate over all archetypes, finding keys that match the filter.
+        // 3. Provide view to each matched archetype.
+        //    This should return an iterator for each column requested in the view.
+        // 4. Compile those slices into Vecs for each component in the view.
+        // 5. Return the flattened Vecs, which will match the V::Results type definition.
+
         todo!()
     }
 
