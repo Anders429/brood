@@ -1,8 +1,12 @@
-use crate::{component::Component, query::NullResult};
+use crate::{
+    component::Component,
+    internal::query::{ViewSeal, ViewsSeal},
+    query::{Filter, NullResult},
+};
 use alloc::vec;
 use core::{iter, marker::PhantomData, slice};
 
-pub trait View<'a> {
+pub trait View<'a>: Filter + ViewSeal {
     type Result: IntoIterator;
 }
 
@@ -36,7 +40,7 @@ where
 
 pub struct NullViews;
 
-pub trait Views<'a> {
+pub trait Views<'a>: Filter + ViewsSeal {
     type Results;
 }
 

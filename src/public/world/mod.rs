@@ -9,8 +9,8 @@ pub use entry::Entry;
 use crate::{
     entities::{Entities, EntitiesIter},
     entity::{Entity, EntityIdentifier, NullEntity},
-    internal::entity_allocator::EntityAllocator,
-    query::{Filter, Query, Views},
+    internal::{entity_allocator::EntityAllocator, query::FilterSeal},
+    query::{And, Filter, Views},
     registry::Registry,
 };
 use alloc::{boxed::Box, vec, vec::Vec};
@@ -99,17 +99,32 @@ where
         }
     }
 
-    pub fn query<'a, V, F>(&'a mut self, query: Query<'a, V, F>) -> V::Results
+    pub fn query<'a, V, F>(&'a mut self) -> V::Results
     where
         V: Views<'a>,
         F: Filter,
     {
-        // 1. Construct key for filter.
+        // 1. Construct key(s) for filter.
         // 2. Iterate over all archetypes, finding keys that match the filter.
         // 3. Provide view to each matched archetype.
         //    This should return an iterator for each column requested in the view.
         // 4. Compile those slices into Vecs for each component in the view.
         // 5. Return the flattened Vecs, which will match the V::Results type definition.
+
+        // To extract the archetype columns efficiently, could do this:
+        // Make a buffer for each archetype that can store the pointer for the column.
+        // (width of usize)
+        // Pass to archetype a set of types that are desired. Then loop through each component in
+        // the archetype, and if its type is in the set, then update the pointer in buffer.
+        // (Or even skip the set of types, since we have to visit each component in the archetype
+        // anyway)
+        // Then extract the pointers out of the buffer for each viewed component and, using the
+        // archetype length, construct the appropriate slice iterator.
+
+        self.archetypes
+            .iter_mut()
+            .filter(|(key, _archetype)| unsafe { And::<V, F>::filter(key, &self.component_map) })
+            .map(|(key, archetype)| todo!("Extract view from archetype."));
 
         todo!()
     }

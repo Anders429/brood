@@ -1,7 +1,15 @@
-use crate::component::Component;
+use crate::{
+    component::Component,
+    internal::query::FilterSeal,
+    query::{NullViews, Read, View, Views, Write},
+};
 use core::marker::PhantomData;
 
-pub trait Filter {}
+pub trait Filter: FilterSeal {}
+
+pub struct None;
+
+impl Filter for None {}
 
 pub struct Has<C>
 where
@@ -50,5 +58,18 @@ impl<F1, F2> Filter for Or<F1, F2>
 where
     F1: Filter,
     F2: Filter,
+{
+}
+
+impl<C> Filter for Read<C> where C: Component {}
+
+impl<C> Filter for Write<C> where C: Component {}
+
+impl Filter for NullViews {}
+
+impl<'a, V, W> Filter for (V, W)
+where
+    V: View<'a>,
+    W: Views<'a>,
 {
 }
