@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct NullResult;
 
 #[macro_export]

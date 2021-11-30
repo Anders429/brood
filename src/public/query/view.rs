@@ -1,10 +1,9 @@
 use crate::{
     component::Component,
     internal::query::{ViewSeal, ViewsSeal},
-    query::{Filter, NullResult},
+    query::Filter,
 };
-use alloc::vec;
-use core::{iter, marker::PhantomData, slice};
+use core::marker::PhantomData;
 
 pub trait View<'a>: Filter + ViewSeal<'a> {}
 
@@ -28,18 +27,13 @@ impl<'a, C> View<'a> for Write<C> where C: Component {}
 
 pub struct NullViews;
 
-pub trait Views<'a>: Filter + ViewsSeal {
-    type Results;
-}
+pub trait Views<'a>: Filter + ViewsSeal<'a> {}
 
-impl<'a> Views<'a> for NullViews {
-    type Results = iter::Repeat<NullResult>;
-}
+impl<'a> Views<'a> for NullViews {}
 
 impl<'a, V, W> Views<'a> for (V, W)
 where
     V: View<'a>,
     W: Views<'a>,
 {
-    type Results = iter::Zip<iter::Flatten<vec::IntoIter<V::Result>>, W::Results>;
 }

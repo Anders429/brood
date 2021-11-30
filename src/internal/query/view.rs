@@ -1,12 +1,12 @@
 use crate::{
     component::Component,
-    query::{NullViews, Read, View, Write},
+    query::{NullResult, NullViews, Read, Write},
 };
-use core::{any::TypeId, slice};
+use core::{any::TypeId, iter, slice};
 use hashbrown::HashMap;
 
 pub trait ViewSeal<'a> {
-    type Result: IntoIterator;
+    type Result: Iterator;
 
     unsafe fn view(
         columns: &[(*const u8, usize)],
@@ -57,13 +57,40 @@ where
     }
 }
 
-pub trait ViewsSeal {}
+pub trait ViewsSeal<'a> {
+    type Results: Iterator;
 
-impl ViewsSeal for NullViews {}
+    unsafe fn view(
+        columns: &[(*const u8, usize)],
+        length: usize,
+        component_map: &mut HashMap<TypeId, usize>,
+    ) -> Self::Results;
+}
 
-impl<'a, V, W> ViewsSeal for (V, W)
+impl<'a> ViewsSeal<'a> for NullViews {
+    type Results = iter::Repeat<NullResult>;
+
+    unsafe fn view(
+        columns: &[(*const u8, usize)],
+        length: usize,
+        component_map: &mut HashMap<TypeId, usize>,
+    ) -> Self::Results {
+        iter::repeat(NullResult)
+    }
+}
+
+impl<'a, V, W> ViewsSeal<'a> for (V, W)
 where
-    V: View<'a>,
-    W: ViewsSeal,
+    V: ViewSeal<'a>,
+    W: ViewsSeal<'a>,
 {
+    type Results = iter::Zip<V::Result, W::Results>;
+
+    unsafe fn view(
+        columns: &[(*const u8, usize)],
+        length: usize,
+        component_map: &mut HashMap<TypeId, usize>,
+    ) -> Self::Results {
+        V::view(columns, length, component_map).zip(W::view(columns, length, component_map))
+    }
 }

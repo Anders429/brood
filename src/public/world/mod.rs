@@ -16,6 +16,7 @@ use crate::{
 use alloc::{boxed::Box, vec, vec::Vec};
 use core::{
     any::{Any, TypeId},
+    iter,
     marker::PhantomData,
 };
 use hashbrown::HashMap;
@@ -99,7 +100,7 @@ where
         }
     }
 
-    pub fn query<'a, V, F>(&'a mut self) -> V::Results
+    pub fn query<'a, V, F>(&'a mut self) -> iter::Flatten<vec::IntoIter<V::Results>>
     where
         V: Views<'a>,
         F: Filter,
