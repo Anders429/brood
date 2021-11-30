@@ -6,9 +6,7 @@ use crate::{
 use alloc::vec;
 use core::{iter, marker::PhantomData, slice};
 
-pub trait View<'a>: Filter + ViewSeal {
-    type Result: IntoIterator;
-}
+pub trait View<'a>: Filter + ViewSeal<'a> {}
 
 pub struct Read<C>
 where
@@ -17,12 +15,7 @@ where
     component: PhantomData<C>,
 }
 
-impl<'a, C> View<'a> for Read<C>
-where
-    C: Component,
-{
-    type Result = slice::Iter<'a, C>;
-}
+impl<'a, C> View<'a> for Read<C> where C: Component {}
 
 pub struct Write<C>
 where
@@ -31,12 +24,7 @@ where
     component: PhantomData<C>,
 }
 
-impl<'a, C> View<'a> for Write<C>
-where
-    C: Component,
-{
-    type Result = slice::IterMut<'a, C>;
-}
+impl<'a, C> View<'a> for Write<C> where C: Component {}
 
 pub struct NullViews;
 
