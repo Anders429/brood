@@ -4,6 +4,7 @@ mod length;
 #[cfg(feature = "serde")]
 mod serde;
 mod storage;
+mod view;
 
 #[cfg(feature = "serde")]
 pub(crate) use self::serde::{RegistryDeserialize, RegistrySerialize};
@@ -13,8 +14,9 @@ pub(crate) use eq::{RegistryEq, RegistryPartialEq};
 use crate::{component::Component, registry::NullRegistry};
 use length::RegistryLength;
 use storage::RegistryStorage;
+use view::RegistryView;
 
-pub trait RegistrySeal: RegistryLength + RegistryStorage {}
+pub trait RegistrySeal: RegistryLength + RegistryStorage + RegistryView {}
 
 impl RegistrySeal for NullRegistry {}
 

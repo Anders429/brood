@@ -125,9 +125,12 @@ where
         self.archetypes
             .iter_mut()
             .filter(|(key, _archetype)| unsafe { And::<V, F>::filter(key, &self.component_map) })
-            .map(|(key, archetype)| todo!("Extract view from archetype."));
-
-        todo!()
+            .map(|(key, archetype)| unsafe {R::view::<NullEntity, V>(key,
+                archetype,
+                0,
+                0,
+                PhantomData,
+            )}).collect::<Vec<_>>().into_iter().flatten()
     }
 
     pub fn entry(&mut self, entity_identifier: EntityIdentifier) -> Option<Entry<R>> {

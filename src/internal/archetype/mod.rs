@@ -8,6 +8,7 @@ use crate::{
     entities::Entities,
     entity::{Entity, EntityIdentifier},
     internal::entity_allocator::{EntityAllocator, Location},
+    query::Views,
 };
 use alloc::vec::Vec;
 use core::{
@@ -162,6 +163,10 @@ where
         );
 
         self.length += component_len;
+    }
+
+    pub(crate) fn view<'a, V>(&mut self) -> V::Results where V: Views<'a> {
+        unsafe {V::view(&self.components, self.length, &self.component_map)}
     }
 }
 

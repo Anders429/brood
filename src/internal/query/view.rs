@@ -9,9 +9,9 @@ pub trait ViewSeal<'a> {
     type Result: Iterator;
 
     unsafe fn view(
-        columns: &[(*const u8, usize)],
+        columns: &[(*mut u8, usize)],
         length: usize,
-        component_map: &mut HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result;
 }
 
@@ -22,14 +22,14 @@ where
     type Result = slice::Iter<'a, C>;
 
     unsafe fn view(
-        columns: &[(*const u8, usize)],
+        columns: &[(*mut u8, usize)],
         length: usize,
-        component_map: &mut HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
         slice::from_raw_parts::<'a, C>(
             columns
                 .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
-                .0 as *const C,
+                .0 as *mut C,
             length,
         )
         .iter()
@@ -43,9 +43,9 @@ where
     type Result = slice::IterMut<'a, C>;
 
     unsafe fn view(
-        columns: &[(*const u8, usize)],
+        columns: &[(*mut u8, usize)],
         length: usize,
-        component_map: &mut HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
         slice::from_raw_parts_mut::<'a, C>(
             columns
@@ -61,9 +61,9 @@ pub trait ViewsSeal<'a> {
     type Results: Iterator;
 
     unsafe fn view(
-        columns: &[(*const u8, usize)],
+        columns: &[(*mut u8, usize)],
         length: usize,
-        component_map: &mut HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results;
 }
 
@@ -71,9 +71,9 @@ impl<'a> ViewsSeal<'a> for NullViews {
     type Results = iter::Repeat<NullResult>;
 
     unsafe fn view(
-        columns: &[(*const u8, usize)],
+        columns: &[(*mut u8, usize)],
         length: usize,
-        component_map: &mut HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results {
         iter::repeat(NullResult)
     }
@@ -87,9 +87,9 @@ where
     type Results = iter::Zip<V::Result, W::Results>;
 
     unsafe fn view(
-        columns: &[(*const u8, usize)],
+        columns: &[(*mut u8, usize)],
         length: usize,
-        component_map: &mut HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results {
         V::view(columns, length, component_map).zip(W::view(columns, length, component_map))
     }
