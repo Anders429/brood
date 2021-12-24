@@ -1,92 +1,76 @@
 use crate::{
     component::Component,
-    entities::Entities,
-    entity::Entity,
-    internal::{archetype::Archetype, entity_allocator::EntityAllocator},
     registry::NullRegistry,
 };
-use alloc::{boxed::Box, vec::Vec};
+use alloc::vec::Vec;
 use core::{
-    any::{Any, TypeId},
-    marker::PhantomData,
-    ptr,
+    any::TypeId,
+    mem::size_of,
 };
 use hashbrown::HashMap;
-use unsafe_any::UnsafeAnyExt;
 
 pub trait RegistryStorage {
     fn create_component_map(component_map: &mut HashMap<TypeId, usize>, index: usize);
 
-    unsafe fn push<E1, E2>(
-        entity: E1,
-        entity_allocator: &mut EntityAllocator,
-        key: Vec<u8>,
-        archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
+    unsafe fn create_component_map_for_key(
+        component_map: &mut HashMap<TypeId, usize>,
         index: usize,
-        bit: u8,
-        canonical_entity: PhantomData<E2>,
-    ) where
-        E1: Entity,
-        E2: Entity;
+        key: &[u8],
+        key_index: usize,
+        bit: usize,
+    );
 
-    unsafe fn extend<E1, E2>(
-        entities: E1,
-        entity_allocator: &mut EntityAllocator,
-        key: Vec<u8>,
-        archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
-        index: usize,
-        bit: u8,
-        canonical_entity: PhantomData<E2>,
-    ) where
-        E1: Entities,
-        E2: Entity;
+    unsafe fn create_offset_map_for_key(
+        offset_map: &mut HashMap<TypeId, isize>,
+        offset: isize,
+        key: &[u8],
+        key_index: usize,
+        bit: usize,
+    );
+
+    unsafe fn len_of_key(key: &[u8], key_index: usize, bit: usize) -> usize;
+
+    unsafe fn free_components(
+        components: &[(*mut u8, usize)],
+        length: usize,
+        key: &[u8],
+        key_index: usize,
+        bit: usize,
+    );
 }
 
 impl RegistryStorage for NullRegistry {
     fn create_component_map(_component_map: &mut HashMap<TypeId, usize>, _index: usize) {}
 
-    unsafe fn push<E1, E2>(
-        entity: E1,
-        entity_allocator: &mut EntityAllocator,
-        key: Vec<u8>,
-        archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
+    unsafe fn create_component_map_for_key(
+        _component_map: &mut HashMap<TypeId, usize>,
         _index: usize,
-        _bit: u8,
-        _canonical_entity: PhantomData<E2>,
-    ) where
-        E1: Entity,
-        E2: Entity,
-    {
-        let archetype_entry = archetypes.entry(key);
-
-        let key_ptr = ptr::NonNull::new_unchecked(archetype_entry.key().as_ptr() as *mut u8);
-
-        archetype_entry
-            .or_insert(Box::new(Archetype::<E2>::new()))
-            .downcast_mut_unchecked::<Archetype<E2>>()
-            .push(entity, entity_allocator, key_ptr);
+        _key: &[u8],
+        _key_index: usize,
+        _bit: usize,
+    ) {
     }
 
-    unsafe fn extend<E1, E2>(
-        entities: E1,
-        entity_allocator: &mut EntityAllocator,
-        key: Vec<u8>,
-        archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
-        _index: usize,
-        _bit: u8,
-        _canonical_entity: PhantomData<E2>,
-    ) where
-        E1: Entities,
-        E2: Entity,
-    {
-        let archetype_entry = archetypes.entry(key);
+    unsafe fn create_offset_map_for_key(
+        _offset_map: &mut HashMap<TypeId, isize>,
+        _offset: isize,
+        _key: &[u8],
+        _key_index: usize,
+        _bit: usize,
+    ) {
+    }
 
-        let key_ptr = ptr::NonNull::new_unchecked(archetype_entry.key().as_ptr() as *mut u8);
+    unsafe fn len_of_key(_key: &[u8], _key_index: usize, _bit: usize) -> usize {
+        0
+    }
 
-        archetype_entry
-            .or_insert(Box::new(Archetype::<E2>::new()))
-            .downcast_mut_unchecked::<Archetype<E2>>()
-            .extend(entities, entity_allocator, key_ptr);
+    unsafe fn free_components(
+        _components: &[(*mut u8, usize)],
+        _length: usize,
+        _key: &[u8],
+        _key_index: usize,
+        _bit: usize,
+    ) {
     }
 }
 
@@ -100,89 +84,96 @@ where
         R::create_component_map(component_map, index + 1);
     }
 
-    unsafe fn push<E1, E2>(
-        entity: E1,
-        entity_allocator: &mut EntityAllocator,
-        key: Vec<u8>,
-        archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
-        index: usize,
-        bit: u8,
-        _canonical_entity: PhantomData<E2>,
-    ) where
-        E1: Entity,
-        E2: Entity,
-    {
+    unsafe fn create_component_map_for_key(
+        component_map: &mut HashMap<TypeId, usize>,
+        mut index: usize,
+        key: &[u8],
+        key_index: usize,
+        bit: usize,
+    ) {
         let mut new_bit = bit + 1;
-        let new_index = if bit >= 8 {
-            new_bit %= 8;
-            index + 1
+        let new_key_index = if new_bit >= 8 {
+            new_bit &= 7;
+            key_index + 1
         } else {
-            index
+            key_index
         };
 
-        if key.get_unchecked(index) & (1 << bit) != 0 {
-            R::push::<E1, (C, E2)>(
-                entity,
-                entity_allocator,
-                key,
-                archetypes,
-                new_index,
-                new_bit,
-                PhantomData,
-            );
-        } else {
-            R::push::<E1, E2>(
-                entity,
-                entity_allocator,
-                key,
-                archetypes,
-                new_index,
-                new_bit,
-                PhantomData,
-            );
+        if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
+            component_map.insert(TypeId::of::<C>(), index);
+            index += 1;
         }
+        R::create_component_map_for_key(component_map, index, key, new_key_index, new_bit);
     }
 
-    unsafe fn extend<E1, E2>(
-        entities: E1,
-        entity_allocator: &mut EntityAllocator,
-        key: Vec<u8>,
-        archetypes: &mut HashMap<Vec<u8>, Box<dyn Any>>,
-        index: usize,
-        bit: u8,
-        _canonical_entity: PhantomData<E2>,
-    ) where
-        E1: Entities,
-        E2: Entity,
-    {
+    unsafe fn create_offset_map_for_key(
+        offset_map: &mut HashMap<TypeId, isize>,
+        mut offset: isize,
+        key: &[u8],
+        key_index: usize,
+        bit: usize,
+    ) {
         let mut new_bit = bit + 1;
-        let new_index = if bit >= 8 {
-            new_bit %= 8;
-            index + 1
+        let new_key_index = if new_bit >= 8 {
+            new_bit &= 7;
+            key_index + 1
         } else {
-            index
+            key_index
         };
 
-        if key.get_unchecked(index) & (1 << bit) != 0 {
-            R::extend::<E1, (C, E2)>(
-                entities,
-                entity_allocator,
-                key,
-                archetypes,
-                new_index,
-                new_bit,
-                PhantomData,
-            );
-        } else {
-            R::extend::<E1, E2>(
-                entities,
-                entity_allocator,
-                key,
-                archetypes,
-                new_index,
-                new_bit,
-                PhantomData,
-            );
+        if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
+            offset_map.insert(TypeId::of::<C>(), offset);
+            offset += size_of::<C>() as isize;
         }
+        R::create_offset_map_for_key(offset_map, offset, key, new_key_index, new_bit);
+    }
+
+    unsafe fn len_of_key(key: &[u8], key_index: usize, bit: usize) -> usize {
+        let mut new_bit = bit + 1;
+        let new_key_index = if new_bit >= 8 {
+            new_bit &= 7;
+            key_index + 1
+        } else {
+            key_index
+        };
+
+        (if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
+            1
+        } else {
+            0
+        }) + R::len_of_key(key, new_key_index, new_bit)
+    }
+
+    unsafe fn free_components(
+        mut components: &[(*mut u8, usize)],
+        length: usize,
+        key: &[u8],
+        key_index: usize,
+        bit: usize,
+    ) {
+        let mut new_bit = bit + 1;
+        let new_key_index = if new_bit >= 8 {
+            new_bit &= 7;
+            key_index + 1
+        } else {
+            key_index
+        };
+
+        if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
+            let component_column = components.get_unchecked(0);
+            let _ = Vec::<C>::from_raw_parts(
+                component_column.0.cast::<C>(),
+                length,
+                component_column.1,
+            );
+            components = components.get_unchecked(1..);
+        }
+        R::free_components(
+            components,
+            length,
+            key,
+            new_key_index,
+            new_bit,
+        );
     }
 }

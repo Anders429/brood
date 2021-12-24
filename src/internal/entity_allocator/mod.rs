@@ -1,40 +1,90 @@
-use crate::entity::EntityIdentifier;
-use alloc::{collections::VecDeque, vec::Vec};
-use core::{iter::ExactSizeIterator, ptr};
+#[cfg(feature = "serde")]
+pub(crate) mod impl_serde;
 
-#[derive(Copy, Clone, Debug)]
-pub(crate) struct Location {
-    pub(crate) key: ptr::NonNull<u8>,
+use crate::{internal::{archetype, registry::{RegistryDebug, RegistryPartialEq}}, entity::EntityIdentifier, registry::Registry};
+use alloc::{collections::VecDeque, vec::Vec};
+use core::{fmt, fmt::Debug, iter::ExactSizeIterator};
+
+pub(crate) struct Location<R> where R: Registry {
+    pub(crate) identifier: archetype::Identifier<R>,
     pub(crate) index: usize,
 }
 
-#[derive(Clone, Debug)]
-pub(crate) struct Slot {
-    pub(crate) generation: u64,
-    pub(crate) location: Option<Location>,
+impl<R> Clone for Location<R> where R: Registry {
+    fn clone(&self) -> Self {
+        Self {
+            identifier: self.identifier.clone(),
+            index: self.index.clone(),
+        }
+    }
 }
 
-impl Slot {
-    unsafe fn new(location: Location) -> Self {
+impl<R> Copy for Location<R> where R: Registry {}
+
+impl<R> Debug for Location<R> where R: RegistryDebug {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Location")
+            .field("identifier", &self.identifier)
+            .field("index", &self.index)
+            .finish()
+    }
+}
+
+impl<R> PartialEq for Location<R> where R: RegistryPartialEq {
+    fn eq(&self, other: &Self) -> bool {
+        self.identifier == other.identifier && self.index == other.index
+    }
+}
+
+pub(crate) struct Slot<R> where R: Registry {
+    pub(crate) generation: u64,
+    pub(crate) location: Option<Location<R>>,
+}
+
+impl<R> Slot<R> where R: Registry {
+    unsafe fn new(location: Location<R>) -> Self {
         Self {
             generation: 0,
             location: Some(location),
         }
     }
 
-    unsafe fn activate_unchecked(&mut self, location: Location) {
+    unsafe fn activate_unchecked(&mut self, location: Location<R>) {
         self.generation = self.generation.wrapping_add(1);
         self.location = Some(location);
     }
 }
 
-#[derive(Debug)]
-pub struct EntityAllocator {
-    pub(crate) slots: Vec<Slot>,
+impl<R> Clone for Slot<R> where R: Registry {
+    fn clone(&self) -> Self {
+        Self {
+            generation: self.generation.clone(),
+            location: self.location.clone(),
+        }
+    }
+}
+
+impl<R> Debug for Slot<R> where R: RegistryDebug {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Slot")
+            .field("generation", &self.generation)
+            .field("location", &self.location)
+            .finish()
+    }
+}
+
+impl<R> PartialEq for Slot<R> where R: RegistryPartialEq {
+    fn eq(&self, other: &Self) -> bool {
+        self.generation == other.generation && self.location == other.location
+    }
+}
+
+pub struct EntityAllocator<R> where R: Registry {
+    pub(crate) slots: Vec<Slot<R>>,
     pub(crate) free: VecDeque<usize>,
 }
 
-impl EntityAllocator {
+impl<R> EntityAllocator<R> where R: Registry {
     pub(crate) fn new() -> Self {
         Self {
             slots: Vec::new(),
@@ -42,7 +92,7 @@ impl EntityAllocator {
         }
     }
 
-    pub(crate) unsafe fn allocate(&mut self, location: Location) -> EntityIdentifier {
+    pub(crate) unsafe fn allocate(&mut self, location: Location<R>) -> EntityIdentifier {
         let (index, generation) = if let Some(index) = self.free.pop_front() {
             let slot = self.slots.get_unchecked_mut(index);
             slot.activate_unchecked(location);
@@ -57,12 +107,13 @@ impl EntityAllocator {
         EntityIdentifier::new(index, generation)
     }
 
+    #[inline]
     pub(crate) unsafe fn allocate_batch<L>(
         &mut self,
         mut locations: L,
     ) -> impl Iterator<Item = EntityIdentifier>
     where
-        L: Iterator<Item = Location> + ExactSizeIterator,
+        L: Iterator<Item = Location<R>> + ExactSizeIterator,
     {
         let mut identifiers = Vec::with_capacity(locations.len());
 
@@ -88,12 +139,27 @@ impl EntityAllocator {
         identifiers.into_iter()
     }
 
-    pub(crate) fn get(&self, identifier: EntityIdentifier) -> Option<Location> {
+    pub(crate) fn get(&self, identifier: EntityIdentifier) -> Option<Location<R>> {
         let slot = self.slots.get(identifier.index)?;
         if slot.generation == identifier.generation {
             slot.location
         } else {
             None
         }
+    }
+}
+
+impl<R> Debug for EntityAllocator<R> where R: RegistryDebug {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("EntityAllocator")
+            .field("slots", &self.slots)
+            .field("free", &self.free)
+            .finish()
+    }
+}
+
+impl<R> PartialEq for EntityAllocator<R> where R: RegistryPartialEq {
+    fn eq(&self, other: &Self) -> bool {
+        self.slots == other.slots && self.free == other.free
     }
 }

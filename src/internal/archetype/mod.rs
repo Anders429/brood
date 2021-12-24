@@ -1,91 +1,72 @@
+mod identifier;
 mod impl_debug;
 mod impl_drop;
 mod impl_eq;
 #[cfg(feature = "serde")]
 mod impl_serde;
 
+pub(crate) use identifier::{Identifier, IdentifierBuffer};
+
 use crate::{
-    entities::Entities,
+    entities::{Entities, EntitiesIter},
     entity::{Entity, EntityIdentifier},
     internal::entity_allocator::{EntityAllocator, Location},
     query::Views,
+    registry::Registry,
 };
 use alloc::vec::Vec;
-use core::{
-    any::TypeId,
-    marker::PhantomData,
-    mem::{size_of, ManuallyDrop},
-    ptr,
-};
+use core::{any::TypeId, mem::ManuallyDrop, slice};
 use hashbrown::HashMap;
 
-pub(crate) struct Archetype<E>
+pub(crate) struct Archetype<R>
 where
-    E: Entity,
+    R: Registry,
 {
-    entity: PhantomData<E>,
+    identifier: IdentifierBuffer<R>,
 
     entity_identifiers: (*mut EntityIdentifier, usize),
     components: Vec<(*mut u8, usize)>,
     length: usize,
 
     component_map: HashMap<TypeId, usize>,
-    offset_map: HashMap<TypeId, isize>,
-
-    entity_buffer: Vec<u8>,
-    entities_buffer: Vec<u8>,
 }
 
-impl<E> Archetype<E>
+impl<R> Archetype<R>
 where
-    E: Entity,
+    R: Registry,
 {
-    pub(crate) fn from_raw_parts(
+    pub(crate) unsafe fn from_raw_parts(
+        identifier: IdentifierBuffer<R>,
         entity_identifiers: (*mut EntityIdentifier, usize),
         components: Vec<(*mut u8, usize)>,
         length: usize,
     ) -> Self {
         let mut component_map = HashMap::new();
-        E::create_component_map(&mut component_map, 0);
-
-        let mut offset_map = HashMap::new();
-        E::create_offset_map(&mut offset_map, 0);
-
-        let mut entity_buffer = Vec::with_capacity(E::BYTE_LEN);
-        unsafe {
-            entity_buffer.set_len(E::BYTE_LEN);
-        }
-
-        let mut entities_buffer = Vec::with_capacity(size_of::<Vec<()>>() * E::LEN);
-        unsafe {
-            entities_buffer.set_len(size_of::<Vec<()>>() * E::LEN);
-        }
+        R::create_component_map_for_key(&mut component_map, 0, identifier.as_identifier().as_slice(), 0, 0);
 
         Self {
-            entity: PhantomData,
+            identifier,
 
             entity_identifiers,
             components,
             length,
 
             component_map,
-            offset_map,
-
-            entity_buffer,
-            entities_buffer,
         }
     }
 
-    pub(crate) fn new() -> Self {
+    pub(crate) unsafe fn new(identifier: IdentifierBuffer<R>) -> Self {
         let mut entity_identifiers = ManuallyDrop::new(Vec::new());
 
-        let mut components = Vec::new();
-        for _ in 0..E::LEN {
+        let entity_len = R::len_of_key(identifier.as_identifier().as_slice(), 0, 0);
+        let mut components = Vec::with_capacity(entity_len);
+        for _ in 0..entity_len {
             let mut v = ManuallyDrop::new(Vec::new());
             components.push((v.as_mut_ptr(), v.capacity()));
         }
 
         Self::from_raw_parts(
+            identifier,
             (
                 entity_identifiers.as_mut_ptr(),
                 entity_identifiers.capacity(),
@@ -95,22 +76,14 @@ where
         )
     }
 
-    pub(crate) unsafe fn push<F>(
+    pub(crate) unsafe fn push<E>(
         &mut self,
-        entity: F,
-        entity_allocator: &mut EntityAllocator,
-        key: ptr::NonNull<u8>,
+        entity: E,
+        entity_allocator: &mut EntityAllocator<R>,
     ) where
-        F: Entity,
+        E: Entity,
     {
-        // Load the components of `entity` into the buffer.
-        entity.into_buffer(self.entity_buffer.as_mut_ptr(), &self.offset_map);
-
-        E::push_components_from_buffer(
-            self.entity_buffer.as_ptr(),
-            &mut self.components,
-            self.length,
-        );
+        entity.push_components(&self.component_map, &mut self.components, self.length);
 
         let mut entity_identifiers = ManuallyDrop::new(Vec::from_raw_parts(
             self.entity_identifiers.0,
@@ -118,7 +91,7 @@ where
             self.entity_identifiers.1,
         ));
         entity_identifiers.push(entity_allocator.allocate(Location {
-            key,
+            identifier: self.identifier.as_identifier(),
             index: self.length,
         }));
         self.entity_identifiers = (
@@ -129,25 +102,18 @@ where
         self.length += 1;
     }
 
-    pub(crate) unsafe fn extend<F>(
+    pub(crate) unsafe fn extend<E>(
         &mut self,
-        entities: F,
-        entity_allocator: &mut EntityAllocator,
-        key: ptr::NonNull<u8>,
+        entities: EntitiesIter<E>,
+        entity_allocator: &mut EntityAllocator<R>,
     ) where
-        F: Entities,
+        E: Entities,
     {
-        let component_len = entities.component_len();
+        let component_len = entities.entities.component_len();
 
-        // Load the component `Vec`s of `entities` into the buffer.
-        entities.into_buffer(self.entities_buffer.as_mut_ptr(), &self.component_map);
-
-        // Push the components all at once.
-        E::extend_components_from_buffer(
-            self.entities_buffer.as_ptr(),
-            &mut self.components,
-            self.length,
-        );
+        entities
+            .entities
+            .extend_components(&self.component_map, &mut self.components, self.length);
 
         let mut entity_identifiers_v = ManuallyDrop::new(Vec::from_raw_parts(
             self.entity_identifiers.0,
@@ -155,7 +121,7 @@ where
             self.entity_identifiers.1,
         ));
         entity_identifiers_v.extend(entity_allocator.allocate_batch(
-            (self.length..(self.length + component_len)).map(|index| Location { key, index }),
+            (self.length..(self.length + component_len)).map(|index| Location { identifier: self.identifier.as_identifier(), index }),
         ));
         self.entity_identifiers = (
             entity_identifiers_v.as_mut_ptr(),
@@ -165,8 +131,22 @@ where
         self.length += component_len;
     }
 
-    pub(crate) fn view<'a, V>(&mut self) -> V::Results where V: Views<'a> {
-        unsafe {V::view(&self.components, self.length, &self.component_map)}
+    pub(crate) fn view<'a, V>(&mut self) -> V::Results
+    where
+        V: Views<'a>,
+    {
+        unsafe { V::view(&self.components, self.length, &self.component_map) }
+    }
+
+    pub(crate) fn identifier(&self) -> Identifier<R> {
+        self.identifier.as_identifier()
+    }
+
+    pub(crate) fn entity_identifiers(&self) -> impl Iterator<Item = &EntityIdentifier> {
+        unsafe {slice::from_raw_parts(
+            self.entity_identifiers.0,
+            self.length,
+        )}.iter()
     }
 }
 

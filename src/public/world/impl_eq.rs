@@ -1,39 +1,14 @@
 use super::World;
 use crate::{
-    entity::NullEntity,
     internal::registry::{RegistryEq, RegistryPartialEq},
 };
-use core::marker::PhantomData;
 
 impl<R> PartialEq for World<R>
 where
     R: RegistryPartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
-        if self.archetypes.len() == other.archetypes.len()
-            && self
-                .archetypes
-                .keys()
-                .all(|key| other.archetypes.contains_key(key))
-        {
-            for key in self.archetypes.keys() {
-                if !unsafe {
-                    R::eq::<NullEntity>(
-                        key,
-                        0,
-                        0,
-                        &self.archetypes[key],
-                        &other.archetypes[key],
-                        PhantomData,
-                    )
-                } {
-                    return false;
-                }
-            }
-            true
-        } else {
-            false
-        }
+        self.archetypes == other.archetypes && self.entity_allocator == other.entity_allocator
     }
 }
 

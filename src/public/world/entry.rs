@@ -7,14 +7,14 @@ where
     R: Registry,
 {
     world: &'a mut World<R>,
-    location: Location,
+    location: Location<R>,
 }
 
 impl<'a, R> Entry<'a, R>
 where
     R: Registry,
 {
-    pub(crate) fn new(world: &'a mut World<R>, location: Location) -> Self {
+    pub(crate) fn new(world: &'a mut World<R>, location: Location<R>) -> Self {
         Self { world, location }
     }
 

@@ -1,12 +1,21 @@
-use crate::{entity::Entity, internal::archetype::Archetype};
+use crate::{internal::archetype::Archetype, registry::Registry};
+use alloc::vec::Vec;
 
-impl<E> Drop for Archetype<E>
+impl<R> Drop for Archetype<R>
 where
-    E: Entity,
+    R: Registry,
 {
+    #[inline]
     fn drop(&mut self) {
         unsafe {
-            E::free_components(&self.components, self.length);
+            R::free_components(&self.components, self.length, self.identifier.as_identifier().as_slice(), 0, 0);
+        }
+        unsafe {
+            let _ = Vec::from_raw_parts(
+                self.entity_identifiers.0,
+                self.length,
+                self.entity_identifiers.1,
+            );
         }
     }
 }
