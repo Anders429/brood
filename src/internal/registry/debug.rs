@@ -114,7 +114,7 @@ where
         };
 
         if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
-            debug_map.entry(&type_name::<C>(), &pointers.get_unchecked(0).cast::<C>());
+            debug_map.entry(&type_name::<C>(), &*pointers.get_unchecked(0).cast::<C>());
             pointers = pointers.get_unchecked(1..);
         }
 
