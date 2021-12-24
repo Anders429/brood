@@ -1,5 +1,8 @@
 #[cfg(feature = "serde")]
 mod impl_serde;
+mod iter;
+
+pub(crate) use iter::IdentifierIter;
 
 use crate::{internal::registry::RegistryDebug, registry::Registry};
 use alloc::vec::Vec;
@@ -42,6 +45,10 @@ where
 
             pointer: self.pointer,
         }
+    }
+
+    pub(crate) fn iter(&self) -> IdentifierIter<R> {
+        unsafe { IdentifierIter::<R>::new(self.pointer) }
     }
 }
 

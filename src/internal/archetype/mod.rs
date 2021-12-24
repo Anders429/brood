@@ -5,7 +5,7 @@ mod impl_eq;
 #[cfg(feature = "serde")]
 mod impl_serde;
 
-pub(crate) use identifier::{Identifier, IdentifierBuffer};
+pub(crate) use identifier::{Identifier, IdentifierBuffer, IdentifierIter};
 
 use crate::{
     entities::{Entities, EntitiesIter},
