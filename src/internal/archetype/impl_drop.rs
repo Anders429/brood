@@ -8,7 +8,13 @@ where
     #[inline]
     fn drop(&mut self) {
         unsafe {
-            R::free_components(&self.components, self.length, self.identifier.as_identifier().as_slice(), 0, 0);
+            R::free_components(
+                &self.components,
+                self.length,
+                self.identifier.as_identifier().as_slice(),
+                0,
+                0,
+            );
         }
         unsafe {
             let _ = Vec::from_raw_parts(

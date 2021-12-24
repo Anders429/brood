@@ -1,16 +1,29 @@
 #[cfg(feature = "serde")]
 pub(crate) mod impl_serde;
 
-use crate::{internal::{archetype, registry::{RegistryDebug, RegistryPartialEq}}, entity::EntityIdentifier, registry::Registry};
+use crate::{
+    entity::EntityIdentifier,
+    internal::{
+        archetype,
+        registry::{RegistryDebug, RegistryPartialEq},
+    },
+    registry::Registry,
+};
 use alloc::{collections::VecDeque, vec::Vec};
 use core::{fmt, fmt::Debug, iter::ExactSizeIterator};
 
-pub(crate) struct Location<R> where R: Registry {
+pub(crate) struct Location<R>
+where
+    R: Registry,
+{
     pub(crate) identifier: archetype::Identifier<R>,
     pub(crate) index: usize,
 }
 
-impl<R> Clone for Location<R> where R: Registry {
+impl<R> Clone for Location<R>
+where
+    R: Registry,
+{
     fn clone(&self) -> Self {
         Self {
             identifier: self.identifier.clone(),
@@ -21,7 +34,10 @@ impl<R> Clone for Location<R> where R: Registry {
 
 impl<R> Copy for Location<R> where R: Registry {}
 
-impl<R> Debug for Location<R> where R: RegistryDebug {
+impl<R> Debug for Location<R>
+where
+    R: RegistryDebug,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Location")
             .field("identifier", &self.identifier)
@@ -30,18 +46,27 @@ impl<R> Debug for Location<R> where R: RegistryDebug {
     }
 }
 
-impl<R> PartialEq for Location<R> where R: RegistryPartialEq {
+impl<R> PartialEq for Location<R>
+where
+    R: RegistryPartialEq,
+{
     fn eq(&self, other: &Self) -> bool {
         self.identifier == other.identifier && self.index == other.index
     }
 }
 
-pub(crate) struct Slot<R> where R: Registry {
+pub(crate) struct Slot<R>
+where
+    R: Registry,
+{
     pub(crate) generation: u64,
     pub(crate) location: Option<Location<R>>,
 }
 
-impl<R> Slot<R> where R: Registry {
+impl<R> Slot<R>
+where
+    R: Registry,
+{
     unsafe fn new(location: Location<R>) -> Self {
         Self {
             generation: 0,
@@ -55,7 +80,10 @@ impl<R> Slot<R> where R: Registry {
     }
 }
 
-impl<R> Clone for Slot<R> where R: Registry {
+impl<R> Clone for Slot<R>
+where
+    R: Registry,
+{
     fn clone(&self) -> Self {
         Self {
             generation: self.generation.clone(),
@@ -64,7 +92,10 @@ impl<R> Clone for Slot<R> where R: Registry {
     }
 }
 
-impl<R> Debug for Slot<R> where R: RegistryDebug {
+impl<R> Debug for Slot<R>
+where
+    R: RegistryDebug,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Slot")
             .field("generation", &self.generation)
@@ -73,18 +104,27 @@ impl<R> Debug for Slot<R> where R: RegistryDebug {
     }
 }
 
-impl<R> PartialEq for Slot<R> where R: RegistryPartialEq {
+impl<R> PartialEq for Slot<R>
+where
+    R: RegistryPartialEq,
+{
     fn eq(&self, other: &Self) -> bool {
         self.generation == other.generation && self.location == other.location
     }
 }
 
-pub struct EntityAllocator<R> where R: Registry {
+pub struct EntityAllocator<R>
+where
+    R: Registry,
+{
     pub(crate) slots: Vec<Slot<R>>,
     pub(crate) free: VecDeque<usize>,
 }
 
-impl<R> EntityAllocator<R> where R: Registry {
+impl<R> EntityAllocator<R>
+where
+    R: Registry,
+{
     pub(crate) fn new() -> Self {
         Self {
             slots: Vec::new(),
@@ -149,7 +189,10 @@ impl<R> EntityAllocator<R> where R: Registry {
     }
 }
 
-impl<R> Debug for EntityAllocator<R> where R: RegistryDebug {
+impl<R> Debug for EntityAllocator<R>
+where
+    R: RegistryDebug,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("EntityAllocator")
             .field("slots", &self.slots)
@@ -158,7 +201,10 @@ impl<R> Debug for EntityAllocator<R> where R: RegistryDebug {
     }
 }
 
-impl<R> PartialEq for EntityAllocator<R> where R: RegistryPartialEq {
+impl<R> PartialEq for EntityAllocator<R>
+where
+    R: RegistryPartialEq,
+{
     fn eq(&self, other: &Self) -> bool {
         self.slots == other.slots && self.free == other.free
     }

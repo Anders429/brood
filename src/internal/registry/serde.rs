@@ -15,7 +15,9 @@ pub trait RegistrySerialize: Registry {
         key: &[u8],
         key_index: usize,
         bit: usize,
-    ) -> Result<(), S::Error> where S: SerializeSeq;
+    ) -> Result<(), S::Error>
+    where
+        S: SerializeSeq;
 }
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
@@ -27,7 +29,10 @@ impl RegistrySerialize for NullRegistry {
         _key: &[u8],
         _key_index: usize,
         _bit: usize,
-    ) -> Result<(), S::Error> where S: SerializeSeq {
+    ) -> Result<(), S::Error>
+    where
+        S: SerializeSeq,
+    {
         Ok(())
     }
 }
@@ -45,7 +50,10 @@ where
         key: &[u8],
         key_index: usize,
         bit: usize,
-    ) -> Result<(), S::Error> where S: SerializeSeq {
+    ) -> Result<(), S::Error>
+    where
+        S: SerializeSeq,
+    {
         let mut new_bit = bit + 1;
         let new_key_index = if new_bit >= 8 {
             new_bit &= 7;
@@ -56,7 +64,13 @@ where
 
         if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
             let component_column = components.get_unchecked(0);
-            for component in ManuallyDrop::new(Vec::<C>::from_raw_parts(component_column.0.cast::<C>(), length, component_column.1)).iter() {
+            for component in ManuallyDrop::new(Vec::<C>::from_raw_parts(
+                component_column.0.cast::<C>(),
+                length,
+                component_column.1,
+            ))
+            .iter()
+            {
                 seq.serialize_element(component)?;
             }
 
@@ -76,7 +90,9 @@ pub trait RegistryDeserialize<'de>: Registry + 'de {
         key: &[u8],
         key_index: usize,
         bit: usize,
-    ) -> Result<(), V::Error> where V: SeqAccess<'de>;
+    ) -> Result<(), V::Error>
+    where
+        V: SeqAccess<'de>;
 }
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
@@ -88,7 +104,10 @@ impl<'de> RegistryDeserialize<'de> for NullRegistry {
         _key: &[u8],
         _key_index: usize,
         _bit: usize,
-    ) -> Result<(), V::Error> where V: SeqAccess<'de> {
+    ) -> Result<(), V::Error>
+    where
+        V: SeqAccess<'de>,
+    {
         Ok(())
     }
 }
@@ -106,7 +125,10 @@ where
         key: &[u8],
         key_index: usize,
         bit: usize,
-    ) -> Result<(), V::Error> where V: SeqAccess<'de> {
+    ) -> Result<(), V::Error>
+    where
+        V: SeqAccess<'de>,
+    {
         let mut new_bit = bit + 1;
         let new_key_index = if new_bit >= 8 {
             new_bit &= 7;
@@ -117,8 +139,9 @@ where
 
         let mut v = if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
             let component_column = components.get_unchecked_mut(0);
-            let mut v = Vec::<C>::from_raw_parts(component_column.0.cast::<C>(), 0, component_column.1);
-            
+            let mut v =
+                Vec::<C>::from_raw_parts(component_column.0.cast::<C>(), 0, component_column.1);
+
             v.reserve(length);
             for i in 0..length {
                 v.push(seq.next_element()?.ok_or_else(|| {
@@ -136,7 +159,14 @@ where
             ManuallyDrop::new(Vec::new())
         };
 
-        let result = R::deserialize_components_by_column(components, length, seq, key, new_key_index, new_bit);
+        let result = R::deserialize_components_by_column(
+            components,
+            length,
+            seq,
+            key,
+            new_key_index,
+            new_bit,
+        );
         if result.is_err() {
             ManuallyDrop::drop(&mut v);
         }

@@ -1,12 +1,30 @@
-use crate::{entity::EntityIdentifier, internal::{archetype, archetype::Archetype, entity_allocator::{EntityAllocator, Location, Slot}}, registry::Registry};
+use crate::{
+    entity::EntityIdentifier,
+    internal::{
+        archetype,
+        archetype::Archetype,
+        entity_allocator::{EntityAllocator, Location, Slot},
+    },
+    registry::Registry,
+};
 use alloc::{format, vec, vec::Vec};
 use core::{fmt, marker::PhantomData};
 use hashbrown::HashMap;
-use serde::{Deserialize, Deserializer, Serialize, Serializer, de, de::{MapAccess, SeqAccess, Visitor}, ser::{SerializeSeq, SerializeStruct}};
+use serde::{
+    de,
+    de::{MapAccess, SeqAccess, Visitor},
+    ser::{SerializeSeq, SerializeStruct},
+    Deserialize, Deserializer, Serialize, Serializer,
+};
 
-struct SerializeFree<'a, R>(&'a EntityAllocator<R>) where R: Registry;
+struct SerializeFree<'a, R>(&'a EntityAllocator<R>)
+where
+    R: Registry;
 
-impl<R> Serialize for SerializeFree<'_, R> where R: Registry {
+impl<R> Serialize for SerializeFree<'_, R>
+where
+    R: Registry,
+{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -15,14 +33,17 @@ impl<R> Serialize for SerializeFree<'_, R> where R: Registry {
         for index in &self.0.free {
             seq.serialize_element(&EntityIdentifier {
                 index: *index,
-                generation: unsafe {self.0.slots.get_unchecked(*index)}.generation,
+                generation: unsafe { self.0.slots.get_unchecked(*index) }.generation,
             })?;
         }
         seq.end()
     }
 }
 
-impl<R> Serialize for EntityAllocator<R> where R: Registry {
+impl<R> Serialize for EntityAllocator<R>
+where
+    R: Registry,
+{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -51,7 +72,10 @@ impl<'de> Deserialize<'de> for SerializedEntityAllocator {
         }
 
         impl<'de> Deserialize<'de> for Field {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: Deserializer<'de>,
+            {
                 struct FieldVisitor;
 
                 impl<'de> Visitor<'de> for FieldVisitor {
@@ -61,7 +85,10 @@ impl<'de> Deserialize<'de> for SerializedEntityAllocator {
                         formatter.write_str("`length` or `free`")
                     }
 
-                    fn visit_str<E>(self, value: &str) -> Result<Field, E> where E: de::Error {
+                    fn visit_str<E>(self, value: &str) -> Result<Field, E>
+                    where
+                        E: de::Error,
+                    {
                         match value {
                             "length" => Ok(Field::Length),
                             "free" => Ok(Field::Free),
@@ -87,12 +114,13 @@ impl<'de> Deserialize<'de> for SerializedEntityAllocator {
             where
                 V: SeqAccess<'de>,
             {
-                let length = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(0, &self))?;
-                let free = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                Ok(SerializedEntityAllocator {
-                    length,
-                    free,
-                })
+                let length = seq
+                    .next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                let free = seq
+                    .next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(1, &self))?;
+                Ok(SerializedEntityAllocator { length, free })
             }
 
             fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
@@ -129,14 +157,32 @@ impl<'de> Deserialize<'de> for SerializedEntityAllocator {
     }
 }
 
-impl<R> EntityAllocator<R> where R: Registry {
-    pub(crate) fn from_serialized_parts<'de, D>(serialized_entity_allocator: SerializedEntityAllocator, archetypes: &HashMap<archetype::Identifier<R>, Archetype<R>>, _deserializer: PhantomData<D>, _lifetime: PhantomData<&'de ()>) -> Result<Self, D::Error> where
-    D: Deserializer<'de>, {
+impl<R> EntityAllocator<R>
+where
+    R: Registry,
+{
+    pub(crate) fn from_serialized_parts<'de, D>(
+        serialized_entity_allocator: SerializedEntityAllocator,
+        archetypes: &HashMap<archetype::Identifier<R>, Archetype<R>>,
+        _deserializer: PhantomData<D>,
+        _lifetime: PhantomData<&'de ()>,
+    ) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
         let mut slots = vec![None; serialized_entity_allocator.length];
         for entity_identifier in &serialized_entity_allocator.free {
-            let slot = slots.get_mut(entity_identifier.index).ok_or(de::Error::custom(format!("entity index {} is out of bounds", entity_identifier.index)))?;
+            let slot = slots
+                .get_mut(entity_identifier.index)
+                .ok_or(de::Error::custom(format!(
+                    "entity index {} is out of bounds",
+                    entity_identifier.index
+                )))?;
             match slot {
-                Some(_) => Err(de::Error::custom(format!("duplicate entity index {}", entity_identifier.index))),
+                Some(_) => Err(de::Error::custom(format!(
+                    "duplicate entity index {}",
+                    entity_identifier.index
+                ))),
                 None => {
                     *slot = Some(Slot {
                         generation: entity_identifier.generation,
@@ -150,15 +196,23 @@ impl<R> EntityAllocator<R> where R: Registry {
         // Populate active slots from archetypes.
         for (archetype_identifier, archetype) in archetypes {
             for (i, entity_identifier) in archetype.entity_identifiers().enumerate() {
-                let slot = slots.get_mut(entity_identifier.index).ok_or(de::Error::custom(format!("entity index {} is out of bounds", entity_identifier.index)))?;
+                let slot = slots
+                    .get_mut(entity_identifier.index)
+                    .ok_or(de::Error::custom(format!(
+                        "entity index {} is out of bounds",
+                        entity_identifier.index
+                    )))?;
                 match slot {
-                    Some(_) => Err(de::Error::custom(format!("duplicate entity index {}", entity_identifier.index))),
+                    Some(_) => Err(de::Error::custom(format!(
+                        "duplicate entity index {}",
+                        entity_identifier.index
+                    ))),
                     None => {
                         *slot = Some(Slot {
                             generation: entity_identifier.generation,
                             location: Some(Location {
                                 identifier: archetype_identifier.clone(),
-                                index: i
+                                index: i,
                             }),
                         });
                         Ok(())
@@ -174,8 +228,15 @@ impl<R> EntityAllocator<R> where R: Registry {
             }
         }
         Ok(Self {
-            slots: slots.into_iter().map(|slot| unsafe {slot.unwrap_unchecked()}).collect(),
-            free: serialized_entity_allocator.free.into_iter().map(|entity_identifier| entity_identifier.index).collect(),
+            slots: slots
+                .into_iter()
+                .map(|slot| unsafe { slot.unwrap_unchecked() })
+                .collect(),
+            free: serialized_entity_allocator
+                .free
+                .into_iter()
+                .map(|entity_identifier| entity_identifier.index)
+                .collect(),
         })
     }
 }

@@ -22,7 +22,10 @@ where
     capacity: usize,
 }
 
-impl<R> IdentifierBuffer<R> where R: Registry {
+impl<R> IdentifierBuffer<R>
+where
+    R: Registry,
+{
     pub(crate) unsafe fn new(bytes: Vec<u8>) -> Self {
         let mut bytes = ManuallyDrop::new(bytes);
         Self {
@@ -42,7 +45,10 @@ impl<R> IdentifierBuffer<R> where R: Registry {
     }
 }
 
-impl<R> PartialEq for IdentifierBuffer<R> where R: Registry {
+impl<R> PartialEq for IdentifierBuffer<R>
+where
+    R: Registry,
+{
     fn eq(&self, other: &Self) -> bool {
         self.as_identifier().as_slice() == other.as_identifier().as_slice()
     }
@@ -77,7 +83,10 @@ where
     }
 }
 
-impl<R> Clone for Identifier<R> where R: Registry {
+impl<R> Clone for Identifier<R>
+where
+    R: Registry,
+{
     fn clone(&self) -> Self {
         Self {
             registry: PhantomData,
@@ -112,8 +121,10 @@ where
 
 impl<R> Eq for Identifier<R> where R: Registry {}
 
-
-impl<R> Debug for Identifier<R> where R: RegistryDebug {
+impl<R> Debug for Identifier<R>
+where
+    R: RegistryDebug,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut debug_list = f.debug_list();
 

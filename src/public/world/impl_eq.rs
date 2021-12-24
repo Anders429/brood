@@ -1,7 +1,5 @@
 use super::World;
-use crate::{
-    internal::registry::{RegistryEq, RegistryPartialEq},
-};
+use crate::internal::registry::{RegistryEq, RegistryPartialEq};
 
 impl<R> PartialEq for World<R>
 where

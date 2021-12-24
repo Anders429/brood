@@ -42,7 +42,13 @@ where
         length: usize,
     ) -> Self {
         let mut component_map = HashMap::new();
-        R::create_component_map_for_key(&mut component_map, 0, identifier.as_identifier().as_slice(), 0, 0);
+        R::create_component_map_for_key(
+            &mut component_map,
+            0,
+            identifier.as_identifier().as_slice(),
+            0,
+            0,
+        );
 
         Self {
             identifier,
@@ -76,11 +82,8 @@ where
         )
     }
 
-    pub(crate) unsafe fn push<E>(
-        &mut self,
-        entity: E,
-        entity_allocator: &mut EntityAllocator<R>,
-    ) where
+    pub(crate) unsafe fn push<E>(&mut self, entity: E, entity_allocator: &mut EntityAllocator<R>)
+    where
         E: Entity,
     {
         entity.push_components(&self.component_map, &mut self.components, self.length);
@@ -121,7 +124,10 @@ where
             self.entity_identifiers.1,
         ));
         entity_identifiers_v.extend(entity_allocator.allocate_batch(
-            (self.length..(self.length + component_len)).map(|index| Location { identifier: self.identifier.as_identifier(), index }),
+            (self.length..(self.length + component_len)).map(|index| Location {
+                identifier: self.identifier.as_identifier(),
+                index,
+            }),
         ));
         self.entity_identifiers = (
             entity_identifiers_v.as_mut_ptr(),
@@ -143,10 +149,7 @@ where
     }
 
     pub(crate) fn entity_identifiers(&self) -> impl Iterator<Item = &EntityIdentifier> {
-        unsafe {slice::from_raw_parts(
-            self.entity_identifiers.0,
-            self.length,
-        )}.iter()
+        unsafe { slice::from_raw_parts(self.entity_identifiers.0, self.length) }.iter()
     }
 }
 

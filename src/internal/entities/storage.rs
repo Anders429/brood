@@ -1,9 +1,6 @@
 use crate::{component::Component, entities::NullEntities};
 use alloc::vec::Vec;
-use core::{
-    any::TypeId,
-    mem::ManuallyDrop,
-};
+use core::{any::TypeId, mem::ManuallyDrop};
 use hashbrown::HashMap;
 
 pub trait EntitiesStorage {

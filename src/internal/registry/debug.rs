@@ -43,7 +43,8 @@ impl RegistryDebug for NullRegistry {
         _key: &[u8],
         _key_index: usize,
         _bit: usize,
-    ) {}
+    ) {
+    }
 
     unsafe fn debug_components<'a, 'b>(
         _pointers: &[*const u8],
@@ -51,14 +52,16 @@ impl RegistryDebug for NullRegistry {
         _key: &[u8],
         _key_index: usize,
         _bit: usize,
-    ) {}
+    ) {
+    }
 
     unsafe fn debug_identifier<'a, 'b>(
         _debug_list: &mut DebugList<'a, 'b>,
         _key: &[u8],
         _key_index: usize,
         _bit: usize,
-    ) {}
+    ) {
+    }
 }
 
 impl<C, R> RegistryDebug for (C, R)
@@ -66,7 +69,6 @@ where
     C: Component + Debug,
     R: RegistryDebug,
 {
-
     unsafe fn extract_component_pointers(
         index: usize,
         mut components: &[(*mut u8, usize)],
@@ -88,14 +90,7 @@ where
             components = components.get_unchecked(1..);
         }
 
-        R::extract_component_pointers(
-            index,
-            components,
-            pointers,
-            key,
-            new_key_index,
-            new_bit,
-        );
+        R::extract_component_pointers(index, components, pointers, key, new_key_index, new_bit);
     }
 
     unsafe fn debug_components<'a, 'b>(
@@ -118,13 +113,7 @@ where
             pointers = pointers.get_unchecked(1..);
         }
 
-        R::debug_components(
-            pointers,
-            debug_map,
-            key,
-            new_key_index,
-            new_bit,
-        );
+        R::debug_components(pointers, debug_map, key, new_key_index, new_bit);
     }
 
     unsafe fn debug_identifier<'a, 'b>(
@@ -145,11 +134,6 @@ where
             debug_list.entry(&type_name::<C>());
         }
 
-        R::debug_identifier(
-            debug_list,
-            key,
-            new_key_index,
-            new_bit,
-        );
+        R::debug_identifier(debug_list, key, new_key_index, new_bit);
     }
 }

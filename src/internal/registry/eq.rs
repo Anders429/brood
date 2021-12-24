@@ -54,7 +54,15 @@ where
             let component_column_a = components_a.get_unchecked(0);
             let component_column_b = components_b.get_unchecked(0);
 
-            if ManuallyDrop::new(Vec::from_raw_parts(component_column_a.0, length, component_column_a.1)) != ManuallyDrop::new(Vec::from_raw_parts(component_column_b.0, length, component_column_b.1)) {
+            if ManuallyDrop::new(Vec::from_raw_parts(
+                component_column_a.0,
+                length,
+                component_column_a.1,
+            )) != ManuallyDrop::new(Vec::from_raw_parts(
+                component_column_b.0,
+                length,
+                component_column_b.1,
+            )) {
                 return false;
             }
 
@@ -62,7 +70,14 @@ where
             components_b = components_b.get_unchecked(1..);
         }
 
-        R::component_eq(components_a, components_b, length, key, new_key_index, new_bit)
+        R::component_eq(
+            components_a,
+            components_b,
+            length,
+            key,
+            new_key_index,
+            new_bit,
+        )
     }
 }
 

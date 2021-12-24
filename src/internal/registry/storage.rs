@@ -1,12 +1,6 @@
-use crate::{
-    component::Component,
-    registry::NullRegistry,
-};
+use crate::{component::Component, registry::NullRegistry};
 use alloc::vec::Vec;
-use core::{
-    any::TypeId,
-    mem::size_of,
-};
+use core::{any::TypeId, mem::size_of};
 use hashbrown::HashMap;
 
 pub trait RegistryStorage {
@@ -168,12 +162,6 @@ where
             );
             components = components.get_unchecked(1..);
         }
-        R::free_components(
-            components,
-            length,
-            key,
-            new_key_index,
-            new_bit,
-        );
+        R::free_components(components, length, key, new_key_index, new_bit);
     }
 }

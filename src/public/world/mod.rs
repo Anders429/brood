@@ -9,15 +9,16 @@ pub use entry::Entry;
 use crate::{
     entities::{Entities, EntitiesIter},
     entity::{Entity, EntityIdentifier},
-    internal::{archetype::{self, Archetype}, entity_allocator::EntityAllocator, query::FilterSeal},
+    internal::{
+        archetype::{self, Archetype},
+        entity_allocator::EntityAllocator,
+        query::FilterSeal,
+    },
     query::{And, Filter, Views},
     registry::Registry,
 };
 use alloc::{vec, vec::Vec};
-use core::{
-    any::TypeId,
-    iter,
-};
+use core::{any::TypeId, iter};
 use hashbrown::HashMap;
 
 pub struct World<R>
@@ -79,7 +80,7 @@ where
         unsafe {
             E::to_key(&mut key, &self.component_map);
         }
-        let identifier_buffer = unsafe {archetype::IdentifierBuffer::new(key)};
+        let identifier_buffer = unsafe { archetype::IdentifierBuffer::new(key) };
 
         unsafe {
             self.archetypes
@@ -96,7 +97,9 @@ where
     {
         self.archetypes
             .iter_mut()
-            .filter(|(key, _archetype)| unsafe { And::<V, F>::filter(key.as_slice(), &self.component_map) })
+            .filter(|(key, _archetype)| unsafe {
+                And::<V, F>::filter(key.as_slice(), &self.component_map)
+            })
             .map(|(_key, archetype)| archetype.view::<V>())
             .collect::<Vec<_>>()
             .into_iter()

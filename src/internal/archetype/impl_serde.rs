@@ -1,4 +1,7 @@
-use crate::internal::{archetype::{Archetype, IdentifierBuffer}, registry::{RegistryDeserialize, RegistrySerialize}};
+use crate::internal::{
+    archetype::{Archetype, IdentifierBuffer},
+    registry::{RegistryDeserialize, RegistrySerialize},
+};
 use alloc::vec::Vec;
 use core::{fmt, marker::PhantomData, mem::ManuallyDrop};
 use serde::{
@@ -7,11 +10,24 @@ use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
 };
 
-struct SerializeArchetypeByColumn<'a, R>(&'a Archetype<R>) where R: RegistrySerialize;
+struct SerializeArchetypeByColumn<'a, R>(&'a Archetype<R>)
+where
+    R: RegistrySerialize;
 
-impl<R> Serialize for SerializeArchetypeByColumn<'_, R> where R: RegistrySerialize {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
-        let mut seq = serializer.serialize_seq(Some(self.0.length * (unsafe { R::len_of_key(self.0.identifier.as_identifier().as_slice(), 0, 0) } + 1) + 2))?;
+impl<R> Serialize for SerializeArchetypeByColumn<'_, R>
+where
+    R: RegistrySerialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(
+            self.0.length
+                * (unsafe { R::len_of_key(self.0.identifier.as_identifier().as_slice(), 0, 0) }
+                    + 1)
+                + 2,
+        ))?;
 
         seq.serialize_element(&self.0.identifier)?;
 
@@ -29,7 +45,14 @@ impl<R> Serialize for SerializeArchetypeByColumn<'_, R> where R: RegistrySeriali
         }
 
         unsafe {
-            R::serialize_components_by_column(&self.0.components, self.0.length, &mut seq, self.0.identifier.as_identifier().as_slice(), 0, 0)?;
+            R::serialize_components_by_column(
+                &self.0.components,
+                self.0.length,
+                &mut seq,
+                self.0.identifier.as_identifier().as_slice(),
+                0,
+                0,
+            )?;
         }
 
         seq.end()
@@ -53,16 +76,25 @@ where
     }
 }
 
-impl<'de, R> Deserialize<'de> for Archetype<R> where R: RegistryDeserialize<'de> {
+impl<'de, R> Deserialize<'de> for Archetype<R>
+where
+    R: RegistryDeserialize<'de>,
+{
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
-        struct VisitArchetypeByColumn<'de, R> where R: RegistryDeserialize<'de> {
+        struct VisitArchetypeByColumn<'de, R>
+        where
+            R: RegistryDeserialize<'de>,
+        {
             registry: PhantomData<&'de R>,
         }
 
-        impl<'de, R> Visitor<'de> for VisitArchetypeByColumn<'de, R> where R: RegistryDeserialize<'de> {
+        impl<'de, R> Visitor<'de> for VisitArchetypeByColumn<'de, R>
+        where
+            R: RegistryDeserialize<'de>,
+        {
             type Value = Archetype<R>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -88,7 +120,8 @@ impl<'de, R> Deserialize<'de> for Archetype<R> where R: RegistryDeserialize<'de>
                     })?);
                 }
 
-                let components_len = unsafe {R::len_of_key(identifier.as_identifier().as_slice(), 0, 0)};
+                let components_len =
+                    unsafe { R::len_of_key(identifier.as_identifier().as_slice(), 0, 0) };
                 let mut components = Vec::with_capacity(components_len);
                 for _ in 0..components_len {
                     let mut v = ManuallyDrop::new(Vec::new());
@@ -109,38 +142,47 @@ impl<'de, R> Deserialize<'de> for Archetype<R> where R: RegistryDeserialize<'de>
                 // EntityIdentifier Vec is transferred to the Archetype.
                 let mut entity_identifiers = ManuallyDrop::new(entity_identifiers);
 
-                Ok(unsafe {Archetype::from_raw_parts(
-                    identifier,
-                    (
-                        entity_identifiers.as_mut_ptr(),
-                        entity_identifiers.capacity(),
-                    ),
-                    components,
-                    length,
-                )})
+                Ok(unsafe {
+                    Archetype::from_raw_parts(
+                        identifier,
+                        (
+                            entity_identifiers.as_mut_ptr(),
+                            entity_identifiers.capacity(),
+                        ),
+                        components,
+                        length,
+                    )
+                })
             }
         }
 
-        struct ArchetypeVisitor<'de, R> where R: RegistryDeserialize<'de> {
+        struct ArchetypeVisitor<'de, R>
+        where
+            R: RegistryDeserialize<'de>,
+        {
             registry: PhantomData<&'de R>,
         }
 
-        impl<'de, R> Visitor<'de> for ArchetypeVisitor<'de, R> where R: RegistryDeserialize<'de> {
+        impl<'de, R> Visitor<'de> for ArchetypeVisitor<'de, R>
+        where
+            R: RegistryDeserialize<'de>,
+        {
             type Value = Archetype<R>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("struct Archetype")
             }
 
-            fn visit_newtype_struct<D>(self, deserializer: D) -> Result<Self::Value, D::Error> where D: Deserializer<'de> {
+            fn visit_newtype_struct<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+            where
+                D: Deserializer<'de>,
+            {
                 if deserializer.is_human_readable() {
                     unimplemented!("human readable deserialization is not yet implemented")
                 } else {
-                    deserializer.deserialize_seq(
-                        VisitArchetypeByColumn::<R> {
-                            registry: PhantomData,
-                        }
-                    )
+                    deserializer.deserialize_seq(VisitArchetypeByColumn::<R> {
+                        registry: PhantomData,
+                    })
                 }
             }
         }
