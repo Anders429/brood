@@ -22,8 +22,6 @@ pub trait RegistryStorage {
         bit: usize,
     );
 
-    unsafe fn len_of_key(key: &[u8], key_index: usize, bit: usize) -> usize;
-
     unsafe fn free_components(
         components: &[(*mut u8, usize)],
         length: usize,
@@ -52,10 +50,6 @@ impl RegistryStorage for NullRegistry {
         _key_index: usize,
         _bit: usize,
     ) {
-    }
-
-    unsafe fn len_of_key(_key: &[u8], _key_index: usize, _bit: usize) -> usize {
-        0
     }
 
     unsafe fn free_components(
@@ -120,22 +114,6 @@ where
             offset += size_of::<C>() as isize;
         }
         R::create_offset_map_for_key(offset_map, offset, key, new_key_index, new_bit);
-    }
-
-    unsafe fn len_of_key(key: &[u8], key_index: usize, bit: usize) -> usize {
-        let mut new_bit = bit + 1;
-        let new_key_index = if new_bit >= 8 {
-            new_bit &= 7;
-            key_index + 1
-        } else {
-            key_index
-        };
-
-        (if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
-            1
-        } else {
-            0
-        }) + R::len_of_key(key, new_key_index, new_bit)
     }
 
     unsafe fn free_components(

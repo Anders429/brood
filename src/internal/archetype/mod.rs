@@ -64,7 +64,7 @@ where
     pub(crate) unsafe fn new(identifier: IdentifierBuffer<R>) -> Self {
         let mut entity_identifiers = ManuallyDrop::new(Vec::new());
 
-        let entity_len = R::len_of_key(identifier.as_identifier().as_slice(), 0, 0);
+        let entity_len = identifier.iter().filter(|b| *b).count();
         let mut components = Vec::with_capacity(entity_len);
         for _ in 0..entity_len {
             let mut v = ManuallyDrop::new(Vec::new());
