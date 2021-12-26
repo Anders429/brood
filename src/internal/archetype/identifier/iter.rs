@@ -41,8 +41,8 @@ where
         } else {
             let result = self.current & 1 != 0;
             self.position += 1;
-            if self.position % 8 == 0 && self.position < R::LEN {
-                unsafe { self.pointer.add(1) };
+            if self.position % 8 == 0 {
+                self.pointer = unsafe { self.pointer.add(1) };
                 self.current = unsafe { *self.pointer };
             } else {
                 self.current >>= 1;

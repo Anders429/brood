@@ -1,6 +1,6 @@
 use crate::{component::Component, registry::NullRegistry};
 use alloc::vec::Vec;
-use core::{any::TypeId, mem::size_of};
+use core::any::TypeId;
 use hashbrown::HashMap;
 
 pub trait RegistryStorage {
@@ -9,25 +9,13 @@ pub trait RegistryStorage {
     unsafe fn create_component_map_for_key(
         component_map: &mut HashMap<TypeId, usize>,
         index: usize,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
-    );
-
-    unsafe fn create_offset_map_for_key(
-        offset_map: &mut HashMap<TypeId, isize>,
-        offset: isize,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        identifier_iter: impl Iterator<Item = bool>,
     );
 
     unsafe fn free_components(
         components: &[(*mut u8, usize)],
         length: usize,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        identifier_iter: impl Iterator<Item = bool>,
     );
 }
 
@@ -37,27 +25,14 @@ impl RegistryStorage for NullRegistry {
     unsafe fn create_component_map_for_key(
         _component_map: &mut HashMap<TypeId, usize>,
         _index: usize,
-        _key: &[u8],
-        _key_index: usize,
-        _bit: usize,
-    ) {
-    }
-
-    unsafe fn create_offset_map_for_key(
-        _offset_map: &mut HashMap<TypeId, isize>,
-        _offset: isize,
-        _key: &[u8],
-        _key_index: usize,
-        _bit: usize,
+        _identifier_iter: impl Iterator<Item = bool>,
     ) {
     }
 
     unsafe fn free_components(
         _components: &[(*mut u8, usize)],
         _length: usize,
-        _key: &[u8],
-        _key_index: usize,
-        _bit: usize,
+        _identifier_iter: impl Iterator<Item = bool>,
     ) {
     }
 }
@@ -75,63 +50,21 @@ where
     unsafe fn create_component_map_for_key(
         component_map: &mut HashMap<TypeId, usize>,
         mut index: usize,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        mut identifier_iter: impl Iterator<Item = bool>,
     ) {
-        let mut new_bit = bit + 1;
-        let new_key_index = if new_bit >= 8 {
-            new_bit &= 7;
-            key_index + 1
-        } else {
-            key_index
-        };
-
-        if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
+        if identifier_iter.next().unwrap_unchecked() {
             component_map.insert(TypeId::of::<C>(), index);
             index += 1;
         }
-        R::create_component_map_for_key(component_map, index, key, new_key_index, new_bit);
-    }
-
-    unsafe fn create_offset_map_for_key(
-        offset_map: &mut HashMap<TypeId, isize>,
-        mut offset: isize,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
-    ) {
-        let mut new_bit = bit + 1;
-        let new_key_index = if new_bit >= 8 {
-            new_bit &= 7;
-            key_index + 1
-        } else {
-            key_index
-        };
-
-        if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
-            offset_map.insert(TypeId::of::<C>(), offset);
-            offset += size_of::<C>() as isize;
-        }
-        R::create_offset_map_for_key(offset_map, offset, key, new_key_index, new_bit);
+        R::create_component_map_for_key(component_map, index, identifier_iter);
     }
 
     unsafe fn free_components(
         mut components: &[(*mut u8, usize)],
         length: usize,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        mut identifier_iter: impl Iterator<Item = bool>,
     ) {
-        let mut new_bit = bit + 1;
-        let new_key_index = if new_bit >= 8 {
-            new_bit &= 7;
-            key_index + 1
-        } else {
-            key_index
-        };
-
-        if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
+        if identifier_iter.next().unwrap_unchecked() {
             let component_column = components.get_unchecked(0);
             let _ = Vec::<C>::from_raw_parts(
                 component_column.0.cast::<C>(),
@@ -140,6 +73,6 @@ where
             );
             components = components.get_unchecked(1..);
         }
-        R::free_components(components, length, key, new_key_index, new_bit);
+        R::free_components(components, length, identifier_iter);
     }
 }

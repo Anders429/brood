@@ -12,9 +12,7 @@ pub trait RegistrySerialize: Registry {
         components: &[(*mut u8, usize)],
         length: usize,
         seq: &mut S,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        identifier_iter: impl Iterator<Item = bool>,
     ) -> Result<(), S::Error>
     where
         S: SerializeSeq;
@@ -26,9 +24,7 @@ impl RegistrySerialize for NullRegistry {
         _components: &[(*mut u8, usize)],
         _length: usize,
         _seq: &mut S,
-        _key: &[u8],
-        _key_index: usize,
-        _bit: usize,
+        _identifier_iter: impl Iterator<Item = bool>,
     ) -> Result<(), S::Error>
     where
         S: SerializeSeq,
@@ -47,22 +43,12 @@ where
         mut components: &[(*mut u8, usize)],
         length: usize,
         seq: &mut S,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        mut identifier_iter: impl Iterator<Item = bool>,
     ) -> Result<(), S::Error>
     where
         S: SerializeSeq,
     {
-        let mut new_bit = bit + 1;
-        let new_key_index = if new_bit >= 8 {
-            new_bit &= 7;
-            key_index + 1
-        } else {
-            key_index
-        };
-
-        if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
+        if identifier_iter.next().unwrap_unchecked() {
             let component_column = components.get_unchecked(0);
             for component in ManuallyDrop::new(Vec::<C>::from_raw_parts(
                 component_column.0.cast::<C>(),
@@ -77,7 +63,7 @@ where
             components = components.get_unchecked(1..);
         }
 
-        R::serialize_components_by_column(components, length, seq, key, new_key_index, new_bit)
+        R::serialize_components_by_column(components, length, seq, identifier_iter)
     }
 }
 
@@ -87,9 +73,7 @@ pub trait RegistryDeserialize<'de>: Registry + 'de {
         components: &mut [(*mut u8, usize)],
         length: usize,
         seq: &mut V,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        identifier_iter: impl Iterator<Item = bool>,
     ) -> Result<(), V::Error>
     where
         V: SeqAccess<'de>;
@@ -101,9 +85,7 @@ impl<'de> RegistryDeserialize<'de> for NullRegistry {
         _components: &mut [(*mut u8, usize)],
         _length: usize,
         _seq: &mut V,
-        _key: &[u8],
-        _key_index: usize,
-        _bit: usize,
+        _identifier_iter: impl Iterator<Item = bool>,
     ) -> Result<(), V::Error>
     where
         V: SeqAccess<'de>,
@@ -122,22 +104,12 @@ where
         mut components: &mut [(*mut u8, usize)],
         length: usize,
         seq: &mut V,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        mut identifier_iter: impl Iterator<Item = bool>,
     ) -> Result<(), V::Error>
     where
         V: SeqAccess<'de>,
     {
-        let mut new_bit = bit + 1;
-        let new_key_index = if new_bit >= 8 {
-            new_bit &= 7;
-            key_index + 1
-        } else {
-            key_index
-        };
-
-        let mut v = if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
+        let mut v = if identifier_iter.next().unwrap_unchecked() {
             let component_column = components.get_unchecked_mut(0);
             let mut v =
                 Vec::<C>::from_raw_parts(component_column.0.cast::<C>(), 0, component_column.1);
@@ -163,9 +135,7 @@ where
             components,
             length,
             seq,
-            key,
-            new_key_index,
-            new_bit,
+            identifier_iter,
         );
         if result.is_err() {
             ManuallyDrop::drop(&mut v);

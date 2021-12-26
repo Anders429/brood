@@ -26,9 +26,7 @@ where
             R::debug_components(
                 &self.pointers,
                 &mut debug_map,
-                self.identifier.as_slice(),
-                0,
-                0,
+                self.identifier.iter(),
             );
         }
         debug_map.finish()
@@ -77,9 +75,7 @@ where
                     i,
                     &self.components,
                     &mut component_pointers,
-                    self.identifier.as_identifier().as_slice(),
-                    0,
-                    0,
+                    self.identifier.iter()
                 );
             }
             debug_map.entry(

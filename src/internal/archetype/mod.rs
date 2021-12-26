@@ -45,9 +45,7 @@ where
         R::create_component_map_for_key(
             &mut component_map,
             0,
-            identifier.as_identifier().as_slice(),
-            0,
-            0,
+            identifier.iter(),
         );
 
         Self {

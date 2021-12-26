@@ -88,6 +88,10 @@ where
     pub(crate) fn as_slice<'a>(&'a self) -> &'a [u8] {
         unsafe { slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8) }
     }
+
+    pub(crate) fn iter(&self) -> IdentifierIter<R> {
+        unsafe { IdentifierIter::<R>::new(self.pointer) }
+    }
 }
 
 impl<R> Clone for Identifier<R>
@@ -136,7 +140,7 @@ where
         let mut debug_list = f.debug_list();
 
         unsafe {
-            R::debug_identifier(&mut debug_list, self.as_slice(), 0, 0);
+            R::debug_identifier(&mut debug_list, self.iter());
         }
 
         debug_list.finish()

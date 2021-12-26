@@ -10,9 +10,7 @@ pub trait RegistryPartialEq: Registry {
         components_a: &[(*mut u8, usize)],
         components_b: &[(*mut u8, usize)],
         length: usize,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        identifier_iter: impl Iterator<Item = bool>,
     ) -> bool;
 }
 
@@ -21,9 +19,7 @@ impl RegistryPartialEq for NullRegistry {
         _components_a: &[(*mut u8, usize)],
         _components_b: &[(*mut u8, usize)],
         _length: usize,
-        _key: &[u8],
-        _key_index: usize,
-        _bit: usize,
+        _identifier_iter: impl Iterator<Item = bool>,
     ) -> bool {
         true
     }
@@ -38,19 +34,9 @@ where
         mut components_a: &[(*mut u8, usize)],
         mut components_b: &[(*mut u8, usize)],
         length: usize,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        mut identifier_iter: impl Iterator<Item = bool>,
     ) -> bool {
-        let mut new_bit = bit + 1;
-        let new_key_index = if new_bit >= 8 {
-            new_bit &= 7;
-            key_index + 1
-        } else {
-            key_index
-        };
-
-        if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
+        if identifier_iter.next().unwrap_unchecked() {
             let component_column_a = components_a.get_unchecked(0);
             let component_column_b = components_b.get_unchecked(0);
 
@@ -74,9 +60,7 @@ where
             components_a,
             components_b,
             length,
-            key,
-            new_key_index,
-            new_bit,
+            identifier_iter,
         )
     }
 }

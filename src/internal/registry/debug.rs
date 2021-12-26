@@ -14,24 +14,18 @@ pub trait RegistryDebug: Registry {
         index: usize,
         components: &[(*mut u8, usize)],
         pointers: &mut Vec<*const u8>,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        identifier_iter: impl Iterator<Item = bool>,
     );
 
     unsafe fn debug_components<'a, 'b>(
         pointers: &[*const u8],
         debug_map: &mut DebugMap<'a, 'b>,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        identifier_iter: impl Iterator<Item = bool>,
     );
 
     unsafe fn debug_identifier<'a, 'b>(
         debug_list: &mut DebugList<'a, 'b>,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        identifier_iter: impl Iterator<Item = bool>,
     );
 }
 
@@ -40,26 +34,20 @@ impl RegistryDebug for NullRegistry {
         _index: usize,
         _components: &[(*mut u8, usize)],
         _pointers: &mut Vec<*const u8>,
-        _key: &[u8],
-        _key_index: usize,
-        _bit: usize,
+        _identifier_iter: impl Iterator<Item = bool>,
     ) {
     }
 
     unsafe fn debug_components<'a, 'b>(
         _pointers: &[*const u8],
         _debug_map: &mut DebugMap<'a, 'b>,
-        _key: &[u8],
-        _key_index: usize,
-        _bit: usize,
+        _identifier_iter: impl Iterator<Item = bool>,
     ) {
     }
 
     unsafe fn debug_identifier<'a, 'b>(
         _debug_list: &mut DebugList<'a, 'b>,
-        _key: &[u8],
-        _key_index: usize,
-        _bit: usize,
+        _identifier_iter: impl Iterator<Item = bool>,
     ) {
     }
 }
@@ -73,67 +61,37 @@ where
         index: usize,
         mut components: &[(*mut u8, usize)],
         pointers: &mut Vec<*const u8>,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        mut identifier_iter: impl Iterator<Item = bool>,
     ) {
-        let mut new_bit = bit + 1;
-        let new_key_index = if new_bit >= 8 {
-            new_bit &= 7;
-            key_index + 1
-        } else {
-            key_index
-        };
-
-        if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
+        if identifier_iter.next().unwrap_unchecked() {
             pointers.push(components.get_unchecked(0).0.add(index * size_of::<C>()));
             components = components.get_unchecked(1..);
         }
 
-        R::extract_component_pointers(index, components, pointers, key, new_key_index, new_bit);
+        R::extract_component_pointers(index, components, pointers, identifier_iter);
     }
 
     unsafe fn debug_components<'a, 'b>(
         mut pointers: &[*const u8],
         debug_map: &mut DebugMap<'a, 'b>,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        mut identifier_iter: impl Iterator<Item = bool>,
     ) {
-        let mut new_bit = bit + 1;
-        let new_key_index = if new_bit >= 8 {
-            new_bit &= 7;
-            key_index + 1
-        } else {
-            key_index
-        };
-
-        if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
+        if identifier_iter.next().unwrap_unchecked() {
             debug_map.entry(&type_name::<C>(), &*pointers.get_unchecked(0).cast::<C>());
             pointers = pointers.get_unchecked(1..);
         }
 
-        R::debug_components(pointers, debug_map, key, new_key_index, new_bit);
+        R::debug_components(pointers, debug_map, identifier_iter);
     }
 
     unsafe fn debug_identifier<'a, 'b>(
         debug_list: &mut DebugList<'a, 'b>,
-        key: &[u8],
-        key_index: usize,
-        bit: usize,
+        mut identifier_iter: impl Iterator<Item = bool>,
     ) {
-        let mut new_bit = bit + 1;
-        let new_key_index = if new_bit >= 8 {
-            new_bit &= 7;
-            key_index + 1
-        } else {
-            key_index
-        };
-
-        if key.get_unchecked(key_index) & (1 << (bit)) != 0 {
+        if identifier_iter.next().unwrap_unchecked() {
             debug_list.entry(&type_name::<C>());
         }
 
-        R::debug_identifier(debug_list, key, new_key_index, new_bit);
+        R::debug_identifier(debug_list, identifier_iter);
     }
 }

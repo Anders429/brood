@@ -24,7 +24,7 @@ where
     {
         let mut seq = serializer.serialize_seq(Some(
             self.0.length
-                * (unsafe { R::len_of_key(self.0.identifier.as_identifier().as_slice(), 0, 0) }
+                * (self.0.identifier.iter().filter(|b| *b).count()
                     + 1)
                 + 2,
         ))?;
@@ -49,9 +49,7 @@ where
                 &self.0.components,
                 self.0.length,
                 &mut seq,
-                self.0.identifier.as_identifier().as_slice(),
-                0,
-                0,
+                self.0.identifier.iter(),
             )?;
         }
 
@@ -120,9 +118,10 @@ where
                     })?);
                 }
 
-                let components_len =
-                    unsafe { R::len_of_key(identifier.as_identifier().as_slice(), 0, 0) };
+                let components_len = identifier.iter().filter(|b| *b).count();
                 let mut components = Vec::with_capacity(components_len);
+                // TODO: Move this logic into the deserialize_components_by_column logic. Vecs
+                // should be deconstructed and populated at the same time.
                 for _ in 0..components_len {
                     let mut v = ManuallyDrop::new(Vec::new());
                     components.push((v.as_mut_ptr(), v.capacity()));
@@ -132,9 +131,7 @@ where
                         &mut components,
                         length,
                         &mut seq,
-                        identifier.as_identifier().as_slice(),
-                        0,
-                        0,
+                        identifier.iter(),
                     )?;
                 }
 
