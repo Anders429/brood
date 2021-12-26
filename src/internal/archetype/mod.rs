@@ -80,34 +80,38 @@ where
         )
     }
 
-    pub(crate) unsafe fn push<E>(&mut self, entity: E, entity_allocator: &mut EntityAllocator<R>)
+    pub(crate) unsafe fn push<E>(&mut self, entity: E, entity_allocator: &mut EntityAllocator<R>) -> EntityIdentifier
     where
         E: Entity,
     {
         entity.push_components(&self.component_map, &mut self.components, self.length);
+
+        let entity_identifier = entity_allocator.allocate(Location {
+            identifier: self.identifier_buffer.as_identifier(),
+            index: self.length,
+        });
 
         let mut entity_identifiers = ManuallyDrop::new(Vec::from_raw_parts(
             self.entity_identifiers.0,
             self.length,
             self.entity_identifiers.1,
         ));
-        entity_identifiers.push(entity_allocator.allocate(Location {
-            identifier: self.identifier_buffer.as_identifier(),
-            index: self.length,
-        }));
+        entity_identifiers.push(entity_identifier);
         self.entity_identifiers = (
             entity_identifiers.as_mut_ptr(),
             entity_identifiers.capacity(),
         );
 
         self.length += 1;
+
+        entity_identifier
     }
 
     pub(crate) unsafe fn extend<E>(
         &mut self,
         entities: EntitiesIter<E>,
         entity_allocator: &mut EntityAllocator<R>,
-    ) where
+    ) -> impl Iterator<Item = EntityIdentifier> where
         E: Entities,
     {
         let component_len = entities.entities.component_len();
@@ -116,23 +120,26 @@ where
             .entities
             .extend_components(&self.component_map, &mut self.components, self.length);
 
+        let entity_identifiers = entity_allocator.allocate_batch(
+            (self.length..(self.length + component_len)).map(|index| Location {
+                identifier: self.identifier_buffer.as_identifier(),
+                index,
+            }));
+
         let mut entity_identifiers_v = ManuallyDrop::new(Vec::from_raw_parts(
             self.entity_identifiers.0,
             self.length,
             self.entity_identifiers.1,
         ));
-        entity_identifiers_v.extend(entity_allocator.allocate_batch(
-            (self.length..(self.length + component_len)).map(|index| Location {
-                identifier: self.identifier_buffer.as_identifier(),
-                index,
-            }),
-        ));
+        entity_identifiers_v.extend(entity_identifiers.iter());
         self.entity_identifiers = (
             entity_identifiers_v.as_mut_ptr(),
             entity_identifiers_v.capacity(),
         );
 
         self.length += component_len;
+
+        entity_identifiers.into_iter()
     }
 
     pub(crate) fn view<'a, V>(&mut self) -> V::Results

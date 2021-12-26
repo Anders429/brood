@@ -54,7 +54,7 @@ where
         Self::from_raw_parts(HashMap::new(), EntityAllocator::new())
     }
 
-    pub fn push<E>(&mut self, entity: E)
+    pub fn push<E>(&mut self, entity: E) -> EntityIdentifier
     where
         E: Entity,
     {
@@ -69,10 +69,11 @@ where
                 .entry(identifier_buffer.as_identifier())
                 .or_insert(Archetype::<R>::new(identifier_buffer))
                 .push(entity, &mut self.entity_allocator)
-        };
+        }
     }
 
-    pub fn extend<E>(&mut self, entities: EntitiesIter<E>)
+    // TODO: Figure out a way to remove the `must_use` attribute on the returned value.
+    pub fn extend<E>(&mut self, entities: EntitiesIter<E>) -> impl Iterator<Item = EntityIdentifier>
     where
         E: Entities,
     {
@@ -87,7 +88,7 @@ where
                 .entry(identifier_buffer.as_identifier())
                 .or_insert(Archetype::<R>::new(identifier_buffer))
                 .extend(entities, &mut self.entity_allocator)
-        };
+        }
     }
 
     pub fn query<'a, V, F>(&'a mut self) -> iter::Flatten<vec::IntoIter<V::Results>>

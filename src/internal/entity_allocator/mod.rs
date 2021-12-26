@@ -151,7 +151,7 @@ where
     pub(crate) unsafe fn allocate_batch<L>(
         &mut self,
         mut locations: L,
-    ) -> impl Iterator<Item = EntityIdentifier>
+    ) -> Vec<EntityIdentifier>
     where
         L: Iterator<Item = Location<R>> + ExactSizeIterator,
     {
@@ -176,7 +176,7 @@ where
             (0..remaining_locations).map(|index| EntityIdentifier::new(slots_len + index, 0)),
         );
 
-        identifiers.into_iter()
+        identifiers
     }
 
     pub(crate) fn get(&self, identifier: EntityIdentifier) -> Option<Location<R>> {
