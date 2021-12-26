@@ -1,5 +1,6 @@
 use crate::{
     component::Component,
+    internal::archetype,
     registry::{NullRegistry, Registry},
 };
 use ::serde::{de, de::SeqAccess, ser::SerializeSeq, Deserialize, Serialize};
@@ -8,25 +9,27 @@ use core::mem::ManuallyDrop;
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 pub trait RegistrySerialize: Registry {
-    unsafe fn serialize_components_by_column<S>(
+    unsafe fn serialize_components_by_column<R, S>(
         components: &[(*mut u8, usize)],
         length: usize,
         seq: &mut S,
-        identifier_iter: impl Iterator<Item = bool>,
+        identifier_iter: impl archetype::IdentifierIterator<R>,
     ) -> Result<(), S::Error>
     where
+        R: Registry,
         S: SerializeSeq;
 }
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl RegistrySerialize for NullRegistry {
-    unsafe fn serialize_components_by_column<S>(
+    unsafe fn serialize_components_by_column<R, S>(
         _components: &[(*mut u8, usize)],
         _length: usize,
         _seq: &mut S,
-        _identifier_iter: impl Iterator<Item = bool>,
+        _identifier_iter: impl archetype::IdentifierIterator<R>,
     ) -> Result<(), S::Error>
     where
+        R: Registry,
         S: SerializeSeq,
     {
         Ok(())
@@ -39,13 +42,14 @@ where
     C: Component + Serialize,
     R: RegistrySerialize,
 {
-    unsafe fn serialize_components_by_column<S>(
+    unsafe fn serialize_components_by_column<R_, S>(
         mut components: &[(*mut u8, usize)],
         length: usize,
         seq: &mut S,
-        mut identifier_iter: impl Iterator<Item = bool>,
+        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
     ) -> Result<(), S::Error>
     where
+        R_: Registry,
         S: SerializeSeq,
     {
         if identifier_iter.next().unwrap_unchecked() {
@@ -69,25 +73,27 @@ where
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 pub trait RegistryDeserialize<'de>: Registry + 'de {
-    unsafe fn deserialize_components_by_column<V>(
+    unsafe fn deserialize_components_by_column<R, V>(
         components: &mut [(*mut u8, usize)],
         length: usize,
         seq: &mut V,
-        identifier_iter: impl Iterator<Item = bool>,
+        identifier_iter: impl archetype::IdentifierIterator<R>,
     ) -> Result<(), V::Error>
     where
+        R: Registry,
         V: SeqAccess<'de>;
 }
 
 #[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl<'de> RegistryDeserialize<'de> for NullRegistry {
-    unsafe fn deserialize_components_by_column<V>(
+    unsafe fn deserialize_components_by_column<R, V>(
         _components: &mut [(*mut u8, usize)],
         _length: usize,
         _seq: &mut V,
-        _identifier_iter: impl Iterator<Item = bool>,
+        _identifier_iter: impl archetype::IdentifierIterator<R>,
     ) -> Result<(), V::Error>
     where
+        R: Registry,
         V: SeqAccess<'de>,
     {
         Ok(())
@@ -100,13 +106,14 @@ where
     C: Component + Deserialize<'de>,
     R: RegistryDeserialize<'de>,
 {
-    unsafe fn deserialize_components_by_column<V>(
+    unsafe fn deserialize_components_by_column<R_, V>(
         mut components: &mut [(*mut u8, usize)],
         length: usize,
         seq: &mut V,
-        mut identifier_iter: impl Iterator<Item = bool>,
+        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
     ) -> Result<(), V::Error>
     where
+        R_: Registry,
         V: SeqAccess<'de>,
     {
         let mut v = if identifier_iter.next().unwrap_unchecked() {

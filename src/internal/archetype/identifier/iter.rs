@@ -1,6 +1,8 @@
 use crate::registry::Registry;
 use core::marker::PhantomData;
 
+pub unsafe trait IdentifierIterator<R>: Iterator<Item = bool> where R: Registry {}
+
 pub(crate) struct IdentifierIter<R>
 where
     R: Registry,
@@ -52,3 +54,5 @@ where
         }
     }
 }
+
+unsafe impl<R> IdentifierIterator<R> for IdentifierIter<R> where R: Registry {}
