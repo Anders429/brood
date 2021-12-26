@@ -11,7 +11,7 @@ where
 {
     fn eq(&self, other: &Self) -> bool {
         self.length == other.length
-            && self.identifier == other.identifier
+            && self.identifier_buffer == other.identifier_buffer
             && ManuallyDrop::new(unsafe {
                 Vec::from_raw_parts(
                     self.entity_identifiers.0,
@@ -30,7 +30,7 @@ where
                     &self.components,
                     &other.components,
                     self.length,
-                    self.identifier.iter(),
+                    self.identifier_buffer.iter(),
                 )
             }
     }

@@ -11,7 +11,7 @@ where
             R::free_components(
                 &self.components,
                 self.length,
-                self.identifier.iter()
+                self.identifier_buffer.iter()
             );
         }
         unsafe {

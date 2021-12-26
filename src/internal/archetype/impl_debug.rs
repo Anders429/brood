@@ -75,7 +75,7 @@ where
                     i,
                     &self.components,
                     &mut component_pointers,
-                    self.identifier.iter()
+                    self.identifier_buffer.iter()
                 );
             }
             debug_map.entry(
@@ -84,7 +84,7 @@ where
                     identifier: *unsafe { entity_identifiers.get_unchecked(i) },
                     components: Components {
                         pointers: component_pointers,
-                        identifier: self.identifier.as_identifier(),
+                        identifier: unsafe {self.identifier_buffer.as_identifier()},
                     },
                 },
             );

@@ -40,7 +40,11 @@ where
         }
     }
 
-    pub(crate) fn as_identifier(&self) -> Identifier<R> {
+    pub(crate) unsafe fn as_slice<'a>(&'a self) -> &'a [u8] {
+        unsafe { slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8) }
+    }
+
+    pub(crate) unsafe fn as_identifier(&self) -> Identifier<R> {
         Identifier::<R> {
             registry: self.registry,
 
@@ -48,7 +52,7 @@ where
         }
     }
 
-    pub(crate) fn iter(&self) -> IdentifierIter<R> {
+    pub(crate) unsafe fn iter(&self) -> IdentifierIter<R> {
         unsafe { IdentifierIter::<R>::new(self.pointer) }
     }
 }
@@ -58,7 +62,7 @@ where
     R: Registry,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.as_identifier().as_slice() == other.as_identifier().as_slice()
+        unsafe {self.as_slice() == other.as_slice()}
     }
 }
 
@@ -86,11 +90,11 @@ impl<R> Identifier<R>
 where
     R: Registry,
 {
-    pub(crate) fn as_slice<'a>(&'a self) -> &'a [u8] {
+    pub(crate) unsafe fn as_slice<'a>(&'a self) -> &'a [u8] {
         unsafe { slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8) }
     }
 
-    pub(crate) fn iter(&self) -> IdentifierIter<R> {
+    pub(crate) unsafe fn iter(&self) -> IdentifierIter<R> {
         unsafe { IdentifierIter::<R>::new(self.pointer) }
     }
 }
@@ -118,7 +122,7 @@ where
     where
         H: Hasher,
     {
-        self.as_slice().hash(state);
+        unsafe {self.as_slice()}.hash(state);
     }
 }
 
@@ -127,7 +131,7 @@ where
     R: Registry,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.as_slice().eq(other.as_slice())
+        unsafe {self.as_slice() == other.as_slice()}
     }
 }
 

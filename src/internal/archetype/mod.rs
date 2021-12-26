@@ -22,7 +22,7 @@ pub(crate) struct Archetype<R>
 where
     R: Registry,
 {
-    identifier: IdentifierBuffer<R>,
+    identifier_buffer: IdentifierBuffer<R>,
 
     entity_identifiers: (*mut EntityIdentifier, usize),
     components: Vec<(*mut u8, usize)>,
@@ -36,7 +36,7 @@ where
     R: Registry,
 {
     pub(crate) unsafe fn from_raw_parts(
-        identifier: IdentifierBuffer<R>,
+        identifier_buffer: IdentifierBuffer<R>,
         entity_identifiers: (*mut EntityIdentifier, usize),
         components: Vec<(*mut u8, usize)>,
         length: usize,
@@ -45,11 +45,11 @@ where
         R::create_component_map_for_key(
             &mut component_map,
             0,
-            identifier.iter(),
+            identifier_buffer.iter(),
         );
 
         Self {
-            identifier,
+            identifier_buffer,
 
             entity_identifiers,
             components,
@@ -92,7 +92,7 @@ where
             self.entity_identifiers.1,
         ));
         entity_identifiers.push(entity_allocator.allocate(Location {
-            identifier: self.identifier.as_identifier(),
+            identifier: self.identifier_buffer.as_identifier(),
             index: self.length,
         }));
         self.entity_identifiers = (
@@ -123,7 +123,7 @@ where
         ));
         entity_identifiers_v.extend(entity_allocator.allocate_batch(
             (self.length..(self.length + component_len)).map(|index| Location {
-                identifier: self.identifier.as_identifier(),
+                identifier: self.identifier_buffer.as_identifier(),
                 index,
             }),
         ));
@@ -142,8 +142,8 @@ where
         unsafe { V::view(&self.components, self.length, &self.component_map) }
     }
 
-    pub(crate) fn identifier(&self) -> Identifier<R> {
-        self.identifier.as_identifier()
+    pub(crate) unsafe fn identifier(&self) -> Identifier<R> {
+        self.identifier_buffer.as_identifier()
     }
 
     pub(crate) fn entity_identifiers(&self) -> impl Iterator<Item = &EntityIdentifier> {
