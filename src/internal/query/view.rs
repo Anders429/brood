@@ -71,9 +71,9 @@ impl<'a> ViewsSeal<'a> for NullViews {
     type Results = iter::Repeat<NullResult>;
 
     unsafe fn view(
-        columns: &[(*mut u8, usize)],
-        length: usize,
-        component_map: &HashMap<TypeId, usize>,
+        _columns: &[(*mut u8, usize)],
+        _length: usize,
+        _component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results {
         iter::repeat(NullResult)
     }
