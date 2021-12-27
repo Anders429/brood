@@ -18,6 +18,7 @@ use crate::{
 use alloc::vec::Vec;
 use core::{
     any::TypeId,
+    marker::PhantomData,
     mem::{ManuallyDrop, MaybeUninit},
     slice,
 };
@@ -211,6 +212,35 @@ where
         R::push_components_from_buffer_and_component(
             buffer.as_ptr(),
             MaybeUninit::new(component),
+            &mut self.components,
+            self.length,
+            self.identifier_buffer.iter(),
+        );
+
+        let mut entity_identifiers = ManuallyDrop::new(Vec::from_raw_parts(
+            self.entity_identifiers.0,
+            self.length,
+            self.entity_identifiers.1,
+        ));
+        entity_identifiers.push(entity_identifier);
+        self.entity_identifiers = (
+            entity_identifiers.as_mut_ptr(),
+            entity_identifiers.capacity(),
+        );
+
+        self.length += 1;
+
+        self.length - 1
+    }
+
+    pub(crate) unsafe fn push_from_buffer_skipping_component<C>(
+        &mut self,
+        entity_identifier: EntityIdentifier,
+        buffer: Vec<u8>,
+    ) -> usize where C: Component {
+        R::push_components_from_buffer_skipping_component(
+            buffer.as_ptr(),
+            PhantomData::<C>,
             &mut self.components,
             self.length,
             self.identifier_buffer.iter(),

@@ -6,6 +6,7 @@ use crate::{
 use alloc::vec::Vec;
 use core::{
     any::TypeId,
+    marker::PhantomData,
     mem::{size_of, ManuallyDrop, MaybeUninit},
     ptr,
 };
@@ -33,6 +34,16 @@ pub trait RegistryStorage {
     unsafe fn push_components_from_buffer_and_component<C, R>(
         buffer: *const u8,
         component: MaybeUninit<C>,
+        components: &mut [(*mut u8, usize)],
+        length: usize,
+        identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        C: Component,
+        R: Registry;
+
+    unsafe fn push_components_from_buffer_skipping_component<C, R>(
+        buffer: *const u8,
+        component: PhantomData<C>,
         components: &mut [(*mut u8, usize)],
         length: usize,
         identifier_iter: impl archetype::IdentifierIterator<R>,
@@ -82,6 +93,16 @@ impl RegistryStorage for NullRegistry {
         R: Registry,
     {
     }
+
+    unsafe fn push_components_from_buffer_skipping_component<C, R>(
+        _buffer: *const u8,
+        _component: PhantomData<C>,
+        _components: &mut [(*mut u8, usize)],
+        _length: usize,
+        _identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        C: Component,
+        R: Registry {}
 
     unsafe fn free_components<R>(
         _components: &[(*mut u8, usize)],
@@ -149,25 +170,25 @@ where
         R::remove_component_row(index, removed_bytes, components, length, identifier_iter);
     }
 
-    unsafe fn push_components_from_buffer_and_component<_C, _R>(
+    unsafe fn push_components_from_buffer_and_component<C_, R_>(
         mut buffer: *const u8,
-        mut component: MaybeUninit<_C>,
+        mut component: MaybeUninit<C_>,
         mut components: &mut [(*mut u8, usize)],
         length: usize,
-        mut identifier_iter: impl archetype::IdentifierIterator<_R>,
+        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
     ) where
-        _C: Component,
-        _R: Registry,
+        C_: Component,
+        R_: Registry,
     {
         if identifier_iter.next().unwrap_unchecked() {
             let component_column = components.get_unchecked_mut(0);
 
-            if TypeId::of::<C>() == TypeId::of::<_C>() {
+            if TypeId::of::<C>() == TypeId::of::<C_>() {
                 // Consume the component. This is sound, since we won't ever read this
                 // component again. This is because each component type is guaranteed to only
                 // occur once within an Archetype's key.
-                let mut v = ManuallyDrop::new(Vec::<_C>::from_raw_parts(
-                    component_column.0.cast::<_C>(),
+                let mut v = ManuallyDrop::new(Vec::<C_>::from_raw_parts(
+                    component_column.0.cast::<C_>(),
                     length,
                     component_column.1,
                 ));
@@ -197,6 +218,40 @@ where
             length,
             identifier_iter,
         );
+    }
+
+    unsafe fn push_components_from_buffer_skipping_component<C_, R_>(
+        mut buffer: *const u8,
+        component: PhantomData<C_>,
+        mut components: &mut [(*mut u8, usize)],
+        length: usize,
+        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+    ) where
+        C_: Component,
+        R_: Registry
+    {
+        if identifier_iter.next().unwrap_unchecked() {
+            if TypeId::of::<C>() != TypeId::of::<C_>() {
+                let component_column = components.get_unchecked_mut(0);
+                let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
+                    component_column.0.cast::<C>(),
+                    length,
+                    component_column.1,
+                ));
+                v.push(buffer.cast::<C>().read());
+                *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());                
+            }
+
+            buffer = buffer.add(size_of::<C>());
+        }
+
+        R::push_components_from_buffer_skipping_component(
+            buffer,
+            component,
+            components,
+            length,
+            identifier_iter,
+        )
     }
 
     unsafe fn free_components<R_>(
