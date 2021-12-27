@@ -161,7 +161,7 @@ where
                     .as_mut_ptr()
                     .add(removed_bytes.len())
                     .cast::<C>(),
-                v.remove(index),
+                v.swap_remove(index),
             );
             removed_bytes.set_len(removed_bytes.len() + size_of::<C>());
 
@@ -239,7 +239,9 @@ where
                     component_column.1,
                 ));
                 v.push(buffer.cast::<C>().read());
-                *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());                
+                *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());
+                
+                components = components.get_unchecked_mut(1..);                
             }
 
             buffer = buffer.add(size_of::<C>());

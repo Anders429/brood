@@ -12,12 +12,9 @@ fn main() {
     let mut world = World::<Registry>::new();
 
     let entity_identifier = world.push(entity!(A(0)));
-    world.push(entity!(A(0), B(1)));
+    world.push(entity!(A(1)));
     dbg!(&world);
 
     world.entry(entity_identifier).unwrap().add(B(0));
-    dbg!(&world);
-
-    world.entry(entity_identifier).unwrap().remove::<A>();
     dbg!(&world);
 }

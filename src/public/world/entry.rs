@@ -49,7 +49,7 @@ where
                     .archetypes
                     .get_mut(&self.location.identifier)
                     .unwrap_unchecked()
-                    .remove_row_unchecked(self.location.index)
+                    .remove_row_unchecked(self.location.index, &mut self.world.entity_allocator)
             };
             // Create new identifier buffer.
             let mut raw_identifier_buffer = self.location.identifier.to_vec();
@@ -103,7 +103,7 @@ where
                     .archetypes
                     .get_mut(&self.location.identifier)
                     .unwrap_unchecked()
-                    .remove_row_unchecked(self.location.index)
+                    .remove_row_unchecked(self.location.index, &mut self.world.entity_allocator)
             };
             // Create new identifier buffer.
             let mut raw_identifier_buffer = self.location.identifier.to_vec();

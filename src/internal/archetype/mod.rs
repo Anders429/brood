@@ -178,6 +178,7 @@ where
     pub(crate) unsafe fn remove_row_unchecked(
         &mut self,
         index: usize,
+        entity_allocator: &mut EntityAllocator<R>,
     ) -> (EntityIdentifier, Vec<u8>) {
         let mut bytes = Vec::new();
         R::remove_component_row(
@@ -193,7 +194,11 @@ where
             self.length,
             self.entity_identifiers.1,
         ));
-        let entity_identifier = entity_identifiers.remove(index);
+        // Update swapped index if this isn't the last row.
+        if index < self.length - 1 {
+            entity_allocator.modify_location_index_unchecked(*entity_identifiers.last().unwrap_unchecked(), index);
+        }
+        let entity_identifier = entity_identifiers.swap_remove(index);
 
         self.length -= 1;
 
