@@ -23,11 +23,7 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut debug_map = f.debug_map();
         unsafe {
-            R::debug_components(
-                &self.pointers,
-                &mut debug_map,
-                self.identifier.iter(),
-            );
+            R::debug_components(&self.pointers, &mut debug_map, self.identifier.iter());
         }
         debug_map.finish()
     }
@@ -75,7 +71,7 @@ where
                     i,
                     &self.components,
                     &mut component_pointers,
-                    self.identifier_buffer.iter()
+                    self.identifier_buffer.iter(),
                 );
             }
             debug_map.entry(
@@ -84,7 +80,7 @@ where
                     identifier: *unsafe { entity_identifiers.get_unchecked(i) },
                     components: Components {
                         pointers: component_pointers,
-                        identifier: unsafe {self.identifier_buffer.as_identifier()},
+                        identifier: unsafe { self.identifier_buffer.as_identifier() },
                     },
                 },
             );

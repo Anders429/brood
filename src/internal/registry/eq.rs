@@ -12,7 +12,9 @@ pub trait RegistryPartialEq: Registry {
         components_b: &[(*mut u8, usize)],
         length: usize,
         identifier_iter: impl archetype::IdentifierIterator<R>,
-    ) -> bool where R: Registry;
+    ) -> bool
+    where
+        R: Registry;
 }
 
 impl RegistryPartialEq for NullRegistry {
@@ -21,7 +23,10 @@ impl RegistryPartialEq for NullRegistry {
         _components_b: &[(*mut u8, usize)],
         _length: usize,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
-    ) -> bool where R: Registry {
+    ) -> bool
+    where
+        R: Registry,
+    {
         true
     }
 }
@@ -36,7 +41,10 @@ where
         mut components_b: &[(*mut u8, usize)],
         length: usize,
         mut identifier_iter: impl archetype::IdentifierIterator<R_>,
-    ) -> bool where R_: Registry {
+    ) -> bool
+    where
+        R_: Registry,
+    {
         if identifier_iter.next().unwrap_unchecked() {
             let component_column_a = components_a.get_unchecked(0);
             let component_column_b = components_b.get_unchecked(0);
@@ -57,12 +65,7 @@ where
             components_b = components_b.get_unchecked(1..);
         }
 
-        R::component_eq(
-            components_a,
-            components_b,
-            length,
-            identifier_iter,
-        )
+        R::component_eq(components_a, components_b, length, identifier_iter)
     }
 }
 

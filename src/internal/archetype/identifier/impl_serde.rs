@@ -21,7 +21,7 @@ where
         } else {
             let mut tuple = serializer.serialize_tuple((R::LEN + 7) / 8)?;
 
-            for byte in unsafe {self.as_slice()} {
+            for byte in unsafe { self.as_slice() } {
                 tuple.serialize_element(byte)?;
             }
 

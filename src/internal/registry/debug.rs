@@ -16,18 +16,21 @@ pub trait RegistryDebug: Registry {
         components: &[(*mut u8, usize)],
         pointers: &mut Vec<*const u8>,
         identifier_iter: impl archetype::IdentifierIterator<R>,
-    ) where R: Registry;
+    ) where
+        R: Registry;
 
     unsafe fn debug_components<'a, 'b, R>(
         pointers: &[*const u8],
         debug_map: &mut DebugMap<'a, 'b>,
         identifier_iter: impl archetype::IdentifierIterator<R>,
-    ) where R: Registry;
+    ) where
+        R: Registry;
 
     unsafe fn debug_identifier<'a, 'b, R>(
         debug_list: &mut DebugList<'a, 'b>,
         identifier_iter: impl archetype::IdentifierIterator<R>,
-    ) where R: Registry;
+    ) where
+        R: Registry;
 }
 
 impl RegistryDebug for NullRegistry {
@@ -36,20 +39,26 @@ impl RegistryDebug for NullRegistry {
         _components: &[(*mut u8, usize)],
         _pointers: &mut Vec<*const u8>,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
-    ) where R: Registry {
+    ) where
+        R: Registry,
+    {
     }
 
     unsafe fn debug_components<'a, 'b, R>(
         _pointers: &[*const u8],
         _debug_map: &mut DebugMap<'a, 'b>,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
-    ) where R: Registry {
+    ) where
+        R: Registry,
+    {
     }
 
     unsafe fn debug_identifier<'a, 'b, R>(
         _debug_list: &mut DebugList<'a, 'b>,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
-    ) where R: Registry {
+    ) where
+        R: Registry,
+    {
     }
 }
 
@@ -63,7 +72,9 @@ where
         mut components: &[(*mut u8, usize)],
         pointers: &mut Vec<*const u8>,
         mut identifier_iter: impl archetype::IdentifierIterator<R_>,
-    ) where R_: Registry {
+    ) where
+        R_: Registry,
+    {
         if identifier_iter.next().unwrap_unchecked() {
             pointers.push(components.get_unchecked(0).0.add(index * size_of::<C>()));
             components = components.get_unchecked(1..);
@@ -75,8 +86,10 @@ where
     unsafe fn debug_components<'a, 'b, R_>(
         mut pointers: &[*const u8],
         debug_map: &mut DebugMap<'a, 'b>,
-        mut identifier_iter: impl archetype::IdentifierIterator<R_>
-    ) where R_: Registry {
+        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+    ) where
+        R_: Registry,
+    {
         if identifier_iter.next().unwrap_unchecked() {
             debug_map.entry(&type_name::<C>(), &*pointers.get_unchecked(0).cast::<C>());
             pointers = pointers.get_unchecked(1..);
@@ -88,7 +101,9 @@ where
     unsafe fn debug_identifier<'a, 'b, R_>(
         debug_list: &mut DebugList<'a, 'b>,
         mut identifier_iter: impl archetype::IdentifierIterator<R_>,
-    ) where R_: Registry {
+    ) where
+        R_: Registry,
+    {
         if identifier_iter.next().unwrap_unchecked() {
             debug_list.entry(&type_name::<C>());
         }

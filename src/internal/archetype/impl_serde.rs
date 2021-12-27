@@ -24,7 +24,9 @@ where
     {
         let mut seq = serializer.serialize_seq(Some(
             self.0.length
-                * (unsafe {self.0.identifier_buffer.iter()}.filter(|b| *b).count()
+                * (unsafe { self.0.identifier_buffer.iter() }
+                    .filter(|b| *b)
+                    .count()
                     + 1)
                 + 2,
         ))?;
@@ -118,7 +120,7 @@ where
                     })?);
                 }
 
-                let components_len = unsafe {identifier.iter()}.filter(|b| *b).count();
+                let components_len = unsafe { identifier.iter() }.filter(|b| *b).count();
                 let mut components = Vec::with_capacity(components_len);
                 // TODO: Move this logic into the deserialize_components_by_column logic. Vecs
                 // should be deconstructed and populated at the same time.

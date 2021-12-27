@@ -1,6 +1,7 @@
 use crate::{
-    component::Component, internal::entity_allocator::Location, registry::Registry, world::World,
+    component::Component, internal::{archetype, archetype::Archetype, entity_allocator::Location}, registry::Registry, world::World,
 };
+use core::any::TypeId;
 
 pub struct Entry<'a, R>
 where
@@ -22,23 +23,69 @@ where
     where
         C: Component,
     {
-        todo!()
+        let component_index = unsafe {*self
+            .world
+            .component_map
+            .get(&TypeId::of::<C>())
+            .unwrap_unchecked()};
+        if unsafe {
+            self.location.identifier.get_unchecked(
+                component_index
+            )
+        } {
+            // The component already exists within this entity. Replace it.
+            unsafe {
+                self.world
+                    .archetypes
+                    .get_mut(&self.location.identifier)
+                    .unwrap_unchecked()
+                    .set_component_unchecked(self.location.index, component)
+            };
+        } else {
+            // The component needs to be added to the entity.
+            let (entity_identifier, current_component_bytes) = unsafe {
+                self.world.archetypes.get_mut(&self.location.identifier).unwrap_unchecked().remove_row_unchecked(self.location.index)
+            };
+            // Create new identifier buffer.
+            let mut raw_identifier_buffer = self.location.identifier.to_vec();
+            // Set the component's bit.
+            *unsafe {raw_identifier_buffer.get_unchecked_mut(component_index / 8)} |= 1 << (component_index % 8);
+            let identifier_buffer = unsafe {archetype::IdentifierBuffer::<R>::new(raw_identifier_buffer)};
 
-        // Determine if the component already exists.
-        // If so, simply replace the value.
+            // Insert to the corresponding archetype using the bytes and the new component.
+            let archetype_entry = self.world
+                .archetypes
+                .entry(unsafe {identifier_buffer.as_identifier()});
+            let archetype_identifier = *archetype_entry.key();
+            let index = unsafe {
+                archetype_entry
+                    .or_insert(Archetype::<R>::new(identifier_buffer))
+                    .push_from_buffer_and_component(entity_identifier, current_component_bytes, component)
+            };
 
-        // If not, then do the following:
-        // Pop the values from the current archetype table.
-        // Append the new component to the values.
-        // Insert with the new component.
-        // (Is there a way to make this more efficient?)
+            // Update the location.
+            unsafe {
+                self.world.entity_allocator.modify_location_unchecked(entity_identifier, Location::new(archetype_identifier, index));
+            }
+        }
     }
 
     pub fn remove<C>(&mut self)
     where
         C: Component,
     {
-        todo!()
+        if unsafe {
+            self.location.identifier.get_unchecked(
+                *self
+                    .world
+                    .component_map
+                    .get(&TypeId::of::<C>())
+                    .unwrap_unchecked(),
+            )
+        } {
+            // The component exists and needs to be removed.
+            todo!()
+        }
 
         // Determine if the component exists.
         // If not, do nothing.
@@ -47,5 +94,11 @@ where
         // Insert the rest of the components.
     }
 
-    // TODO: Add query method.
+    // pub fn query<'a, V, F>(&'a mut self) -> iter::Flatten<vec::IntoIter<V::Results>>
+    // where
+    //     V: Views<'a>,
+    //     F: Filter,
+    // {
+    //     todo!()
+    // }
 }

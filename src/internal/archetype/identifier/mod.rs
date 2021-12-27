@@ -62,7 +62,7 @@ where
     R: Registry,
 {
     fn eq(&self, other: &Self) -> bool {
-        unsafe {self.as_slice() == other.as_slice()}
+        unsafe { self.as_slice() == other.as_slice() }
     }
 }
 
@@ -97,6 +97,14 @@ where
     pub(crate) unsafe fn iter(&self) -> IdentifierIter<R> {
         unsafe { IdentifierIter::<R>::new(self.pointer) }
     }
+
+    pub(crate) fn to_vec(&self) -> Vec<u8> {
+        unsafe {self.as_slice()}.to_vec()
+    }
+
+    pub(crate) unsafe fn get_unchecked(&self, index: usize) -> bool {
+        (self.as_slice().get_unchecked(index / 8) >> (index % 8) & 1) != 0
+    }
 }
 
 impl<R> Clone for Identifier<R>
@@ -122,7 +130,7 @@ where
     where
         H: Hasher,
     {
-        unsafe {self.as_slice()}.hash(state);
+        unsafe { self.as_slice() }.hash(state);
     }
 }
 
@@ -131,7 +139,7 @@ where
     R: Registry,
 {
     fn eq(&self, other: &Self) -> bool {
-        unsafe {self.as_slice() == other.as_slice()}
+        unsafe { self.as_slice() == other.as_slice() }
     }
 }
 

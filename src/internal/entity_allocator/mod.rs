@@ -20,6 +20,15 @@ where
     pub(crate) index: usize,
 }
 
+impl<R> Location<R> where R: Registry {
+    pub(crate) fn new(identifier: archetype::Identifier<R>, index: usize) -> Self {
+        Self{
+            identifier,
+            index,
+        }
+    }
+}
+
 impl<R> Clone for Location<R>
 where
     R: Registry,
@@ -148,10 +157,7 @@ where
     }
 
     #[inline]
-    pub(crate) unsafe fn allocate_batch<L>(
-        &mut self,
-        mut locations: L,
-    ) -> Vec<EntityIdentifier>
+    pub(crate) unsafe fn allocate_batch<L>(&mut self, mut locations: L) -> Vec<EntityIdentifier>
     where
         L: Iterator<Item = Location<R>> + ExactSizeIterator,
     {
@@ -186,6 +192,10 @@ where
         } else {
             None
         }
+    }
+
+    pub(crate) unsafe fn modify_location_unchecked(&mut self, identifier: EntityIdentifier, location: Location<R>) {
+        self.slots.get_unchecked_mut(identifier.index).location = Some(location);
     }
 }
 

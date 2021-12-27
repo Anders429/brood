@@ -138,12 +138,7 @@ where
             ManuallyDrop::new(Vec::new())
         };
 
-        let result = R::deserialize_components_by_column(
-            components,
-            length,
-            seq,
-            identifier_iter,
-        );
+        let result = R::deserialize_components_by_column(components, length, seq, identifier_iter);
         if result.is_err() {
             ManuallyDrop::drop(&mut v);
         }

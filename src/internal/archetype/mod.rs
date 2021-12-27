@@ -8,6 +8,7 @@ mod impl_serde;
 pub(crate) use identifier::{Identifier, IdentifierBuffer, IdentifierIterator};
 
 use crate::{
+    component::Component,
     entities::{Entities, EntitiesIter},
     entity::{Entity, EntityIdentifier},
     internal::entity_allocator::{EntityAllocator, Location},
@@ -15,7 +16,7 @@ use crate::{
     registry::Registry,
 };
 use alloc::vec::Vec;
-use core::{any::TypeId, mem::ManuallyDrop, slice};
+use core::{any::TypeId, mem::{ManuallyDrop, MaybeUninit}, slice};
 use hashbrown::HashMap;
 
 pub(crate) struct Archetype<R>
@@ -42,11 +43,7 @@ where
         length: usize,
     ) -> Self {
         let mut component_map = HashMap::new();
-        R::create_component_map_for_key(
-            &mut component_map,
-            0,
-            identifier_buffer.iter(),
-        );
+        R::create_component_map_for_key(&mut component_map, 0, identifier_buffer.iter());
 
         Self {
             identifier_buffer,
@@ -80,7 +77,11 @@ where
         )
     }
 
-    pub(crate) unsafe fn push<E>(&mut self, entity: E, entity_allocator: &mut EntityAllocator<R>) -> EntityIdentifier
+    pub(crate) unsafe fn push<E>(
+        &mut self,
+        entity: E,
+        entity_allocator: &mut EntityAllocator<R>,
+    ) -> EntityIdentifier
     where
         E: Entity,
     {
@@ -111,7 +112,8 @@ where
         &mut self,
         entities: EntitiesIter<E>,
         entity_allocator: &mut EntityAllocator<R>,
-    ) -> impl Iterator<Item = EntityIdentifier> where
+    ) -> impl Iterator<Item = EntityIdentifier>
+    where
         E: Entities,
     {
         let component_len = entities.entities.component_len();
@@ -124,7 +126,8 @@ where
             (self.length..(self.length + component_len)).map(|index| Location {
                 identifier: self.identifier_buffer.as_identifier(),
                 index,
-            }));
+            }),
+        );
 
         let mut entity_identifiers_v = ManuallyDrop::new(Vec::from_raw_parts(
             self.entity_identifiers.0,
@@ -147,6 +150,59 @@ where
         V: Views<'a>,
     {
         unsafe { V::view(&self.components, self.length, &self.component_map) }
+    }
+
+    pub(crate) unsafe fn set_component_unchecked<C>(&mut self, index: usize, component: C)
+    where
+        C: Component,
+    {
+        *slice::from_raw_parts_mut(
+            self.components
+                .get_unchecked(
+                    *self
+                        .component_map
+                        .get(&TypeId::of::<C>())
+                        .unwrap_unchecked(),
+                )
+                .0 as *mut C,
+            self.length,
+        )
+        .get_unchecked_mut(index) = component;
+    }
+
+    pub(crate) unsafe fn remove_row_unchecked(&mut self, index: usize) -> (EntityIdentifier ,Vec<u8>) {
+        let mut bytes = Vec::new();
+        R::remove_component_row(index, &mut bytes, &self.components, self.length, self.identifier_buffer.iter());
+
+        let mut entity_identifiers = ManuallyDrop::new(Vec::from_raw_parts(
+            self.entity_identifiers.0,
+            self.length,
+            self.entity_identifiers.1,
+        ));
+        let entity_identifier = entity_identifiers.remove(index);
+
+        self.length -= 1;
+
+        (entity_identifier, bytes)
+    }
+
+    pub(crate) unsafe fn push_from_buffer_and_component<C>(&mut self, entity_identifier: EntityIdentifier, buffer: Vec<u8>, component: C) -> usize where C: Component {
+        R::push_components_from_buffer_and_component(buffer.as_ptr(), MaybeUninit::new(component), &mut self.components, self.length, self.identifier_buffer.iter());
+        
+        let mut entity_identifiers = ManuallyDrop::new(Vec::from_raw_parts(
+            self.entity_identifiers.0,
+            self.length,
+            self.entity_identifiers.1,
+        ));
+        entity_identifiers.push(entity_identifier);
+        self.entity_identifiers = (
+            entity_identifiers.as_mut_ptr(),
+            entity_identifiers.capacity(),
+        );
+
+        self.length += 1;
+
+        self.length - 1
     }
 
     pub(crate) unsafe fn identifier(&self) -> Identifier<R> {
