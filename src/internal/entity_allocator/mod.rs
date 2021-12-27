@@ -20,12 +20,12 @@ where
     pub(crate) index: usize,
 }
 
-impl<R> Location<R> where R: Registry {
+impl<R> Location<R>
+where
+    R: Registry,
+{
     pub(crate) fn new(identifier: archetype::Identifier<R>, index: usize) -> Self {
-        Self{
-            identifier,
-            index,
-        }
+        Self { identifier, index }
     }
 }
 
@@ -194,7 +194,11 @@ where
         }
     }
 
-    pub(crate) unsafe fn modify_location_unchecked(&mut self, identifier: EntityIdentifier, location: Location<R>) {
+    pub(crate) unsafe fn modify_location_unchecked(
+        &mut self,
+        identifier: EntityIdentifier,
+        location: Location<R>,
+    ) {
         self.slots.get_unchecked_mut(identifier.index).location = Some(location);
     }
 }

@@ -99,7 +99,7 @@ where
     }
 
     pub(crate) fn to_vec(&self) -> Vec<u8> {
-        unsafe {self.as_slice()}.to_vec()
+        unsafe { self.as_slice() }.to_vec()
     }
 
     pub(crate) unsafe fn get_unchecked(&self, index: usize) -> bool {

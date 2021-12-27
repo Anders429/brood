@@ -16,7 +16,11 @@ use crate::{
     registry::Registry,
 };
 use alloc::vec::Vec;
-use core::{any::TypeId, mem::{ManuallyDrop, MaybeUninit}, slice};
+use core::{
+    any::TypeId,
+    mem::{ManuallyDrop, MaybeUninit},
+    slice,
+};
 use hashbrown::HashMap;
 
 pub(crate) struct Archetype<R>
@@ -170,9 +174,18 @@ where
         .get_unchecked_mut(index) = component;
     }
 
-    pub(crate) unsafe fn remove_row_unchecked(&mut self, index: usize) -> (EntityIdentifier ,Vec<u8>) {
+    pub(crate) unsafe fn remove_row_unchecked(
+        &mut self,
+        index: usize,
+    ) -> (EntityIdentifier, Vec<u8>) {
         let mut bytes = Vec::new();
-        R::remove_component_row(index, &mut bytes, &self.components, self.length, self.identifier_buffer.iter());
+        R::remove_component_row(
+            index,
+            &mut bytes,
+            &self.components,
+            self.length,
+            self.identifier_buffer.iter(),
+        );
 
         let mut entity_identifiers = ManuallyDrop::new(Vec::from_raw_parts(
             self.entity_identifiers.0,
@@ -186,9 +199,23 @@ where
         (entity_identifier, bytes)
     }
 
-    pub(crate) unsafe fn push_from_buffer_and_component<C>(&mut self, entity_identifier: EntityIdentifier, buffer: Vec<u8>, component: C) -> usize where C: Component {
-        R::push_components_from_buffer_and_component(buffer.as_ptr(), MaybeUninit::new(component), &mut self.components, self.length, self.identifier_buffer.iter());
-        
+    pub(crate) unsafe fn push_from_buffer_and_component<C>(
+        &mut self,
+        entity_identifier: EntityIdentifier,
+        buffer: Vec<u8>,
+        component: C,
+    ) -> usize
+    where
+        C: Component,
+    {
+        R::push_components_from_buffer_and_component(
+            buffer.as_ptr(),
+            MaybeUninit::new(component),
+            &mut self.components,
+            self.length,
+            self.identifier_buffer.iter(),
+        );
+
         let mut entity_identifiers = ManuallyDrop::new(Vec::from_raw_parts(
             self.entity_identifiers.0,
             self.length,

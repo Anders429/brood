@@ -1,5 +1,8 @@
 use crate::{
-    component::Component, internal::{archetype, archetype::Archetype, entity_allocator::Location}, registry::Registry, world::World,
+    component::Component,
+    internal::{archetype, archetype::Archetype, entity_allocator::Location},
+    registry::Registry,
+    world::World,
 };
 use core::any::TypeId;
 
@@ -23,16 +26,14 @@ where
     where
         C: Component,
     {
-        let component_index = unsafe {*self
-            .world
-            .component_map
-            .get(&TypeId::of::<C>())
-            .unwrap_unchecked()};
-        if unsafe {
-            self.location.identifier.get_unchecked(
-                component_index
-            )
-        } {
+        let component_index = unsafe {
+            *self
+                .world
+                .component_map
+                .get(&TypeId::of::<C>())
+                .unwrap_unchecked()
+        };
+        if unsafe { self.location.identifier.get_unchecked(component_index) } {
             // The component already exists within this entity. Replace it.
             unsafe {
                 self.world
@@ -44,28 +45,42 @@ where
         } else {
             // The component needs to be added to the entity.
             let (entity_identifier, current_component_bytes) = unsafe {
-                self.world.archetypes.get_mut(&self.location.identifier).unwrap_unchecked().remove_row_unchecked(self.location.index)
+                self.world
+                    .archetypes
+                    .get_mut(&self.location.identifier)
+                    .unwrap_unchecked()
+                    .remove_row_unchecked(self.location.index)
             };
             // Create new identifier buffer.
             let mut raw_identifier_buffer = self.location.identifier.to_vec();
             // Set the component's bit.
-            *unsafe {raw_identifier_buffer.get_unchecked_mut(component_index / 8)} |= 1 << (component_index % 8);
-            let identifier_buffer = unsafe {archetype::IdentifierBuffer::<R>::new(raw_identifier_buffer)};
+            *unsafe { raw_identifier_buffer.get_unchecked_mut(component_index / 8) } |=
+                1 << (component_index % 8);
+            let identifier_buffer =
+                unsafe { archetype::IdentifierBuffer::<R>::new(raw_identifier_buffer) };
 
             // Insert to the corresponding archetype using the bytes and the new component.
-            let archetype_entry = self.world
+            let archetype_entry = self
+                .world
                 .archetypes
-                .entry(unsafe {identifier_buffer.as_identifier()});
+                .entry(unsafe { identifier_buffer.as_identifier() });
             let archetype_identifier = *archetype_entry.key();
             let index = unsafe {
                 archetype_entry
                     .or_insert(Archetype::<R>::new(identifier_buffer))
-                    .push_from_buffer_and_component(entity_identifier, current_component_bytes, component)
+                    .push_from_buffer_and_component(
+                        entity_identifier,
+                        current_component_bytes,
+                        component,
+                    )
             };
 
             // Update the location.
             unsafe {
-                self.world.entity_allocator.modify_location_unchecked(entity_identifier, Location::new(archetype_identifier, index));
+                self.world.entity_allocator.modify_location_unchecked(
+                    entity_identifier,
+                    Location::new(archetype_identifier, index),
+                );
             }
         }
     }

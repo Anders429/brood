@@ -4,7 +4,11 @@ use crate::{
     registry::{NullRegistry, Registry},
 };
 use alloc::vec::Vec;
-use core::{any::TypeId, mem::{ManuallyDrop, MaybeUninit, size_of}, ptr};
+use core::{
+    any::TypeId,
+    mem::{size_of, ManuallyDrop, MaybeUninit},
+    ptr,
+};
 use hashbrown::HashMap;
 
 pub trait RegistryStorage {
@@ -63,21 +67,21 @@ impl RegistryStorage for NullRegistry {
         _length: usize,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
     ) where
-        R: Registry {
+        R: Registry,
+    {
+    }
 
-        }
-
-        unsafe fn push_components_from_buffer_and_component<C, R>(
-            _buffer: *const u8,
-            _component: MaybeUninit<C>,
-            _components: &mut [(*mut u8, usize)],
-            _length: usize,
-            _identifier_iter: impl archetype::IdentifierIterator<R>,
-        ) where
-            C: Component,
-            R: Registry {
-
-            }
+    unsafe fn push_components_from_buffer_and_component<C, R>(
+        _buffer: *const u8,
+        _component: MaybeUninit<C>,
+        _components: &mut [(*mut u8, usize)],
+        _length: usize,
+        _identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        C: Component,
+        R: Registry,
+    {
+    }
 
     unsafe fn free_components<R>(
         _components: &[(*mut u8, usize)],
@@ -120,67 +124,80 @@ where
         length: usize,
         mut identifier_iter: impl archetype::IdentifierIterator<R_>,
     ) where
-        R_: Registry {
-            if identifier_iter.next().unwrap_unchecked() {
-                let component_column = components.get_unchecked(0);
+        R_: Registry,
+    {
+        if identifier_iter.next().unwrap_unchecked() {
+            let component_column = components.get_unchecked(0);
+            let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
+                component_column.0.cast::<C>(),
+                length,
+                component_column.1,
+            ));
+
+            removed_bytes.reserve(size_of::<C>());
+            ptr::write(
+                removed_bytes
+                    .as_mut_ptr()
+                    .add(removed_bytes.len())
+                    .cast::<C>(),
+                v.remove(index),
+            );
+            removed_bytes.set_len(removed_bytes.len() + size_of::<C>());
+
+            components = components.get_unchecked(1..);
+        }
+        R::remove_component_row(index, removed_bytes, components, length, identifier_iter);
+    }
+
+    unsafe fn push_components_from_buffer_and_component<_C, _R>(
+        mut buffer: *const u8,
+        mut component: MaybeUninit<_C>,
+        mut components: &mut [(*mut u8, usize)],
+        length: usize,
+        mut identifier_iter: impl archetype::IdentifierIterator<_R>,
+    ) where
+        _C: Component,
+        _R: Registry,
+    {
+        if identifier_iter.next().unwrap_unchecked() {
+            let component_column = components.get_unchecked_mut(0);
+
+            if TypeId::of::<C>() == TypeId::of::<_C>() {
+                // Consume the component. This is sound, since we won't ever read this
+                // component again. This is because each component type is guaranteed to only
+                // occur once within an Archetype's key.
+                let mut v = ManuallyDrop::new(Vec::<_C>::from_raw_parts(
+                    component_column.0.cast::<_C>(),
+                    length,
+                    component_column.1,
+                ));
+                v.push(component.assume_init());
+                component = MaybeUninit::uninit();
+
+                *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());
+            } else {
                 let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
                     component_column.0.cast::<C>(),
                     length,
                     component_column.1,
                 ));
+                v.push(buffer.cast::<C>().read());
+                buffer = buffer.add(size_of::<C>());
 
-                removed_bytes.reserve(size_of::<C>());
-                ptr::write(removed_bytes.as_mut_ptr().add(removed_bytes.len()).cast::<C>(), v.remove(index));
-                removed_bytes.set_len(removed_bytes.len() + size_of::<C>());
-
-                components = components.get_unchecked(1..);
-            }
-            R::remove_component_row(index, removed_bytes, components, length, identifier_iter);
-        }
-
-        unsafe fn push_components_from_buffer_and_component<_C, _R>(
-            mut buffer: *const u8,
-            mut component: MaybeUninit<_C>,
-            mut components: &mut [(*mut u8, usize)],
-            length: usize,
-            mut identifier_iter: impl archetype::IdentifierIterator<_R>,
-        ) where
-            _C: Component,
-            _R: Registry 
-        {
-            if identifier_iter.next().unwrap_unchecked() {
-                let component_column = components.get_unchecked_mut(0);
-
-                if TypeId::of::<C>() == TypeId::of::<_C>() {
-                    // Consume the component. This is sound, since we won't ever read this
-                    // component again. This is because each component type is guaranteed to only
-                    // occur once within an Archetype's key.
-                    let mut v = ManuallyDrop::new(Vec::<_C>::from_raw_parts(
-                        component_column.0.cast::<_C>(),
-                        length,
-                        component_column.1,
-                    ));
-                    v.push(component.assume_init());
-                    component = MaybeUninit::uninit();
-
-                    *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());
-                } else {
-                    let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
-                        component_column.0.cast::<C>(),
-                        length,
-                        component_column.1,
-                    ));
-                    v.push(buffer.cast::<C>().read());
-                    buffer = buffer.add(size_of::<C>());
-
-                    *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());
-                }
-
-                components = components.get_unchecked_mut(1..);
+                *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());
             }
 
-            R::push_components_from_buffer_and_component(buffer, component, components, length, identifier_iter);
+            components = components.get_unchecked_mut(1..);
         }
+
+        R::push_components_from_buffer_and_component(
+            buffer,
+            component,
+            components,
+            length,
+            identifier_iter,
+        );
+    }
 
     unsafe fn free_components<R_>(
         mut components: &[(*mut u8, usize)],

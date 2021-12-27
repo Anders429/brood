@@ -1,8 +1,4 @@
-use brood::{
-    entity,
-    registry,
-    World,
-};
+use brood::{entity, registry, World};
 
 #[derive(Debug)]
 struct A(usize);
