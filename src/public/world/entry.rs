@@ -113,7 +113,7 @@ where
             let identifier_buffer =
                 unsafe { archetype::IdentifierBuffer::<R>::new(raw_identifier_buffer) };
 
-            // Insert to the corresponding archetype using the bytes, skipping the removed 
+            // Insert to the corresponding archetype using the bytes, skipping the removed
             // component.
             let archetype_entry = self
                 .world

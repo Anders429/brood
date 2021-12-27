@@ -196,7 +196,10 @@ where
         ));
         // Update swapped index if this isn't the last row.
         if index < self.length - 1 {
-            entity_allocator.modify_location_index_unchecked(*entity_identifiers.last().unwrap_unchecked(), index);
+            entity_allocator.modify_location_index_unchecked(
+                *entity_identifiers.last().unwrap_unchecked(),
+                index,
+            );
         }
         let entity_identifier = entity_identifiers.swap_remove(index);
 
@@ -242,7 +245,10 @@ where
         &mut self,
         entity_identifier: EntityIdentifier,
         buffer: Vec<u8>,
-    ) -> usize where C: Component {
+    ) -> usize
+    where
+        C: Component,
+    {
         R::push_components_from_buffer_skipping_component(
             buffer.as_ptr(),
             PhantomData::<C>,

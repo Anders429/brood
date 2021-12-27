@@ -102,7 +102,9 @@ impl RegistryStorage for NullRegistry {
         _identifier_iter: impl archetype::IdentifierIterator<R>,
     ) where
         C: Component,
-        R: Registry {}
+        R: Registry,
+    {
+    }
 
     unsafe fn free_components<R>(
         _components: &[(*mut u8, usize)],
@@ -228,7 +230,7 @@ where
         mut identifier_iter: impl archetype::IdentifierIterator<R_>,
     ) where
         C_: Component,
-        R_: Registry
+        R_: Registry,
     {
         if identifier_iter.next().unwrap_unchecked() {
             if TypeId::of::<C>() != TypeId::of::<C_>() {
@@ -240,8 +242,8 @@ where
                 ));
                 v.push(buffer.cast::<C>().read());
                 *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());
-                
-                components = components.get_unchecked_mut(1..);                
+
+                components = components.get_unchecked_mut(1..);
             }
 
             buffer = buffer.add(size_of::<C>());

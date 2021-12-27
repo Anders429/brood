@@ -207,7 +207,10 @@ where
         identifier: EntityIdentifier,
         index: usize,
     ) {
-        (&mut self.slots.get_unchecked_mut(identifier.index).location).as_mut().unwrap_unchecked().index = index;
+        (&mut self.slots.get_unchecked_mut(identifier.index).location)
+            .as_mut()
+            .unwrap_unchecked()
+            .index = index;
     }
 }
 
