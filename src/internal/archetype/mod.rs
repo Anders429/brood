@@ -179,10 +179,39 @@ where
         &mut self,
         index: usize,
         entity_allocator: &mut EntityAllocator<R>,
+    ) {
+        R::remove_component_row(
+            index,
+            &self.components,
+            self.length,
+            self.identifier_buffer.iter(),
+        );
+
+        let mut entity_identifiers = ManuallyDrop::new(Vec::from_raw_parts(
+            self.entity_identifiers.0,
+            self.length,
+            self.entity_identifiers.1,
+        ));
+        // Update swapped index if this isn't the last row.
+        if index < self.length - 1 {
+            entity_allocator.modify_location_index_unchecked(
+                *entity_identifiers.last().unwrap_unchecked(),
+                index,
+            );
+        }
+        entity_identifiers.swap_remove(index);
+
+        self.length -= 1;
+    }
+
+    pub(crate) unsafe fn pop_row_unchecked(
+        &mut self,
+        index: usize,
+        entity_allocator: &mut EntityAllocator<R>,
     ) -> (EntityIdentifier, Vec<u8>) {
         let size_of_components = self.identifier_buffer.size_of_components();
         let mut bytes = Vec::with_capacity(size_of_components);
-        R::remove_component_row(
+        R::pop_component_row(
             index,
             bytes.as_mut_ptr(),
             &self.components,

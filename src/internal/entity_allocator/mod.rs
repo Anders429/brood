@@ -76,6 +76,7 @@ impl<R> Slot<R>
 where
     R: Registry,
 {
+    // TODO: Should this really be considered unsafe?
     unsafe fn new(location: Location<R>) -> Self {
         Self {
             generation: 0,
@@ -83,9 +84,14 @@ where
         }
     }
 
+    // TODO: Should this really be considered unsafe?
     unsafe fn activate_unchecked(&mut self, location: Location<R>) {
         self.generation = self.generation.wrapping_add(1);
         self.location = Some(location);
+    }
+
+    fn deactivate(&mut self) {
+        self.location = None;
     }
 }
 
@@ -192,6 +198,12 @@ where
         } else {
             None
         }
+    }
+
+    pub(crate) unsafe fn free_unchecked(&mut self, identifier: EntityIdentifier) {
+        let slot = self.slots.get_unchecked_mut(identifier.index);
+        slot.deactivate();
+        self.free.push_back(identifier.index);
     }
 
     pub(crate) unsafe fn modify_location_unchecked(

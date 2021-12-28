@@ -112,6 +112,20 @@ where
             .get(entity_identifier)
             .map(|location| Entry::new(self, location))
     }
+
+    pub fn remove(&mut self, entity_identifier: EntityIdentifier) {
+        // Get location of entity.
+        if let Some(location) = self.entity_allocator.get(entity_identifier) {
+            // Remove row from Archetype.
+            unsafe {
+                self.archetypes.get_mut(&location.identifier).unwrap_unchecked().remove_row_unchecked(location.index, &mut self.entity_allocator);
+            }
+            // Free slot in EntityAllocator.
+            unsafe {
+                self.entity_allocator.free_unchecked(entity_identifier);
+            }
+        }
+    }
 }
 
 #[cfg(test)]

@@ -30,6 +30,14 @@ pub trait RegistryStorage {
 
     unsafe fn remove_component_row<R>(
         index: usize,
+        components: &[(*mut u8, usize)],
+        length: usize,
+        identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        R: Registry;
+
+    unsafe fn pop_component_row<R>(
+        index: usize,
         buffer: *mut u8,
         components: &[(*mut u8, usize)],
         length: usize,
@@ -87,6 +95,16 @@ impl RegistryStorage for NullRegistry {
     }
 
     unsafe fn remove_component_row<R>(
+        _index: usize,
+        _components: &[(*mut u8, usize)],
+        _length: usize,
+        _identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        R: Registry,
+    {
+    }
+
+    unsafe fn pop_component_row<R>(
         _index: usize,
         _buffer: *mut u8,
         _components: &[(*mut u8, usize)],
@@ -167,6 +185,28 @@ where
 
     unsafe fn remove_component_row<R_>(
         index: usize,
+        mut components: &[(*mut u8, usize)],
+        length: usize,
+        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+    ) where
+        R_: Registry,
+    {
+        if identifier_iter.next().unwrap_unchecked() {
+            let component_column = components.get_unchecked(0);
+            let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
+                component_column.0.cast::<C>(),
+                length,
+                component_column.1,
+            ));
+            v.swap_remove(index);
+
+            components = components.get_unchecked(1..);
+        }
+        R::remove_component_row(index, components, length, identifier_iter);
+    }
+
+    unsafe fn pop_component_row<R_>(
+        index: usize,
         mut buffer: *mut u8,
         mut components: &[(*mut u8, usize)],
         length: usize,
@@ -187,7 +227,7 @@ where
 
             components = components.get_unchecked(1..);
         }
-        R::remove_component_row(index, buffer, components, length, identifier_iter);
+        R::pop_component_row(index, buffer, components, length, identifier_iter);
     }
 
     unsafe fn push_components_from_buffer_and_component<C_, R_>(
