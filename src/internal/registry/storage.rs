@@ -5,7 +5,8 @@ use crate::{
 };
 use alloc::vec::Vec;
 use core::{
-    any::TypeId,
+    any::{type_name, TypeId},
+    fmt::DebugList,
     marker::PhantomData,
     mem::{size_of, ManuallyDrop, MaybeUninit},
     ptr,
@@ -68,6 +69,12 @@ pub trait RegistryStorage {
     unsafe fn free_components<R>(
         components: &[(*mut u8, usize)],
         length: usize,
+        identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        R: Registry;
+
+    unsafe fn debug_identifier<'a, 'b, R>(
+        debug_list: &mut DebugList<'a, 'b>,
         identifier_iter: impl archetype::IdentifierIterator<R>,
     ) where
         R: Registry;
@@ -142,6 +149,14 @@ impl RegistryStorage for NullRegistry {
     unsafe fn free_components<R>(
         _components: &[(*mut u8, usize)],
         _length: usize,
+        _identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        R: Registry,
+    {
+    }
+
+    unsafe fn debug_identifier<'a, 'b, R>(
+        _debug_list: &mut DebugList<'a, 'b>,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
     ) where
         R: Registry,
@@ -333,5 +348,18 @@ where
             components = components.get_unchecked(1..);
         }
         R::free_components(components, length, identifier_iter);
+    }
+
+    unsafe fn debug_identifier<'a, 'b, R_>(
+        debug_list: &mut DebugList<'a, 'b>,
+        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+    ) where
+        R_: Registry,
+    {
+        if identifier_iter.next().unwrap_unchecked() {
+            debug_list.entry(&type_name::<C>());
+        }
+
+        R::debug_identifier(debug_list, identifier_iter);
     }
 }

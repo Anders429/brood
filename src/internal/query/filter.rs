@@ -21,7 +21,7 @@ where
 {
     unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
         match component_map.get(&TypeId::of::<C>()) {
-            Some(index) => key.get_unchecked(index / 8) | (1 << (index % 8)) != 0,
+            Some(index) => key.get_unchecked(index / 8) & (1 << (index % 8)) != 0,
             Option::None => false,
         }
     }

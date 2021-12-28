@@ -151,7 +151,7 @@ impl<R> Eq for Identifier<R> where R: Registry {}
 
 impl<R> Debug for Identifier<R>
 where
-    R: RegistryDebug,
+    R: Registry,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut debug_list = f.debug_list();

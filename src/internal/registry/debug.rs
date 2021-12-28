@@ -25,12 +25,6 @@ pub trait RegistryDebug: Registry {
         identifier_iter: impl archetype::IdentifierIterator<R>,
     ) where
         R: Registry;
-
-    unsafe fn debug_identifier<'a, 'b, R>(
-        debug_list: &mut DebugList<'a, 'b>,
-        identifier_iter: impl archetype::IdentifierIterator<R>,
-    ) where
-        R: Registry;
 }
 
 impl RegistryDebug for NullRegistry {
@@ -47,14 +41,6 @@ impl RegistryDebug for NullRegistry {
     unsafe fn debug_components<'a, 'b, R>(
         _pointers: &[*const u8],
         _debug_map: &mut DebugMap<'a, 'b>,
-        _identifier_iter: impl archetype::IdentifierIterator<R>,
-    ) where
-        R: Registry,
-    {
-    }
-
-    unsafe fn debug_identifier<'a, 'b, R>(
-        _debug_list: &mut DebugList<'a, 'b>,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
     ) where
         R: Registry,
@@ -96,18 +82,5 @@ where
         }
 
         R::debug_components(pointers, debug_map, identifier_iter);
-    }
-
-    unsafe fn debug_identifier<'a, 'b, R_>(
-        debug_list: &mut DebugList<'a, 'b>,
-        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
-    ) where
-        R_: Registry,
-    {
-        if identifier_iter.next().unwrap_unchecked() {
-            debug_list.entry(&type_name::<C>());
-        }
-
-        R::debug_identifier(debug_list, identifier_iter);
     }
 }
