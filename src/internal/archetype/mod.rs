@@ -61,10 +61,10 @@ where
         }
     }
 
-    pub(crate) unsafe fn new(identifier: IdentifierBuffer<R>) -> Self {
+    pub(crate) unsafe fn new(identifier_buffer: IdentifierBuffer<R>) -> Self {
         let mut entity_identifiers = ManuallyDrop::new(Vec::new());
 
-        let entity_len = identifier.iter().filter(|b| *b).count();
+        let entity_len = identifier_buffer.iter().filter(|b| *b).count();
         let mut components = Vec::with_capacity(entity_len);
         for _ in 0..entity_len {
             let mut v = ManuallyDrop::new(Vec::new());
@@ -72,7 +72,7 @@ where
         }
 
         Self::from_raw_parts(
-            identifier,
+            identifier_buffer,
             (
                 entity_identifiers.as_mut_ptr(),
                 entity_identifiers.capacity(),
@@ -180,14 +180,16 @@ where
         index: usize,
         entity_allocator: &mut EntityAllocator<R>,
     ) -> (EntityIdentifier, Vec<u8>) {
-        let mut bytes = Vec::new();
+        let size_of_components = self.identifier_buffer.size_of_components();
+        let mut bytes = Vec::with_capacity(size_of_components);
         R::remove_component_row(
             index,
-            &mut bytes,
+            bytes.as_mut_ptr(),
             &self.components,
             self.length,
             self.identifier_buffer.iter(),
         );
+        bytes.set_len(size_of_components);
 
         let mut entity_identifiers = ManuallyDrop::new(Vec::from_raw_parts(
             self.entity_identifiers.0,

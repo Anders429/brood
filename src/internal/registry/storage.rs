@@ -22,9 +22,15 @@ pub trait RegistryStorage {
     ) where
         R: Registry;
 
+    unsafe fn size_of_components_for_identifier<R>(
+        identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) -> usize
+    where
+        R: Registry;
+
     unsafe fn remove_component_row<R>(
         index: usize,
-        removed_bytes: &mut Vec<u8>,
+        buffer: *mut u8,
         components: &[(*mut u8, usize)],
         length: usize,
         identifier_iter: impl archetype::IdentifierIterator<R>,
@@ -71,9 +77,18 @@ impl RegistryStorage for NullRegistry {
     {
     }
 
+    unsafe fn size_of_components_for_identifier<R>(
+        _identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) -> usize
+    where
+        R: Registry,
+    {
+        0
+    }
+
     unsafe fn remove_component_row<R>(
         _index: usize,
-        _removed_bytes: &mut Vec<u8>,
+        _buffer: *mut u8,
         _components: &[(*mut u8, usize)],
         _length: usize,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
@@ -140,9 +155,19 @@ where
         R::create_component_map_for_key(component_map, index, identifier_iter);
     }
 
+    unsafe fn size_of_components_for_identifier<R_>(
+        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+    ) -> usize
+    where
+        R_: Registry,
+    {
+        (identifier_iter.next().unwrap_unchecked() as usize)
+            + R::size_of_components_for_identifier(identifier_iter)
+    }
+
     unsafe fn remove_component_row<R_>(
         index: usize,
-        removed_bytes: &mut Vec<u8>,
+        mut buffer: *mut u8,
         mut components: &[(*mut u8, usize)],
         length: usize,
         mut identifier_iter: impl archetype::IdentifierIterator<R_>,
@@ -157,19 +182,12 @@ where
                 component_column.1,
             ));
 
-            removed_bytes.reserve(size_of::<C>());
-            ptr::write(
-                removed_bytes
-                    .as_mut_ptr()
-                    .add(removed_bytes.len())
-                    .cast::<C>(),
-                v.swap_remove(index),
-            );
-            removed_bytes.set_len(removed_bytes.len() + size_of::<C>());
+            ptr::write(buffer as *mut C, v.swap_remove(index));
+            buffer = buffer.add(size_of::<C>());
 
             components = components.get_unchecked(1..);
         }
-        R::remove_component_row(index, removed_bytes, components, length, identifier_iter);
+        R::remove_component_row(index, buffer, components, length, identifier_iter);
     }
 
     unsafe fn push_components_from_buffer_and_component<C_, R_>(
@@ -188,7 +206,7 @@ where
             if TypeId::of::<C>() == TypeId::of::<C_>() {
                 // Consume the component. This is sound, since we won't ever read this
                 // component again. This is because each component type is guaranteed to only
-                // occur once within an Archetype's key.
+                // occur once within an Archetype's identifier.
                 let mut v = ManuallyDrop::new(Vec::<C_>::from_raw_parts(
                     component_column.0.cast::<C_>(),
                     length,

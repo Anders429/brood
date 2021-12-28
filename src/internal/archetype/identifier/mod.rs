@@ -55,6 +55,10 @@ where
     pub(crate) unsafe fn iter(&self) -> IdentifierIter<R> {
         unsafe { IdentifierIter::<R>::new(self.pointer) }
     }
+
+    pub(crate) fn size_of_components(&self) -> usize {
+        unsafe { R::size_of_components_for_identifier(self.iter()) }
+    }
 }
 
 impl<R> PartialEq for IdentifierBuffer<R>
