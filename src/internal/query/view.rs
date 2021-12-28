@@ -1,5 +1,6 @@
 use crate::{
     component::Component,
+    entity::EntityIdentifier,
     query::{NullResult, NullViews, Read, Write},
 };
 use core::{any::TypeId, iter, slice};
@@ -10,6 +11,7 @@ pub trait ViewSeal<'a> {
 
     unsafe fn view(
         columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut EntityIdentifier, usize),
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result;
@@ -23,6 +25,7 @@ where
 
     unsafe fn view(
         columns: &[(*mut u8, usize)],
+        _entity_identifiers: (*mut EntityIdentifier, usize),
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
@@ -44,6 +47,7 @@ where
 
     unsafe fn view(
         columns: &[(*mut u8, usize)],
+        _entity_identifiers: (*mut EntityIdentifier, usize),
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
@@ -57,11 +61,27 @@ where
     }
 }
 
+impl<'a> ViewSeal<'a> for EntityIdentifier {
+    type Result = iter::Cloned<slice::Iter<'a, Self>>;
+
+    unsafe fn view(
+        _columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut EntityIdentifier, usize),
+        length: usize,
+        _component_map: &HashMap<TypeId, usize>,
+    ) -> Self::Result {
+        slice::from_raw_parts_mut::<'a, Self>(
+            entity_identifiers.0, length,
+        ).iter().cloned()
+    }
+}
+
 pub trait ViewsSeal<'a> {
     type Results: Iterator;
 
     unsafe fn view(
         columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut EntityIdentifier, usize),
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results;
@@ -72,6 +92,7 @@ impl<'a> ViewsSeal<'a> for NullViews {
 
     unsafe fn view(
         _columns: &[(*mut u8, usize)],
+        _entity_identifiers: (*mut EntityIdentifier, usize),
         _length: usize,
         _component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results {
@@ -88,9 +109,10 @@ where
 
     unsafe fn view(
         columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut EntityIdentifier, usize),
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results {
-        V::view(columns, length, component_map).zip(W::view(columns, length, component_map))
+        V::view(columns, entity_identifiers, length, component_map).zip(W::view(columns, entity_identifiers, length, component_map))
     }
 }

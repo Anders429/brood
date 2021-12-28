@@ -154,7 +154,7 @@ where
     where
         V: Views<'a>,
     {
-        unsafe { V::view(&self.components, self.length, &self.component_map) }
+        unsafe { V::view(&self.components, self.entity_identifiers, self.length, &self.component_map) }
     }
 
     pub(crate) unsafe fn set_component_unchecked<C>(&mut self, index: usize, component: C)

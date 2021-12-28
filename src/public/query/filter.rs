@@ -1,5 +1,6 @@
 use crate::{
     component::Component,
+    entity::EntityIdentifier,
     internal::query::FilterSeal,
     query::{NullViews, Read, View, Views, Write},
 };
@@ -64,6 +65,8 @@ where
 impl<C> Filter for Read<C> where C: Component {}
 
 impl<C> Filter for Write<C> where C: Component {}
+
+impl Filter for EntityIdentifier {}
 
 impl Filter for NullViews {}
 

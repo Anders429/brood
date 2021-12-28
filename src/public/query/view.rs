@@ -1,5 +1,6 @@
 use crate::{
     component::Component,
+    entity::EntityIdentifier,
     internal::query::{ViewSeal, ViewsSeal},
     query::Filter,
 };
@@ -24,6 +25,8 @@ where
 }
 
 impl<'a, C> View<'a> for Write<C> where C: Component {}
+
+impl<'a> View<'a> for EntityIdentifier {}
 
 pub struct NullViews;
 
