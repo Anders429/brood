@@ -66,6 +66,10 @@ impl<C> Filter for &C where C: Component {}
 
 impl<C> Filter for &mut C where C: Component {}
 
+impl<C> Filter for Option<&C> where C: Component {}
+
+impl<C> Filter for Option<&mut C> where C: Component {}
+
 impl Filter for EntityIdentifier {}
 
 impl Filter for NullViews {}
