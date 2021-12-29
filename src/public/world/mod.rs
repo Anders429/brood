@@ -118,7 +118,10 @@ where
         if let Some(location) = self.entity_allocator.get(entity_identifier) {
             // Remove row from Archetype.
             unsafe {
-                self.archetypes.get_mut(&location.identifier).unwrap_unchecked().remove_row_unchecked(location.index, &mut self.entity_allocator);
+                self.archetypes
+                    .get_mut(&location.identifier)
+                    .unwrap_unchecked()
+                    .remove_row_unchecked(location.index, &mut self.entity_allocator);
             }
             // Free slot in EntityAllocator.
             unsafe {

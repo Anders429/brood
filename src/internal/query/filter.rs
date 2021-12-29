@@ -76,10 +76,7 @@ where
 }
 
 impl FilterSeal for EntityIdentifier {
-    unsafe fn filter(
-        _key: &[u8],
-        _component_map: &HashMap<TypeId, usize>) -> bool
-    {
+    unsafe fn filter(_key: &[u8], _component_map: &HashMap<TypeId, usize>) -> bool {
         true
     }
 }

@@ -70,9 +70,9 @@ impl<'a> ViewSeal<'a> for EntityIdentifier {
         length: usize,
         _component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
-        slice::from_raw_parts_mut::<'a, Self>(
-            entity_identifiers.0, length,
-        ).iter().cloned()
+        slice::from_raw_parts_mut::<'a, Self>(entity_identifiers.0, length)
+            .iter()
+            .cloned()
     }
 }
 
@@ -113,6 +113,11 @@ where
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results {
-        V::view(columns, entity_identifiers, length, component_map).zip(W::view(columns, entity_identifiers, length, component_map))
+        V::view(columns, entity_identifiers, length, component_map).zip(W::view(
+            columns,
+            entity_identifiers,
+            length,
+            component_map,
+        ))
     }
 }
