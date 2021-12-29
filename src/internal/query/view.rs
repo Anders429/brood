@@ -1,7 +1,7 @@
 use crate::{
     component::Component,
     entity::EntityIdentifier,
-    query::{NullResult, NullViews, Read, Write},
+    query::{NullResult, NullViews},
 };
 use core::{any::TypeId, iter, slice};
 use hashbrown::HashMap;
@@ -17,10 +17,7 @@ pub trait ViewSeal<'a> {
     ) -> Self::Result;
 }
 
-impl<'a, C> ViewSeal<'a> for Read<C>
-where
-    C: Component,
-{
+impl<'a, C> ViewSeal<'a> for &C where C: Component {
     type Result = slice::Iter<'a, C>;
 
     unsafe fn view(
@@ -39,7 +36,7 @@ where
     }
 }
 
-impl<'a, C> ViewSeal<'a> for Write<C>
+impl<'a, C> ViewSeal<'a> for &mut C
 where
     C: Component,
 {

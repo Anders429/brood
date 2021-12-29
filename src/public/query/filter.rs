@@ -2,7 +2,7 @@ use crate::{
     component::Component,
     entity::EntityIdentifier,
     internal::query::FilterSeal,
-    query::{NullViews, Read, View, Views, Write},
+    query::{NullViews, View, Views},
 };
 use core::marker::PhantomData;
 
@@ -62,9 +62,9 @@ where
 {
 }
 
-impl<C> Filter for Read<C> where C: Component {}
+impl<C> Filter for &C where C: Component {}
 
-impl<C> Filter for Write<C> where C: Component {}
+impl<C> Filter for &mut C where C: Component {}
 
 impl Filter for EntityIdentifier {}
 

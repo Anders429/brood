@@ -1,7 +1,7 @@
 use crate::{
     component::Component,
     entity::EntityIdentifier,
-    query::{And, Filter, Has, None, Not, NullViews, Or, Read, View, Views, Write},
+    query::{And, Filter, Has, None, Not, NullViews, Or, View, Views},
 };
 use core::any::TypeId;
 use hashbrown::HashMap;
@@ -57,7 +57,7 @@ where
     }
 }
 
-impl<C> FilterSeal for Read<C>
+impl<C> FilterSeal for &C
 where
     C: Component,
 {
@@ -66,7 +66,7 @@ where
     }
 }
 
-impl<C> FilterSeal for Write<C>
+impl<C> FilterSeal for &mut C
 where
     C: Component,
 {
