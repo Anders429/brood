@@ -40,3 +40,13 @@ where
     W: Views<'a>,
 {
 }
+
+#[macro_export]
+macro_rules! views {
+    ($view:ty $(,$views:ty)* $(,)?) => {
+        ($view, views!($($views,)*))
+    };
+    () => {
+        $crate::query::NullViews
+    };
+}
