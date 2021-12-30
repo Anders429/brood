@@ -194,39 +194,3 @@ where
         )
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::Archetype;
-    use crate::{
-        entity,
-        entity::{EntityIdentifier, NullEntity},
-    };
-    use serde_test::{assert_tokens, Token};
-
-    #[test]
-    fn archetype_ser_de() {
-        let mut archetype = Archetype::<(usize, NullEntity)>::new();
-
-        unsafe { archetype.push(entity!(1_usize), EntityIdentifier::new(0, 0)) };
-
-        assert_tokens(
-            &archetype,
-            &[
-                Token::Seq { len: Some(3) },
-                Token::U64(1),
-                Token::Struct {
-                    name: "EntityIdentifier",
-                    len: 2,
-                },
-                Token::Str("index"),
-                Token::U64(0),
-                Token::Str("generation"),
-                Token::U64(0),
-                Token::StructEnd,
-                Token::U64(1),
-                Token::SeqEnd,
-            ],
-        );
-    }
-}

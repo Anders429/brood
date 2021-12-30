@@ -131,29 +131,3 @@ where
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::World;
-    use crate::{entities, entity, registry};
-    use alloc::{borrow::ToOwned, string::String};
-
-    #[test]
-    fn push() {
-        let mut world = World::<registry!(usize, bool, String, ())>::new();
-
-        world.push(entity!(1_usize));
-        world.push(entity!(true));
-        world.push(entity!("foo".to_owned()));
-    }
-
-    #[test]
-    fn extend() {
-        let mut world = World::<registry!(usize, bool, String, ())>::new();
-
-        world.extend(entities!((1_usize); 100));
-        world.extend(entities!((true); 100));
-        world.extend(entities!(("foo".to_owned()); 100));
-        world.extend(entities!((2_usize, false, "bar".to_owned()); 100));
-    }
-}

@@ -39,21 +39,3 @@ macro_rules! views {
         $crate::query::NullViews
     };
 }
-
-pub struct WrapSome<I>
-where
-    I: Iterator,
-{
-    pub(crate) iter: I,
-}
-
-impl<I> Iterator for WrapSome<I>
-where
-    I: Iterator,
-{
-    type Item = Option<I::Item>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        Some(self.iter.next())
-    }
-}
