@@ -88,7 +88,6 @@ where
                 S: SeqAccess<'de>,
             {
                 let mut archetypes = HashMap::with_capacity(seq.size_hint().unwrap_or(0));
-                extern crate std;
                 while let Some(archetype) = seq.next_element::<Archetype<R>>()? {
                     archetypes.insert(unsafe { archetype.identifier() }, archetype);
                 }
