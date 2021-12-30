@@ -4,7 +4,7 @@ mod iter;
 
 pub use iter::IdentifierIterator;
 
-use crate::{internal::registry::RegistryDebug, registry::Registry};
+use crate::registry::Registry;
 use alloc::vec::Vec;
 use core::{
     fmt,
@@ -40,8 +40,8 @@ where
         }
     }
 
-    pub(crate) unsafe fn as_slice<'a>(&'a self) -> &'a [u8] {
-        unsafe { slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8) }
+    pub(crate) unsafe fn as_slice(&self) -> &[u8] {
+        slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8)
     }
 
     pub(crate) unsafe fn as_identifier(&self) -> Identifier<R> {
@@ -53,7 +53,7 @@ where
     }
 
     pub(crate) unsafe fn iter(&self) -> IdentifierIter<R> {
-        unsafe { IdentifierIter::<R>::new(self.pointer) }
+        IdentifierIter::<R>::new(self.pointer)
     }
 
     pub(crate) fn size_of_components(&self) -> usize {
@@ -94,15 +94,15 @@ impl<R> Identifier<R>
 where
     R: Registry,
 {
-    pub(crate) unsafe fn as_slice<'a>(&'a self) -> &'a [u8] {
-        unsafe { slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8) }
+    pub(crate) unsafe fn as_slice(&self) -> &[u8] {
+        slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8)
     }
 
     pub(crate) unsafe fn iter(&self) -> IdentifierIter<R> {
-        unsafe { IdentifierIter::<R>::new(self.pointer) }
+        IdentifierIter::<R>::new(self.pointer)
     }
 
-    pub(crate) fn to_vec(&self) -> Vec<u8> {
+    pub(crate) fn as_vec(&self) -> Vec<u8> {
         unsafe { self.as_slice() }.to_vec()
     }
 

@@ -224,7 +224,7 @@ where
             }
         }
 
-        const FIELDS: &'static [&'static str] = &["archetypes", "entity_allocator"];
+        const FIELDS: &[&str] = &["archetypes", "entity_allocator"];
         let serialized_world = deserializer.deserialize_struct(
             "World",
             FIELDS,

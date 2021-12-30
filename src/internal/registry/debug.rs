@@ -6,7 +6,7 @@ use crate::{
 use alloc::vec::Vec;
 use core::{
     any::type_name,
-    fmt::{Debug, DebugList, DebugMap},
+    fmt::{Debug, DebugMap},
     mem::size_of,
 };
 

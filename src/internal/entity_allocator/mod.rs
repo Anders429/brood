@@ -35,8 +35,8 @@ where
 {
     fn clone(&self) -> Self {
         Self {
-            identifier: self.identifier.clone(),
-            index: self.index.clone(),
+            identifier: self.identifier,
+            index: self.index,
         }
     }
 }
@@ -101,8 +101,8 @@ where
 {
     fn clone(&self) -> Self {
         Self {
-            generation: self.generation.clone(),
-            location: self.location.clone(),
+            generation: self.generation,
+            location: self.location,
         }
     }
 }

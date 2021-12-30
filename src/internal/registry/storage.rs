@@ -73,8 +73,8 @@ pub trait RegistryStorage {
     ) where
         R: Registry;
 
-    unsafe fn debug_identifier<'a, 'b, R>(
-        debug_list: &mut DebugList<'a, 'b>,
+    unsafe fn debug_identifier<R>(
+        debug_list: &mut DebugList,
         identifier_iter: impl archetype::IdentifierIterator<R>,
     ) where
         R: Registry;
@@ -155,8 +155,8 @@ impl RegistryStorage for NullRegistry {
     {
     }
 
-    unsafe fn debug_identifier<'a, 'b, R>(
-        _debug_list: &mut DebugList<'a, 'b>,
+    unsafe fn debug_identifier<R>(
+        _debug_list: &mut DebugList,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
     ) where
         R: Registry,
@@ -350,8 +350,8 @@ where
         R::free_components(components, length, identifier_iter);
     }
 
-    unsafe fn debug_identifier<'a, 'b, R_>(
-        debug_list: &mut DebugList<'a, 'b>,
+    unsafe fn debug_identifier<R_>(
+        debug_list: &mut DebugList,
         mut identifier_iter: impl archetype::IdentifierIterator<R_>,
     ) where
         R_: Registry,

@@ -18,7 +18,10 @@ pub trait ViewSeal<'a> {
     ) -> Self::Result;
 }
 
-impl<'a, C> ViewSeal<'a> for &C where C: Component {
+impl<'a, C> ViewSeal<'a> for &C
+where
+    C: Component,
+{
     type Result = slice::Iter<'a, C>;
 
     unsafe fn view(
@@ -63,10 +66,13 @@ fn wrap_some<T>(val: T) -> Option<T> {
     Some(val)
 }
 
-impl<'a, C> ViewSeal<'a> for Option<&C> where C: Component {
+impl<'a, C> ViewSeal<'a> for Option<&C>
+where
+    C: Component,
+{
     type Result = Either<
-        iter::Take<iter::Repeat<Option<&'a C>>>, 
-        iter::Map<slice::Iter<'a, C>, fn(&'a C) -> Option<&'a C>>
+        iter::Take<iter::Repeat<Option<&'a C>>>,
+        iter::Map<slice::Iter<'a, C>, fn(&'a C) -> Option<&'a C>>,
     >;
 
     unsafe fn view(
@@ -76,18 +82,23 @@ impl<'a, C> ViewSeal<'a> for Option<&C> where C: Component {
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
         match component_map.get(&TypeId::of::<C>()) {
-            Some(index) => {
-                Either::Right(slice::from_raw_parts(columns.get_unchecked(*index).0 as *mut C, length).iter().map(wrap_some))
-            }
-            None => {Either::Left(iter::repeat(None).take(length))}
+            Some(index) => Either::Right(
+                slice::from_raw_parts(columns.get_unchecked(*index).0 as *mut C, length)
+                    .iter()
+                    .map(wrap_some),
+            ),
+            None => Either::Left(iter::repeat(None).take(length)),
         }
     }
 }
 
-impl<'a, C> ViewSeal<'a> for Option<&mut C> where C: Component {
+impl<'a, C> ViewSeal<'a> for Option<&mut C>
+where
+    C: Component,
+{
     type Result = Either<
         iter::Take<iter::RepeatWith<fn() -> Option<&'a mut C>>>,
-        iter::Map<slice::IterMut<'a, C>, fn(&'a mut C) -> Option<&'a mut C>>
+        iter::Map<slice::IterMut<'a, C>, fn(&'a mut C) -> Option<&'a mut C>>,
     >;
 
     unsafe fn view(
@@ -101,10 +112,12 @@ impl<'a, C> ViewSeal<'a> for Option<&mut C> where C: Component {
         }
 
         match component_map.get(&TypeId::of::<C>()) {
-            Some(index) => {
-                Either::Right(slice::from_raw_parts_mut(columns.get_unchecked(*index).0 as *mut C, length).iter_mut().map(wrap_some))
-            }
-            None => {Either::Left(iter::repeat_with(none as fn() -> Option<&'a mut C>).take(length))}
+            Some(index) => Either::Right(
+                slice::from_raw_parts_mut(columns.get_unchecked(*index).0 as *mut C, length)
+                    .iter_mut()
+                    .map(wrap_some),
+            ),
+            None => Either::Left(iter::repeat_with(none as fn() -> Option<&'a mut C>).take(length)),
         }
     }
 }

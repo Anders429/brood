@@ -111,7 +111,7 @@ impl<'de> Deserialize<'de> for EntityIdentifier {
             }
         }
 
-        const FIELDS: &'static [&'static str] = &["index", "generation"];
+        const FIELDS: &[&str] = &["index", "generation"];
         deserializer.deserialize_struct("EntityIdentifier", FIELDS, EntityIdentifierVisitor)
     }
 }

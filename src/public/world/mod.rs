@@ -1,5 +1,6 @@
 mod entry;
 mod impl_debug;
+mod impl_default;
 mod impl_eq;
 #[cfg(feature = "serde")]
 mod impl_serde;

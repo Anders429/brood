@@ -52,7 +52,7 @@ where
                     .pop_row_unchecked(self.location.index, &mut self.world.entity_allocator)
             };
             // Create new identifier buffer.
-            let mut raw_identifier_buffer = self.location.identifier.to_vec();
+            let mut raw_identifier_buffer = self.location.identifier.as_vec();
             // Set the component's bit.
             *unsafe { raw_identifier_buffer.get_unchecked_mut(component_index / 8) } |=
                 1 << (component_index % 8);
@@ -106,7 +106,7 @@ where
                     .pop_row_unchecked(self.location.index, &mut self.world.entity_allocator)
             };
             // Create new identifier buffer.
-            let mut raw_identifier_buffer = self.location.identifier.to_vec();
+            let mut raw_identifier_buffer = self.location.identifier.as_vec();
             // Unset the component's bit.
             *unsafe { raw_identifier_buffer.get_unchecked_mut(component_index / 8) } ^=
                 1 << (component_index % 8);

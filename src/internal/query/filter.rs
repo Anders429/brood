@@ -75,13 +75,19 @@ where
     }
 }
 
-impl<C> FilterSeal for Option<&C> where C: Component {
+impl<C> FilterSeal for Option<&C>
+where
+    C: Component,
+{
     unsafe fn filter(_key: &[u8], _component_map: &HashMap<TypeId, usize>) -> bool {
         true
     }
 }
 
-impl<C> FilterSeal for Option<&mut C> where C: Component {
+impl<C> FilterSeal for Option<&mut C>
+where
+    C: Component,
+{
     unsafe fn filter(_key: &[u8], _component_map: &HashMap<TypeId, usize>) -> bool {
         true
     }

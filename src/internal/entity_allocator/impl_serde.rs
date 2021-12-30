@@ -152,7 +152,7 @@ impl<'de> Deserialize<'de> for SerializedEntityAllocator {
             }
         }
 
-        const FIELDS: &'static [&'static str] = &["length", "free"];
+        const FIELDS: &[&str] = &["length", "free"];
         deserializer.deserialize_struct("EntityAllocator", FIELDS, SerializedEntityAllocatorVisitor)
     }
 }
@@ -172,12 +172,12 @@ where
     {
         let mut slots = vec![None; serialized_entity_allocator.length];
         for entity_identifier in &serialized_entity_allocator.free {
-            let slot = slots
-                .get_mut(entity_identifier.index)
-                .ok_or(de::Error::custom(format!(
+            let slot = slots.get_mut(entity_identifier.index).ok_or_else(|| {
+                de::Error::custom(format!(
                     "entity index {} is out of bounds",
                     entity_identifier.index
-                )))?;
+                ))
+            })?;
             match slot {
                 Some(_) => Err(de::Error::custom(format!(
                     "duplicate entity index {}",
@@ -196,12 +196,12 @@ where
         // Populate active slots from archetypes.
         for (archetype_identifier, archetype) in archetypes {
             for (i, entity_identifier) in archetype.entity_identifiers().enumerate() {
-                let slot = slots
-                    .get_mut(entity_identifier.index)
-                    .ok_or(de::Error::custom(format!(
+                let slot = slots.get_mut(entity_identifier.index).ok_or_else(|| {
+                    de::Error::custom(format!(
                         "entity index {} is out of bounds",
                         entity_identifier.index
-                    )))?;
+                    ))
+                })?;
                 match slot {
                     Some(_) => Err(de::Error::custom(format!(
                         "duplicate entity index {}",
@@ -211,7 +211,7 @@ where
                         *slot = Some(Slot {
                             generation: entity_identifier.generation,
                             location: Some(Location {
-                                identifier: archetype_identifier.clone(),
+                                identifier: *archetype_identifier,
                                 index: i,
                             }),
                         });

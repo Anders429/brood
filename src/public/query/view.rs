@@ -40,11 +40,17 @@ macro_rules! views {
     };
 }
 
-pub struct WrapSome<I> where I: Iterator {
+pub struct WrapSome<I>
+where
+    I: Iterator,
+{
     pub(crate) iter: I,
 }
 
-impl<I> Iterator for WrapSome<I> where I: Iterator {
+impl<I> Iterator for WrapSome<I>
+where
+    I: Iterator,
+{
     type Item = Option<I::Item>;
 
     fn next(&mut self) -> Option<Self::Item> {
