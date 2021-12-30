@@ -311,10 +311,12 @@ where
         self.length - 1
     }
 
+    #[cfg(feature = "serde")]
     pub(crate) unsafe fn identifier(&self) -> Identifier<R> {
         self.identifier_buffer.as_identifier()
     }
 
+    #[cfg(feature = "serde")]
     pub(crate) fn entity_identifiers(&self) -> impl Iterator<Item = &EntityIdentifier> {
         unsafe { slice::from_raw_parts(self.entity_identifiers.0, self.length) }.iter()
     }
