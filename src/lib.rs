@@ -1,4 +1,3 @@
-#![cfg_attr(doc, feature(doc_cfg))]
 #![no_std]
 
 extern crate alloc;

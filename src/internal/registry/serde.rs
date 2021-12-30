@@ -7,7 +7,6 @@ use ::serde::{de, de::SeqAccess, ser::SerializeSeq, Deserialize, Serialize};
 use alloc::vec::Vec;
 use core::mem::ManuallyDrop;
 
-#[cfg_attr(doc, doc(cfg(feature = "serde")))]
 pub trait RegistrySerialize: Registry {
     unsafe fn serialize_components_by_column<R, S>(
         components: &[(*mut u8, usize)],
@@ -20,7 +19,6 @@ pub trait RegistrySerialize: Registry {
         S: SerializeSeq;
 }
 
-#[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl RegistrySerialize for NullRegistry {
     unsafe fn serialize_components_by_column<R, S>(
         _components: &[(*mut u8, usize)],
@@ -36,7 +34,6 @@ impl RegistrySerialize for NullRegistry {
     }
 }
 
-#[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl<C, R> RegistrySerialize for (C, R)
 where
     C: Component + Serialize,
@@ -71,7 +68,6 @@ where
     }
 }
 
-#[cfg_attr(doc, doc(cfg(feature = "serde")))]
 pub trait RegistryDeserialize<'de>: Registry + 'de {
     unsafe fn deserialize_components_by_column<R, V>(
         components: &mut [(*mut u8, usize)],
@@ -84,7 +80,6 @@ pub trait RegistryDeserialize<'de>: Registry + 'de {
         V: SeqAccess<'de>;
 }
 
-#[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl<'de> RegistryDeserialize<'de> for NullRegistry {
     unsafe fn deserialize_components_by_column<R, V>(
         _components: &mut [(*mut u8, usize)],
@@ -100,7 +95,6 @@ impl<'de> RegistryDeserialize<'de> for NullRegistry {
     }
 }
 
-#[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl<'de, C, R> RegistryDeserialize<'de> for (C, R)
 where
     C: Component + Deserialize<'de>,

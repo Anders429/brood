@@ -59,7 +59,6 @@ where
     }
 }
 
-#[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl<R> Serialize for Archetype<R>
 where
     R: RegistrySerialize,

@@ -6,7 +6,6 @@ use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
 };
 
-#[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl Serialize for EntityIdentifier {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -19,7 +18,6 @@ impl Serialize for EntityIdentifier {
     }
 }
 
-#[cfg_attr(doc, doc(cfg(feature = "serde")))]
 impl<'de> Deserialize<'de> for EntityIdentifier {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
