@@ -24,7 +24,6 @@ jobs:
     - uses: actions-rs/install@v0.1
       with:
         crate: cargo-hack
-        use-tool-cache: true
     - uses: actions-rs/cargo@v1
       with:
         command: hack
@@ -47,7 +46,6 @@ jobs:
     - uses: actions-rs/install@v0.1
       with:
         crate: cargo-hack
-        use-tool-cache: true
     - uses: actions-rs/cargo@v1
       with:
         command: hack
@@ -78,7 +76,6 @@ jobs:
     - uses: actions-rs/install@v0.1
       with:
         crate: cargo-hack
-        use-tool-cache: true
     - uses: actions-rs/cargo@v1
       with:
         command: hack
@@ -96,7 +93,6 @@ jobs:
     - uses: actions-rs/install@v0.1
       with:
         crate: cargo-hack
-        use-tool-cache: true
     - uses: actions-rs/cargo@v1
       with:
         command: hack
@@ -114,11 +110,9 @@ jobs:
     - uses: actions-rs/install@v0.1
       with:
         crate: cargo-valgrind
-        use-tool-cache: true
     - uses: actions-rs/install@v0.1
       with:
         crate: cargo-hack
-        use-tool-cache: true
     - uses: actions-rs/cargo@v1
       with:
         command: hack
