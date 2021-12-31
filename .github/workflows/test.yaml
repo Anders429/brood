@@ -67,6 +67,23 @@ jobs:
         command: fmt
         args: -- --check
 
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        override: true
+    - uses: actions-rs/install@v0.1
+      with:
+        crate: cargo-hack
+        use-tool-cache: true
+    - uses: actions-rs/cargo@v1
+      with:
+        command: hack
+        args: check --feature-powerset --optional-deps
+
   miri:
     runs-on: ubuntu-latest
     steps:
