@@ -12,3 +12,22 @@ impl EntityIdentifier {
         Self { index, generation }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::entity::EntityIdentifier;
+
+    #[test]
+    fn new_index() {
+        let identifier = EntityIdentifier::new(1, 2);
+
+        assert_eq!(identifier.index, 1);
+    }
+
+    #[test]
+    fn new_generation() {
+        let identifier = EntityIdentifier::new(1, 2);
+
+        assert_eq!(identifier.generation, 2);
+    }
+}
