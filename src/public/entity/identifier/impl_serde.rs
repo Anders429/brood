@@ -113,3 +113,137 @@ impl<'de> Deserialize<'de> for EntityIdentifier {
         deserializer.deserialize_struct("EntityIdentifier", FIELDS, EntityIdentifierVisitor)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::entity::EntityIdentifier;
+    use serde_test::{Token, assert_tokens, assert_de_tokens, assert_de_tokens_error};
+
+    #[test]
+    fn serialize_deserialize() {
+        let identifier = EntityIdentifier::new(1, 2);
+
+        assert_tokens(&identifier, &[
+            Token::Struct {
+                name: "EntityIdentifier",
+                len: 2,
+            },
+            Token::String("index"),
+            Token::U64(1),
+            Token::String("generation"),
+            Token::U64(2),
+            Token::StructEnd,
+        ]);
+    }
+
+    #[test]
+    fn deserialize_missing_index() {
+        assert_de_tokens_error::<EntityIdentifier>(&[
+            Token::Struct {
+                name: "EntityIdentifier",
+                len: 1,
+            },
+            Token::String("generation"),
+            Token::U64(0),
+            Token::StructEnd,
+        ], "missing field `index`");
+    }
+
+    #[test]
+    fn deserialize_missing_generation() {
+        assert_de_tokens_error::<EntityIdentifier>(&[
+            Token::Struct {
+                name: "EntityIdentifier",
+                len: 1,
+            },
+            Token::String("index"),
+            Token::U64(0),
+            Token::StructEnd,
+        ], "missing field `generation`");
+    }
+
+    #[test]
+    fn deserialize_duplicate_index() {
+        assert_de_tokens_error::<EntityIdentifier>(&[
+            Token::Struct {
+                name: "EntityIdentifier",
+                len: 2,
+            },
+            Token::String("index"),
+            Token::U64(0),
+            Token::String("index"),
+        ], "duplicate field `index`");
+    }
+
+    #[test]
+    fn deserialize_duplicate_generation() {
+        assert_de_tokens_error::<EntityIdentifier>(&[
+            Token::Struct {
+                name: "EntityIdentifier",
+                len: 2,
+            },
+            Token::String("generation"),
+            Token::U64(0),
+            Token::String("generation"),
+        ], "duplicate field `generation`");
+    }
+
+    #[test]
+    fn deserialize_unknown_field() {
+        assert_de_tokens_error::<EntityIdentifier>(&[
+            Token::Struct {
+                name: "EntityIdentifier",
+                len: 2,
+            },
+            Token::String("unknown"),
+        ], "unknown field `unknown`, expected `index` or `generation`");
+    }
+
+    #[test]
+    fn deserialize_from_seq() {
+        let identifier = EntityIdentifier::new(1, 2);
+
+        assert_de_tokens(&identifier, &[
+            Token::Seq {
+                len: Some(2),
+            },
+            Token::U64(1),
+            Token::U64(2),
+            Token::SeqEnd,
+        ]);
+    }
+
+    #[test]
+    fn deserialize_from_seq_no_items() {
+        assert_de_tokens_error::<EntityIdentifier>(&[
+            Token::Seq {
+                len: Some(0),
+            },
+            Token::SeqEnd,
+        ], "invalid length 0, expected struct EntityIdentifier");
+    }
+
+    #[test]
+    fn deserialize_from_seq_missing_item() {
+        assert_de_tokens_error::<EntityIdentifier>(&[
+            Token::Seq {
+                len: Some(1),
+            },
+            Token::U64(1),
+            Token::SeqEnd,
+        ], "invalid length 1, expected struct EntityIdentifier");
+    }
+
+    #[test]
+    #[should_panic(expected = "expected Token::U64(3) but deserialization wants Token::SeqEnd")]
+    fn deserialize_from_seq_too_many_items() {
+        assert_de_tokens_error::<EntityIdentifier>(&[
+            Token::Seq {
+                len: Some(3),
+            },
+            Token::U64(1),
+            Token::U64(2),
+            Token::U64(3),
+        ], "");
+    }
+}
