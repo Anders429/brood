@@ -23,11 +23,12 @@ jobs:
         override: true
     - uses: actions-rs/install@v0.1
       with:
-        crate: cargo-all-features
+        crate: cargo-hack
         use-tool-cache: true
     - uses: actions-rs/cargo@v1
       with:
-        command: test-all-features
+        command: hack
+        args: test --feature-powerset --optional-deps
 
   no_std:
     runs-on: ubuntu-latest
@@ -45,12 +46,12 @@ jobs:
         override: true
     - uses: actions-rs/install@v0.1
       with:
-        crate: cargo-all-features
+        crate: cargo-hack
         use-tool-cache: true
     - uses: actions-rs/cargo@v1
       with:
-        command: build-all-features
-        args: --target thumbv6m-none-eabi
+        command: hack
+        args: build --feature-powerset --optional-deps --target thumbv6m-none-eabi
 
   fmt:
     runs-on: ubuntu-latest
@@ -75,10 +76,14 @@ jobs:
         toolchain: nightly
         override: true
         components: miri
+    - uses: actions-rs/install@v0.1
+      with:
+        crate: cargo-hack
+        use-tool-cache: true
     - uses: actions-rs/cargo@v1
       with:
-        command: miri
-        args: test
+        command: hack
+        args: miri --feature-powerset --optional-deps
 
   valgrind:
     runs-on: ubuntu-latest
@@ -93,7 +98,11 @@ jobs:
       with:
         crate: cargo-valgrind
         use-tool-cache: true
+    - uses: actions-rs/install@v0.1
+      with:
+        crate: cargo-hack
+        use-tool-cache: true
     - uses: actions-rs/cargo@v1
       with:
-        command: valgrind
-        args: test
+        command: hack
+        args: vagrind test --feature-powerset --optional-deps
