@@ -63,7 +63,10 @@ unsafe impl<R> IdentifierIterator<R> for IdentifierIter<R> where R: Registry {}
 
 #[cfg(test)]
 mod tests {
-    use crate::{internal::archetype::{IdentifierBuffer, IdentifierIterator}, registry};
+    use crate::{
+        internal::archetype::{IdentifierBuffer, IdentifierIterator},
+        registry,
+    };
     use alloc::{vec, vec::Vec};
 
     macro_rules! create_components {
@@ -170,11 +173,10 @@ mod tests {
 
     #[test]
     fn impl_identifier_iterator() {
-        fn assert_impls_identifier_iterator(iter: impl IdentifierIterator<Registry>) {
-        }
+        fn assert_impls_identifier_iterator(iter: impl IdentifierIterator<Registry>) {}
 
-        let buffer = unsafe {IdentifierBuffer::<Registry>::new(vec![0, 0, 0, 0])};
+        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![0, 0, 0, 0]) };
 
-        assert_impls_identifier_iterator(unsafe {buffer.iter()});
+        assert_impls_identifier_iterator(unsafe { buffer.iter() });
     }
 }
