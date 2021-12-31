@@ -117,3 +117,24 @@ jobs:
       with:
         command: hack
         args: valgrind test --feature-powerset --optional-deps
+
+  codecov:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+        components: llvm-tools-preview
+    - uses: actions-rs/install@v0.1
+      with:
+        crate: cargo-llvm-cov
+    - uses: actions-rs/cargo@v1
+      with:
+        command: llvm-cov
+        args: --all-features --lcov --output-path lcov.info
+    - uses: codecov/codecov-action@v2
+      with:
+        files: lcov.info
+        fail_ci_if_error: true
