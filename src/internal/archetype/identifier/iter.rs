@@ -47,7 +47,7 @@ where
         } else {
             let result = self.current & 1 != 0;
             self.position += 1;
-            if self.position % 8 == 0 {
+            if self.position < R::LEN && self.position % 8 == 0 {
                 self.pointer = unsafe { self.pointer.add(1) };
                 self.current = unsafe { *self.pointer };
             } else {
@@ -173,7 +173,7 @@ mod tests {
 
     #[test]
     fn impl_identifier_iterator() {
-        fn assert_impls_identifier_iterator(iter: impl IdentifierIterator<Registry>) {}
+        fn assert_impls_identifier_iterator(_iter: impl IdentifierIterator<Registry>) {}
 
         let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![0, 0, 0, 0]) };
 
