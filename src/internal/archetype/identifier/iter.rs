@@ -72,7 +72,6 @@ mod tests {
     macro_rules! create_components {
         ($( $variants:ident ),*) => {
             $(
-                #[derive(Clone)]
                 struct $variants(f32);
             )*
         };
