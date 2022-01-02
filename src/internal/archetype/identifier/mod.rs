@@ -187,21 +187,21 @@ mod tests {
 
     #[test]
     fn buffer_as_slice() {
-        let buffer = unsafe {IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
 
         assert_eq!(unsafe { buffer.as_slice() }, &[1, 2, 3, 0]);
     }
 
     #[test]
     fn empty_buffer_as_slice() {
-        let buffer = unsafe {IdentifierBuffer::<registry!()>::new(Vec::new()) };
+        let buffer = unsafe { IdentifierBuffer::<registry!()>::new(Vec::new()) };
 
         assert_eq!(unsafe { buffer.as_slice() }, &[]);
     }
 
     #[test]
     fn buffer_as_identifier() {
-        let buffer = unsafe {IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
         let identifier = unsafe { buffer.as_identifier() };
 
         assert!(ptr::eq(buffer.pointer, identifier.pointer));
@@ -209,76 +209,78 @@ mod tests {
 
     #[test]
     fn buffer_iter() {
-        let buffer = unsafe {IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        
-        assert_eq!(unsafe {buffer.iter()}.collect::<Vec<bool>>(), vec![
-            true, false, false, false, false, false, false, false,
-            false, true, false, false, false, false, false, false,
-            true, true, false, false, false, false, false, false,
-            false, false,
-        ]);
+        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+
+        assert_eq!(
+            unsafe { buffer.iter() }.collect::<Vec<bool>>(),
+            vec![
+                true, false, false, false, false, false, false, false, false, true, false, false,
+                false, false, false, false, true, true, false, false, false, false, false, false,
+                false, false,
+            ]
+        );
     }
 
     #[test]
     fn buffer_size_of_components() {
-        let buffer = unsafe {IdentifierBuffer::<registry!(bool, u64, f32)>::new(vec![7])};
+        let buffer = unsafe { IdentifierBuffer::<registry!(bool, u64, f32)>::new(vec![7]) };
 
         assert_eq!(buffer.size_of_components(), 13);
     }
 
     #[test]
     fn identifier_as_slice() {
-        let buffer = unsafe {IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0])};
-        let identifier = unsafe {buffer.as_identifier()};
+        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_identifier() };
 
-        assert_eq!(unsafe {identifier.as_slice()}, &[1, 2, 3, 0]);
+        assert_eq!(unsafe { identifier.as_slice() }, &[1, 2, 3, 0]);
     }
 
     #[test]
     fn identifier_iter() {
-        let buffer = unsafe {IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier = unsafe {buffer.as_identifier()};
+        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_identifier() };
 
-        assert_eq!(unsafe {identifier.iter()}.collect::<Vec<bool>>(), vec![
-            true, false, false, false, false, false, false, false,
-            false, true, false, false, false, false, false, false,
-            true, true, false, false, false, false, false, false,
-            false, false,
-        ]);
+        assert_eq!(
+            unsafe { identifier.iter() }.collect::<Vec<bool>>(),
+            vec![
+                true, false, false, false, false, false, false, false, false, true, false, false,
+                false, false, false, false, true, true, false, false, false, false, false, false,
+                false, false,
+            ]
+        );
     }
 
     #[test]
     fn identifier_as_vec() {
-        let buffer = unsafe {IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier = unsafe {buffer.as_identifier()};
+        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_identifier() };
 
-        assert_eq!(identifier.as_vec(), vec![
-            1, 2, 3, 0
-        ]);
+        assert_eq!(identifier.as_vec(), vec![1, 2, 3, 0]);
     }
 
     #[test]
     fn identifier_get_unchecked() {
-        let buffer = unsafe {IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier = unsafe {buffer.as_identifier()};
+        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_identifier() };
 
-        assert!(unsafe {identifier.get_unchecked(9)});
-        assert!(!unsafe {identifier.get_unchecked(10)});
+        assert!(unsafe { identifier.get_unchecked(9) });
+        assert!(!unsafe { identifier.get_unchecked(10) });
     }
 
     #[test]
     fn identifier_get_unchecked_first_element() {
-        let buffer = unsafe {IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier = unsafe {buffer.as_identifier()};
+        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_identifier() };
 
-        assert!(unsafe {identifier.get_unchecked(0)});
+        assert!(unsafe { identifier.get_unchecked(0) });
     }
 
     #[test]
     fn identifier_get_unchecked_last_element() {
-        let buffer = unsafe {IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier = unsafe {buffer.as_identifier()};
+        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_identifier() };
 
-        assert!(!unsafe {identifier.get_unchecked(25)});
+        assert!(!unsafe { identifier.get_unchecked(25) });
     }
 }
