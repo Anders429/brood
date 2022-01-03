@@ -81,6 +81,21 @@ where
     }
 }
 
+impl<R> Debug for IdentifierBuffer<R>
+where
+    R: Registry,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut debug_list = f.debug_list();
+
+        unsafe {
+            R::debug_identifier(&mut debug_list, self.iter());
+        }
+
+        debug_list.finish()
+    }
+}
+
 pub(crate) struct Identifier<R>
 where
     R: Registry,
@@ -169,6 +184,7 @@ mod tests {
     use crate::{internal::archetype::IdentifierBuffer, registry};
     use alloc::{vec, vec::Vec};
     use core::ptr;
+    use hashbrown::HashSet;
 
     macro_rules! create_components {
         ($( $variants:ident ),*) => {
@@ -229,6 +245,14 @@ mod tests {
     }
 
     #[test]
+    fn buffer_eq() {
+        let buffer_a = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let buffer_b = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+
+        assert_eq!(buffer_a, buffer_b);
+    }
+
+    #[test]
     fn identifier_as_slice() {
         let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
         let identifier = unsafe { buffer.as_identifier() };
@@ -282,5 +306,34 @@ mod tests {
         let identifier = unsafe { buffer.as_identifier() };
 
         assert!(!unsafe { identifier.get_unchecked(25) });
+    }
+
+    #[test]
+    fn identifier_clone() {
+        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_identifier() };
+        let identifier_clone = identifier.clone();
+
+        assert_eq!(identifier, identifier_clone);
+    }
+
+    #[test]
+    fn identifier_copy() {
+        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_identifier() };
+        let identifier_copy = identifier;
+
+        assert_eq!(identifier, identifier_copy);
+    }
+
+    #[test]
+    fn identifier_in_hashset() {
+        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier_a = unsafe { buffer.as_identifier() };
+        let identifier_b = unsafe { buffer.as_identifier() };
+
+        let mut hashset = HashSet::new();
+        hashset.insert(identifier_a);
+        assert!(hashset.contains(&identifier_b));
     }
 }
