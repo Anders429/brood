@@ -3,6 +3,7 @@ use crate::{
     internal::{
         archetype,
         archetype::Archetype,
+        archetypes::Archetypes,
         entity_allocator::{EntityAllocator, Location, Slot},
     },
     registry::Registry,
@@ -163,7 +164,7 @@ where
 {
     pub(crate) fn from_serialized_parts<'de, D>(
         serialized_entity_allocator: SerializedEntityAllocator,
-        archetypes: &HashMap<archetype::Identifier<R>, Archetype<R>>,
+        archetypes: &Archetypes<R>,
         _deserializer: PhantomData<D>,
         _lifetime: PhantomData<&'de ()>,
     ) -> Result<Self, D::Error>
@@ -194,7 +195,7 @@ where
         }
 
         // Populate active slots from archetypes.
-        for (archetype_identifier, archetype) in archetypes {
+        for (archetype_identifier, archetype) in archetypes.iter() {
             for (i, entity_identifier) in archetype.entity_identifiers().enumerate() {
                 let slot = slots.get_mut(entity_identifier.index).ok_or_else(|| {
                     de::Error::custom(format!(
@@ -211,7 +212,7 @@ where
                         *slot = Some(Slot {
                             generation: entity_identifier.generation,
                             location: Some(Location {
-                                identifier: *archetype_identifier,
+                                identifier: archetype_identifier,
                                 index: i,
                             }),
                         });

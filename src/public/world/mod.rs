@@ -12,6 +12,7 @@ use crate::{
     entity::{Entity, EntityIdentifier},
     internal::{
         archetype::{self, Archetype},
+        archetypes::Archetypes,
         entity_allocator::EntityAllocator,
         query::FilterSeal,
     },
@@ -26,7 +27,7 @@ pub struct World<R>
 where
     R: Registry,
 {
-    archetypes: HashMap<archetype::Identifier<R>, Archetype<R>>,
+    archetypes: Archetypes<R>,
     entity_allocator: EntityAllocator<R>,
 
     component_map: HashMap<TypeId, usize>,
@@ -36,10 +37,7 @@ impl<R> World<R>
 where
     R: Registry,
 {
-    fn from_raw_parts(
-        archetypes: HashMap<archetype::Identifier<R>, Archetype<R>>,
-        entity_allocator: EntityAllocator<R>,
-    ) -> Self {
+    fn from_raw_parts(archetypes: Archetypes<R>, entity_allocator: EntityAllocator<R>) -> Self {
         let mut component_map = HashMap::new();
         R::create_component_map(&mut component_map, 0);
 
@@ -52,7 +50,7 @@ where
     }
 
     pub fn new() -> Self {
-        Self::from_raw_parts(HashMap::new(), EntityAllocator::new())
+        Self::from_raw_parts(Archetypes::new(), EntityAllocator::new())
     }
 
     pub fn push<E>(&mut self, entity: E) -> EntityIdentifier
@@ -67,8 +65,7 @@ where
 
         unsafe {
             self.archetypes
-                .entry(identifier_buffer.as_identifier())
-                .or_insert(Archetype::<R>::new(identifier_buffer))
+                .get_mut_or_insert_new(identifier_buffer)
                 .push(entity, &mut self.entity_allocator)
         }
     }
@@ -86,8 +83,7 @@ where
 
         unsafe {
             self.archetypes
-                .entry(identifier_buffer.as_identifier())
-                .or_insert(Archetype::<R>::new(identifier_buffer))
+                .get_mut_or_insert_new(identifier_buffer)
                 .extend(entities, &mut self.entity_allocator)
         }
     }
@@ -99,10 +95,10 @@ where
     {
         self.archetypes
             .iter_mut()
-            .filter(|(key, _archetype)| unsafe {
-                And::<V, F>::filter(key.as_slice(), &self.component_map)
+            .filter(|(identifier, _archetype)| unsafe {
+                And::<V, F>::filter(identifier.as_slice(), &self.component_map)
             })
-            .map(|(_key, archetype)| archetype.view::<V>())
+            .map(|(_identifier, archetype)| archetype.view::<V>())
             .collect::<Vec<_>>()
             .into_iter()
             .flatten()
@@ -120,8 +116,7 @@ where
             // Remove row from Archetype.
             unsafe {
                 self.archetypes
-                    .get_mut(&location.identifier)
-                    .unwrap_unchecked()
+                    .get_unchecked_mut(location.identifier)
                     .remove_row_unchecked(location.index, &mut self.entity_allocator);
             }
             // Free slot in EntityAllocator.

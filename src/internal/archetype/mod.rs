@@ -311,7 +311,6 @@ where
         self.length - 1
     }
 
-    #[cfg(feature = "serde")]
     pub(crate) unsafe fn identifier(&self) -> Identifier<R> {
         self.identifier_buffer.as_identifier()
     }

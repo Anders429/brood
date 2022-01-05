@@ -38,8 +38,7 @@ where
             unsafe {
                 self.world
                     .archetypes
-                    .get_mut(&self.location.identifier)
-                    .unwrap_unchecked()
+                    .get_unchecked_mut(self.location.identifier)
                     .set_component_unchecked(self.location.index, component)
             };
         } else {
@@ -47,8 +46,7 @@ where
             let (entity_identifier, current_component_bytes) = unsafe {
                 self.world
                     .archetypes
-                    .get_mut(&self.location.identifier)
-                    .unwrap_unchecked()
+                    .get_unchecked_mut(self.location.identifier)
                     .pop_row_unchecked(self.location.index, &mut self.world.entity_allocator)
             };
             // Create new identifier buffer.
@@ -60,26 +58,23 @@ where
                 unsafe { archetype::IdentifierBuffer::<R>::new(raw_identifier_buffer) };
 
             // Insert to the corresponding archetype using the bytes and the new component.
-            let archetype_entry = self
+            let archetype = self
                 .world
                 .archetypes
-                .entry(unsafe { identifier_buffer.as_identifier() });
-            let archetype_identifier = *archetype_entry.key();
+                .get_mut_or_insert_new(identifier_buffer);
             let index = unsafe {
-                archetype_entry
-                    .or_insert(Archetype::<R>::new(identifier_buffer))
-                    .push_from_buffer_and_component(
-                        entity_identifier,
-                        current_component_bytes,
-                        component,
-                    )
+                archetype.push_from_buffer_and_component(
+                    entity_identifier,
+                    current_component_bytes,
+                    component,
+                )
             };
 
             // Update the location.
             unsafe {
                 self.world.entity_allocator.modify_location_unchecked(
                     entity_identifier,
-                    Location::new(archetype_identifier, index),
+                    Location::new(archetype.identifier(), index),
                 );
             }
         }
@@ -101,8 +96,7 @@ where
             let (entity_identifier, current_component_bytes) = unsafe {
                 self.world
                     .archetypes
-                    .get_mut(&self.location.identifier)
-                    .unwrap_unchecked()
+                    .get_unchecked_mut(self.location.identifier)
                     .pop_row_unchecked(self.location.index, &mut self.world.entity_allocator)
             };
             // Create new identifier buffer.
@@ -115,25 +109,22 @@ where
 
             // Insert to the corresponding archetype using the bytes, skipping the removed
             // component.
-            let archetype_entry = self
+            let archetype = self
                 .world
                 .archetypes
-                .entry(unsafe { identifier_buffer.as_identifier() });
-            let archetype_identifier = *archetype_entry.key();
+                .get_mut_or_insert_new(identifier_buffer);
             let index = unsafe {
-                archetype_entry
-                    .or_insert(Archetype::<R>::new(identifier_buffer))
-                    .push_from_buffer_skipping_component::<C>(
-                        entity_identifier,
-                        current_component_bytes,
-                    )
+                archetype.push_from_buffer_skipping_component::<C>(
+                    entity_identifier,
+                    current_component_bytes,
+                )
             };
 
             // Update the location.
             unsafe {
                 self.world.entity_allocator.modify_location_unchecked(
                     entity_identifier,
-                    Location::new(archetype_identifier, index),
+                    Location::new(archetype.identifier(), index),
                 );
             }
         }
