@@ -39,6 +39,10 @@ where
             (unsafe { archetype.identifier() }, archetype)
         })
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.raw_iter.size_hint()
+    }
 }
 
 pub(crate) struct IterMut<'a, R>
