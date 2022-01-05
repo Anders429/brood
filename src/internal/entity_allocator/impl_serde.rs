@@ -1,8 +1,6 @@
 use crate::{
     entity::EntityIdentifier,
     internal::{
-        archetype,
-        archetype::Archetype,
         archetypes::Archetypes,
         entity_allocator::{EntityAllocator, Location, Slot},
     },
@@ -10,7 +8,6 @@ use crate::{
 };
 use alloc::{format, vec, vec::Vec};
 use core::{fmt, marker::PhantomData};
-use hashbrown::HashMap;
 use serde::{
     de,
     de::{MapAccess, SeqAccess, Visitor},

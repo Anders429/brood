@@ -31,6 +31,7 @@ where
         }
     }
 
+    #[cfg(feature = "serde")]
     pub(crate) fn with_capacity(capacity: usize) -> Self {
         Self {
             raw_archetypes: RawTable::with_capacity(capacity),
@@ -95,9 +96,10 @@ where
             .unwrap_unchecked()
     }
 
+    #[cfg(feature = "serde")]
     pub(crate) fn insert(&mut self, archetype: Archetype<R>) -> bool {
         let hash = Self::make_hash(unsafe { archetype.identifier() }, &self.hash_builder);
-        if let Some(existing_archetype) = self.raw_archetypes.get(
+        if let Some(_existing_archetype) = self.raw_archetypes.get(
             hash,
             Self::equivalent_identifier(unsafe { archetype.identifier() }),
         ) {

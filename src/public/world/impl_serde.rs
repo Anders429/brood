@@ -1,7 +1,5 @@
 use crate::{
     internal::{
-        archetype,
-        archetype::Archetype,
         archetypes::Archetypes,
         entity_allocator::{impl_serde::SerializedEntityAllocator, EntityAllocator},
         registry::{RegistryDeserialize, RegistrySerialize},
@@ -9,11 +7,10 @@ use crate::{
     World,
 };
 use core::{fmt, marker::PhantomData};
-use hashbrown::HashMap;
 use serde::{
     de,
     de::{MapAccess, SeqAccess, Visitor},
-    ser::{SerializeSeq, SerializeStruct},
+    ser::SerializeStruct,
     Deserialize, Deserializer, Serialize, Serializer,
 };
 

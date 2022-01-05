@@ -11,10 +11,7 @@ use crate::{
     entities::{Entities, EntitiesIter},
     entity::{Entity, EntityIdentifier},
     internal::{
-        archetype::{self, Archetype},
-        archetypes::Archetypes,
-        entity_allocator::EntityAllocator,
-        query::FilterSeal,
+        archetype, archetypes::Archetypes, entity_allocator::EntityAllocator, query::FilterSeal,
     },
     query::{And, Filter, Views},
     registry::Registry,
