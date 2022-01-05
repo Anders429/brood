@@ -168,6 +168,5 @@ where
             serialized_world.archetypes,
             entity_allocator,
         ))
-        // TODO: Confirm the data is formatted correctly.
     }
 }
