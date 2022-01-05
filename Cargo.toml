@@ -10,4 +10,8 @@ hashbrown = {version = "0.11.2", features = ["raw"]}
 serde = {version = "1.0.130", default-features = false, features = ["alloc"], optional = true}
 
 [dev-dependencies]
+anyhow = "1.0.52"
+crossterm = "0.22.1"
+fps_clock = "2.0.0"
+rand = "0.8.4"  
 serde_test = "1.0.130"
