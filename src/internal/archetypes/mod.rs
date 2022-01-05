@@ -96,11 +96,15 @@ where
     }
 
     pub(crate) fn insert(&mut self, archetype: Archetype<R>) -> bool {
-        let hash = Self::make_hash(unsafe {archetype.identifier()}, &self.hash_builder);
-        if let Some(existing_archetype) = self.raw_archetypes.get(hash, Self::equivalent_identifier(unsafe {archetype.identifier()})) {
+        let hash = Self::make_hash(unsafe { archetype.identifier() }, &self.hash_builder);
+        if let Some(existing_archetype) = self.raw_archetypes.get(
+            hash,
+            Self::equivalent_identifier(unsafe { archetype.identifier() }),
+        ) {
             false
         } else {
-            self.raw_archetypes.insert(hash, archetype, Self::make_hasher(&self.hash_builder));
+            self.raw_archetypes
+                .insert(hash, archetype, Self::make_hasher(&self.hash_builder));
             true
         }
     }

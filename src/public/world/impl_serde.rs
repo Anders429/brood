@@ -143,8 +143,7 @@ where
                     }
                 }
                 Ok(SerializedWorld {
-                    archetypes: archetypes
-                        .ok_or_else(|| de::Error::missing_field("archetypes"))?,
+                    archetypes: archetypes.ok_or_else(|| de::Error::missing_field("archetypes"))?,
                     serialized_entity_allocator: entity_allocator
                         .ok_or_else(|| de::Error::missing_field("archetypes"))?,
 

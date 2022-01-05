@@ -37,10 +37,7 @@ impl<R> World<R>
 where
     R: Registry,
 {
-    fn from_raw_parts(
-        archetypes: Archetypes<R>,
-        entity_allocator: EntityAllocator<R>,
-    ) -> Self {
+    fn from_raw_parts(archetypes: Archetypes<R>, entity_allocator: EntityAllocator<R>) -> Self {
         let mut component_map = HashMap::new();
         R::create_component_map(&mut component_map, 0);
 

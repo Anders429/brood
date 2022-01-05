@@ -58,12 +58,17 @@ where
                 unsafe { archetype::IdentifierBuffer::<R>::new(raw_identifier_buffer) };
 
             // Insert to the corresponding archetype using the bytes and the new component.
-            let archetype = self.world.archetypes.get_mut_or_insert_new(identifier_buffer);
-            let index = unsafe {archetype.push_from_buffer_and_component(
-                entity_identifier,
-                current_component_bytes,
-                component,
-            )};
+            let archetype = self
+                .world
+                .archetypes
+                .get_mut_or_insert_new(identifier_buffer);
+            let index = unsafe {
+                archetype.push_from_buffer_and_component(
+                    entity_identifier,
+                    current_component_bytes,
+                    component,
+                )
+            };
 
             // Update the location.
             unsafe {
@@ -104,11 +109,16 @@ where
 
             // Insert to the corresponding archetype using the bytes, skipping the removed
             // component.
-            let archetype = self.world.archetypes.get_mut_or_insert_new(identifier_buffer);
-            let index = unsafe {archetype.push_from_buffer_skipping_component::<C>(
-                entity_identifier,
-                current_component_bytes,
-            )};
+            let archetype = self
+                .world
+                .archetypes
+                .get_mut_or_insert_new(identifier_buffer);
+            let index = unsafe {
+                archetype.push_from_buffer_skipping_component::<C>(
+                    entity_identifier,
+                    current_component_bytes,
+                )
+            };
 
             // Update the location.
             unsafe {
