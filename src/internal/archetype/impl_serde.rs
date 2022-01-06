@@ -59,6 +59,58 @@ where
     }
 }
 
+struct SerializeArchetypeByRow<'a, R>(&'a Archetype<R>)
+where
+    R: RegistrySerialize;
+
+impl<R> Serialize for SerializeArchetypeByRow<'_, R>
+where
+    R: RegistrySerialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(
+            self.0.length
+                * (unsafe { self.0.identifier_buffer.iter() }
+                    .filter(|b| *b)
+                    .count()
+                    + 1)
+                + 2,
+        ))?;
+
+        seq.serialize_element(&self.0.identifier_buffer)?;
+
+        seq.serialize_element(&self.0.length)?;
+
+        let entity_identifiers = ManuallyDrop::new(unsafe {
+            Vec::from_raw_parts(
+                self.0.entity_identifiers.0,
+                self.0.length,
+                self.0.entity_identifiers.1,
+            )
+        });
+
+        // Serialize by row with entity identifiers included.
+        for (i, entity_identifier) in entity_identifiers.iter().enumerate() {
+            // TODO: Should be in tuples, rather than free-form.
+            seq.serialize_element(entity_identifier)?;
+            unsafe {
+                R::serialize_components_by_row(
+                    &self.0.components,
+                    self.0.length,
+                    i,
+                    &mut seq,
+                    self.0.identifier_buffer.iter(),
+                )?;
+            }
+        }
+
+        seq.end()
+    }
+}
+
 impl<R> Serialize for Archetype<R>
 where
     R: RegistrySerialize,
@@ -68,7 +120,7 @@ where
         S: Serializer,
     {
         if serializer.is_human_readable() {
-            unimplemented!("human readable serialization is not yet implemented");
+            serializer.serialize_newtype_struct("Archetype", &SerializeArchetypeByRow(self))
         } else {
             serializer.serialize_newtype_struct("Archetype", &SerializeArchetypeByColumn(self))
         }
@@ -154,6 +206,84 @@ where
             }
         }
 
+        struct VisitArchetypeByRow<'de, R>
+        where
+            R: RegistryDeserialize<'de>,
+        {
+            registry: PhantomData<&'de R>,
+        }
+
+        impl<'de, R> Visitor<'de> for VisitArchetypeByRow<'de, R>
+        where
+            R: RegistryDeserialize<'de>,
+        {
+            type Value = Archetype<R>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("row-serialized Archetype")
+            }
+
+            fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
+            where
+                V: SeqAccess<'de>,
+            {
+                let identifier: IdentifierBuffer<R> = seq
+                    .next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(0, &self))?;
+
+                let length = seq
+                    .next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(1, &self))?;
+
+                let mut entity_identifiers = Vec::with_capacity(length);
+                let components_len = unsafe { identifier.iter() }.filter(|b| *b).count();
+                let mut components = Vec::with_capacity(components_len);
+                // TODO: Move this logic into the deserialize_components_by_column logic. Vecs
+                // should be deconstructed and populated at the same time.
+                for _ in 0..components_len {
+                    let mut v = ManuallyDrop::new(Vec::new());
+                    components.push((v.as_mut_ptr(), v.capacity()));
+                }
+
+                for i in 0..length {
+                    entity_identifiers.push(seq.next_element()?.ok_or_else(|| {
+                        de::Error::invalid_length(i, &"`length` entity identifiers")
+                    })?);
+
+                    let result = unsafe {
+                        R::deserialize_components_by_row(
+                            &mut components,
+                            length,
+                            &mut seq,
+                            identifier.iter(),
+                        )
+                    };
+                    if result.is_err() {
+                        unsafe {
+                            R::free_components(&components, length, identifier.iter());
+                        }
+                        return Err(unsafe { result.unwrap_err_unchecked() });
+                    }
+                }
+
+                // At this point we know the deserialization was successful, so ownership of the
+                // EntityIdentifier Vec is transferred to the Archetype.
+                let mut entity_identifiers = ManuallyDrop::new(entity_identifiers);
+
+                Ok(unsafe {
+                    Archetype::from_raw_parts(
+                        identifier,
+                        (
+                            entity_identifiers.as_mut_ptr(),
+                            entity_identifiers.capacity(),
+                        ),
+                        components,
+                        length,
+                    )
+                })
+            }
+        }
+
         struct ArchetypeVisitor<'de, R>
         where
             R: RegistryDeserialize<'de>,
@@ -176,7 +306,9 @@ where
                 D: Deserializer<'de>,
             {
                 if deserializer.is_human_readable() {
-                    unimplemented!("human readable deserialization is not yet implemented")
+                    deserializer.deserialize_seq(VisitArchetypeByRow::<R> {
+                        registry: PhantomData,
+                    })
                 } else {
                     deserializer.deserialize_seq(VisitArchetypeByColumn::<R> {
                         registry: PhantomData,

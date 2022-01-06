@@ -17,12 +17,37 @@ pub trait RegistrySerialize: Registry {
     where
         R: Registry,
         S: SerializeSeq;
+
+    unsafe fn serialize_components_by_row<R, S>(
+        components: &[(*mut u8, usize)],
+        length: usize,
+        index: usize,
+        seq: &mut S,
+        identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) -> Result<(), S::Error>
+    where
+        R: Registry,
+        S: SerializeSeq;
 }
 
 impl RegistrySerialize for NullRegistry {
     unsafe fn serialize_components_by_column<R, S>(
         _components: &[(*mut u8, usize)],
         _length: usize,
+        _seq: &mut S,
+        _identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) -> Result<(), S::Error>
+    where
+        R: Registry,
+        S: SerializeSeq,
+    {
+        Ok(())
+    }
+
+    unsafe fn serialize_components_by_row<R, S>(
+        _components: &[(*mut u8, usize)],
+        _length: usize,
+        _index: usize,
         _seq: &mut S,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
     ) -> Result<(), S::Error>
@@ -66,6 +91,34 @@ where
 
         R::serialize_components_by_column(components, length, seq, identifier_iter)
     }
+
+    unsafe fn serialize_components_by_row<R_, S>(
+        mut components: &[(*mut u8, usize)],
+        length: usize,
+        index: usize,
+        seq: &mut S,
+        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+    ) -> Result<(), S::Error>
+    where
+        R_: Registry,
+        S: SerializeSeq,
+    {
+        if identifier_iter.next().unwrap_unchecked() {
+            let component_column = components.get_unchecked(0);
+            seq.serialize_element(
+                ManuallyDrop::new(Vec::<C>::from_raw_parts(
+                    component_column.0.cast::<C>(),
+                    length,
+                    component_column.1,
+                ))
+                .get_unchecked(index),
+            )?;
+
+            components = components.get_unchecked(1..);
+        }
+
+        R::serialize_components_by_row(components, length, index, seq, identifier_iter)
+    }
 }
 
 pub trait RegistryDeserialize<'de>: Registry + 'de {
@@ -78,10 +131,33 @@ pub trait RegistryDeserialize<'de>: Registry + 'de {
     where
         R: Registry,
         V: SeqAccess<'de>;
+
+    unsafe fn deserialize_components_by_row<R, V>(
+        components: &mut [(*mut u8, usize)],
+        length: usize,
+        seq: &mut V,
+        identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) -> Result<(), V::Error>
+    where
+        R: Registry,
+        V: SeqAccess<'de>;
 }
 
 impl<'de> RegistryDeserialize<'de> for NullRegistry {
     unsafe fn deserialize_components_by_column<R, V>(
+        _components: &mut [(*mut u8, usize)],
+        _length: usize,
+        _seq: &mut V,
+        _identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) -> Result<(), V::Error>
+    where
+        R: Registry,
+        V: SeqAccess<'de>,
+    {
+        Ok(())
+    }
+
+    unsafe fn deserialize_components_by_row<R, V>(
         _components: &mut [(*mut u8, usize)],
         _length: usize,
         _seq: &mut V,
@@ -137,5 +213,36 @@ where
             ManuallyDrop::drop(&mut v);
         }
         result
+    }
+
+    unsafe fn deserialize_components_by_row<R_, V>(
+        mut components: &mut [(*mut u8, usize)],
+        length: usize,
+        seq: &mut V,
+        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+    ) -> Result<(), V::Error>
+    where
+        R_: Registry,
+        V: SeqAccess<'de>,
+    {
+        if identifier_iter.next().unwrap_unchecked() {
+            let component_column = components.get_unchecked_mut(0);
+            let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
+                component_column.0.cast::<C>(),
+                0,
+                component_column.1,
+            ));
+
+            v.push(seq.next_element()?.ok_or_else(|| {
+                // TODO: the length returned here is incorrect.
+                de::Error::invalid_length(0, &"`length` components for each column")
+            })?);
+            component_column.0 = v.as_mut_ptr().cast::<u8>();
+            component_column.1 = v.capacity();
+
+            components = components.get_unchecked_mut(1..);
+        }
+
+        R::deserialize_components_by_row(components, length, seq, identifier_iter)
     }
 }
