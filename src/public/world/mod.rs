@@ -2,8 +2,10 @@ mod entry;
 mod impl_debug;
 mod impl_default;
 mod impl_eq;
+mod impl_send;
 #[cfg(feature = "serde")]
 mod impl_serde;
+mod impl_sync;
 
 pub use entry::Entry;
 
