@@ -65,15 +65,15 @@ where
                         archetypes: &archetypes,
                     })?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                Ok(World::from_raw_parts(
-                    archetypes,
-                    entity_allocator,
-                ))
+                Ok(World::from_raw_parts(archetypes, entity_allocator))
             }
         }
 
-        deserializer.deserialize_tuple(2, WorldVisitor::<R> {
-            registry: PhantomData,
-        })
+        deserializer.deserialize_tuple(
+            2,
+            WorldVisitor::<R> {
+                registry: PhantomData,
+            },
+        )
     }
 }

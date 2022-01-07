@@ -54,11 +54,17 @@ where
     }
 }
 
-pub(crate) struct DeserializeEntityAllocator<'a, R> where R: Registry {
+pub(crate) struct DeserializeEntityAllocator<'a, R>
+where
+    R: Registry,
+{
     pub(crate) archetypes: &'a Archetypes<R>,
 }
 
-impl<'de, R> DeserializeSeed<'de> for DeserializeEntityAllocator<'_, R> where R: Registry {
+impl<'de, R> DeserializeSeed<'de> for DeserializeEntityAllocator<'_, R>
+where
+    R: Registry,
+{
     type Value = EntityAllocator<R>;
 
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
@@ -100,11 +106,17 @@ impl<'de, R> DeserializeSeed<'de> for DeserializeEntityAllocator<'_, R> where R:
             }
         }
 
-        struct DeserializeEntityAllocatorVisitor<'a, R> where R: Registry {
+        struct DeserializeEntityAllocatorVisitor<'a, R>
+        where
+            R: Registry,
+        {
             archetypes: &'a Archetypes<R>,
         }
 
-        impl<'de, R> Visitor<'de> for DeserializeEntityAllocatorVisitor<'_, R> where R: Registry {
+        impl<'de, R> Visitor<'de> for DeserializeEntityAllocatorVisitor<'_, R>
+        where
+            R: Registry,
+        {
             type Value = EntityAllocator<R>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -163,9 +175,13 @@ impl<'de, R> DeserializeSeed<'de> for DeserializeEntityAllocator<'_, R> where R:
         }
 
         const FIELDS: &[&str] = &["length", "free"];
-        deserializer.deserialize_struct("EntityAllocator", FIELDS, DeserializeEntityAllocatorVisitor {
-            archetypes: self.archetypes,
-        })
+        deserializer.deserialize_struct(
+            "EntityAllocator",
+            FIELDS,
+            DeserializeEntityAllocatorVisitor {
+                archetypes: self.archetypes,
+            },
+        )
     }
 }
 
