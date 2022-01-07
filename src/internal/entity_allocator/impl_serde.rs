@@ -10,7 +10,7 @@ use alloc::{format, vec, vec::Vec};
 use core::{fmt, marker::PhantomData};
 use serde::{
     de,
-    de::{MapAccess, SeqAccess, Visitor},
+    de::{DeserializeSeed, MapAccess, SeqAccess, Visitor},
     ser::{SerializeSeq, SerializeStruct},
     Deserialize, Deserializer, Serialize, Serializer,
 };
@@ -54,13 +54,14 @@ where
     }
 }
 
-pub(crate) struct SerializedEntityAllocator {
-    pub(crate) length: usize,
-    pub(crate) free: Vec<EntityIdentifier>,
+pub(crate) struct DeserializeEntityAllocator<'a, R> where R: Registry {
+    pub(crate) archetypes: &'a Archetypes<R>,
 }
 
-impl<'de> Deserialize<'de> for SerializedEntityAllocator {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+impl<'de, R> DeserializeSeed<'de> for DeserializeEntityAllocator<'_, R> where R: Registry {
+    type Value = EntityAllocator<R>;
+
+    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -99,10 +100,12 @@ impl<'de> Deserialize<'de> for SerializedEntityAllocator {
             }
         }
 
-        struct SerializedEntityAllocatorVisitor;
+        struct DeserializeEntityAllocatorVisitor<'a, R> where R: Registry {
+            archetypes: &'a Archetypes<R>,
+        }
 
-        impl<'de> Visitor<'de> for SerializedEntityAllocatorVisitor {
-            type Value = SerializedEntityAllocator;
+        impl<'de, R> Visitor<'de> for DeserializeEntityAllocatorVisitor<'_, R> where R: Registry {
+            type Value = EntityAllocator<R>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("serialized EntityAllocator")
@@ -118,7 +121,13 @@ impl<'de> Deserialize<'de> for SerializedEntityAllocator {
                 let free = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                Ok(SerializedEntityAllocator { length, free })
+                EntityAllocator::from_serialized_parts(
+                    length,
+                    free,
+                    self.archetypes,
+                    PhantomData,
+                    PhantomData,
+                )
             }
 
             fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
@@ -143,15 +152,20 @@ impl<'de> Deserialize<'de> for SerializedEntityAllocator {
                         }
                     }
                 }
-                Ok(SerializedEntityAllocator {
-                    length: length.ok_or_else(|| de::Error::missing_field("length"))?,
-                    free: free.ok_or_else(|| de::Error::missing_field("free"))?,
-                })
+                EntityAllocator::from_serialized_parts(
+                    length.ok_or_else(|| de::Error::missing_field("length"))?,
+                    free.ok_or_else(|| de::Error::missing_field("free"))?,
+                    self.archetypes,
+                    PhantomData,
+                    PhantomData,
+                )
             }
         }
 
         const FIELDS: &[&str] = &["length", "free"];
-        deserializer.deserialize_struct("EntityAllocator", FIELDS, SerializedEntityAllocatorVisitor)
+        deserializer.deserialize_struct("EntityAllocator", FIELDS, DeserializeEntityAllocatorVisitor {
+            archetypes: self.archetypes,
+        })
     }
 }
 
@@ -159,17 +173,18 @@ impl<R> EntityAllocator<R>
 where
     R: Registry,
 {
-    pub(crate) fn from_serialized_parts<'de, D>(
-        serialized_entity_allocator: SerializedEntityAllocator,
+    fn from_serialized_parts<'de, E>(
+        length: usize,
+        free: Vec<EntityIdentifier>,
         archetypes: &Archetypes<R>,
-        _deserializer: PhantomData<D>,
+        _deserializer: PhantomData<E>,
         _lifetime: PhantomData<&'de ()>,
-    ) -> Result<Self, D::Error>
+    ) -> Result<Self, E>
     where
-        D: Deserializer<'de>,
+        E: de::Error,
     {
-        let mut slots = vec![None; serialized_entity_allocator.length];
-        for entity_identifier in &serialized_entity_allocator.free {
+        let mut slots = vec![None; length];
+        for entity_identifier in &free {
             let slot = slots.get_mut(entity_identifier.index).ok_or_else(|| {
                 de::Error::custom(format!(
                     "entity index {} is out of bounds",
@@ -230,8 +245,7 @@ where
                 .into_iter()
                 .map(|slot| unsafe { slot.unwrap_unchecked() })
                 .collect(),
-            free: serialized_entity_allocator
-                .free
+            free: free
                 .into_iter()
                 .map(|entity_identifier| entity_identifier.index)
                 .collect(),

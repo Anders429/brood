@@ -1,5 +1,8 @@
 #[cfg(feature = "serde")]
-pub(crate) mod impl_serde;
+mod impl_serde;
+
+#[cfg(feature = "serde")]
+pub(crate) use impl_serde::DeserializeEntityAllocator;
 
 use crate::{
     entity::EntityIdentifier,
