@@ -4,14 +4,7 @@ mod impl_serde;
 #[cfg(feature = "serde")]
 pub(crate) use impl_serde::DeserializeEntityAllocator;
 
-use crate::{
-    entity::EntityIdentifier,
-    internal::{
-        archetype,
-        registry::{RegistryDebug, RegistryPartialEq},
-    },
-    registry::Registry,
-};
+use crate::{entity::EntityIdentifier, internal::archetype, registry::Registry};
 use alloc::{collections::VecDeque, vec::Vec};
 use core::{fmt, fmt::Debug, iter::ExactSizeIterator};
 
@@ -48,7 +41,7 @@ impl<R> Copy for Location<R> where R: Registry {}
 
 impl<R> Debug for Location<R>
 where
-    R: RegistryDebug,
+    R: Registry,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Location")
@@ -60,7 +53,7 @@ where
 
 impl<R> PartialEq for Location<R>
 where
-    R: RegistryPartialEq,
+    R: Registry,
 {
     fn eq(&self, other: &Self) -> bool {
         self.identifier == other.identifier && self.index == other.index
@@ -112,7 +105,7 @@ where
 
 impl<R> Debug for Slot<R>
 where
-    R: RegistryDebug,
+    R: Registry,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Slot")
@@ -124,7 +117,7 @@ where
 
 impl<R> PartialEq for Slot<R>
 where
-    R: RegistryPartialEq,
+    R: Registry,
 {
     fn eq(&self, other: &Self) -> bool {
         self.generation == other.generation && self.location == other.location
@@ -231,7 +224,7 @@ where
 
 impl<R> Debug for EntityAllocator<R>
 where
-    R: RegistryDebug,
+    R: Registry,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("EntityAllocator")
@@ -243,7 +236,7 @@ where
 
 impl<R> PartialEq for EntityAllocator<R>
 where
-    R: RegistryPartialEq,
+    R: Registry,
 {
     fn eq(&self, other: &Self) -> bool {
         self.slots == other.slots && self.free == other.free
