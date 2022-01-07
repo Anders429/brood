@@ -138,7 +138,6 @@ where
                     free,
                     self.archetypes,
                     PhantomData,
-                    PhantomData,
                 )
             }
 
@@ -169,7 +168,6 @@ where
                     free.ok_or_else(|| de::Error::missing_field("free"))?,
                     self.archetypes,
                     PhantomData,
-                    PhantomData,
                 )
             }
         }
@@ -189,12 +187,11 @@ impl<R> EntityAllocator<R>
 where
     R: Registry,
 {
-    fn from_serialized_parts<'de, E>(
+    fn from_serialized_parts<E>(
         length: usize,
         free: Vec<EntityIdentifier>,
         archetypes: &Archetypes<R>,
         _deserializer: PhantomData<E>,
-        _lifetime: PhantomData<&'de ()>,
     ) -> Result<Self, E>
     where
         E: de::Error,
