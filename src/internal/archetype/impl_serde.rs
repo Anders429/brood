@@ -11,7 +11,7 @@ use alloc::vec::Vec;
 use core::{any::type_name, fmt, marker::PhantomData, mem::ManuallyDrop, write};
 use serde::{
     de::{self, DeserializeSeed, SeqAccess, Visitor},
-    ser::{SerializeSeq, SerializeTuple},
+    ser::SerializeTuple,
     Deserialize, Deserializer, Serialize, Serializer,
 };
 
@@ -110,7 +110,12 @@ where
     where
         S: Serializer,
     {
-        let mut tuple = serializer.serialize_tuple(R::LEN + 1)?;
+        let mut tuple = serializer.serialize_tuple(
+            unsafe { self.archetype.identifier_buffer.iter() }
+                .filter(|b| *b)
+                .count()
+                + 1,
+        )?;
 
         tuple.serialize_element(unsafe {
             ManuallyDrop::new(Vec::from_raw_parts(
@@ -135,6 +140,29 @@ where
     }
 }
 
+struct SerializeRows<'a, R>(&'a Archetype<R>)
+where
+    R: RegistrySerialize;
+
+impl<R> Serialize for SerializeRows<'_, R>
+where
+    R: RegistrySerialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut tuple = serializer.serialize_tuple(self.0.length)?;
+        for index in 0..self.0.length {
+            tuple.serialize_element(&SerializeRow::<R> {
+                archetype: self.0,
+                index,
+            })?;
+        }
+        tuple.end()
+    }
+}
+
 struct SerializeArchetypeByRow<'a, R>(&'a Archetype<R>)
 where
     R: RegistrySerialize;
@@ -147,21 +175,11 @@ where
     where
         S: Serializer,
     {
-        let mut seq = serializer.serialize_seq(Some(self.0.length + 2))?;
-
-        seq.serialize_element(&self.0.identifier_buffer)?;
-
-        seq.serialize_element(&self.0.length)?;
-
-        // Serialize by row with entity identifiers included.
-        for index in 0..self.0.length {
-            seq.serialize_element(&SerializeRow::<R> {
-                archetype: self.0,
-                index,
-            })?;
-        }
-
-        seq.end()
+        let mut tuple = serializer.serialize_tuple(3)?;
+        tuple.serialize_element(&self.0.identifier_buffer)?;
+        tuple.serialize_element(&self.0.length)?;
+        tuple.serialize_element(&SerializeRows(self.0))?;
+        tuple.end()
     }
 }
 
@@ -282,6 +300,119 @@ where
     }
 }
 
+struct DeserializeRows<'de, R>
+where
+    R: RegistryDeserialize<'de>,
+{
+    lifetime: PhantomData<&'de ()>,
+
+    identifier: archetype::IdentifierBuffer<R>,
+    length: usize,
+}
+
+impl<'de, R> DeserializeSeed<'de> for DeserializeRows<'de, R>
+where
+    R: RegistryDeserialize<'de>,
+{
+    type Value = Archetype<R>;
+
+    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct DeserializeRowsVisitor<'de, R>(DeserializeRows<'de, R>)
+        where
+            R: RegistryDeserialize<'de>;
+
+        impl<'de, R> Visitor<'de> for DeserializeRowsVisitor<'de, R>
+        where
+            R: RegistryDeserialize<'de>,
+        {
+            type Value = Archetype<R>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                write!(
+                    formatter,
+                    "{} rows of (EntityIdentifier, components...)",
+                    self.0.length
+                )
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let mut entity_identifiers_vec =
+                    ManuallyDrop::new(Vec::with_capacity(self.0.length));
+                let mut entity_identifiers = (
+                    entity_identifiers_vec.as_mut_ptr(),
+                    entity_identifiers_vec.capacity(),
+                );
+
+                let components_len = unsafe { self.0.identifier.iter() }.filter(|b| *b).count();
+                let mut components = Vec::with_capacity(components_len);
+                for _ in 0..components_len {
+                    let mut v = ManuallyDrop::new(Vec::new());
+                    components.push((v.as_mut_ptr(), v.capacity()));
+                }
+                let mut vec_length = 0;
+
+                for i in 0..self.0.length {
+                    let result = seq.next_element_seed(unsafe {
+                        DeserializeRow::new(
+                            self.0.identifier.as_identifier(),
+                            &mut entity_identifiers,
+                            &mut components,
+                            vec_length,
+                        )
+                    });
+                    if result.is_err() {
+                        let _ = unsafe {
+                            Vec::from_raw_parts(
+                                entity_identifiers.0,
+                                vec_length,
+                                entity_identifiers.1,
+                            )
+                        };
+                        unsafe {
+                            R::free_components(&components, vec_length, self.0.identifier.iter());
+                        }
+
+                        return Err(unsafe { result.unwrap_err_unchecked() });
+                    }
+                    if let Some(()) = unsafe { result.unwrap_unchecked() } {
+                        vec_length += 1;
+                    } else {
+                        let _ = unsafe {
+                            Vec::from_raw_parts(
+                                entity_identifiers.0,
+                                vec_length,
+                                entity_identifiers.1,
+                            )
+                        };
+                        unsafe {
+                            R::free_components(&components, vec_length, self.0.identifier.iter());
+                        }
+
+                        return Err(de::Error::invalid_length(i, &self));
+                    }
+                }
+
+                Ok(unsafe {
+                    Archetype::from_raw_parts(
+                        self.0.identifier,
+                        entity_identifiers,
+                        components,
+                        self.0.length,
+                    )
+                })
+            }
+        }
+
+        deserializer.deserialize_tuple(self.length, DeserializeRowsVisitor(self))
+    }
+}
+
 pub(crate) struct DeserializeColumn<'de, C>
 where
     C: Component + Deserialize<'de>,
@@ -358,7 +489,6 @@ where
     }
 }
 
-// TODO: here.
 struct DeserializeColumns<'de, R>
 where
     R: RegistryDeserialize<'de>,
@@ -525,64 +655,13 @@ where
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
 
-                let mut entity_identifiers_vec = ManuallyDrop::new(Vec::with_capacity(length));
-                let mut entity_identifiers = (
-                    entity_identifiers_vec.as_mut_ptr(),
-                    entity_identifiers_vec.capacity(),
-                );
+                seq.next_element_seed(DeserializeRows {
+                    lifetime: PhantomData,
 
-                let components_len = unsafe { identifier.iter() }.filter(|b| *b).count();
-                let mut components = Vec::with_capacity(components_len);
-                for _ in 0..components_len {
-                    let mut v = ManuallyDrop::new(Vec::new());
-                    components.push((v.as_mut_ptr(), v.capacity()));
-                }
-                let mut vec_length = 0;
-
-                for i in 0..length {
-                    let result = seq.next_element_seed(unsafe {
-                        DeserializeRow::new(
-                            identifier.as_identifier(),
-                            &mut entity_identifiers,
-                            &mut components,
-                            vec_length,
-                        )
-                    });
-                    if result.is_err() {
-                        let _ = unsafe {
-                            Vec::from_raw_parts(
-                                entity_identifiers.0,
-                                vec_length,
-                                entity_identifiers.1,
-                            )
-                        };
-                        unsafe {
-                            R::free_components(&components, vec_length, identifier.iter());
-                        }
-
-                        return Err(unsafe { result.unwrap_err_unchecked() });
-                    }
-                    if let Some(()) = unsafe { result.unwrap_unchecked() } {
-                        vec_length += 1;
-                    } else {
-                        let _ = unsafe {
-                            Vec::from_raw_parts(
-                                entity_identifiers.0,
-                                vec_length,
-                                entity_identifiers.1,
-                            )
-                        };
-                        unsafe {
-                            R::free_components(&components, vec_length, identifier.iter());
-                        }
-
-                        return Err(de::Error::invalid_length(i, &self));
-                    }
-                }
-
-                Ok(unsafe {
-                    Archetype::from_raw_parts(identifier, entity_identifiers, components, length)
-                })
+                    identifier,
+                    length,
+                })?
+                .ok_or_else(|| de::Error::invalid_length(2, &self))
             }
         }
 
@@ -608,9 +687,12 @@ where
                 D: Deserializer<'de>,
             {
                 if deserializer.is_human_readable() {
-                    deserializer.deserialize_seq(VisitArchetypeByRow::<R> {
-                        registry: PhantomData,
-                    })
+                    deserializer.deserialize_tuple(
+                        3,
+                        VisitArchetypeByRow::<R> {
+                            registry: PhantomData,
+                        },
+                    )
                 } else {
                     deserializer.deserialize_tuple(
                         3,
