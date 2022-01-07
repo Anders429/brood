@@ -421,7 +421,11 @@ where
                         )
                     };
                     unsafe {
-                        R::try_free_components(&components, self.0.length, self.0.identifier.iter());
+                        R::try_free_components(
+                            &components,
+                            self.0.length,
+                            self.0.identifier.iter(),
+                        );
                     }
 
                     return Err(unsafe { result.unwrap_err_unchecked() });
@@ -439,10 +443,7 @@ where
         }
 
         deserializer.deserialize_tuple(
-            unsafe { self.identifier.iter() }
-                .filter(|b| *b)
-                .count()
-                + 1,
+            unsafe { self.identifier.iter() }.filter(|b| *b).count() + 1,
             DeserializeColumnsVisitor(self),
         )
     }
@@ -490,7 +491,8 @@ where
 
                     identifier,
                     length,
-                })?.ok_or_else(|| de::Error::invalid_length(2, &self))
+                })?
+                .ok_or_else(|| de::Error::invalid_length(2, &self))
             }
         }
 
