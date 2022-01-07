@@ -23,6 +23,13 @@ pub trait RegistryStorage {
     ) where
         R: Registry;
 
+    unsafe fn new_components_with_capacity<R>(
+        components: &mut Vec<(*mut u8, usize)>,
+        length: usize,
+        identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        R: Registry;
+
     unsafe fn size_of_components_for_identifier<R>(
         identifier_iter: impl archetype::IdentifierIterator<R>,
     ) -> usize
@@ -73,6 +80,13 @@ pub trait RegistryStorage {
     ) where
         R: Registry;
 
+    unsafe fn try_free_components<R>(
+        components: &[(*mut u8, usize)],
+        length: usize,
+        identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        R: Registry;
+
     unsafe fn debug_identifier<R>(
         debug_list: &mut DebugList,
         identifier_iter: impl archetype::IdentifierIterator<R>,
@@ -86,6 +100,15 @@ impl RegistryStorage for NullRegistry {
     unsafe fn create_component_map_for_key<R>(
         _component_map: &mut HashMap<TypeId, usize>,
         _index: usize,
+        _identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        R: Registry,
+    {
+    }
+
+    unsafe fn new_components_with_capacity<R>(
+        _components: &mut Vec<(*mut u8, usize)>,
+        _length: usize,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
     ) where
         R: Registry,
@@ -155,6 +178,15 @@ impl RegistryStorage for NullRegistry {
     {
     }
 
+    unsafe fn try_free_components<R>(
+        _components: &[(*mut u8, usize)],
+        _length: usize,
+        _identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        R: Registry,
+    {
+    }
+
     unsafe fn debug_identifier<R>(
         _debug_list: &mut DebugList,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
@@ -186,6 +218,21 @@ where
             index += 1;
         }
         R::create_component_map_for_key(component_map, index, identifier_iter);
+    }
+
+    unsafe fn new_components_with_capacity<R_>(
+        components: &mut Vec<(*mut u8, usize)>,
+        length: usize,
+        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+    ) where
+        R_: Registry,
+    {
+        if identifier_iter.next().unwrap_unchecked() {
+            let mut v = ManuallyDrop::new(Vec::<C>::with_capacity(length));
+            components.push((v.as_mut_ptr() as *mut u8, v.capacity()));
+        }
+
+        R::new_components_with_capacity(components, length, identifier_iter);
     }
 
     unsafe fn size_of_components_for_identifier<R_>(
@@ -348,6 +395,35 @@ where
             components = components.get_unchecked(1..);
         }
         R::free_components(components, length, identifier_iter);
+    }
+
+    unsafe fn try_free_components<R_>(
+        mut components: &[(*mut u8, usize)],
+        length: usize,
+        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+    ) where
+        R_: Registry,
+    {
+        if identifier_iter.next().unwrap_unchecked() {
+            let component_column = match components.get(0) {
+                Some(component_column) => component_column,
+                None => {
+                    return;
+                }
+            };
+            let _ = Vec::<C>::from_raw_parts(
+                component_column.0.cast::<C>(),
+                length,
+                component_column.1,
+            );
+            components = match components.get(1..) {
+                Some(components) => components,
+                None => {
+                    return;
+                }
+            };
+        }
+        R::try_free_components(components, length, identifier_iter);
     }
 
     unsafe fn debug_identifier<R_>(

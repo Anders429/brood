@@ -16,17 +16,13 @@ where
     where
         S: Serializer,
     {
-        if serializer.is_human_readable() {
-            unimplemented!("human readable serialization is not yet implemented")
-        } else {
-            let mut tuple = serializer.serialize_tuple((R::LEN + 7) / 8)?;
+        let mut tuple = serializer.serialize_tuple((R::LEN + 7) / 8)?;
 
-            for byte in unsafe { self.as_slice() } {
-                tuple.serialize_element(byte)?;
-            }
-
-            tuple.end()
+        for byte in unsafe { self.as_slice() } {
+            tuple.serialize_element(byte)?;
         }
+
+        tuple.end()
     }
 }
 
