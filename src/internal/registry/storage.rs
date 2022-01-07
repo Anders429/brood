@@ -73,6 +73,13 @@ pub trait RegistryStorage {
     ) where
         R: Registry;
 
+    unsafe fn try_free_components<R>(
+        components: &[(*mut u8, usize)],
+        length: usize,
+        identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        R: Registry;
+
     unsafe fn debug_identifier<R>(
         debug_list: &mut DebugList,
         identifier_iter: impl archetype::IdentifierIterator<R>,
@@ -147,6 +154,15 @@ impl RegistryStorage for NullRegistry {
     }
 
     unsafe fn free_components<R>(
+        _components: &[(*mut u8, usize)],
+        _length: usize,
+        _identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        R: Registry,
+    {
+    }
+
+    unsafe fn try_free_components<R>(
         _components: &[(*mut u8, usize)],
         _length: usize,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
@@ -348,6 +364,35 @@ where
             components = components.get_unchecked(1..);
         }
         R::free_components(components, length, identifier_iter);
+    }
+
+    unsafe fn try_free_components<R_>(
+        mut components: &[(*mut u8, usize)],
+        length: usize,
+        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+    ) where
+        R_: Registry,
+    {
+        if identifier_iter.next().unwrap_unchecked() {
+            let component_column = match components.get(0) {
+                Some(component_column) => component_column,
+                None => {
+                    return;
+                }
+            };
+            let _ = Vec::<C>::from_raw_parts(
+                component_column.0.cast::<C>(),
+                length,
+                component_column.1,
+            );
+            components = match components.get(1..) {
+                Some(components) => components,
+                None => {
+                    return;
+                }
+            };
+        }
+        R::try_free_components(components, length, identifier_iter);
     }
 
     unsafe fn debug_identifier<R_>(

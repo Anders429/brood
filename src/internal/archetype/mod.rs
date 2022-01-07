@@ -6,6 +6,8 @@ mod impl_eq;
 mod impl_serde;
 
 pub(crate) use identifier::{Identifier, IdentifierBuffer, IdentifierIterator};
+#[cfg(feature = "serde")]
+pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
 
 use crate::{
     component::Component,

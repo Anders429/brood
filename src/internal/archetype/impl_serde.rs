@@ -1,4 +1,5 @@
 use crate::{
+    component::Component,
     entity::EntityIdentifier,
     internal::{
         archetype,
@@ -7,12 +8,34 @@ use crate::{
     },
 };
 use alloc::vec::Vec;
-use core::{fmt, marker::PhantomData, mem::ManuallyDrop};
+use core::{any::type_name, fmt, marker::PhantomData, mem::ManuallyDrop, write};
 use serde::{
     de::{self, DeserializeSeed, SeqAccess, Visitor},
     ser::{SerializeSeq, SerializeTuple},
     Deserialize, Deserializer, Serialize, Serializer,
 };
+
+pub(crate) struct SerializeColumn<'a, C>(pub(crate) &'a Vec<C>)
+where
+    C: Component + Serialize;
+
+impl<C> Serialize for SerializeColumn<'_, C>
+where
+    C: Component + Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut tuple = serializer.serialize_tuple(self.0.len())?;
+
+        for component in self.0 {
+            tuple.serialize_element(component)?;
+        }
+
+        tuple.end()
+    }
+}
 
 struct SerializeArchetypeByColumn<'a, R>(&'a Archetype<R>)
 where
@@ -27,28 +50,23 @@ where
         S: Serializer,
     {
         let mut seq = serializer.serialize_seq(Some(
-            self.0.length
-                * (unsafe { self.0.identifier_buffer.iter() }
-                    .filter(|b| *b)
-                    .count()
-                    + 1)
-                + 2,
+            unsafe { self.0.identifier_buffer.iter() }
+                .filter(|b| *b)
+                .count()
+                + 3,
         ))?;
 
         seq.serialize_element(&self.0.identifier_buffer)?;
 
         seq.serialize_element(&self.0.length)?;
 
-        let entity_identifiers = ManuallyDrop::new(unsafe {
+        seq.serialize_element(&SerializeColumn(&ManuallyDrop::new(unsafe {
             Vec::from_raw_parts(
                 self.0.entity_identifiers.0,
                 self.0.length,
                 self.0.entity_identifiers.1,
             )
-        });
-        for entity_identifier in entity_identifiers.iter() {
-            seq.serialize_element(&entity_identifier)?;
-        }
+        })))?;
 
         unsafe {
             R::serialize_components_by_column(
@@ -245,9 +263,85 @@ where
         }
 
         deserializer.deserialize_tuple(
-            unsafe { self.identifier.iter() }.count() + 1,
+            unsafe { self.identifier.iter() }.filter(|b| *b).count() + 1,
             DeserializeRowVisitor(self),
         )
+    }
+}
+
+pub(crate) struct DeserializeColumn<'de, C>
+where
+    C: Component + Deserialize<'de>,
+{
+    lifetime: PhantomData<&'de ()>,
+    component: PhantomData<C>,
+
+    length: usize,
+}
+
+impl<'de, C> DeserializeColumn<'de, C>
+where
+    C: Component + Deserialize<'de>,
+{
+    pub(crate) fn new(length: usize) -> Self {
+        Self {
+            lifetime: PhantomData,
+            component: PhantomData,
+
+            length,
+        }
+    }
+}
+
+impl<'de, C> DeserializeSeed<'de> for DeserializeColumn<'de, C>
+where
+    C: Component + Deserialize<'de>,
+{
+    type Value = (*mut C, usize);
+
+    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct DeserializeColumnVisitor<'de, C>(DeserializeColumn<'de, C>)
+        where
+            C: Component + Deserialize<'de>;
+
+        impl<'de, C> Visitor<'de> for DeserializeColumnVisitor<'de, C>
+        where
+            C: Component + Deserialize<'de>,
+        {
+            type Value = (*mut C, usize);
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                write!(
+                    formatter,
+                    "column of {} `{}`s",
+                    self.0.length,
+                    type_name::<C>()
+                )
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let mut v = Vec::with_capacity(self.0.length);
+
+                for i in 0..self.0.length {
+                    v.push(
+                        seq.next_element()?
+                            .ok_or_else(|| de::Error::invalid_length(i, &"`length` components"))?,
+                    );
+                }
+
+                let mut v = ManuallyDrop::new(v);
+
+                Ok((v.as_mut_ptr(), v.capacity()))
+            }
+        }
+
+        deserializer.deserialize_tuple(self.length, DeserializeColumnVisitor(self))
     }
 }
 
@@ -288,44 +382,34 @@ where
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
 
-                let mut entity_identifiers = Vec::with_capacity(length);
-                for i in 0..length {
-                    entity_identifiers.push(seq.next_element()?.ok_or_else(|| {
-                        de::Error::invalid_length(i, &"`length` entity identifiers")
-                    })?);
-                }
+                let entity_identifiers = seq
+                    .next_element_seed(DeserializeColumn::new(length))?
+                    .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
-                let components_len = unsafe { identifier.iter() }.filter(|b| *b).count();
-                let mut components = Vec::with_capacity(components_len);
-                // TODO: Move this logic into the deserialize_components_by_column logic. Vecs
-                // should be deconstructed and populated at the same time.
-                for _ in 0..components_len {
-                    let mut v = ManuallyDrop::new(Vec::new());
-                    components.push((v.as_mut_ptr(), v.capacity()));
-                }
-                unsafe {
+                let mut components =
+                    Vec::with_capacity(unsafe { identifier.iter() }.filter(|b| *b).count());
+                let result = unsafe {
                     R::deserialize_components_by_column(
                         &mut components,
                         length,
                         &mut seq,
                         identifier.iter(),
-                    )?;
+                    )
+                };
+                if result.is_err() {
+                    // Free columns, since they are invalid and must be dropped.
+                    let _ = unsafe {
+                        Vec::from_raw_parts(entity_identifiers.0, length, entity_identifiers.1)
+                    };
+                    unsafe {
+                        R::try_free_components(&components, length, identifier.iter());
+                    }
+
+                    return Err(unsafe { result.unwrap_err_unchecked() });
                 }
 
-                // At this point we know the deserialization was successful, so ownership of the
-                // EntityIdentifier Vec is transferred to the Archetype.
-                let mut entity_identifiers = ManuallyDrop::new(entity_identifiers);
-
                 Ok(unsafe {
-                    Archetype::from_raw_parts(
-                        identifier,
-                        (
-                            entity_identifiers.as_mut_ptr(),
-                            entity_identifiers.capacity(),
-                        ),
-                        components,
-                        length,
-                    )
+                    Archetype::from_raw_parts(identifier, entity_identifiers, components, length)
                 })
             }
         }

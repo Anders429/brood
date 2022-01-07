@@ -1,6 +1,9 @@
 use crate::{
     component::Component,
-    internal::archetype,
+    internal::{
+        archetype,
+        archetype::{DeserializeColumn, SerializeColumn},
+    },
     registry::{NullRegistry, Registry},
 };
 use ::serde::{
@@ -9,8 +12,8 @@ use ::serde::{
     ser::{SerializeSeq, SerializeTuple},
     Deserialize, Serialize,
 };
-use alloc::vec::Vec;
-use core::mem::ManuallyDrop;
+use alloc::{format, vec::Vec};
+use core::{any::type_name, mem::ManuallyDrop};
 
 pub trait RegistrySerialize: Registry {
     unsafe fn serialize_components_by_column<R, S>(
@@ -81,15 +84,13 @@ where
     {
         if identifier_iter.next().unwrap_unchecked() {
             let component_column = components.get_unchecked(0);
-            for component in ManuallyDrop::new(Vec::<C>::from_raw_parts(
-                component_column.0.cast::<C>(),
-                length,
-                component_column.1,
-            ))
-            .iter()
-            {
-                seq.serialize_element(component)?;
-            }
+            seq.serialize_element(&SerializeColumn(&ManuallyDrop::new(
+                Vec::<C>::from_raw_parts(
+                    component_column.0.cast::<C>(),
+                    length,
+                    component_column.1,
+                ),
+            )))?;
 
             components = components.get_unchecked(1..);
         }
@@ -128,7 +129,7 @@ where
 
 pub trait RegistryDeserialize<'de>: Registry + 'de {
     unsafe fn deserialize_components_by_column<R, V>(
-        components: &mut [(*mut u8, usize)],
+        components: &mut Vec<(*mut u8, usize)>,
         length: usize,
         seq: &mut V,
         identifier_iter: impl archetype::IdentifierIterator<R>,
@@ -150,7 +151,7 @@ pub trait RegistryDeserialize<'de>: Registry + 'de {
 
 impl<'de> RegistryDeserialize<'de> for NullRegistry {
     unsafe fn deserialize_components_by_column<R, V>(
-        _components: &mut [(*mut u8, usize)],
+        _components: &mut Vec<(*mut u8, usize)>,
         _length: usize,
         _seq: &mut V,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
@@ -182,7 +183,7 @@ where
     R: RegistryDeserialize<'de>,
 {
     unsafe fn deserialize_components_by_column<R_, V>(
-        mut components: &mut [(*mut u8, usize)],
+        components: &mut Vec<(*mut u8, usize)>,
         length: usize,
         seq: &mut V,
         mut identifier_iter: impl archetype::IdentifierIterator<R_>,
@@ -191,33 +192,17 @@ where
         R_: Registry,
         V: SeqAccess<'de>,
     {
-        let mut v = if identifier_iter.next().unwrap_unchecked() {
-            let component_column = components.get_unchecked_mut(0);
-            let mut v =
-                Vec::<C>::from_raw_parts(component_column.0.cast::<C>(), 0, component_column.1);
-
-            v.reserve(length);
-            for i in 0..length {
-                v.push(seq.next_element()?.ok_or_else(|| {
-                    de::Error::invalid_length(i, &"`length` components for each column")
-                })?);
-            }
-            component_column.0 = v.as_mut_ptr().cast::<u8>();
-            component_column.1 = v.capacity();
-
-            components = components.get_unchecked_mut(1..);
-
-            ManuallyDrop::new(v)
-        } else {
-            // This doesn't actually allocate anything, because it isn't populated.
-            ManuallyDrop::new(Vec::new())
-        };
-
-        let result = R::deserialize_components_by_column(components, length, seq, identifier_iter);
-        if result.is_err() {
-            ManuallyDrop::drop(&mut v);
+        if identifier_iter.next().unwrap_unchecked() {
+            // TODO: Better error messages?
+            let component_column = seq
+                .next_element_seed(DeserializeColumn::<C>::new(length))?
+                .ok_or_else(|| {
+                    de::Error::custom(format!("expected a column of type `{}`", type_name::<C>()))
+                })?;
+            components.push((component_column.0 as *mut u8, component_column.1));
         }
-        result
+
+        R::deserialize_components_by_column(components, length, seq, identifier_iter)
     }
 
     unsafe fn deserialize_components_by_row<R_, V>(
