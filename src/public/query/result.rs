@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NullResult;
 
 #[macro_export]

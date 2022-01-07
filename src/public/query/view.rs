@@ -17,6 +17,7 @@ impl<'a, C> View<'a> for Option<&mut C> where C: Component {}
 
 impl<'a> View<'a> for EntityIdentifier {}
 
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NullViews;
 
 pub trait Views<'a>: Filter + ViewsSeal<'a> {}

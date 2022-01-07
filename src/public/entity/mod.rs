@@ -5,6 +5,7 @@ pub use identifier::EntityIdentifier;
 use crate::{component::Component, internal::entity::EntitySeal};
 use core::any::Any;
 
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NullEntity;
 
 pub trait Entity: EntitySeal + Any {}

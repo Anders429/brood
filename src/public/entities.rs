@@ -1,6 +1,7 @@
 use crate::{component::Component, internal::entities::EntitiesSeal};
 use alloc::vec::Vec;
 
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NullEntities;
 
 pub trait Entities: EntitiesSeal {}
