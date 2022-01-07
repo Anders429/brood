@@ -4,6 +4,48 @@ use alloc::vec::Vec;
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NullEntities;
 
+#[cfg(feature = "serde")]
+mod impl_serde {
+    use crate::entities::NullEntities;
+    use core::fmt;
+    use serde::{de, de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
+
+    impl Serialize for NullEntities {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            serializer.serialize_unit_struct("NullEntities")
+        }
+    }
+
+    impl<'de> Deserialize<'de> for NullEntities {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            struct NullEntitiesVisitor;
+
+            impl<'de> Visitor<'de> for NullEntitiesVisitor {
+                type Value = NullEntities;
+
+                fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    formatter.write_str("struct NullEntities")
+                }
+
+                fn visit_unit<E>(self) -> Result<Self::Value, E>
+                where
+                    E: de::Error,
+                {
+                    Ok(NullEntities)
+                }
+            }
+
+            deserializer.deserialize_unit_struct("NullEntities", NullEntitiesVisitor)
+        }
+    }
+}
+
 pub trait Entities: EntitiesSeal {}
 
 impl Entities for NullEntities {}
