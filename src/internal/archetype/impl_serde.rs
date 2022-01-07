@@ -37,6 +37,43 @@ where
     }
 }
 
+struct SerializeColumns<'a, R>(&'a Archetype<R>)
+where
+    R: RegistrySerialize;
+
+impl<R> Serialize for SerializeColumns<'_, R>
+where
+    R: RegistrySerialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut tuple = serializer.serialize_tuple(
+            unsafe { self.0.identifier_buffer.iter() }
+                .filter(|b| *b)
+                .count()
+                + 1,
+        )?;
+        tuple.serialize_element(&SerializeColumn(&ManuallyDrop::new(unsafe {
+            Vec::from_raw_parts(
+                self.0.entity_identifiers.0,
+                self.0.length,
+                self.0.entity_identifiers.1,
+            )
+        })))?;
+        unsafe {
+            R::serialize_components_by_column(
+                &self.0.components,
+                self.0.length,
+                &mut tuple,
+                self.0.identifier_buffer.iter(),
+            )?;
+        }
+        tuple.end()
+    }
+}
+
 struct SerializeArchetypeByColumn<'a, R>(&'a Archetype<R>)
 where
     R: RegistrySerialize;
@@ -49,35 +86,11 @@ where
     where
         S: Serializer,
     {
-        let mut seq = serializer.serialize_seq(Some(
-            unsafe { self.0.identifier_buffer.iter() }
-                .filter(|b| *b)
-                .count()
-                + 3,
-        ))?;
-
-        seq.serialize_element(&self.0.identifier_buffer)?;
-
-        seq.serialize_element(&self.0.length)?;
-
-        seq.serialize_element(&SerializeColumn(&ManuallyDrop::new(unsafe {
-            Vec::from_raw_parts(
-                self.0.entity_identifiers.0,
-                self.0.length,
-                self.0.entity_identifiers.1,
-            )
-        })))?;
-
-        unsafe {
-            R::serialize_components_by_column(
-                &self.0.components,
-                self.0.length,
-                &mut seq,
-                self.0.identifier_buffer.iter(),
-            )?;
-        }
-
-        seq.end()
+        let mut tuple = serializer.serialize_tuple(3)?;
+        tuple.serialize_element(&self.0.identifier_buffer)?;
+        tuple.serialize_element(&self.0.length)?;
+        tuple.serialize_element(&SerializeColumns(self.0))?;
+        tuple.end()
     }
 }
 
@@ -345,6 +358,96 @@ where
     }
 }
 
+// TODO: here.
+struct DeserializeColumns<'de, R>
+where
+    R: RegistryDeserialize<'de>,
+{
+    lifetime: PhantomData<&'de ()>,
+
+    identifier: archetype::IdentifierBuffer<R>,
+    length: usize,
+}
+
+impl<'de, R> DeserializeSeed<'de> for DeserializeColumns<'de, R>
+where
+    R: RegistryDeserialize<'de>,
+{
+    type Value = Archetype<R>;
+
+    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct DeserializeColumnsVisitor<'de, R>(DeserializeColumns<'de, R>)
+        where
+            R: RegistryDeserialize<'de>;
+
+        impl<'de, R> Visitor<'de> for DeserializeColumnsVisitor<'de, R>
+        where
+            R: RegistryDeserialize<'de>,
+        {
+            type Value = Archetype<R>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("component columns")
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let entity_identifiers = seq
+                    .next_element_seed(DeserializeColumn::new(self.0.length))?
+                    .ok_or_else(|| de::Error::invalid_length(2, &self))?;
+
+                let mut components =
+                    Vec::with_capacity(unsafe { self.0.identifier.iter() }.filter(|b| *b).count());
+                let result = unsafe {
+                    R::deserialize_components_by_column(
+                        &mut components,
+                        self.0.length,
+                        &mut seq,
+                        self.0.identifier.iter(),
+                    )
+                };
+                if result.is_err() {
+                    // Free columns, since they are invalid and must be dropped.
+                    let _ = unsafe {
+                        Vec::from_raw_parts(
+                            entity_identifiers.0,
+                            self.0.length,
+                            entity_identifiers.1,
+                        )
+                    };
+                    unsafe {
+                        R::try_free_components(&components, self.0.length, self.0.identifier.iter());
+                    }
+
+                    return Err(unsafe { result.unwrap_err_unchecked() });
+                }
+
+                Ok(unsafe {
+                    Archetype::from_raw_parts(
+                        self.0.identifier,
+                        entity_identifiers,
+                        components,
+                        self.0.length,
+                    )
+                })
+            }
+        }
+
+        deserializer.deserialize_tuple(
+            unsafe { self.identifier.iter() }
+                .filter(|b| *b)
+                .count()
+                + 1,
+            DeserializeColumnsVisitor(self),
+        )
+    }
+}
+
 impl<'de, R> Deserialize<'de> for Archetype<R>
 where
     R: RegistryDeserialize<'de>,
@@ -382,35 +485,12 @@ where
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
 
-                let entity_identifiers = seq
-                    .next_element_seed(DeserializeColumn::new(length))?
-                    .ok_or_else(|| de::Error::invalid_length(2, &self))?;
+                seq.next_element_seed(DeserializeColumns {
+                    lifetime: PhantomData,
 
-                let mut components =
-                    Vec::with_capacity(unsafe { identifier.iter() }.filter(|b| *b).count());
-                let result = unsafe {
-                    R::deserialize_components_by_column(
-                        &mut components,
-                        length,
-                        &mut seq,
-                        identifier.iter(),
-                    )
-                };
-                if result.is_err() {
-                    // Free columns, since they are invalid and must be dropped.
-                    let _ = unsafe {
-                        Vec::from_raw_parts(entity_identifiers.0, length, entity_identifiers.1)
-                    };
-                    unsafe {
-                        R::try_free_components(&components, length, identifier.iter());
-                    }
-
-                    return Err(unsafe { result.unwrap_err_unchecked() });
-                }
-
-                Ok(unsafe {
-                    Archetype::from_raw_parts(identifier, entity_identifiers, components, length)
-                })
+                    identifier,
+                    length,
+                })?.ok_or_else(|| de::Error::invalid_length(2, &self))
             }
         }
 
@@ -530,9 +610,12 @@ where
                         registry: PhantomData,
                     })
                 } else {
-                    deserializer.deserialize_seq(VisitArchetypeByColumn::<R> {
-                        registry: PhantomData,
-                    })
+                    deserializer.deserialize_tuple(
+                        3,
+                        VisitArchetypeByColumn::<R> {
+                            registry: PhantomData,
+                        },
+                    )
                 }
             }
         }
