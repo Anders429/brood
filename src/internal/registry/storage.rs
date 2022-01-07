@@ -23,6 +23,13 @@ pub trait RegistryStorage {
     ) where
         R: Registry;
 
+    unsafe fn new_components_with_capacity<R>(
+        components: &mut Vec<(*mut u8, usize)>,
+        length: usize,
+        identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        R: Registry;
+
     unsafe fn size_of_components_for_identifier<R>(
         identifier_iter: impl archetype::IdentifierIterator<R>,
     ) -> usize
@@ -93,6 +100,15 @@ impl RegistryStorage for NullRegistry {
     unsafe fn create_component_map_for_key<R>(
         _component_map: &mut HashMap<TypeId, usize>,
         _index: usize,
+        _identifier_iter: impl archetype::IdentifierIterator<R>,
+    ) where
+        R: Registry,
+    {
+    }
+
+    unsafe fn new_components_with_capacity<R>(
+        _components: &mut Vec<(*mut u8, usize)>,
+        _length: usize,
         _identifier_iter: impl archetype::IdentifierIterator<R>,
     ) where
         R: Registry,
@@ -202,6 +218,21 @@ where
             index += 1;
         }
         R::create_component_map_for_key(component_map, index, identifier_iter);
+    }
+
+    unsafe fn new_components_with_capacity<R_>(
+        components: &mut Vec<(*mut u8, usize)>,
+        length: usize,
+        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+    ) where
+        R_: Registry,
+    {
+        if identifier_iter.next().unwrap_unchecked() {
+            let mut v = ManuallyDrop::new(Vec::<C>::with_capacity(length));
+            components.push((v.as_mut_ptr() as *mut u8, v.capacity()));
+        }
+
+        R::new_components_with_capacity(components, length, identifier_iter);
     }
 
     unsafe fn size_of_components_for_identifier<R_>(

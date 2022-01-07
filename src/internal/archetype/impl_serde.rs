@@ -351,9 +351,12 @@ where
 
                 let components_len = unsafe { self.0.identifier.iter() }.filter(|b| *b).count();
                 let mut components = Vec::with_capacity(components_len);
-                for _ in 0..components_len {
-                    let mut v = ManuallyDrop::new(Vec::new());
-                    components.push((v.as_mut_ptr(), v.capacity()));
+                unsafe {
+                    R::new_components_with_capacity(
+                        &mut components,
+                        self.0.length,
+                        self.0.identifier.iter(),
+                    )
                 }
                 let mut vec_length = 0;
 
