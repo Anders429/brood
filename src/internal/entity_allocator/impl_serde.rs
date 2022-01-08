@@ -133,12 +133,7 @@ where
                 let free = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                EntityAllocator::from_serialized_parts(
-                    length,
-                    free,
-                    self.archetypes,
-                    PhantomData,
-                )
+                EntityAllocator::from_serialized_parts(length, free, self.archetypes, PhantomData)
             }
 
             fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>

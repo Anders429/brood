@@ -1,3 +1,3 @@
-use crate::{registry::Registry, world::World};
+use crate::{internal::registry::RegistrySend, world::World};
 
-unsafe impl<R> Send for World<R> where R: Registry {}
+unsafe impl<R> Send for World<R> where R: RegistrySend {}
