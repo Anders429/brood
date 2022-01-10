@@ -1,6 +1,6 @@
 use crate::{
     component::Component,
-    entity::EntityIdentifier,
+    entity,
     internal::query::filter::FilterSeal,
     query::{view, view::{View, Views}},
 };
@@ -70,7 +70,7 @@ impl<C> Filter for Option<&C> where C: Component {}
 
 impl<C> Filter for Option<&mut C> where C: Component {}
 
-impl Filter for EntityIdentifier {}
+impl Filter for entity::Identifier {}
 
 impl Filter for view::Null {}
 

@@ -1,6 +1,6 @@
 use crate::{
     component::Component,
-    entity::EntityIdentifier,
+    entity,
     query::{result, view::Null},
 };
 use core::{any::TypeId, iter, slice};
@@ -12,7 +12,7 @@ pub trait ViewSeal<'a> {
 
     unsafe fn view(
         columns: &[(*mut u8, usize)],
-        entity_identifiers: (*mut EntityIdentifier, usize),
+        entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result;
@@ -26,7 +26,7 @@ where
 
     unsafe fn view(
         columns: &[(*mut u8, usize)],
-        _entity_identifiers: (*mut EntityIdentifier, usize),
+        _entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
@@ -48,7 +48,7 @@ where
 
     unsafe fn view(
         columns: &[(*mut u8, usize)],
-        _entity_identifiers: (*mut EntityIdentifier, usize),
+        _entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
@@ -77,7 +77,7 @@ where
 
     unsafe fn view(
         columns: &[(*mut u8, usize)],
-        _entity_identifiers: (*mut EntityIdentifier, usize),
+        _entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
@@ -103,7 +103,7 @@ where
 
     unsafe fn view(
         columns: &[(*mut u8, usize)],
-        _entity_identifiers: (*mut EntityIdentifier, usize),
+        _entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
@@ -122,12 +122,12 @@ where
     }
 }
 
-impl<'a> ViewSeal<'a> for EntityIdentifier {
+impl<'a> ViewSeal<'a> for entity::Identifier {
     type Result = iter::Cloned<slice::Iter<'a, Self>>;
 
     unsafe fn view(
         _columns: &[(*mut u8, usize)],
-        entity_identifiers: (*mut EntityIdentifier, usize),
+        entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         _component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
@@ -142,7 +142,7 @@ pub trait ViewsSeal<'a> {
 
     unsafe fn view(
         columns: &[(*mut u8, usize)],
-        entity_identifiers: (*mut EntityIdentifier, usize),
+        entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results;
@@ -153,7 +153,7 @@ impl<'a> ViewsSeal<'a> for Null {
 
     unsafe fn view(
         _columns: &[(*mut u8, usize)],
-        _entity_identifiers: (*mut EntityIdentifier, usize),
+        _entity_identifiers: (*mut entity::Identifier, usize),
         _length: usize,
         _component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results {
@@ -170,7 +170,7 @@ where
 
     unsafe fn view(
         columns: &[(*mut u8, usize)],
-        entity_identifiers: (*mut EntityIdentifier, usize),
+        entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results {

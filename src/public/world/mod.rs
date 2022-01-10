@@ -11,7 +11,8 @@ pub use entry::Entry;
 
 use crate::{
     entities::{Entities, EntitiesIter},
-    entity::{Entity, EntityIdentifier},
+    entity,
+    entity::Entity,
     internal::{
         archetype, archetypes::Archetypes, entity_allocator::EntityAllocator, query::filter::FilterSeal,
     },
@@ -52,7 +53,7 @@ where
         Self::from_raw_parts(Archetypes::new(), EntityAllocator::new())
     }
 
-    pub fn push<E>(&mut self, entity: E) -> EntityIdentifier
+    pub fn push<E>(&mut self, entity: E) -> entity::Identifier
     where
         E: Entity,
     {
@@ -70,7 +71,7 @@ where
     }
 
     // TODO: Figure out a way to remove the `must_use` attribute on the returned value.
-    pub fn extend<E>(&mut self, entities: EntitiesIter<E>) -> impl Iterator<Item = EntityIdentifier>
+    pub fn extend<E>(&mut self, entities: EntitiesIter<E>) -> impl Iterator<Item = entity::Identifier>
     where
         E: Entities,
     {
@@ -103,13 +104,13 @@ where
             .flatten()
     }
 
-    pub fn entry(&mut self, entity_identifier: EntityIdentifier) -> Option<Entry<R>> {
+    pub fn entry(&mut self, entity_identifier: entity::Identifier) -> Option<Entry<R>> {
         self.entity_allocator
             .get(entity_identifier)
             .map(|location| Entry::new(self, location))
     }
 
-    pub fn remove(&mut self, entity_identifier: EntityIdentifier) {
+    pub fn remove(&mut self, entity_identifier: entity::Identifier) {
         // Get location of entity.
         if let Some(location) = self.entity_allocator.get(entity_identifier) {
             // Remove row from Archetype.

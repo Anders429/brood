@@ -1,4 +1,4 @@
-use super::EntityIdentifier;
+use super::Identifier;
 use core::fmt;
 use serde::{
     de::{self, MapAccess, SeqAccess, Visitor},
@@ -6,19 +6,19 @@ use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
 };
 
-impl Serialize for EntityIdentifier {
+impl Serialize for Identifier {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        let mut state = serializer.serialize_struct("EntityIdentifier", 2)?;
+        let mut state = serializer.serialize_struct("Identifier", 2)?;
         state.serialize_field("index", &self.index)?;
         state.serialize_field("generation", &self.generation)?;
         state.end()
     }
 }
 
-impl<'de> Deserialize<'de> for EntityIdentifier {
+impl<'de> Deserialize<'de> for Identifier {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -58,16 +58,16 @@ impl<'de> Deserialize<'de> for EntityIdentifier {
             }
         }
 
-        struct EntityIdentifierVisitor;
+        struct IdentifierVisitor;
 
-        impl<'de> Visitor<'de> for EntityIdentifierVisitor {
-            type Value = EntityIdentifier;
+        impl<'de> Visitor<'de> for IdentifierVisitor {
+            type Value = Identifier;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("struct EntityIdentifier")
+                formatter.write_str("struct Identifier")
             }
 
-            fn visit_seq<V>(self, mut seq: V) -> Result<EntityIdentifier, V::Error>
+            fn visit_seq<V>(self, mut seq: V) -> Result<Identifier, V::Error>
             where
                 V: SeqAccess<'de>,
             {
@@ -77,10 +77,10 @@ impl<'de> Deserialize<'de> for EntityIdentifier {
                 let generation = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                Ok(EntityIdentifier::new(index, generation))
+                Ok(Identifier::new(index, generation))
             }
 
-            fn visit_map<V>(self, mut map: V) -> Result<EntityIdentifier, V::Error>
+            fn visit_map<V>(self, mut map: V) -> Result<Identifier, V::Error>
             where
                 V: MapAccess<'de>,
             {
@@ -105,18 +105,18 @@ impl<'de> Deserialize<'de> for EntityIdentifier {
                 let index = index.ok_or_else(|| de::Error::missing_field("index"))?;
                 let generation =
                     generation.ok_or_else(|| de::Error::missing_field("generation"))?;
-                Ok(EntityIdentifier::new(index, generation))
+                Ok(Identifier::new(index, generation))
             }
         }
 
         const FIELDS: &[&str] = &["index", "generation"];
-        deserializer.deserialize_struct("EntityIdentifier", FIELDS, EntityIdentifierVisitor)
+        deserializer.deserialize_struct("Identifier", FIELDS, IdentifierVisitor)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::entity::EntityIdentifier;
+    use crate::entity::Identifier;
     use serde_test::{assert_de_tokens, assert_de_tokens_error, assert_tokens, Token};
 
     #[test]
@@ -127,7 +127,7 @@ mod tests {
             &identifier,
             &[
                 Token::Struct {
-                    name: "EntityIdentifier",
+                    name: "Identifier",
                     len: 2,
                 },
                 Token::String("index"),
@@ -141,10 +141,10 @@ mod tests {
 
     #[test]
     fn deserialize_missing_index() {
-        assert_de_tokens_error::<EntityIdentifier>(
+        assert_de_tokens_error::<Identifier>(
             &[
                 Token::Struct {
-                    name: "EntityIdentifier",
+                    name: "Identifier",
                     len: 1,
                 },
                 Token::String("generation"),
@@ -157,10 +157,10 @@ mod tests {
 
     #[test]
     fn deserialize_missing_generation() {
-        assert_de_tokens_error::<EntityIdentifier>(
+        assert_de_tokens_error::<Identifier>(
             &[
                 Token::Struct {
-                    name: "EntityIdentifier",
+                    name: "Identifier",
                     len: 1,
                 },
                 Token::String("index"),
@@ -173,10 +173,10 @@ mod tests {
 
     #[test]
     fn deserialize_duplicate_index() {
-        assert_de_tokens_error::<EntityIdentifier>(
+        assert_de_tokens_error::<Identifier>(
             &[
                 Token::Struct {
-                    name: "EntityIdentifier",
+                    name: "Identifier",
                     len: 2,
                 },
                 Token::String("index"),
@@ -189,10 +189,10 @@ mod tests {
 
     #[test]
     fn deserialize_duplicate_generation() {
-        assert_de_tokens_error::<EntityIdentifier>(
+        assert_de_tokens_error::<Identifier>(
             &[
                 Token::Struct {
-                    name: "EntityIdentifier",
+                    name: "Identifier",
                     len: 2,
                 },
                 Token::String("generation"),
@@ -205,10 +205,10 @@ mod tests {
 
     #[test]
     fn deserialize_unknown_field() {
-        assert_de_tokens_error::<EntityIdentifier>(
+        assert_de_tokens_error::<Identifier>(
             &[
                 Token::Struct {
-                    name: "EntityIdentifier",
+                    name: "Identifier",
                     len: 2,
                 },
                 Token::String("unknown"),
@@ -219,7 +219,7 @@ mod tests {
 
     #[test]
     fn deserialize_from_seq() {
-        let identifier = EntityIdentifier::new(1, 2);
+        let identifier = Identifier::new(1, 2);
 
         assert_de_tokens(
             &identifier,
@@ -234,24 +234,24 @@ mod tests {
 
     #[test]
     fn deserialize_from_seq_no_items() {
-        assert_de_tokens_error::<EntityIdentifier>(
+        assert_de_tokens_error::<Identifier>(
             &[Token::Seq { len: Some(0) }, Token::SeqEnd],
-            "invalid length 0, expected struct EntityIdentifier",
+            "invalid length 0, expected struct Identifier",
         );
     }
 
     #[test]
     fn deserialize_from_seq_missing_item() {
-        assert_de_tokens_error::<EntityIdentifier>(
+        assert_de_tokens_error::<Identifier>(
             &[Token::Seq { len: Some(1) }, Token::U64(1), Token::SeqEnd],
-            "invalid length 1, expected struct EntityIdentifier",
+            "invalid length 1, expected struct Identifier",
         );
     }
 
     #[test]
     #[should_panic(expected = "expected Token::U64(3) but deserialization wants Token::SeqEnd")]
     fn deserialize_from_seq_too_many_items() {
-        assert_de_tokens_error::<EntityIdentifier>(
+        assert_de_tokens_error::<Identifier>(
             &[
                 Token::Seq { len: Some(3) },
                 Token::U64(1),

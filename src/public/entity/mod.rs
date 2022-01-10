@@ -1,6 +1,6 @@
 mod identifier;
 
-pub use identifier::EntityIdentifier;
+pub use identifier::Identifier;
 
 use crate::{component::Component, internal::entity::EntitySeal};
 use core::any::Any;

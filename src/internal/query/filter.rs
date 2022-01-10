@@ -1,6 +1,6 @@
 use crate::{
     component::Component,
-    entity::EntityIdentifier,
+    entity,
     query::{filter::{And, Filter, Has, None, Not, Or}, view, view::{View, Views}},
 };
 use core::any::TypeId;
@@ -93,7 +93,7 @@ where
     }
 }
 
-impl FilterSeal for EntityIdentifier {
+impl FilterSeal for entity::Identifier {
     unsafe fn filter(_key: &[u8], _component_map: &HashMap<TypeId, usize>) -> bool {
         true
     }

@@ -1,6 +1,6 @@
 use crate::{
     component::Component,
-    entity::EntityIdentifier,
+    entity,
     internal::query::view::{ViewSeal, ViewsSeal},
     query::filter::Filter,
 };
@@ -15,7 +15,7 @@ impl<'a, C> View<'a> for Option<&C> where C: Component {}
 
 impl<'a, C> View<'a> for Option<&mut C> where C: Component {}
 
-impl<'a> View<'a> for EntityIdentifier {}
+impl<'a> View<'a> for entity::Identifier {}
 
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Null;
