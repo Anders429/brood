@@ -1,7 +1,7 @@
 use crate::{
     component::Component,
     entity::EntityIdentifier,
-    query::{result::NullResult, view::NullViews},
+    query::{result, view::NullViews},
 };
 use core::{any::TypeId, iter, slice};
 use either::Either;
@@ -149,7 +149,7 @@ pub trait ViewsSeal<'a> {
 }
 
 impl<'a> ViewsSeal<'a> for NullViews {
-    type Results = iter::Repeat<NullResult>;
+    type Results = iter::Repeat<result::Null>;
 
     unsafe fn view(
         _columns: &[(*mut u8, usize)],
@@ -157,7 +157,7 @@ impl<'a> ViewsSeal<'a> for NullViews {
         _length: usize,
         _component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results {
-        iter::repeat(NullResult)
+        iter::repeat(result::Null)
     }
 }
 
