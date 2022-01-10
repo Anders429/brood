@@ -1,11 +1,11 @@
 use crate::{
     component::Component,
-    registry::{NullRegistry, Registry},
+    registry::{Null, Registry},
 };
 
 pub trait RegistrySend: Registry {}
 
-impl RegistrySend for NullRegistry {}
+impl RegistrySend for Null {}
 
 impl<C, R> RegistrySend for (C, R)
 where

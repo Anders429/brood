@@ -1,7 +1,7 @@
 use crate::{
     component::Component,
     internal::archetype,
-    registry::{NullRegistry, Registry},
+    registry::{Null, Registry},
 };
 use alloc::vec::Vec;
 use core::mem::ManuallyDrop;
@@ -17,7 +17,7 @@ pub trait RegistryPartialEq: Registry {
         R: Registry;
 }
 
-impl RegistryPartialEq for NullRegistry {
+impl RegistryPartialEq for Null {
     unsafe fn component_eq<R>(
         _components_a: &[(*mut u8, usize)],
         _components_b: &[(*mut u8, usize)],
@@ -71,7 +71,7 @@ where
 
 pub trait RegistryEq: RegistryPartialEq {}
 
-impl RegistryEq for NullRegistry {}
+impl RegistryEq for Null {}
 
 impl<C, R> RegistryEq for (C, R)
 where

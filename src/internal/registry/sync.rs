@@ -1,11 +1,11 @@
 use crate::{
     component::Component,
-    registry::{NullRegistry, Registry},
+    registry::{Null, Registry},
 };
 
 pub trait RegistrySync: Registry {}
 
-impl RegistrySync for NullRegistry {}
+impl RegistrySync for Null {}
 
 impl<C, R> RegistrySync for (C, R)
 where

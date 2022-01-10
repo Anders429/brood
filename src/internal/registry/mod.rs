@@ -14,13 +14,13 @@ pub(crate) use eq::{RegistryEq, RegistryPartialEq};
 pub(crate) use send::RegistrySend;
 pub(crate) use sync::RegistrySync;
 
-use crate::{component::Component, registry::NullRegistry};
+use crate::{component::Component, registry::Null};
 use length::RegistryLength;
 use storage::RegistryStorage;
 
 pub trait RegistrySeal: RegistryLength + RegistryStorage {}
 
-impl RegistrySeal for NullRegistry {}
+impl RegistrySeal for Null {}
 
 impl<C, R> RegistrySeal for (C, R)
 where

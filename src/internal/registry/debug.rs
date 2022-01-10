@@ -1,7 +1,7 @@
 use crate::{
     component::Component,
     internal::archetype,
-    registry::{NullRegistry, Registry},
+    registry::{Null, Registry},
 };
 use alloc::vec::Vec;
 use core::{
@@ -27,7 +27,7 @@ pub trait RegistryDebug: Registry {
         R: Registry;
 }
 
-impl RegistryDebug for NullRegistry {
+impl RegistryDebug for Null {
     unsafe fn extract_component_pointers<R>(
         _index: usize,
         _components: &[(*mut u8, usize)],

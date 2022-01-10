@@ -1,10 +1,10 @@
-use crate::{component::Component, registry::NullRegistry};
+use crate::{component::Component, registry::Null};
 
 pub trait RegistryLength {
     const LEN: usize;
 }
 
-impl RegistryLength for NullRegistry {
+impl RegistryLength for Null {
     const LEN: usize = 0;
 }
 
