@@ -1,3 +1,7 @@
+use core::iter;
+use crate::query::view::Views;
+use alloc::vec;
+
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Null;
 
@@ -51,4 +55,18 @@ macro_rules! result {
     ($component:ident $(,$components:ident)* $(,)?) => {
         ($component, result!($($components,)*))
     };
+}
+
+pub struct Results<'a, V>(pub(crate) iter::Flatten<vec::IntoIter<V::Results>>) where V: Views<'a>;
+
+impl<'a, V> Iterator for Results<'a, V> where V: Views<'a> {
+    type Item = <V::Results as Iterator>::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
 }
