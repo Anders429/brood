@@ -1,7 +1,7 @@
 use crate::{
     component::Component,
     entity::EntityIdentifier,
-    query::{filter::{And, Filter, Has, None, Not, Or}, view::{NullViews, View, Views}},
+    query::{filter::{And, Filter, Has, None, Not, Or}, view, view::{View, Views}},
 };
 use core::any::TypeId;
 use hashbrown::HashMap;
@@ -99,7 +99,7 @@ impl FilterSeal for EntityIdentifier {
     }
 }
 
-impl FilterSeal for NullViews {
+impl FilterSeal for view::Null {
     unsafe fn filter(_key: &[u8], _component_map: &HashMap<TypeId, usize>) -> bool {
         true
     }
