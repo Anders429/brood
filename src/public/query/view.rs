@@ -79,6 +79,6 @@ macro_rules! views {
         ($view, views!($($views,)*))
     };
     () => {
-        $crate::query::Null
+        $crate::query::view::Null
     };
 }
