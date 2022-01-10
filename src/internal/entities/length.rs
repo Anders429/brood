@@ -1,4 +1,4 @@
-use crate::{component::Component, entities::NullEntities};
+use crate::{component::Component, entities::Null};
 use alloc::vec::Vec;
 
 pub trait EntitiesLength {
@@ -7,7 +7,7 @@ pub trait EntitiesLength {
     fn check_len_against(&self, len: usize) -> bool;
 }
 
-impl EntitiesLength for NullEntities {
+impl EntitiesLength for Null {
     fn component_len(&self) -> usize {
         0
     }

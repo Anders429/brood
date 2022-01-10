@@ -1,4 +1,4 @@
-use crate::{component::Component, entities::NullEntities};
+use crate::{component::Component, entities::Null};
 use alloc::vec::Vec;
 use core::{any::TypeId, mem::ManuallyDrop};
 use hashbrown::HashMap;
@@ -14,7 +14,7 @@ pub trait EntitiesStorage {
     unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>);
 }
 
-impl EntitiesStorage for NullEntities {
+impl EntitiesStorage for Null {
     unsafe fn extend_components(
         self,
         _component_map: &HashMap<TypeId, usize>,
