@@ -14,7 +14,7 @@ use crate::{
     entities::{Entities, EntitiesIter},
     entity::{Entity, EntityIdentifier},
     internal::entity_allocator::{EntityAllocator, Location},
-    query::Views,
+    query::view::Views,
     registry::Registry,
 };
 use alloc::vec::Vec;

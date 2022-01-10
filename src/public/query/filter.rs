@@ -1,8 +1,8 @@
 use crate::{
     component::Component,
     entity::EntityIdentifier,
-    internal::query::FilterSeal,
-    query::{NullViews, View, Views},
+    internal::query::filter::FilterSeal,
+    query::view::{NullViews, View, Views},
 };
 use core::marker::PhantomData;
 

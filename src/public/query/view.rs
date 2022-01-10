@@ -1,8 +1,8 @@
 use crate::{
     component::Component,
     entity::EntityIdentifier,
-    internal::query::{ViewSeal, ViewsSeal},
-    query::Filter,
+    internal::query::view::{ViewSeal, ViewsSeal},
+    query::filter::Filter,
 };
 
 pub trait View<'a>: Filter + ViewSeal<'a> {}

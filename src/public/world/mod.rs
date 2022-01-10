@@ -13,9 +13,9 @@ use crate::{
     entities::{Entities, EntitiesIter},
     entity::{Entity, EntityIdentifier},
     internal::{
-        archetype, archetypes::Archetypes, entity_allocator::EntityAllocator, query::FilterSeal,
+        archetype, archetypes::Archetypes, entity_allocator::EntityAllocator, query::filter::FilterSeal,
     },
-    query::{And, Filter, Views},
+    query::{filter::{And, Filter}, view::Views},
     registry::Registry,
 };
 use alloc::{vec, vec::Vec};

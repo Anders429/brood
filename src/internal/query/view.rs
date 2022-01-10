@@ -1,7 +1,7 @@
 use crate::{
     component::Component,
     entity::EntityIdentifier,
-    query::{NullResult, NullViews},
+    query::{result::NullResult, view::NullViews},
 };
 use core::{any::TypeId, iter, slice};
 use either::Either;

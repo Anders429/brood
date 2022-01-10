@@ -1,7 +1,7 @@
 use crate::{
     component::Component,
     entity::EntityIdentifier,
-    query::{And, Filter, Has, None, Not, NullViews, Or, View, Views},
+    query::{filter::{And, Filter, Has, None, Not, Or}, view::{NullViews, View, Views}},
 };
 use core::any::TypeId;
 use hashbrown::HashMap;
