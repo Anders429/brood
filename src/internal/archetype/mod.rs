@@ -11,7 +11,8 @@ pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
 
 use crate::{
     component::Component,
-    entities::{Entities, EntitiesIter},
+    entities,
+    entities::Entities,
     entity,
     entity::Entity,
     internal::entity_allocator::{EntityAllocator, Location},
@@ -118,7 +119,7 @@ where
 
     pub(crate) unsafe fn extend<E>(
         &mut self,
-        entities: EntitiesIter<E>,
+        entities: entities::Batch<E>,
         entity_allocator: &mut EntityAllocator<R>,
     ) -> impl Iterator<Item = entity::Identifier>
     where

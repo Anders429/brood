@@ -57,15 +57,14 @@ where
 {
 }
 
-// TODO: Bikeshed this name. Yuck.
-pub struct EntitiesIter<E>
+pub struct Batch<E>
 where
     E: Entities,
 {
     pub(crate) entities: E,
 }
 
-impl<E> EntitiesIter<E>
+impl<E> Batch<E>
 where
     E: Entities,
 {
@@ -83,26 +82,26 @@ where
 macro_rules! entities {
     (($component:expr $(,$components:expr)* $(,)?); $n:expr) => {
         unsafe {
-            $crate::entities::EntitiesIter::new_unchecked(
+            $crate::entities::Batch::new_unchecked(
                 ($crate::reexports::vec![$component; $n], entities!(@cloned ($($components),*); $n))
             )
         }
     };
     ($(($($components:expr),*)),* $(,)?) => {
         unsafe {
-            $crate::entities::EntitiesIter::new_unchecked(
+            $crate::entities::Batch::new_unchecked(
                 entities!(@transpose [] $(($($components),*)),*)
             )
         }
     };
     ((); $n:expr) => {
         unsafe {
-            $crate::entities::EntitiesIter::new_unchecked($crate::entities::Null)
+            $crate::entities::Batch::new_unchecked($crate::entities::Null)
         }
     };
     () => {
         unsafe {
-            $crate::entities::EntitiesIter::new_unchecked($crate::entities::Null)
+            $crate::entities::Batch::new_unchecked($crate::entities::Null)
         }
     };
     (@cloned ($component:expr $(,$components:expr)* $(,)?); $n:expr) => {

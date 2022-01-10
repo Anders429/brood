@@ -10,7 +10,8 @@ mod impl_sync;
 pub use entry::Entry;
 
 use crate::{
-    entities::{Entities, EntitiesIter},
+    entities,
+    entities::Entities,
     entity,
     entity::Entity,
     internal::{
@@ -71,7 +72,7 @@ where
     }
 
     // TODO: Figure out a way to remove the `must_use` attribute on the returned value.
-    pub fn extend<E>(&mut self, entities: EntitiesIter<E>) -> impl Iterator<Item = entity::Identifier>
+    pub fn extend<E>(&mut self, entities: entities::Batch<E>) -> impl Iterator<Item = entity::Identifier>
     where
         E: Entities,
     {
