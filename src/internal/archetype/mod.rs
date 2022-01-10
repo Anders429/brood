@@ -121,7 +121,7 @@ where
         &mut self,
         entities: entities::Batch<E>,
         entity_allocator: &mut EntityAllocator<R>,
-    ) -> impl Iterator<Item = entity::Identifier>
+    ) -> Vec<entity::Identifier>
     where
         E: Entities,
     {
@@ -151,7 +151,7 @@ where
 
         self.length += component_len;
 
-        entity_identifiers.into_iter()
+        entity_identifiers
     }
 
     pub(crate) fn view<'a, V>(&mut self) -> V::Results

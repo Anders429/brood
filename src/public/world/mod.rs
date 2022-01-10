@@ -71,8 +71,7 @@ where
         }
     }
 
-    // TODO: Figure out a way to remove the `must_use` attribute on the returned value.
-    pub fn extend<E>(&mut self, entities: entities::Batch<E>) -> impl Iterator<Item = entity::Identifier>
+    pub fn extend<E>(&mut self, entities: entities::Batch<E>) -> Vec<entity::Identifier>
     where
         E: Entities,
     {
