@@ -121,7 +121,7 @@ mod tests {
 
     #[test]
     fn serialize_deserialize() {
-        let identifier = EntityIdentifier::new(1, 2);
+        let identifier = Identifier::new(1, 2);
 
         assert_tokens(
             &identifier,
