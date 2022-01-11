@@ -1,4 +1,11 @@
-use crate::{internal::{archetypes, query::filter::FilterSeal}, query::{filter::{Filter, And}, view::Views}, registry::Registry};
+use crate::{
+    internal::{archetypes, query::filter::FilterSeal},
+    query::{
+        filter::{And, Filter},
+        view::Views,
+    },
+    registry::Registry,
+};
 use core::{any::TypeId, marker::PhantomData};
 use hashbrown::HashMap;
 
@@ -57,7 +64,12 @@ macro_rules! result {
     };
 }
 
-pub struct Results<'a, R, F, V> where R: Registry, F: Filter, V: Views<'a> {
+pub struct Results<'a, R, F, V>
+where
+    R: Registry,
+    F: Filter,
+    V: Views<'a>,
+{
     archetypes_iter: archetypes::IterMut<'a, R>,
 
     front_results_iter: Option<V::Results>,
@@ -68,14 +80,22 @@ pub struct Results<'a, R, F, V> where R: Registry, F: Filter, V: Views<'a> {
     filter: PhantomData<F>,
 }
 
-impl<'a, R, F, V> Results<'a, R, F, V> where R: Registry, F: Filter, V: Views<'a> {
+impl<'a, R, F, V> Results<'a, R, F, V>
+where
+    R: Registry,
+    F: Filter,
+    V: Views<'a>,
+{
     // fn filter((identifier, _archetype): (archetype::Identifier, &mut Archetype<R>)) -> bool {
     //     unsafe {
     //         And::<V, F>::filter(identifier.as_slice(), &self.component_map)
     //     }
     // }
 
-    pub(crate) fn new(archetypes_iter: archetypes::IterMut<'a, R>, component_map: &'a HashMap<TypeId, usize>) -> Self {
+    pub(crate) fn new(
+        archetypes_iter: archetypes::IterMut<'a, R>,
+        component_map: &'a HashMap<TypeId, usize>,
+    ) -> Self {
         Self {
             archetypes_iter,
 
@@ -89,7 +109,12 @@ impl<'a, R, F, V> Results<'a, R, F, V> where R: Registry, F: Filter, V: Views<'a
     }
 }
 
-impl<'a, R, F, V> Iterator for Results<'a, R, F, V> where R: Registry + 'a, F: Filter, V: Views<'a> {
+impl<'a, R, F, V> Iterator for Results<'a, R, F, V>
+where
+    R: Registry + 'a,
+    F: Filter,
+    V: Views<'a>,
+{
     type Item = <V::Results as Iterator>::Item;
 
     #[inline]
@@ -101,17 +126,21 @@ impl<'a, R, F, V> Iterator for Results<'a, R, F, V> where R: Registry + 'a, F: F
                     None => self.front_results_iter = None,
                 }
             }
-            match self.archetypes_iter.find(|(identifier, _archetype)| unsafe {
-                And::<V, F>::filter(identifier.as_slice(), self.component_map)
-            }) {
-                Some((_identifier, archetype)) => self.front_results_iter = Some(archetype.view::<V>()),
+            match self
+                .archetypes_iter
+                .find(|(identifier, _archetype)| unsafe {
+                    And::<V, F>::filter(identifier.as_slice(), self.component_map)
+                }) {
+                Some((_identifier, archetype)) => {
+                    self.front_results_iter = Some(archetype.view::<V>())
+                }
                 None => match self.back_results_iter.as_mut()?.next() {
                     result @ Some(_) => return result,
                     None => {
                         self.back_results_iter = None;
                         return None;
                     }
-                }
+                },
             }
         }
     }

@@ -2,7 +2,10 @@ use crate::{
     component::Component,
     entity,
     internal::query::filter::FilterSeal,
-    query::{view, view::{View, Views}},
+    query::{
+        view,
+        view::{View, Views},
+    },
 };
 use core::marker::PhantomData;
 
