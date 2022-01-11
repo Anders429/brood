@@ -15,13 +15,14 @@ use crate::{
     entity,
     entity::Entity,
     internal::{
-        archetype, archetypes::Archetypes, entity_allocator::EntityAllocator, query::filter::FilterSeal,
+        archetype, archetypes::Archetypes, entity_allocator::EntityAllocator,
     },
-    query::{filter::{And, Filter}, view::Views},
+    query,
+    query::{filter::Filter, view::Views},
     registry::Registry,
 };
 use alloc::{vec, vec::Vec};
-use core::{any::TypeId, iter};
+use core::any::TypeId;
 use hashbrown::HashMap;
 
 pub struct World<R>
@@ -88,20 +89,12 @@ where
         }
     }
 
-    pub fn query<'a, V, F>(&'a mut self) -> iter::Flatten<vec::IntoIter<V::Results>>
+    pub fn query<'a, V, F>(&'a mut self) -> query::Results<'a, R, F, V>
     where
         V: Views<'a>,
         F: Filter,
     {
-        self.archetypes
-            .iter_mut()
-            .filter(|(identifier, _archetype)| unsafe {
-                And::<V, F>::filter(identifier.as_slice(), &self.component_map)
-            })
-            .map(|(_identifier, archetype)| archetype.view::<V>())
-            .collect::<Vec<_>>()
-            .into_iter()
-            .flatten()
+        query::Results::new(self.archetypes.iter_mut(), &self.component_map)
     }
 
     pub fn entry(&mut self, entity_identifier: entity::Identifier) -> Option<Entry<R>> {

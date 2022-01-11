@@ -4,13 +4,15 @@ mod impl_eq;
 mod impl_serde;
 mod iter;
 
+pub(crate) use iter::IterMut;
+
 use crate::{
     internal::{archetype, archetype::Archetype},
     registry::Registry,
 };
 use core::hash::{BuildHasher, Hash, Hasher};
 use hashbrown::raw::RawTable;
-use iter::{Iter, IterMut};
+use iter::Iter;
 
 pub(crate) struct Archetypes<R>
 where
