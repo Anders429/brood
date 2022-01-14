@@ -2,6 +2,7 @@ mod identifier;
 mod impl_debug;
 mod impl_drop;
 mod impl_eq;
+mod impl_send;
 #[cfg(feature = "serde")]
 mod impl_serde;
 
@@ -19,6 +20,8 @@ use crate::{
     query::view::Views,
     registry::Registry,
 };
+#[cfg(feature = "parallel")]
+use crate::query::view::ParViews;
 use alloc::vec::Vec;
 use core::{
     any::TypeId,
@@ -160,6 +163,18 @@ where
     {
         unsafe {
             V::view(
+                &self.components,
+                self.entity_identifiers,
+                self.length,
+                &self.component_map,
+            )
+        }
+    }
+
+    #[cfg(feature = "parallel")]
+    pub(crate) fn par_view<'a, V>(&mut self) -> V::ParResults where V: ParViews<'a> {
+        unsafe {
+            V::par_view(
                 &self.components,
                 self.entity_identifiers,
                 self.length,
