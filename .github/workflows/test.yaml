@@ -49,7 +49,7 @@ jobs:
     - uses: actions-rs/cargo@v1
       with:
         command: hack
-        args: build --feature-powerset --optional-deps --target thumbv6m-none-eabi
+        args: build --feature-powerset --optional-deps --exclude-features parallel --exclude-features rayon --target thumbv6m-none-eabi
 
   fmt:
     runs-on: ubuntu-latest

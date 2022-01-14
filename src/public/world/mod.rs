@@ -9,14 +9,15 @@ mod impl_sync;
 
 pub use entry::Entry;
 
+#[cfg(feature = "parallel")]
+use crate::query::view::ParViews;
 use crate::{
     entities,
     entities::Entities,
     entity,
     entity::Entity,
     internal::{archetype, archetypes::Archetypes, entity_allocator::EntityAllocator},
-    query,
-    query::{filter::Filter, view::Views},
+    query::{filter::Filter, result, view::Views},
     registry::Registry,
 };
 use alloc::{vec, vec::Vec};
@@ -87,12 +88,21 @@ where
         }
     }
 
-    pub fn query<'a, V, F>(&'a mut self) -> query::Results<'a, R, F, V>
+    pub fn query<'a, V, F>(&'a mut self) -> result::Iter<'a, R, F, V>
     where
         V: Views<'a>,
         F: Filter,
     {
-        query::Results::new(self.archetypes.iter_mut(), &self.component_map)
+        result::Iter::new(self.archetypes.iter_mut(), &self.component_map)
+    }
+
+    #[cfg(feature = "parallel")]
+    pub fn par_query<'a, V, F>(&'a mut self) -> result::ParIter<'a, R, F, V>
+    where
+        V: ParViews<'a>,
+        F: Filter,
+    {
+        result::ParIter::new(self.archetypes.par_iter_mut(), &self.component_map)
     }
 
     pub fn entry(&mut self, entity_identifier: entity::Identifier) -> Option<Entry<R>> {

@@ -9,62 +9,7 @@ use crate::{
 use core::{any::TypeId, marker::PhantomData};
 use hashbrown::HashMap;
 
-#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct Null;
-
-#[cfg(feature = "serde")]
-mod impl_serde {
-    use super::Null;
-    use core::fmt;
-    use serde::{de, de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
-
-    impl Serialize for Null {
-        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-        {
-            serializer.serialize_unit_struct("Null")
-        }
-    }
-
-    impl<'de> Deserialize<'de> for Null {
-        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
-        {
-            struct NullVisitor;
-
-            impl<'de> Visitor<'de> for NullVisitor {
-                type Value = Null;
-
-                fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                    formatter.write_str("struct Null")
-                }
-
-                fn visit_unit<E>(self) -> Result<Self::Value, E>
-                where
-                    E: de::Error,
-                {
-                    Ok(Null)
-                }
-            }
-
-            deserializer.deserialize_unit_struct("Null", NullVisitor)
-        }
-    }
-}
-
-#[macro_export]
-macro_rules! result {
-    () => {
-        _
-    };
-    ($component:ident $(,$components:ident)* $(,)?) => {
-        ($component, result!($($components,)*))
-    };
-}
-
-pub struct Results<'a, R, F, V>
+pub struct Iter<'a, R, F, V>
 where
     R: Registry,
     F: Filter,
@@ -80,7 +25,7 @@ where
     filter: PhantomData<F>,
 }
 
-impl<'a, R, F, V> Results<'a, R, F, V>
+impl<'a, R, F, V> Iter<'a, R, F, V>
 where
     R: Registry,
     F: Filter,
@@ -109,7 +54,7 @@ where
     }
 }
 
-impl<'a, R, F, V> Iterator for Results<'a, R, F, V>
+impl<'a, R, F, V> Iterator for Iter<'a, R, F, V>
 where
     R: Registry + 'a,
     F: Filter,

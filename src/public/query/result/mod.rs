@@ -1,21 +1,10 @@
-use crate::{
-    component::Component,
-    entity,
-    internal::query::view::{ViewSeal, ViewsSeal},
-    query::filter::Filter,
-};
+mod iter;
+#[cfg(feature = "parallel")]
+mod par_iter;
 
-pub trait View<'a>: Filter + ViewSeal<'a> {}
-
-impl<'a, C> View<'a> for &C where C: Component {}
-
-impl<'a, C> View<'a> for &mut C where C: Component {}
-
-impl<'a, C> View<'a> for Option<&C> where C: Component {}
-
-impl<'a, C> View<'a> for Option<&mut C> where C: Component {}
-
-impl<'a> View<'a> for entity::Identifier {}
+pub use iter::Iter;
+#[cfg(feature = "parallel")]
+pub use par_iter::ParIter;
 
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Null;
@@ -62,23 +51,12 @@ mod impl_serde {
     }
 }
 
-pub trait Views<'a>: Filter + ViewsSeal<'a> {}
-
-impl<'a> Views<'a> for Null {}
-
-impl<'a, V, W> Views<'a> for (V, W)
-where
-    V: View<'a>,
-    W: Views<'a>,
-{
-}
-
 #[macro_export]
-macro_rules! views {
-    ($view:ty $(,$views:ty)* $(,)?) => {
-        ($view, views!($($views,)*))
-    };
+macro_rules! result {
     () => {
-        $crate::query::view::Null
+        _
+    };
+    ($component:ident $(,$components:ident)* $(,)?) => {
+        ($component, result!($($components,)*))
     };
 }

@@ -3,8 +3,12 @@ mod impl_eq;
 #[cfg(feature = "serde")]
 mod impl_serde;
 mod iter;
+#[cfg(feature = "parallel")]
+mod par_iter;
 
 pub(crate) use iter::IterMut;
+#[cfg(feature = "parallel")]
+pub(crate) use par_iter::ParIterMut;
 
 use crate::{
     internal::{archetype, archetype::Archetype},

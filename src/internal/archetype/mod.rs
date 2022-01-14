@@ -2,6 +2,7 @@ mod identifier;
 mod impl_debug;
 mod impl_drop;
 mod impl_eq;
+mod impl_send;
 #[cfg(feature = "serde")]
 mod impl_serde;
 
@@ -9,6 +10,8 @@ pub(crate) use identifier::{Identifier, IdentifierBuffer, IdentifierIterator};
 #[cfg(feature = "serde")]
 pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
 
+#[cfg(feature = "parallel")]
+use crate::query::view::ParViews;
 use crate::{
     component::Component,
     entities,
@@ -160,6 +163,21 @@ where
     {
         unsafe {
             V::view(
+                &self.components,
+                self.entity_identifiers,
+                self.length,
+                &self.component_map,
+            )
+        }
+    }
+
+    #[cfg(feature = "parallel")]
+    pub(crate) fn par_view<'a, V>(&mut self) -> V::ParResults
+    where
+        V: ParViews<'a>,
+    {
+        unsafe {
+            V::par_view(
                 &self.components,
                 self.entity_identifiers,
                 self.length,
