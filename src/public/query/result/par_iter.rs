@@ -8,7 +8,10 @@ use crate::{
 };
 use core::{any::TypeId, marker::PhantomData};
 use hashbrown::HashMap;
-use rayon::iter::{ParallelIterator, plumbing::{Consumer, Folder, Reducer, UnindexedConsumer}};
+use rayon::iter::{
+    plumbing::{Consumer, Folder, Reducer, UnindexedConsumer},
+    ParallelIterator,
+};
 
 pub struct ParIter<'a, R, F, V>
 where
@@ -45,14 +48,34 @@ where
     }
 }
 
-unsafe impl<'a, R, F, V> Send for ParIter<'a, R, F, V> where R: Registry, F: Filter, V: ParViews<'a> {}
+unsafe impl<'a, R, F, V> Send for ParIter<'a, R, F, V>
+where
+    R: Registry,
+    F: Filter,
+    V: ParViews<'a>,
+{
+}
 
-unsafe impl<'a, R, F, V> Sync for ParIter<'a, R, F, V> where R: Registry, F: Filter, V: ParViews<'a> {}
+unsafe impl<'a, R, F, V> Sync for ParIter<'a, R, F, V>
+where
+    R: Registry,
+    F: Filter,
+    V: ParViews<'a>,
+{
+}
 
-impl<'a, R, F, V> ParallelIterator for ParIter<'a, R, F, V> where R: Registry + 'a, F: Filter, V: ParViews<'a> {
+impl<'a, R, F, V> ParallelIterator for ParIter<'a, R, F, V>
+where
+    R: Registry + 'a,
+    F: Filter,
+    V: ParViews<'a>,
+{
     type Item = <V::ParResults as ParallelIterator>::Item;
 
-    fn drive_unindexed<C>(self, consumer: C) -> C::Result where C: UnindexedConsumer<Self::Item> {
+    fn drive_unindexed<C>(self, consumer: C) -> C::Result
+    where
+        C: UnindexedConsumer<Self::Item>,
+    {
         let consumer = ResultsConsumer::<_, F, V>::new(consumer, self.component_map);
         self.archetypes_iter.drive_unindexed(consumer)
     }
@@ -82,7 +105,13 @@ unsafe impl<C, F, V> Send for ResultsConsumer<'_, C, F, V> {}
 
 unsafe impl<C, F, V> Sync for ResultsConsumer<'_, C, F, V> {}
 
-impl<'a, C, R, F, V> Consumer<&'a mut Archetype<R>> for ResultsConsumer<'a, C, F, V> where C: UnindexedConsumer<<V::ParResults as ParallelIterator>::Item>, R: Registry, F: Filter, V: ParViews<'a> {
+impl<'a, C, R, F, V> Consumer<&'a mut Archetype<R>> for ResultsConsumer<'a, C, F, V>
+where
+    C: UnindexedConsumer<<V::ParResults as ParallelIterator>::Item>,
+    R: Registry,
+    F: Filter,
+    V: ParViews<'a>,
+{
     type Folder = ResultsFolder<'a, C, C::Result, F, V>;
     type Reducer = C::Reducer;
     type Result = C::Result;
@@ -112,7 +141,13 @@ impl<'a, C, R, F, V> Consumer<&'a mut Archetype<R>> for ResultsConsumer<'a, C, F
     }
 }
 
-impl<'a, C, R, F, V> UnindexedConsumer<&'a mut Archetype<R>> for ResultsConsumer<'a, C, F, V> where C: UnindexedConsumer<<V::ParResults as ParallelIterator>::Item>, R: Registry, F: Filter, V: ParViews<'a> {
+impl<'a, C, R, F, V> UnindexedConsumer<&'a mut Archetype<R>> for ResultsConsumer<'a, C, F, V>
+where
+    C: UnindexedConsumer<<V::ParResults as ParallelIterator>::Item>,
+    R: Registry,
+    F: Filter,
+    V: ParViews<'a>,
+{
     fn split_off_left(&self) -> Self {
         ResultsConsumer::new(self.base.split_off_left(), self.component_map)
     }
@@ -131,13 +166,17 @@ struct ResultsFolder<'a, C, P, F, V> {
     views: PhantomData<V>,
 }
 
-impl<'a, C, R, F, V> Folder<&'a mut Archetype<R>> for ResultsFolder<'a, C, C::Result, F, V> where C: UnindexedConsumer<<V::ParResults as ParallelIterator>::Item>, R: Registry, F: Filter, V: ParViews<'a> {
+impl<'a, C, R, F, V> Folder<&'a mut Archetype<R>> for ResultsFolder<'a, C, C::Result, F, V>
+where
+    C: UnindexedConsumer<<V::ParResults as ParallelIterator>::Item>,
+    R: Registry,
+    F: Filter,
+    V: ParViews<'a>,
+{
     type Result = C::Result;
 
     fn consume(self, archetype: &'a mut Archetype<R>) -> Self {
-        if unsafe {
-            And::<V, F>::filter(archetype.identifier().as_slice(), self.component_map)
-        } {
+        if unsafe { And::<V, F>::filter(archetype.identifier().as_slice(), self.component_map) } {
             let consumer = self.base.split_off_left();
             let result = archetype.par_view::<V>().drive_unindexed(consumer);
 
@@ -153,7 +192,7 @@ impl<'a, C, R, F, V> Folder<&'a mut Archetype<R>> for ResultsFolder<'a, C, C::Re
                 base: self.base,
                 component_map: self.component_map,
                 previous,
-    
+
                 filter: self.filter,
                 views: self.views,
             }

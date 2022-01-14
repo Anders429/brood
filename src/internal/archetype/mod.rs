@@ -10,6 +10,8 @@ pub(crate) use identifier::{Identifier, IdentifierBuffer, IdentifierIterator};
 #[cfg(feature = "serde")]
 pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
 
+#[cfg(feature = "parallel")]
+use crate::query::view::ParViews;
 use crate::{
     component::Component,
     entities,
@@ -20,8 +22,6 @@ use crate::{
     query::view::Views,
     registry::Registry,
 };
-#[cfg(feature = "parallel")]
-use crate::query::view::ParViews;
 use alloc::vec::Vec;
 use core::{
     any::TypeId,
@@ -172,7 +172,10 @@ where
     }
 
     #[cfg(feature = "parallel")]
-    pub(crate) fn par_view<'a, V>(&mut self) -> V::ParResults where V: ParViews<'a> {
+    pub(crate) fn par_view<'a, V>(&mut self) -> V::ParResults
+    where
+        V: ParViews<'a>,
+    {
         unsafe {
             V::par_view(
                 &self.components,
