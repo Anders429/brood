@@ -1,5 +1,5 @@
 use crate::{
-    entity::EntityIdentifier,
+    entity,
     internal::{
         archetypes::Archetypes,
         entity_allocator::{EntityAllocator, Location, Slot},
@@ -29,7 +29,7 @@ where
     {
         let mut seq = serializer.serialize_seq(Some(self.0.free.len()))?;
         for index in &self.0.free {
-            seq.serialize_element(&EntityIdentifier {
+            seq.serialize_element(&entity::Identifier {
                 index: *index,
                 generation: unsafe { self.0.slots.get_unchecked(*index) }.generation,
             })?;
@@ -184,7 +184,7 @@ where
 {
     fn from_serialized_parts<E>(
         length: usize,
-        free: Vec<EntityIdentifier>,
+        free: Vec<entity::Identifier>,
         archetypes: &Archetypes<R>,
         _deserializer: PhantomData<E>,
     ) -> Result<Self, E>

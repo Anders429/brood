@@ -4,7 +4,7 @@ use crate::{
         archetype,
         archetype::{DeserializeColumn, SerializeColumn},
     },
-    registry::{NullRegistry, Registry},
+    registry::{Null, Registry},
 };
 use ::serde::{de, de::SeqAccess, ser::SerializeTuple, Deserialize, Serialize};
 use alloc::{format, vec::Vec};
@@ -33,7 +33,7 @@ pub trait RegistrySerialize: Registry {
         S: SerializeTuple;
 }
 
-impl RegistrySerialize for NullRegistry {
+impl RegistrySerialize for Null {
     unsafe fn serialize_components_by_column<R, S>(
         _components: &[(*mut u8, usize)],
         _length: usize,
@@ -144,7 +144,7 @@ pub trait RegistryDeserialize<'de>: Registry + 'de {
         V: SeqAccess<'de>;
 }
 
-impl<'de> RegistryDeserialize<'de> for NullRegistry {
+impl<'de> RegistryDeserialize<'de> for Null {
     unsafe fn deserialize_components_by_column<R, V>(
         _components: &mut Vec<(*mut u8, usize)>,
         _length: usize,

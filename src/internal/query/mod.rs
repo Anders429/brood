@@ -1,5 +1,2 @@
-mod filter;
-mod view;
-
-pub use filter::FilterSeal;
-pub use view::{ViewSeal, ViewsSeal};
+pub(crate) mod filter;
+pub(crate) mod view;

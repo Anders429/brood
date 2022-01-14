@@ -10,16 +10,17 @@ mod impl_sync;
 pub use entry::Entry;
 
 use crate::{
-    entities::{Entities, EntitiesIter},
-    entity::{Entity, EntityIdentifier},
-    internal::{
-        archetype, archetypes::Archetypes, entity_allocator::EntityAllocator, query::FilterSeal,
-    },
-    query::{And, Filter, Views},
+    entities,
+    entities::Entities,
+    entity,
+    entity::Entity,
+    internal::{archetype, archetypes::Archetypes, entity_allocator::EntityAllocator},
+    query,
+    query::{filter::Filter, view::Views},
     registry::Registry,
 };
 use alloc::{vec, vec::Vec};
-use core::{any::TypeId, iter};
+use core::any::TypeId;
 use hashbrown::HashMap;
 
 pub struct World<R>
@@ -52,7 +53,7 @@ where
         Self::from_raw_parts(Archetypes::new(), EntityAllocator::new())
     }
 
-    pub fn push<E>(&mut self, entity: E) -> EntityIdentifier
+    pub fn push<E>(&mut self, entity: E) -> entity::Identifier
     where
         E: Entity,
     {
@@ -69,8 +70,7 @@ where
         }
     }
 
-    // TODO: Figure out a way to remove the `must_use` attribute on the returned value.
-    pub fn extend<E>(&mut self, entities: EntitiesIter<E>) -> impl Iterator<Item = EntityIdentifier>
+    pub fn extend<E>(&mut self, entities: entities::Batch<E>) -> Vec<entity::Identifier>
     where
         E: Entities,
     {
@@ -87,29 +87,21 @@ where
         }
     }
 
-    pub fn query<'a, V, F>(&'a mut self) -> iter::Flatten<vec::IntoIter<V::Results>>
+    pub fn query<'a, V, F>(&'a mut self) -> query::Results<'a, R, F, V>
     where
         V: Views<'a>,
         F: Filter,
     {
-        self.archetypes
-            .iter_mut()
-            .filter(|(identifier, _archetype)| unsafe {
-                And::<V, F>::filter(identifier.as_slice(), &self.component_map)
-            })
-            .map(|(_identifier, archetype)| archetype.view::<V>())
-            .collect::<Vec<_>>()
-            .into_iter()
-            .flatten()
+        query::Results::new(self.archetypes.iter_mut(), &self.component_map)
     }
 
-    pub fn entry(&mut self, entity_identifier: EntityIdentifier) -> Option<Entry<R>> {
+    pub fn entry(&mut self, entity_identifier: entity::Identifier) -> Option<Entry<R>> {
         self.entity_allocator
             .get(entity_identifier)
             .map(|location| Entry::new(self, location))
     }
 
-    pub fn remove(&mut self, entity_identifier: EntityIdentifier) {
+    pub fn remove(&mut self, entity_identifier: entity::Identifier) {
         // Get location of entity.
         if let Some(location) = self.entity_allocator.get(entity_identifier) {
             // Remove row from Archetype.

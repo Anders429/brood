@@ -1,7 +1,7 @@
 use crate::{
     component::Component,
     internal::archetype,
-    registry::{NullRegistry, Registry},
+    registry::{Null, Registry},
 };
 use alloc::vec::Vec;
 use core::{
@@ -94,7 +94,7 @@ pub trait RegistryStorage {
         R: Registry;
 }
 
-impl RegistryStorage for NullRegistry {
+impl RegistryStorage for Null {
     fn create_component_map(_component_map: &mut HashMap<TypeId, usize>, _index: usize) {}
 
     unsafe fn create_component_map_for_key<R>(

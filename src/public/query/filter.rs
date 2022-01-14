@@ -1,8 +1,11 @@
 use crate::{
     component::Component,
-    entity::EntityIdentifier,
-    internal::query::FilterSeal,
-    query::{NullViews, View, Views},
+    entity,
+    internal::query::filter::FilterSeal,
+    query::{
+        view,
+        view::{View, Views},
+    },
 };
 use core::marker::PhantomData;
 
@@ -70,9 +73,9 @@ impl<C> Filter for Option<&C> where C: Component {}
 
 impl<C> Filter for Option<&mut C> where C: Component {}
 
-impl Filter for EntityIdentifier {}
+impl Filter for entity::Identifier {}
 
-impl Filter for NullViews {}
+impl Filter for view::Null {}
 
 impl<'a, V, W> Filter for (V, W)
 where

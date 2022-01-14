@@ -1,6 +1,6 @@
 use crate::{
     component::Component,
-    entity::EntityIdentifier,
+    entity,
     internal::{
         archetype,
         archetype::{Archetype, IdentifierBuffer},
@@ -208,7 +208,7 @@ where
 
     identifier: archetype::Identifier<R>,
 
-    entity_identifiers: &'a mut (*mut EntityIdentifier, usize),
+    entity_identifiers: &'a mut (*mut entity::Identifier, usize),
     components: &'a mut [(*mut u8, usize)],
     length: usize,
 }
@@ -219,7 +219,7 @@ where
 {
     unsafe fn new(
         identifier: archetype::Identifier<R>,
-        entity_identifiers: &'a mut (*mut EntityIdentifier, usize),
+        entity_identifiers: &'a mut (*mut entity::Identifier, usize),
         components: &'a mut [(*mut u8, usize)],
         length: usize,
     ) -> Self {
@@ -257,7 +257,7 @@ where
             type Value = ();
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("row of (EntityIdentifier, components...)")
+                formatter.write_str("row of (entity::Identifier, components...)")
             }
 
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
@@ -333,7 +333,7 @@ where
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 write!(
                     formatter,
-                    "{} rows of (EntityIdentifier, components...)",
+                    "{} rows of (entity::Identifier, components...)",
                     self.0.length
                 )
             }

@@ -1,5 +1,5 @@
 use crate::{
-    entity::EntityIdentifier,
+    entity,
     internal::{archetype, archetype::Archetype, registry::RegistryDebug},
 };
 use alloc::vec::Vec;
@@ -33,7 +33,7 @@ struct Row<R>
 where
     R: RegistryDebug,
 {
-    identifier: EntityIdentifier,
+    identifier: entity::Identifier,
     components: Components<R>,
 }
 

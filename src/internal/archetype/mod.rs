@@ -11,10 +11,12 @@ pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
 
 use crate::{
     component::Component,
-    entities::{Entities, EntitiesIter},
-    entity::{Entity, EntityIdentifier},
+    entities,
+    entities::Entities,
+    entity,
+    entity::Entity,
     internal::entity_allocator::{EntityAllocator, Location},
-    query::Views,
+    query::view::Views,
     registry::Registry,
 };
 use alloc::vec::Vec;
@@ -32,7 +34,7 @@ where
 {
     identifier_buffer: IdentifierBuffer<R>,
 
-    entity_identifiers: (*mut EntityIdentifier, usize),
+    entity_identifiers: (*mut entity::Identifier, usize),
     components: Vec<(*mut u8, usize)>,
     length: usize,
 
@@ -45,7 +47,7 @@ where
 {
     pub(crate) unsafe fn from_raw_parts(
         identifier_buffer: IdentifierBuffer<R>,
-        entity_identifiers: (*mut EntityIdentifier, usize),
+        entity_identifiers: (*mut entity::Identifier, usize),
         components: Vec<(*mut u8, usize)>,
         length: usize,
     ) -> Self {
@@ -88,7 +90,7 @@ where
         &mut self,
         entity: E,
         entity_allocator: &mut EntityAllocator<R>,
-    ) -> EntityIdentifier
+    ) -> entity::Identifier
     where
         E: Entity,
     {
@@ -117,9 +119,9 @@ where
 
     pub(crate) unsafe fn extend<E>(
         &mut self,
-        entities: EntitiesIter<E>,
+        entities: entities::Batch<E>,
         entity_allocator: &mut EntityAllocator<R>,
-    ) -> impl Iterator<Item = EntityIdentifier>
+    ) -> Vec<entity::Identifier>
     where
         E: Entities,
     {
@@ -149,7 +151,7 @@ where
 
         self.length += component_len;
 
-        entity_identifiers.into_iter()
+        entity_identifiers
     }
 
     pub(crate) fn view<'a, V>(&mut self) -> V::Results
@@ -217,7 +219,7 @@ where
         &mut self,
         index: usize,
         entity_allocator: &mut EntityAllocator<R>,
-    ) -> (EntityIdentifier, Vec<u8>) {
+    ) -> (entity::Identifier, Vec<u8>) {
         let size_of_components = self.identifier_buffer.size_of_components();
         let mut bytes = Vec::with_capacity(size_of_components);
         R::pop_component_row(
@@ -250,7 +252,7 @@ where
 
     pub(crate) unsafe fn push_from_buffer_and_component<C>(
         &mut self,
-        entity_identifier: EntityIdentifier,
+        entity_identifier: entity::Identifier,
         buffer: Vec<u8>,
         component: C,
     ) -> usize
@@ -283,7 +285,7 @@ where
 
     pub(crate) unsafe fn push_from_buffer_skipping_component<C>(
         &mut self,
-        entity_identifier: EntityIdentifier,
+        entity_identifier: entity::Identifier,
         buffer: Vec<u8>,
     ) -> usize
     where
@@ -318,7 +320,7 @@ where
     }
 
     #[cfg(feature = "serde")]
-    pub(crate) fn entity_identifiers(&self) -> impl Iterator<Item = &EntityIdentifier> {
+    pub(crate) fn entity_identifiers(&self) -> impl Iterator<Item = &entity::Identifier> {
         unsafe { slice::from_raw_parts(self.entity_identifiers.0, self.length) }.iter()
     }
 }

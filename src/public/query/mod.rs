@@ -1,7 +1,7 @@
-mod filter;
-mod result;
-mod view;
+pub mod filter;
+pub mod result;
+pub mod view;
 
-pub use filter::*;
-pub use result::*;
-pub use view::*;
+#[doc(inline)]
+pub use crate::result;
+pub use result::Results;

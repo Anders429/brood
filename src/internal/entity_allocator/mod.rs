@@ -4,7 +4,7 @@ mod impl_serde;
 #[cfg(feature = "serde")]
 pub(crate) use impl_serde::DeserializeEntityAllocator;
 
-use crate::{entity::EntityIdentifier, internal::archetype, registry::Registry};
+use crate::{entity, internal::archetype, registry::Registry};
 use alloc::{collections::VecDeque, vec::Vec};
 use core::{fmt, fmt::Debug, iter::ExactSizeIterator};
 
@@ -143,7 +143,7 @@ where
         }
     }
 
-    pub(crate) unsafe fn allocate(&mut self, location: Location<R>) -> EntityIdentifier {
+    pub(crate) unsafe fn allocate(&mut self, location: Location<R>) -> entity::Identifier {
         let (index, generation) = if let Some(index) = self.free.pop_front() {
             let slot = self.slots.get_unchecked_mut(index);
             slot.activate_unchecked(location);
@@ -155,11 +155,11 @@ where
             (index, 0)
         };
 
-        EntityIdentifier::new(index, generation)
+        entity::Identifier::new(index, generation)
     }
 
     #[inline]
-    pub(crate) unsafe fn allocate_batch<L>(&mut self, mut locations: L) -> Vec<EntityIdentifier>
+    pub(crate) unsafe fn allocate_batch<L>(&mut self, mut locations: L) -> Vec<entity::Identifier>
     where
         L: Iterator<Item = Location<R>> + ExactSizeIterator,
     {
@@ -172,7 +172,7 @@ where
             }
             let slot = self.slots.get_unchecked_mut(index);
             slot.activate_unchecked(locations.next().unwrap_unchecked());
-            identifiers.push(EntityIdentifier::new(index, slot.generation));
+            identifiers.push(entity::Identifier::new(index, slot.generation));
         }
 
         // Now allocate the remaining slots.
@@ -181,13 +181,13 @@ where
         self.slots
             .extend(locations.map(|location| Slot::new(location)));
         identifiers.extend(
-            (0..remaining_locations).map(|index| EntityIdentifier::new(slots_len + index, 0)),
+            (0..remaining_locations).map(|index| entity::Identifier::new(slots_len + index, 0)),
         );
 
         identifiers
     }
 
-    pub(crate) fn get(&self, identifier: EntityIdentifier) -> Option<Location<R>> {
+    pub(crate) fn get(&self, identifier: entity::Identifier) -> Option<Location<R>> {
         let slot = self.slots.get(identifier.index)?;
         if slot.generation == identifier.generation {
             slot.location
@@ -196,7 +196,7 @@ where
         }
     }
 
-    pub(crate) unsafe fn free_unchecked(&mut self, identifier: EntityIdentifier) {
+    pub(crate) unsafe fn free_unchecked(&mut self, identifier: entity::Identifier) {
         let slot = self.slots.get_unchecked_mut(identifier.index);
         slot.deactivate();
         self.free.push_back(identifier.index);
@@ -204,7 +204,7 @@ where
 
     pub(crate) unsafe fn modify_location_unchecked(
         &mut self,
-        identifier: EntityIdentifier,
+        identifier: entity::Identifier,
         location: Location<R>,
     ) {
         self.slots.get_unchecked_mut(identifier.index).location = Some(location);
@@ -212,7 +212,7 @@ where
 
     pub(crate) unsafe fn modify_location_index_unchecked(
         &mut self,
-        identifier: EntityIdentifier,
+        identifier: entity::Identifier,
         index: usize,
     ) {
         (&mut self.slots.get_unchecked_mut(identifier.index).location)
