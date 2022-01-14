@@ -85,6 +85,22 @@ jobs:
         command: hack
         args: check --feature-powerset --optional-deps
 
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+    - uses: actions-rs/install@v0.1
+      with:
+        crate: cargo-msrv
+    - uses: actions-rs/cargo@v1
+      with:
+        command: msrv
+        args: --verify
+
   miri:
     runs-on: ubuntu-latest
     steps:
