@@ -544,7 +544,7 @@ where
                         self.0.identifier.iter(),
                     )
                 };
-                if result.is_err() {
+                if let Err(error) = result {
                     // Free columns, since they are invalid and must be dropped.
                     let _ = unsafe {
                         Vec::from_raw_parts(
@@ -561,7 +561,7 @@ where
                         );
                     }
 
-                    return Err(unsafe { result.unwrap_err_unchecked() });
+                    return Err(error);
                 }
 
                 Ok(unsafe {
