@@ -369,7 +369,7 @@ where
                             vec_length,
                         )
                     });
-                    if result.is_err() {
+                    if let Err(error) = result {
                         let _ = unsafe {
                             Vec::from_raw_parts(
                                 entity_identifiers.0,
@@ -381,7 +381,7 @@ where
                             R::free_components(&components, vec_length, self.0.identifier.iter());
                         }
 
-                        return Err(unsafe { result.unwrap_err_unchecked() });
+                        return Err(error);
                     }
                     if let Some(()) = unsafe { result.unwrap_unchecked() } {
                         vec_length += 1;
