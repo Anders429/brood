@@ -7,7 +7,7 @@ rust-version = "1.58.0"
 [dependencies]
 ahash = {version = "0.7.6", default-features = false}
 either = {version = "1.6.1", default-features = false}
-hashbrown = {version = "0.11.2", features = ["raw"]}
+hashbrown = {version = "0.12.0", features = ["raw"]}
 rayon = {version = "1.5.1", optional = true}
 serde = {version = "1.0.133", default-features = false, features = ["alloc"], optional = true}
 
