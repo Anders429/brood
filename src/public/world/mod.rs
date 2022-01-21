@@ -10,7 +10,7 @@ mod impl_sync;
 pub use entry::Entry;
 
 #[cfg(feature = "parallel")]
-use crate::query::view::ParViews;
+use crate::{query::view::ParViews, system::{Schedule, schedule::stage::Stages}};
 use crate::{
     entities,
     entities::Entities,
@@ -19,7 +19,6 @@ use crate::{
     internal::{archetype, archetypes::Archetypes, entity_allocator::EntityAllocator},
     query::{filter::Filter, result, view::Views},
     registry::Registry,
-    system::{Schedule, schedule::stage::Stages},
 };
 use alloc::{vec, vec::Vec};
 use core::any::TypeId;
