@@ -6,14 +6,14 @@ pub(crate) mod sendable;
 pub use builder::Builder;
 pub use stage::Stages;
 
-use crate::{registry::Registry, system::schedule::sendable::SendableWorld, world::World};
+use crate::{internal::system::schedule::raw_task, registry::Registry, system::schedule::sendable::SendableWorld, world::World};
 
 pub struct Schedule<S> {
     stages: S,
 }
 
 impl Schedule<stage::Null> {
-    pub fn builder() -> Builder<builder::Null> {
+    pub fn builder() -> Builder<raw_task::Null> {
         Builder::new()
     }
 }
