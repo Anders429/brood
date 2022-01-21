@@ -1,15 +1,9 @@
 use crate::{
-    component::Component,
-    entity,
     internal::{
         query::claim::Claim,
+        system,
         system::schedule::task::Task,
     },
-    query::{
-        filter, result, view,
-        view::{View, Views},
-    },
-    registry::Registry,
     system::{
         schedule::{
             stage,
@@ -18,9 +12,8 @@ use crate::{
         },
         ParSystem, System,
     },
-    world::World,
 };
-use core::{any::TypeId, hint::unreachable_unchecked};
+use core::any::TypeId;
 use hashbrown::HashSet;
 
 pub enum RawTask<S, P> {
@@ -115,44 +108,6 @@ where
     }
 }
 
-impl<'a> System<'a> for Null {
-    type Filter = filter::None;
-    type Views = view::Null;
-
-    fn run<R>(&mut self, _query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-    where
-        R: Registry + 'a,
-    {
-        unsafe { unreachable_unchecked() }
-    }
-
-    fn world_post_processing<R>(&mut self, _world: &mut World<R>)
-    where
-        R: Registry,
-    {
-        unsafe { unreachable_unchecked() }
-    }
-}
-
-impl<'a> ParSystem<'a> for Null {
-    type Filter = filter::None;
-    type Views = view::Null;
-
-    fn run<R>(&mut self, _query_results: result::ParIter<'a, R, Self::Filter, Self::Views>)
-    where
-        R: Registry + 'a,
-    {
-        unsafe { unreachable_unchecked() }
-    }
-
-    fn world_post_processing<R>(&mut self, _world: &mut World<R>)
-    where
-        R: Registry,
-    {
-        unsafe { unreachable_unchecked() }
-    }
-}
-
 pub struct Builder<T> {
     raw_tasks: T,
 }
@@ -167,26 +122,26 @@ impl<'a, T> Builder<T>
 where
     T: RawTasks<'a>,
 {
-    pub fn system<S>(self, system: S) -> Builder<(RawTask<S, Null>, T)>
+    pub fn system<S>(self, system: S) -> Builder<(RawTask<S, system::Null>, T)>
     where
         S: System<'a>,
     {
-        Builder::<(RawTask<S, Null>, T)> {
+        Builder::<(RawTask<S, system::Null>, T)> {
             raw_tasks: (RawTask::Task(Task::Seq(system)), self.raw_tasks),
         }
     }
 
-    pub fn par_system<S>(self, par_system: S) -> Builder<(RawTask<Null, S>, T)>
+    pub fn par_system<S>(self, par_system: S) -> Builder<(RawTask<system::Null, S>, T)>
     where
         S: ParSystem<'a>,
     {
-        Builder::<(RawTask<Null, S>, T)> {
+        Builder::<(RawTask<system::Null, S>, T)> {
             raw_tasks: (RawTask::Task(Task::Par(par_system)), self.raw_tasks),
         }
     }
 
-    pub fn flush(self) -> Builder<(RawTask<Null, Null>, T)> {
-        Builder::<(RawTask<Null, Null>, T)> {
+    pub fn flush(self) -> Builder<(RawTask<system::Null, system::Null>, T)> {
+        Builder::<(RawTask<system::Null, system::Null>, T)> {
             raw_tasks: (RawTask::Flush, self.raw_tasks),
         }
     }
