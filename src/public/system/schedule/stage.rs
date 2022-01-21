@@ -41,5 +41,5 @@ macro_rules! stages {
     };
     (internal @ $processed:ty; $($remaining:tt),* $(,)?) => {
         $processed
-    }
+    };
 }
