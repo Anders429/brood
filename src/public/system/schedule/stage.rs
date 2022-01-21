@@ -1,6 +1,6 @@
 use crate::{
-    internal::system::schedule::{stage::StagesSeal, task::Task},
-    system::{ParSystem, System},
+    internal::system::schedule::stage::StagesSeal,
+    system::{schedule::task::Task, ParSystem, System},
 };
 
 pub enum Stage<S, P> {

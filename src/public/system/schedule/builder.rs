@@ -4,10 +4,9 @@ use crate::{
         system::schedule::{
             raw_task,
             raw_task::{RawTask, RawTasks},
-            task::Task,
         },
     },
-    system::{schedule::Schedule, ParSystem, System},
+    system::{schedule::{Schedule, task::Task}, ParSystem, System},
 };
 use hashbrown::HashSet;
 

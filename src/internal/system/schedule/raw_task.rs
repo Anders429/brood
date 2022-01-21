@@ -1,9 +1,10 @@
 use crate::{
-    internal::{query::claim::Claim, system::schedule::task::Task},
+    internal::{query::claim::Claim},
     system::{
         schedule::{
             stage,
             stage::{Stage, Stages},
+            task::Task,
         },
         ParSystem, System,
     },

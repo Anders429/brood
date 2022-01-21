@@ -1,4 +1,5 @@
 pub mod stage;
+pub mod task;
 
 mod builder;
 
