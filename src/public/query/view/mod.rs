@@ -82,7 +82,7 @@ where
 #[macro_export]
 macro_rules! views {
     ($view:ty $(,$views:ty)* $(,)?) => {
-        ($view, views!($($views,)*))
+        ($view, $crate::views!($($views,)*))
     };
     () => {
         $crate::query::view::Null
