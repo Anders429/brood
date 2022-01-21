@@ -1,9 +1,6 @@
 use crate::{
-    internal::{system::schedule::raw_task::RawTasksSeal},
-    system::{
-        schedule::task::Task,
-        ParSystem, System,
-    },
+    internal::system::schedule::raw_task::RawTasksSeal,
+    system::{schedule::task::Task, ParSystem, System},
 };
 
 pub enum RawTask<S, P> {
@@ -22,4 +19,5 @@ where
     S: System<'a> + Send,
     P: ParSystem<'a> + Send,
     T: RawTasks<'a>,
-{}
+{
+}

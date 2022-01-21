@@ -1,7 +1,10 @@
 use crate::{
     internal::system::schedule::sendable::SendableWorld,
     registry::Registry,
-    system::{schedule::stage::{Null, Stage}, ParSystem, System},
+    system::{
+        schedule::stage::{Null, Stage},
+        ParSystem, System,
+    },
 };
 
 pub trait StagesSeal<'a>: Send {

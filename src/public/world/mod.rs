@@ -107,7 +107,7 @@ where
     {
         result::ParIter::new(self.archetypes.par_iter_mut(), &self.component_map)
     }
-    
+
     #[cfg(feature = "parallel")]
     pub(crate) unsafe fn query_unchecked<'a, V, F>(&'a self) -> result::Iter<'a, R, F, V>
     where

@@ -20,7 +20,8 @@ where
     S: System<'a> + Send,
     P: ParSystem<'a> + Send,
     L: Stages<'a>,
-{}
+{
+}
 
 #[macro_export]
 macro_rules! stages {

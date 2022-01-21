@@ -1,5 +1,5 @@
 use crate::{
-    internal::{query::claim::Claim},
+    internal::query::claim::Claim,
     system::{
         schedule::{
             raw_task::{Null, RawTask},

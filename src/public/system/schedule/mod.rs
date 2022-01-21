@@ -7,8 +7,7 @@ mod builder;
 pub use builder::Builder;
 
 use crate::{
-    internal::system::schedule::{sendable::SendableWorld}, registry::Registry,
-    world::World,
+    internal::system::schedule::sendable::SendableWorld, registry::Registry, world::World,
 };
 use stage::Stages;
 
