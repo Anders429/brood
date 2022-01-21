@@ -6,7 +6,7 @@ use crate::{
 
 pub trait ParSystem<'a> {
     type Filter: Filter;
-    type Views: ParViews<'a> + super::schedule::Claim;
+    type Views: ParViews<'a>;
 
     fn run<R>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, Self::Views>)
     where

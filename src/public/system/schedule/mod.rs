@@ -7,8 +7,6 @@ mod task;
 pub use builder::Builder;
 pub use stage::Stages;
 
-pub(crate) use builder::Claim;
-
 use crate::{registry::Registry, system::schedule::sendable::SendableWorld, world::World};
 
 pub struct Schedule<S> {

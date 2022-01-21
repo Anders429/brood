@@ -16,7 +16,7 @@ use crate::{
 
 pub trait System<'a> {
     type Filter: Filter;
-    type Views: Views<'a> + schedule::Claim;
+    type Views: Views<'a>;
 
     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
     where
