@@ -9,8 +9,6 @@ mod impl_sync;
 
 pub use entry::Entry;
 
-#[cfg(feature = "parallel")]
-use crate::{query::view::ParViews, system::{Schedule, schedule::stage::Stages}};
 use crate::{
     entities,
     entities::Entities,
@@ -19,6 +17,11 @@ use crate::{
     internal::{archetype, archetypes::Archetypes, entity_allocator::EntityAllocator},
     query::{filter::Filter, result, view::Views},
     registry::Registry,
+};
+#[cfg(feature = "parallel")]
+use crate::{
+    query::view::ParViews,
+    system::{schedule::stage::Stages, Schedule},
 };
 use alloc::{vec, vec::Vec};
 use core::any::TypeId;
@@ -125,7 +128,10 @@ where
     }
 
     #[cfg(feature = "parallel")]
-    pub fn run<'a, S>(&'a mut self, schedule: &'a mut Schedule<S>) where S: Stages<'a> {
+    pub fn run<'a, S>(&'a mut self, schedule: &'a mut Schedule<S>)
+    where
+        S: Stages<'a>,
+    {
         schedule.run(self);
     }
 

@@ -1,6 +1,11 @@
-use crate::{query::{filter, result, view}, registry::Registry, system::System, world::World};
 #[cfg(feature = "parallel")]
 use crate::system::ParSystem;
+use crate::{
+    query::{filter, result, view},
+    registry::Registry,
+    system::System,
+    world::World,
+};
 use core::hint::unreachable_unchecked;
 
 pub enum Null {}

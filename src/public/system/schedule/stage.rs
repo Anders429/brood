@@ -1,7 +1,7 @@
 use crate::{
     internal::system::schedule::task::Task,
     registry::Registry,
-    system::{schedule::{sendable::SendableWorld}, ParSystem, System},
+    system::{schedule::sendable::SendableWorld, ParSystem, System},
 };
 
 pub enum Stage<S, P> {
@@ -113,7 +113,7 @@ where
                     },
                     || {
                         task.run(world);
-                    }
+                    },
                 );
             }
             Stage::Flush => {
@@ -137,7 +137,7 @@ where
                     },
                     || {
                         task.run(world);
-                    }
+                    },
                 );
             }
             Stage::Flush => {}

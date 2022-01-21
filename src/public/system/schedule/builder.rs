@@ -1,12 +1,13 @@
 use crate::{
     internal::{
         system,
-        system::schedule::{task::Task, raw_task::{RawTasks, RawTask}, raw_task},
+        system::schedule::{
+            raw_task,
+            raw_task::{RawTask, RawTasks},
+            task::Task,
+        },
     },
-    system::{
-        schedule::Schedule,
-        ParSystem, System,
-    },
+    system::{schedule::Schedule, ParSystem, System},
 };
 use hashbrown::HashSet;
 
@@ -16,7 +17,9 @@ pub struct Builder<T> {
 
 impl Builder<raw_task::Null> {
     pub(super) fn new() -> Self {
-        Self { raw_tasks: raw_task::Null }
+        Self {
+            raw_tasks: raw_task::Null,
+        }
     }
 }
 

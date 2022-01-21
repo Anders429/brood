@@ -1,4 +1,13 @@
-use crate::{internal::{system::schedule::task::Task, query::claim::Claim}, system::{schedule::{stage::{Stage, Stages}, stage}, System, ParSystem}};
+use crate::{
+    internal::{query::claim::Claim, system::schedule::task::Task},
+    system::{
+        schedule::{
+            stage,
+            stage::{Stage, Stages},
+        },
+        ParSystem, System,
+    },
+};
 use core::any::TypeId;
 use hashbrown::HashSet;
 

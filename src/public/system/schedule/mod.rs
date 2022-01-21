@@ -6,7 +6,10 @@ pub(crate) mod sendable;
 pub use builder::Builder;
 pub use stage::Stages;
 
-use crate::{internal::system::schedule::raw_task, registry::Registry, system::schedule::sendable::SendableWorld, world::World};
+use crate::{
+    internal::system::schedule::raw_task, registry::Registry,
+    system::schedule::sendable::SendableWorld, world::World,
+};
 
 pub struct Schedule<S> {
     stages: S,
@@ -26,6 +29,6 @@ where
     where
         R: Registry,
     {
-        self.stages.run(SendableWorld(unsafe {world}));
+        self.stages.run(SendableWorld(unsafe { world }));
     }
 }
