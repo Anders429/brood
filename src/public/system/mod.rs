@@ -1,12 +1,15 @@
 #[cfg(feature = "parallel")]
-mod par;
-#[cfg(feature = "parallel")]
 pub mod schedule;
+
+mod null;
+#[cfg(feature = "parallel")]
+mod par;
 
 #[cfg(feature = "parallel")]
 pub use par::ParSystem;
 #[cfg(feature = "parallel")]
 pub use schedule::Schedule;
+pub use null::Null;
 
 use crate::{
     query::{filter::Filter, result, view::Views},
