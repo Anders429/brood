@@ -1,7 +1,10 @@
 use crate::{
     component::Component,
     entity,
-    internal::query::claim::Claim,
+    internal::{
+        query::claim::Claim,
+        system::schedule::task::Task,
+    },
     query::{
         filter, result, view,
         view::{View, Views},
@@ -11,7 +14,6 @@ use crate::{
         schedule::{
             stage,
             stage::{Stage, Stages},
-            task::Task,
             Schedule,
         },
         ParSystem, System,

@@ -1,8 +1,7 @@
 pub mod stage;
 
 pub mod builder;
-mod sendable;
-mod task;
+pub(crate) mod sendable;
 
 pub use builder::Builder;
 pub use stage::Stages;
