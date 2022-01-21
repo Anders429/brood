@@ -2,9 +2,9 @@ use crate::{
     internal::{query::claim::Claim},
     system::{
         schedule::{
+            raw_task::{Null, RawTask},
             stage,
             stage::{Stage, Stages},
-            task::Task,
         },
         ParSystem, System,
     },
@@ -12,14 +12,7 @@ use crate::{
 use core::any::TypeId;
 use hashbrown::HashSet;
 
-pub enum RawTask<S, P> {
-    Task(Task<S, P>),
-    Flush,
-}
-
-pub struct Null;
-
-pub trait RawTasks<'a> {
+pub trait RawTasksSeal<'a> {
     type Stages: Stages<'a>;
 
     fn into_stages(
@@ -31,7 +24,7 @@ pub trait RawTasks<'a> {
     ) -> Self::Stages;
 }
 
-impl<'a> RawTasks<'a> for Null {
+impl<'a> RawTasksSeal<'a> for Null {
     type Stages = stage::Null;
 
     fn into_stages(
@@ -45,11 +38,11 @@ impl<'a> RawTasks<'a> for Null {
     }
 }
 
-impl<'a, S, P, T> RawTasks<'a> for (RawTask<S, P>, T)
+impl<'a, S, P, T> RawTasksSeal<'a> for (RawTask<S, P>, T)
 where
     S: System<'a> + Send,
     P: ParSystem<'a> + Send,
-    T: RawTasks<'a>,
+    T: RawTasksSeal<'a>,
 {
     type Stages = (Stage<S, P>, T::Stages);
 

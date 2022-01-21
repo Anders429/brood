@@ -1,12 +1,8 @@
 use crate::{
     internal::{
         system,
-        system::schedule::{
-            raw_task,
-            raw_task::{RawTask, RawTasks},
-        },
     },
-    system::{schedule::{Schedule, task::Task}, ParSystem, System},
+    system::{schedule::{raw_task, raw_task::{RawTask, RawTasks}, Schedule, task::Task}, ParSystem, System},
 };
 use hashbrown::HashSet;
 

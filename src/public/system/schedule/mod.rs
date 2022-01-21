@@ -1,3 +1,4 @@
+pub mod raw_task;
 pub mod stage;
 pub mod task;
 
@@ -6,7 +7,7 @@ mod builder;
 pub use builder::Builder;
 
 use crate::{
-    internal::system::schedule::{sendable::SendableWorld, raw_task}, registry::Registry,
+    internal::system::schedule::{sendable::SendableWorld}, registry::Registry,
     world::World,
 };
 use stage::Stages;
