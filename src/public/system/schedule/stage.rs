@@ -1,7 +1,7 @@
 use crate::{
-    internal::system::schedule::task::Task,
+    internal::system::schedule::{task::Task, sendable::SendableWorld},
     registry::Registry,
-    system::{schedule::sendable::SendableWorld, ParSystem, System},
+    system::{ParSystem, System},
 };
 
 pub enum Stage<S, P> {
