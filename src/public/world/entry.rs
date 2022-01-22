@@ -55,7 +55,7 @@ where
             *unsafe { raw_identifier_buffer.get_unchecked_mut(component_index / 8) } |=
                 1 << (component_index % 8);
             let identifier_buffer =
-                unsafe { archetype::IdentifierBuffer::<R>::new(raw_identifier_buffer) };
+                unsafe { archetype::Identifier::<R>::new(raw_identifier_buffer) };
 
             // Insert to the corresponding archetype using the bytes and the new component.
             let archetype = self
@@ -105,7 +105,7 @@ where
             *unsafe { raw_identifier_buffer.get_unchecked_mut(component_index / 8) } ^=
                 1 << (component_index % 8);
             let identifier_buffer =
-                unsafe { archetype::IdentifierBuffer::<R>::new(raw_identifier_buffer) };
+                unsafe { archetype::Identifier::<R>::new(raw_identifier_buffer) };
 
             // Insert to the corresponding archetype using the bytes, skipping the removed
             // component.

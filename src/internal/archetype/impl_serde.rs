@@ -3,7 +3,7 @@ use crate::{
     entity,
     internal::{
         archetype,
-        archetype::{Archetype, IdentifierBuffer},
+        archetype::Archetype,
         registry::{RegistryDeserialize, RegistrySerialize},
     },
 };
@@ -305,7 +305,7 @@ where
 {
     lifetime: PhantomData<&'de ()>,
 
-    identifier: archetype::IdentifierBuffer<R>,
+    identifier: archetype::Identifier<R>,
     length: usize,
 }
 
@@ -497,7 +497,7 @@ where
 {
     lifetime: PhantomData<&'de ()>,
 
-    identifier: archetype::IdentifierBuffer<R>,
+    identifier: archetype::Identifier<R>,
     length: usize,
 }
 
@@ -610,7 +610,7 @@ where
             where
                 V: SeqAccess<'de>,
             {
-                let identifier: IdentifierBuffer<R> = seq
+                let identifier: archetype::Identifier<R> = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(0, &self))?;
 
@@ -649,7 +649,7 @@ where
             where
                 V: SeqAccess<'de>,
             {
-                let identifier: IdentifierBuffer<R> = seq
+                let identifier: archetype::Identifier<R> = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(0, &self))?;
 

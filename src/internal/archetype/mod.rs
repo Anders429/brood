@@ -6,7 +6,7 @@ mod impl_send;
 #[cfg(feature = "serde")]
 mod impl_serde;
 
-pub(crate) use identifier::{IdentifierRef, IdentifierBuffer, IdentifierIterator};
+pub(crate) use identifier::{IdentifierRef, Identifier, IdentifierIterator};
 #[cfg(feature = "serde")]
 pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
 
@@ -35,7 +35,7 @@ pub(crate) struct Archetype<R>
 where
     R: Registry,
 {
-    identifier_buffer: IdentifierBuffer<R>,
+    identifier_buffer: Identifier<R>,
 
     entity_identifiers: (*mut entity::Identifier, usize),
     components: Vec<(*mut u8, usize)>,
@@ -49,7 +49,7 @@ where
     R: Registry,
 {
     pub(crate) unsafe fn from_raw_parts(
-        identifier_buffer: IdentifierBuffer<R>,
+        identifier_buffer: Identifier<R>,
         entity_identifiers: (*mut entity::Identifier, usize),
         components: Vec<(*mut u8, usize)>,
         length: usize,
@@ -68,7 +68,7 @@ where
         }
     }
 
-    pub(crate) unsafe fn new(identifier_buffer: IdentifierBuffer<R>) -> Self {
+    pub(crate) unsafe fn new(identifier_buffer: Identifier<R>) -> Self {
         let mut entity_identifiers = ManuallyDrop::new(Vec::new());
 
         let entity_len = identifier_buffer.iter().filter(|b| *b).count();

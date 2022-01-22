@@ -16,7 +16,7 @@ use core::{
 };
 use iter::IdentifierIter;
 
-pub(crate) struct IdentifierBuffer<R>
+pub(crate) struct Identifier<R>
 where
     R: Registry,
 {
@@ -26,7 +26,7 @@ where
     capacity: usize,
 }
 
-impl<R> IdentifierBuffer<R>
+impl<R> Identifier<R>
 where
     R: Registry,
 {
@@ -61,7 +61,7 @@ where
     }
 }
 
-impl<R> PartialEq for IdentifierBuffer<R>
+impl<R> PartialEq for Identifier<R>
 where
     R: Registry,
 {
@@ -70,7 +70,7 @@ where
     }
 }
 
-impl<R> Drop for IdentifierBuffer<R>
+impl<R> Drop for Identifier<R>
 where
     R: Registry,
 {
@@ -81,7 +81,7 @@ where
     }
 }
 
-impl<R> Debug for IdentifierBuffer<R>
+impl<R> Debug for Identifier<R>
 where
     R: Registry,
 {

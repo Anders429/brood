@@ -1,4 +1,4 @@
-use crate::{internal::archetype::IdentifierBuffer, registry::Registry};
+use crate::{internal::archetype::Identifier, registry::Registry};
 use alloc::vec::Vec;
 use core::{fmt, marker::PhantomData, mem::ManuallyDrop};
 use serde::{
@@ -8,7 +8,7 @@ use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
 };
 
-impl<R> Serialize for IdentifierBuffer<R>
+impl<R> Serialize for Identifier<R>
 where
     R: Registry,
 {
@@ -26,7 +26,7 @@ where
     }
 }
 
-impl<'de, R> Deserialize<'de> for IdentifierBuffer<R>
+impl<'de, R> Deserialize<'de> for Identifier<R>
 where
     R: Registry,
 {
@@ -34,18 +34,18 @@ where
     where
         D: Deserializer<'de>,
     {
-        struct IdentifierBufferVisitor<R>
+        struct IdentifierVisitor<R>
         where
             R: Registry,
         {
             registry: PhantomData<R>,
         }
 
-        impl<'de, R> Visitor<'de> for IdentifierBufferVisitor<R>
+        impl<'de, R> Visitor<'de> for IdentifierVisitor<R>
         where
             R: Registry,
         {
-            type Value = IdentifierBuffer<R>;
+            type Value = Identifier<R>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 write!(formatter, "{} bits corresponding to components, with prefixed 0s padded on the last byte to round up to {} bytes", R::LEN, (R::LEN + 7) / 8)
@@ -89,7 +89,7 @@ where
 
         deserializer.deserialize_tuple(
             (R::LEN + 7) / 8,
-            IdentifierBufferVisitor {
+            IdentifierVisitor {
                 registry: PhantomData,
             },
         )
