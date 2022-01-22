@@ -161,8 +161,7 @@ mod tests {
 
     #[test]
     fn nine_components() {
-        let buffer =
-            unsafe { Identifier::<registry!(A, B, C, D, E, F, G, H, I)>::new(vec![0, 0]) };
+        let buffer = unsafe { Identifier::<registry!(A, B, C, D, E, F, G, H, I)>::new(vec![0, 0]) };
 
         assert_eq!(
             unsafe { buffer.iter() }.collect::<Vec<bool>>(),
