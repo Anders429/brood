@@ -45,7 +45,7 @@ where
         }
     }
 
-    fn make_hash(identifier: archetype::Identifier<R>, hash_builder: &ahash::RandomState) -> u64 {
+    fn make_hash(identifier: archetype::IdentifierRef<R>, hash_builder: &ahash::RandomState) -> u64 {
         let mut state = hash_builder.build_hasher();
         identifier.hash(&mut state);
         state.finish()
@@ -56,12 +56,12 @@ where
     }
 
     fn equivalent_identifier(
-        identifier: archetype::Identifier<R>,
+        identifier: archetype::IdentifierRef<R>,
     ) -> impl Fn(&Archetype<R>) -> bool {
         move |archetype: &Archetype<R>| unsafe { archetype.identifier() } == identifier
     }
 
-    pub(crate) fn get(&self, identifier: archetype::Identifier<R>) -> Option<&Archetype<R>> {
+    pub(crate) fn get(&self, identifier: archetype::IdentifierRef<R>) -> Option<&Archetype<R>> {
         self.raw_archetypes.get(
             Self::make_hash(identifier, &self.hash_builder),
             Self::equivalent_identifier(identifier),
@@ -73,13 +73,13 @@ where
         identifier_buffer: archetype::IdentifierBuffer<R>,
     ) -> &mut Archetype<R> {
         let hash = Self::make_hash(
-            unsafe { identifier_buffer.as_identifier() },
+            unsafe { identifier_buffer.as_ref() },
             &self.hash_builder,
         );
 
         match self.raw_archetypes.find(
             hash,
-            Self::equivalent_identifier(unsafe { identifier_buffer.as_identifier() }),
+            Self::equivalent_identifier(unsafe { identifier_buffer.as_ref() }),
         ) {
             Some(archetype_bucket) => unsafe { archetype_bucket.as_mut() },
             None => self.raw_archetypes.insert_entry(
@@ -92,7 +92,7 @@ where
 
     pub(crate) unsafe fn get_unchecked_mut(
         &mut self,
-        identifier: archetype::Identifier<R>,
+        identifier: archetype::IdentifierRef<R>,
     ) -> &mut Archetype<R> {
         self.raw_archetypes
             .get_mut(

@@ -44,8 +44,8 @@ where
         slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8)
     }
 
-    pub(crate) unsafe fn as_identifier(&self) -> Identifier<R> {
-        Identifier::<R> {
+    pub(crate) unsafe fn as_ref(&self) -> IdentifierRef<R> {
+        IdentifierRef::<R> {
             registry: self.registry,
 
             pointer: self.pointer,
@@ -96,7 +96,7 @@ where
     }
 }
 
-pub(crate) struct Identifier<R>
+pub(crate) struct IdentifierRef<R>
 where
     R: Registry,
 {
@@ -105,7 +105,7 @@ where
     pointer: *const u8,
 }
 
-impl<R> Identifier<R>
+impl<R> IdentifierRef<R>
 where
     R: Registry,
 {
@@ -126,7 +126,7 @@ where
     }
 }
 
-impl<R> Clone for Identifier<R>
+impl<R> Clone for IdentifierRef<R>
 where
     R: Registry,
 {
@@ -139,9 +139,9 @@ where
     }
 }
 
-impl<R> Copy for Identifier<R> where R: Registry {}
+impl<R> Copy for IdentifierRef<R> where R: Registry {}
 
-impl<R> Hash for Identifier<R>
+impl<R> Hash for IdentifierRef<R>
 where
     R: Registry,
 {
@@ -153,7 +153,7 @@ where
     }
 }
 
-impl<R> PartialEq for Identifier<R>
+impl<R> PartialEq for IdentifierRef<R>
 where
     R: Registry,
 {
@@ -162,9 +162,9 @@ where
     }
 }
 
-impl<R> Eq for Identifier<R> where R: Registry {}
+impl<R> Eq for IdentifierRef<R> where R: Registry {}
 
-impl<R> Debug for Identifier<R>
+impl<R> Debug for IdentifierRef<R>
 where
     R: Registry,
 {

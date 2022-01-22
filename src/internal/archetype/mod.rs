@@ -6,7 +6,7 @@ mod impl_send;
 #[cfg(feature = "serde")]
 mod impl_serde;
 
-pub(crate) use identifier::{Identifier, IdentifierBuffer, IdentifierIterator};
+pub(crate) use identifier::{IdentifierRef, IdentifierBuffer, IdentifierIterator};
 #[cfg(feature = "serde")]
 pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
 
@@ -100,7 +100,7 @@ where
         entity.push_components(&self.component_map, &mut self.components, self.length);
 
         let entity_identifier = entity_allocator.allocate(Location {
-            identifier: self.identifier_buffer.as_identifier(),
+            identifier: self.identifier_buffer.as_ref(),
             index: self.length,
         });
 
@@ -136,7 +136,7 @@ where
 
         let entity_identifiers = entity_allocator.allocate_batch(
             (self.length..(self.length + component_len)).map(|index| Location {
-                identifier: self.identifier_buffer.as_identifier(),
+                identifier: self.identifier_buffer.as_ref(),
                 index,
             }),
         );
@@ -333,8 +333,8 @@ where
         self.length - 1
     }
 
-    pub(crate) unsafe fn identifier(&self) -> Identifier<R> {
-        self.identifier_buffer.as_identifier()
+    pub(crate) unsafe fn identifier(&self) -> IdentifierRef<R> {
+        self.identifier_buffer.as_ref()
     }
 
     #[cfg(feature = "serde")]

@@ -13,7 +13,7 @@ where
     R: RegistryDebug,
 {
     pointers: Vec<*const u8>,
-    identifier: archetype::Identifier<R>,
+    identifier: archetype::IdentifierRef<R>,
 }
 
 impl<R> Debug for Components<R>
@@ -80,7 +80,7 @@ where
                     identifier: *unsafe { entity_identifiers.get_unchecked(i) },
                     components: Components {
                         pointers: component_pointers,
-                        identifier: unsafe { self.identifier_buffer.as_identifier() },
+                        identifier: unsafe { self.identifier_buffer.as_ref() },
                     },
                 },
             );
