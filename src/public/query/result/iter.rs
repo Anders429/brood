@@ -90,3 +90,11 @@ where
         }
     }
 }
+
+unsafe impl<'a, R, F, V> Send for Iter<'a, R, F, V>
+where
+    R: Registry + 'a,
+    F: Filter,
+    V: Views<'a>,
+{
+}

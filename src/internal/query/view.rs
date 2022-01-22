@@ -1,13 +1,14 @@
 use crate::{
     component::Component,
     entity,
+    internal::query::claim::Claim,
     query::{result, view::Null},
 };
 use core::{any::TypeId, iter, slice};
 use either::Either;
 use hashbrown::HashMap;
 
-pub trait ViewSeal<'a> {
+pub trait ViewSeal<'a>: Claim {
     type Result: Iterator;
 
     unsafe fn view(
@@ -137,7 +138,7 @@ impl<'a> ViewSeal<'a> for entity::Identifier {
     }
 }
 
-pub trait ViewsSeal<'a> {
+pub trait ViewsSeal<'a>: Claim {
     type Results: Iterator;
 
     unsafe fn view(
