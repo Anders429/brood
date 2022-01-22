@@ -31,6 +31,7 @@ where
     pub fn system<S>(self, system: S) -> Builder<(RawTask<S, system::Null>, T)>
     where
         S: System<'a>,
+        S::Views: Send,
     {
         Builder::<(RawTask<S, system::Null>, T)> {
             raw_tasks: (RawTask::Task(Task::Seq(system)), self.raw_tasks),
