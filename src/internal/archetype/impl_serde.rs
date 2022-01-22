@@ -3,7 +3,7 @@ use crate::{
     entity,
     internal::{
         archetype,
-        archetype::{Archetype, IdentifierBuffer},
+        archetype::Archetype,
         registry::{RegistryDeserialize, RegistrySerialize},
     },
 };
@@ -199,14 +199,13 @@ where
     }
 }
 
-// The deserialization should be done in-place. How can that be done?
 struct DeserializeRow<'a, 'de, R>
 where
     R: RegistryDeserialize<'de>,
 {
     lifetime: PhantomData<&'de ()>,
 
-    identifier: archetype::Identifier<R>,
+    identifier: archetype::IdentifierRef<R>,
 
     entity_identifiers: &'a mut (*mut entity::Identifier, usize),
     components: &'a mut [(*mut u8, usize)],
@@ -218,7 +217,7 @@ where
     R: RegistryDeserialize<'de>,
 {
     unsafe fn new(
-        identifier: archetype::Identifier<R>,
+        identifier: archetype::IdentifierRef<R>,
         entity_identifiers: &'a mut (*mut entity::Identifier, usize),
         components: &'a mut [(*mut u8, usize)],
         length: usize,
@@ -306,7 +305,7 @@ where
 {
     lifetime: PhantomData<&'de ()>,
 
-    identifier: archetype::IdentifierBuffer<R>,
+    identifier: archetype::Identifier<R>,
     length: usize,
 }
 
@@ -363,7 +362,7 @@ where
                 for i in 0..self.0.length {
                     let result = seq.next_element_seed(unsafe {
                         DeserializeRow::new(
-                            self.0.identifier.as_identifier(),
+                            self.0.identifier.as_ref(),
                             &mut entity_identifiers,
                             &mut components,
                             vec_length,
@@ -498,7 +497,7 @@ where
 {
     lifetime: PhantomData<&'de ()>,
 
-    identifier: archetype::IdentifierBuffer<R>,
+    identifier: archetype::Identifier<R>,
     length: usize,
 }
 
@@ -611,7 +610,7 @@ where
             where
                 V: SeqAccess<'de>,
             {
-                let identifier: IdentifierBuffer<R> = seq
+                let identifier: archetype::Identifier<R> = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(0, &self))?;
 
@@ -650,7 +649,7 @@ where
             where
                 V: SeqAccess<'de>,
             {
-                let identifier: IdentifierBuffer<R> = seq
+                let identifier: archetype::Identifier<R> = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(0, &self))?;
 

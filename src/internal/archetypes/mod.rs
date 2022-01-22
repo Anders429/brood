@@ -45,7 +45,10 @@ where
         }
     }
 
-    fn make_hash(identifier: archetype::Identifier<R>, hash_builder: &ahash::RandomState) -> u64 {
+    fn make_hash(
+        identifier: archetype::IdentifierRef<R>,
+        hash_builder: &ahash::RandomState,
+    ) -> u64 {
         let mut state = hash_builder.build_hasher();
         identifier.hash(&mut state);
         state.finish()
@@ -56,12 +59,12 @@ where
     }
 
     fn equivalent_identifier(
-        identifier: archetype::Identifier<R>,
+        identifier: archetype::IdentifierRef<R>,
     ) -> impl Fn(&Archetype<R>) -> bool {
         move |archetype: &Archetype<R>| unsafe { archetype.identifier() } == identifier
     }
 
-    pub(crate) fn get(&self, identifier: archetype::Identifier<R>) -> Option<&Archetype<R>> {
+    pub(crate) fn get(&self, identifier: archetype::IdentifierRef<R>) -> Option<&Archetype<R>> {
         self.raw_archetypes.get(
             Self::make_hash(identifier, &self.hash_builder),
             Self::equivalent_identifier(identifier),
@@ -70,16 +73,13 @@ where
 
     pub(crate) fn get_mut_or_insert_new(
         &mut self,
-        identifier_buffer: archetype::IdentifierBuffer<R>,
+        identifier_buffer: archetype::Identifier<R>,
     ) -> &mut Archetype<R> {
-        let hash = Self::make_hash(
-            unsafe { identifier_buffer.as_identifier() },
-            &self.hash_builder,
-        );
+        let hash = Self::make_hash(unsafe { identifier_buffer.as_ref() }, &self.hash_builder);
 
         match self.raw_archetypes.find(
             hash,
-            Self::equivalent_identifier(unsafe { identifier_buffer.as_identifier() }),
+            Self::equivalent_identifier(unsafe { identifier_buffer.as_ref() }),
         ) {
             Some(archetype_bucket) => unsafe { archetype_bucket.as_mut() },
             None => self.raw_archetypes.insert_entry(
@@ -92,7 +92,7 @@ where
 
     pub(crate) unsafe fn get_unchecked_mut(
         &mut self,
-        identifier: archetype::Identifier<R>,
+        identifier: archetype::IdentifierRef<R>,
     ) -> &mut Archetype<R> {
         self.raw_archetypes
             .get_mut(
@@ -152,7 +152,7 @@ mod tests {
     #[test]
     fn get_mut_or_insert_new_insertion() {
         let mut archetypes = Archetypes::<Registry>::new();
-        let buffer = unsafe { archetype::IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let buffer = unsafe { archetype::Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
 
         let archetype = archetypes.get_mut_or_insert_new(buffer);
     }
@@ -160,8 +160,8 @@ mod tests {
     #[test]
     fn get_mut_or_insert_new_already_inserted() {
         let mut archetypes = Archetypes::<Registry>::new();
-        let buffer_a = unsafe { archetype::IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let buffer_b = unsafe { archetype::IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let buffer_a = unsafe { archetype::Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+        let buffer_b = unsafe { archetype::Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
         archetypes.get_mut_or_insert_new(buffer_a);
 
         let archetype = archetypes.get_mut_or_insert_new(buffer_b);

@@ -12,7 +12,7 @@ pub(crate) struct Location<R>
 where
     R: Registry,
 {
-    pub(crate) identifier: archetype::Identifier<R>,
+    pub(crate) identifier: archetype::IdentifierRef<R>,
     pub(crate) index: usize,
 }
 
@@ -20,7 +20,7 @@ impl<R> Location<R>
 where
     R: Registry,
 {
-    pub(crate) fn new(identifier: archetype::Identifier<R>, index: usize) -> Self {
+    pub(crate) fn new(identifier: archetype::IdentifierRef<R>, index: usize) -> Self {
         Self { identifier, index }
     }
 }

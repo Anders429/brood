@@ -65,7 +65,7 @@ where
         unsafe {
             E::to_key(&mut key, &self.component_map);
         }
-        let identifier_buffer = unsafe { archetype::IdentifierBuffer::new(key) };
+        let identifier_buffer = unsafe { archetype::Identifier::new(key) };
 
         unsafe {
             self.archetypes
@@ -82,7 +82,7 @@ where
         unsafe {
             E::to_key(&mut key, &self.component_map);
         }
-        let identifier_buffer = unsafe { archetype::IdentifierBuffer::new(key) };
+        let identifier_buffer = unsafe { archetype::Identifier::new(key) };
 
         unsafe {
             self.archetypes

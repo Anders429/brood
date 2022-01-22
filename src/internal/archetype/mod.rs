@@ -6,7 +6,7 @@ mod impl_send;
 #[cfg(feature = "serde")]
 mod impl_serde;
 
-pub(crate) use identifier::{Identifier, IdentifierBuffer, IdentifierIterator};
+pub(crate) use identifier::{Identifier, IdentifierIterator, IdentifierRef};
 #[cfg(feature = "serde")]
 pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
 
@@ -35,7 +35,7 @@ pub(crate) struct Archetype<R>
 where
     R: Registry,
 {
-    identifier_buffer: IdentifierBuffer<R>,
+    identifier_buffer: Identifier<R>,
 
     entity_identifiers: (*mut entity::Identifier, usize),
     components: Vec<(*mut u8, usize)>,
@@ -49,7 +49,7 @@ where
     R: Registry,
 {
     pub(crate) unsafe fn from_raw_parts(
-        identifier_buffer: IdentifierBuffer<R>,
+        identifier_buffer: Identifier<R>,
         entity_identifiers: (*mut entity::Identifier, usize),
         components: Vec<(*mut u8, usize)>,
         length: usize,
@@ -68,7 +68,7 @@ where
         }
     }
 
-    pub(crate) unsafe fn new(identifier_buffer: IdentifierBuffer<R>) -> Self {
+    pub(crate) unsafe fn new(identifier_buffer: Identifier<R>) -> Self {
         let mut entity_identifiers = ManuallyDrop::new(Vec::new());
 
         let entity_len = identifier_buffer.iter().filter(|b| *b).count();
@@ -100,7 +100,7 @@ where
         entity.push_components(&self.component_map, &mut self.components, self.length);
 
         let entity_identifier = entity_allocator.allocate(Location {
-            identifier: self.identifier_buffer.as_identifier(),
+            identifier: self.identifier_buffer.as_ref(),
             index: self.length,
         });
 
@@ -136,7 +136,7 @@ where
 
         let entity_identifiers = entity_allocator.allocate_batch(
             (self.length..(self.length + component_len)).map(|index| Location {
-                identifier: self.identifier_buffer.as_identifier(),
+                identifier: self.identifier_buffer.as_ref(),
                 index,
             }),
         );
@@ -333,8 +333,8 @@ where
         self.length - 1
     }
 
-    pub(crate) unsafe fn identifier(&self) -> Identifier<R> {
-        self.identifier_buffer.as_identifier()
+    pub(crate) unsafe fn identifier(&self) -> IdentifierRef<R> {
+        self.identifier_buffer.as_ref()
     }
 
     #[cfg(feature = "serde")]

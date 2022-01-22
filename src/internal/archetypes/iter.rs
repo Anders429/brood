@@ -31,7 +31,7 @@ impl<'a, R> Iterator for Iter<'a, R>
 where
     R: Registry + 'a,
 {
-    type Item = (archetype::Identifier<R>, &'a Archetype<R>);
+    type Item = (archetype::IdentifierRef<R>, &'a Archetype<R>);
 
     fn next(&mut self) -> Option<Self::Item> {
         self.raw_iter.next().map(|archetype_bucket| {
@@ -71,7 +71,7 @@ impl<'a, R> Iterator for IterMut<'a, R>
 where
     R: Registry + 'a,
 {
-    type Item = (archetype::Identifier<R>, &'a mut Archetype<R>);
+    type Item = (archetype::IdentifierRef<R>, &'a mut Archetype<R>);
 
     fn next(&mut self) -> Option<Self::Item> {
         self.raw_iter.next().map(|archetype_bucket| {
