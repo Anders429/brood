@@ -45,7 +45,10 @@ where
         }
     }
 
-    fn make_hash(identifier: archetype::IdentifierRef<R>, hash_builder: &ahash::RandomState) -> u64 {
+    fn make_hash(
+        identifier: archetype::IdentifierRef<R>,
+        hash_builder: &ahash::RandomState,
+    ) -> u64 {
         let mut state = hash_builder.build_hasher();
         identifier.hash(&mut state);
         state.finish()
@@ -72,10 +75,7 @@ where
         &mut self,
         identifier_buffer: archetype::Identifier<R>,
     ) -> &mut Archetype<R> {
-        let hash = Self::make_hash(
-            unsafe { identifier_buffer.as_ref() },
-            &self.hash_builder,
-        );
+        let hash = Self::make_hash(unsafe { identifier_buffer.as_ref() }, &self.hash_builder);
 
         match self.raw_archetypes.find(
             hash,
