@@ -1,6 +1,7 @@
 pub mod raw_task;
 pub mod stage;
-pub mod task;
+
+pub(crate) mod task;
 
 mod builder;
 
