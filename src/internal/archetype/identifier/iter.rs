@@ -64,7 +64,7 @@ unsafe impl<R> IdentifierIterator<R> for IdentifierIter<R> where R: Registry {}
 #[cfg(test)]
 mod tests {
     use crate::{
-        internal::archetype::{IdentifierBuffer, IdentifierIterator},
+        internal::archetype::{Identifier, IdentifierIterator},
         registry,
     };
     use alloc::{vec, vec::Vec};
@@ -86,7 +86,7 @@ mod tests {
 
     #[test]
     fn none_set() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![0; 4]) };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![0; 4]) };
 
         assert_eq!(
             unsafe { buffer.iter() }.collect::<Vec<bool>>(),
@@ -96,7 +96,7 @@ mod tests {
 
     #[test]
     fn all_set() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![255, 255, 255, 63]) };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![255, 255, 255, 63]) };
 
         assert_eq!(
             unsafe { buffer.iter() }.collect::<Vec<bool>>(),
@@ -106,7 +106,7 @@ mod tests {
 
     #[test]
     fn every_other_set() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![170, 170, 170, 42]) };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![170, 170, 170, 42]) };
 
         assert_eq!(
             unsafe { buffer.iter() }.collect::<Vec<bool>>(),
@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn one_set() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![0, 128, 0, 0]) };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![0, 128, 0, 0]) };
 
         assert_eq!(
             unsafe { buffer.iter() }.collect::<Vec<bool>>(),
@@ -134,14 +134,14 @@ mod tests {
 
     #[test]
     fn no_components() {
-        let buffer = unsafe { IdentifierBuffer::<registry!()>::new(Vec::new()) };
+        let buffer = unsafe { Identifier::<registry!()>::new(Vec::new()) };
 
         assert_eq!(unsafe { buffer.iter() }.collect::<Vec<bool>>(), Vec::new());
     }
 
     #[test]
     fn seven_components() {
-        let buffer = unsafe { IdentifierBuffer::<registry!(A, B, C, D, E, F, G)>::new(vec![0]) };
+        let buffer = unsafe { Identifier::<registry!(A, B, C, D, E, F, G)>::new(vec![0]) };
 
         assert_eq!(
             unsafe { buffer.iter() }.collect::<Vec<bool>>(),
@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn eight_components() {
-        let buffer = unsafe { IdentifierBuffer::<registry!(A, B, C, D, E, F, G, H)>::new(vec![0]) };
+        let buffer = unsafe { Identifier::<registry!(A, B, C, D, E, F, G, H)>::new(vec![0]) };
 
         assert_eq!(
             unsafe { buffer.iter() }.collect::<Vec<bool>>(),
@@ -162,7 +162,7 @@ mod tests {
     #[test]
     fn nine_components() {
         let buffer =
-            unsafe { IdentifierBuffer::<registry!(A, B, C, D, E, F, G, H, I)>::new(vec![0, 0]) };
+            unsafe { Identifier::<registry!(A, B, C, D, E, F, G, H, I)>::new(vec![0, 0]) };
 
         assert_eq!(
             unsafe { buffer.iter() }.collect::<Vec<bool>>(),
@@ -174,7 +174,7 @@ mod tests {
     fn impl_identifier_iterator() {
         fn assert_impls_identifier_iterator(_iter: impl IdentifierIterator<Registry>) {}
 
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![0, 0, 0, 0]) };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![0, 0, 0, 0]) };
 
         assert_impls_identifier_iterator(unsafe { buffer.iter() });
     }

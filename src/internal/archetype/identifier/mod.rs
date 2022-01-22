@@ -181,7 +181,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{internal::archetype::IdentifierBuffer, registry};
+    use crate::{internal::archetype::Identifier, registry};
     use alloc::{vec, vec::Vec};
     use core::ptr;
     use hashbrown::HashSet;
@@ -203,29 +203,29 @@ mod tests {
 
     #[test]
     fn buffer_as_slice() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
 
         assert_eq!(unsafe { buffer.as_slice() }, &[1, 2, 3, 0]);
     }
 
     #[test]
     fn empty_buffer_as_slice() {
-        let buffer = unsafe { IdentifierBuffer::<registry!()>::new(Vec::new()) };
+        let buffer = unsafe { Identifier::<registry!()>::new(Vec::new()) };
 
         assert_eq!(unsafe { buffer.as_slice() }, &[]);
     }
 
     #[test]
     fn buffer_as_identifier() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier = unsafe { buffer.as_identifier() };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_ref() };
 
         assert!(ptr::eq(buffer.pointer, identifier.pointer));
     }
 
     #[test]
     fn buffer_iter() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
 
         assert_eq!(
             unsafe { buffer.iter() }.collect::<Vec<bool>>(),
@@ -239,31 +239,31 @@ mod tests {
 
     #[test]
     fn buffer_size_of_components() {
-        let buffer = unsafe { IdentifierBuffer::<registry!(bool, u64, f32)>::new(vec![7]) };
+        let buffer = unsafe { Identifier::<registry!(bool, u64, f32)>::new(vec![7]) };
 
         assert_eq!(buffer.size_of_components(), 13);
     }
 
     #[test]
     fn buffer_eq() {
-        let buffer_a = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let buffer_b = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
+        let buffer_a = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+        let buffer_b = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
 
         assert_eq!(buffer_a, buffer_b);
     }
 
     #[test]
     fn identifier_as_slice() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier = unsafe { buffer.as_identifier() };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_ref() };
 
         assert_eq!(unsafe { identifier.as_slice() }, &[1, 2, 3, 0]);
     }
 
     #[test]
     fn identifier_iter() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier = unsafe { buffer.as_identifier() };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_ref() };
 
         assert_eq!(
             unsafe { identifier.iter() }.collect::<Vec<bool>>(),
@@ -277,16 +277,16 @@ mod tests {
 
     #[test]
     fn identifier_as_vec() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier = unsafe { buffer.as_identifier() };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_ref() };
 
         assert_eq!(identifier.as_vec(), vec![1, 2, 3, 0]);
     }
 
     #[test]
     fn identifier_get_unchecked() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier = unsafe { buffer.as_identifier() };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_ref() };
 
         assert!(unsafe { identifier.get_unchecked(9) });
         assert!(!unsafe { identifier.get_unchecked(10) });
@@ -294,24 +294,24 @@ mod tests {
 
     #[test]
     fn identifier_get_unchecked_first_element() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier = unsafe { buffer.as_identifier() };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_ref() };
 
         assert!(unsafe { identifier.get_unchecked(0) });
     }
 
     #[test]
     fn identifier_get_unchecked_last_element() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier = unsafe { buffer.as_identifier() };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_ref() };
 
         assert!(!unsafe { identifier.get_unchecked(25) });
     }
 
     #[test]
     fn identifier_clone() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier = unsafe { buffer.as_identifier() };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_ref() };
         let identifier_clone = identifier.clone();
 
         assert_eq!(identifier, identifier_clone);
@@ -319,8 +319,8 @@ mod tests {
 
     #[test]
     fn identifier_copy() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier = unsafe { buffer.as_identifier() };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_ref() };
         let identifier_copy = identifier;
 
         assert_eq!(identifier, identifier_copy);
@@ -328,9 +328,9 @@ mod tests {
 
     #[test]
     fn identifier_in_hashset() {
-        let buffer = unsafe { IdentifierBuffer::<Registry>::new(vec![1, 2, 3, 0]) };
-        let identifier_a = unsafe { buffer.as_identifier() };
-        let identifier_b = unsafe { buffer.as_identifier() };
+        let buffer = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier_a = unsafe { buffer.as_ref() };
+        let identifier_b = unsafe { buffer.as_ref() };
 
         let mut hashset = HashSet::new();
         hashset.insert(identifier_a);
