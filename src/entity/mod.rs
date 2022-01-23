@@ -1,7 +1,11 @@
+pub(crate) mod allocator;
+
 mod identifier;
 mod seal;
 
 pub use identifier::Identifier;
+
+pub(crate) use allocator::Allocator;
 
 use crate::component::Component;
 use seal::Seal;

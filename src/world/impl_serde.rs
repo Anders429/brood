@@ -1,8 +1,6 @@
 use crate::{
-    internal::{
-        entity_allocator::DeserializeEntityAllocator,
-        registry::{RegistryDeserialize, RegistrySerialize},
-    },
+    entity::allocator::DeserializeAllocator,
+    internal::registry::{RegistryDeserialize, RegistrySerialize},
     World,
 };
 use core::{fmt, marker::PhantomData};
@@ -61,7 +59,7 @@ where
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(0, &self))?;
                 let entity_allocator = seq
-                    .next_element_seed(DeserializeEntityAllocator {
+                    .next_element_seed(DeserializeAllocator {
                         archetypes: &archetypes,
                     })?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;

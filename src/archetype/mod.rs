@@ -17,8 +17,7 @@ use crate::{
     entities,
     entities::Entities,
     entity,
-    entity::Entity,
-    internal::entity_allocator::{EntityAllocator, Location},
+    entity::{Entity, allocator::Location},
     query::view::Views,
     registry::Registry,
 };
@@ -92,7 +91,7 @@ where
     pub(crate) unsafe fn push<E>(
         &mut self,
         entity: E,
-        entity_allocator: &mut EntityAllocator<R>,
+        entity_allocator: &mut entity::Allocator<R>,
     ) -> entity::Identifier
     where
         E: Entity,
@@ -123,7 +122,7 @@ where
     pub(crate) unsafe fn extend<E>(
         &mut self,
         entities: entities::Batch<E>,
-        entity_allocator: &mut EntityAllocator<R>,
+        entity_allocator: &mut entity::Allocator<R>,
     ) -> Vec<entity::Identifier>
     where
         E: Entities,
@@ -207,7 +206,7 @@ where
     pub(crate) unsafe fn remove_row_unchecked(
         &mut self,
         index: usize,
-        entity_allocator: &mut EntityAllocator<R>,
+        entity_allocator: &mut entity::Allocator<R>,
     ) {
         R::remove_component_row(
             index,
@@ -236,7 +235,7 @@ where
     pub(crate) unsafe fn pop_row_unchecked(
         &mut self,
         index: usize,
-        entity_allocator: &mut EntityAllocator<R>,
+        entity_allocator: &mut entity::Allocator<R>,
     ) -> (entity::Identifier, Vec<u8>) {
         let size_of_components = self.identifier_buffer.size_of_components();
         let mut bytes = Vec::with_capacity(size_of_components);

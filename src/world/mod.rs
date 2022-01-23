@@ -14,7 +14,7 @@ use crate::{
     entities::Entities,
     entity,
     entity::Entity,
-    archetype, archetypes::Archetypes, internal::entity_allocator::EntityAllocator,
+    archetype, archetypes::Archetypes,
     query::{filter::Filter, result, view::Views},
     registry::Registry,
 };
@@ -32,7 +32,7 @@ where
     R: Registry,
 {
     archetypes: Archetypes<R>,
-    entity_allocator: EntityAllocator<R>,
+    entity_allocator: entity::Allocator<R>,
 
     component_map: HashMap<TypeId, usize>,
 }
@@ -41,7 +41,7 @@ impl<R> World<R>
 where
     R: Registry,
 {
-    fn from_raw_parts(archetypes: Archetypes<R>, entity_allocator: EntityAllocator<R>) -> Self {
+    fn from_raw_parts(archetypes: Archetypes<R>, entity_allocator: entity::Allocator<R>) -> Self {
         let mut component_map = HashMap::new();
         R::create_component_map(&mut component_map, 0);
 
@@ -54,7 +54,7 @@ where
     }
 
     pub fn new() -> Self {
-        Self::from_raw_parts(Archetypes::new(), EntityAllocator::new())
+        Self::from_raw_parts(Archetypes::new(), entity::Allocator::new())
     }
 
     pub fn push<E>(&mut self, entity: E) -> entity::Identifier
@@ -151,7 +151,7 @@ where
                     .get_unchecked_mut(location.identifier)
                     .remove_row_unchecked(location.index, &mut self.entity_allocator);
             }
-            // Free slot in EntityAllocator.
+            // Free slot in entity allocator.
             unsafe {
                 self.entity_allocator.free_unchecked(entity_identifier);
             }

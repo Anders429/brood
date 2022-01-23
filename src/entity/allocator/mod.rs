@@ -2,7 +2,7 @@
 mod impl_serde;
 
 #[cfg(feature = "serde")]
-pub(crate) use impl_serde::DeserializeEntityAllocator;
+pub(crate) use impl_serde::DeserializeAllocator;
 
 use crate::{entity, archetype, registry::Registry};
 use alloc::{collections::VecDeque, vec::Vec};
@@ -124,7 +124,7 @@ where
     }
 }
 
-pub struct EntityAllocator<R>
+pub struct Allocator<R>
 where
     R: Registry,
 {
@@ -132,7 +132,7 @@ where
     pub(crate) free: VecDeque<usize>,
 }
 
-impl<R> EntityAllocator<R>
+impl<R> Allocator<R>
 where
     R: Registry,
 {
@@ -222,19 +222,19 @@ where
     }
 }
 
-impl<R> Debug for EntityAllocator<R>
+impl<R> Debug for Allocator<R>
 where
     R: Registry,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("EntityAllocator")
+        f.debug_struct("Allocator")
             .field("slots", &self.slots)
             .field("free", &self.free)
             .finish()
     }
 }
 
-impl<R> PartialEq for EntityAllocator<R>
+impl<R> PartialEq for Allocator<R>
 where
     R: Registry,
 {

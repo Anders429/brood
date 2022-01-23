@@ -1,7 +1,7 @@
+use super::{Allocator, Location, Slot};
 use crate::{
     entity,
     archetypes::Archetypes,
-    internal::entity_allocator::{EntityAllocator, Location, Slot},
     registry::Registry,
 };
 use alloc::{format, vec, vec::Vec};
@@ -13,7 +13,7 @@ use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
 };
 
-struct SerializeFree<'a, R>(&'a EntityAllocator<R>)
+struct SerializeFree<'a, R>(&'a Allocator<R>)
 where
     R: Registry;
 
@@ -36,7 +36,7 @@ where
     }
 }
 
-impl<R> Serialize for EntityAllocator<R>
+impl<R> Serialize for Allocator<R>
 where
     R: Registry,
 {
@@ -45,25 +45,25 @@ where
         S: Serializer,
     {
         // Only serialize the freed slots. The rest are serialized within the archetypes.
-        let mut r#struct = serializer.serialize_struct("EntityAllocator", 2)?;
+        let mut r#struct = serializer.serialize_struct("Allocator", 2)?;
         r#struct.serialize_field("length", &self.slots.len())?;
         r#struct.serialize_field("free", &SerializeFree(self))?;
         r#struct.end()
     }
 }
 
-pub(crate) struct DeserializeEntityAllocator<'a, R>
+pub(crate) struct DeserializeAllocator<'a, R>
 where
     R: Registry,
 {
     pub(crate) archetypes: &'a Archetypes<R>,
 }
 
-impl<'de, R> DeserializeSeed<'de> for DeserializeEntityAllocator<'_, R>
+impl<'de, R> DeserializeSeed<'de> for DeserializeAllocator<'_, R>
 where
     R: Registry,
 {
-    type Value = EntityAllocator<R>;
+    type Value = Allocator<R>;
 
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
     where
@@ -104,21 +104,21 @@ where
             }
         }
 
-        struct DeserializeEntityAllocatorVisitor<'a, R>
+        struct DeserializeAllocatorVisitor<'a, R>
         where
             R: Registry,
         {
             archetypes: &'a Archetypes<R>,
         }
 
-        impl<'de, R> Visitor<'de> for DeserializeEntityAllocatorVisitor<'_, R>
+        impl<'de, R> Visitor<'de> for DeserializeAllocatorVisitor<'_, R>
         where
             R: Registry,
         {
-            type Value = EntityAllocator<R>;
+            type Value = Allocator<R>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("serialized EntityAllocator")
+                formatter.write_str("serialized Allocator")
             }
 
             fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
@@ -131,7 +131,7 @@ where
                 let free = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                EntityAllocator::from_serialized_parts(length, free, self.archetypes, PhantomData)
+                Allocator::from_serialized_parts(length, free, self.archetypes, PhantomData)
             }
 
             fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
@@ -156,7 +156,7 @@ where
                         }
                     }
                 }
-                EntityAllocator::from_serialized_parts(
+                Allocator::from_serialized_parts(
                     length.ok_or_else(|| de::Error::missing_field("length"))?,
                     free.ok_or_else(|| de::Error::missing_field("free"))?,
                     self.archetypes,
@@ -167,16 +167,16 @@ where
 
         const FIELDS: &[&str] = &["length", "free"];
         deserializer.deserialize_struct(
-            "EntityAllocator",
+            "Allocator",
             FIELDS,
-            DeserializeEntityAllocatorVisitor {
+            DeserializeAllocatorVisitor {
                 archetypes: self.archetypes,
             },
         )
     }
 }
 
-impl<R> EntityAllocator<R>
+impl<R> Allocator<R>
 where
     R: Registry,
 {
