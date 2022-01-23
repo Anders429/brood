@@ -1,6 +1,6 @@
 use crate::{
     entity::allocator::DeserializeAllocator,
-    internal::registry::{RegistryDeserialize, RegistrySerialize},
+    registry::{RegistryDeserialize, RegistrySerialize},
     World,
 };
 use core::{fmt, marker::PhantomData};

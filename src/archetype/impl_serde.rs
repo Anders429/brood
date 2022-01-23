@@ -3,7 +3,7 @@ use crate::{
     archetype::Archetype,
     component::Component,
     entity,
-    internal::registry::{RegistryDeserialize, RegistrySerialize},
+    registry::{RegistryDeserialize, RegistrySerialize},
 };
 use alloc::vec::Vec;
 use core::{any::type_name, fmt, marker::PhantomData, mem::ManuallyDrop, write};

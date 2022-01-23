@@ -1,6 +1,6 @@
 use crate::{
     archetypes::Archetypes,
-    internal::registry::{RegistryDeserialize, RegistrySerialize},
+    registry::{RegistryDeserialize, RegistrySerialize},
 };
 use core::{cmp, fmt, format_args, marker::PhantomData};
 use serde::{

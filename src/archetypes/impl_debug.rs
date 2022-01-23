@@ -1,4 +1,4 @@
-use crate::{archetypes::Archetypes, internal::registry::RegistryDebug};
+use crate::{archetypes::Archetypes, registry::RegistryDebug};
 use core::{fmt, fmt::Debug};
 
 impl<R> Debug for Archetypes<R>

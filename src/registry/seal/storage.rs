@@ -13,7 +13,7 @@ use core::{
 };
 use hashbrown::HashMap;
 
-pub trait RegistryStorage {
+pub trait Storage {
     fn create_component_map(component_map: &mut HashMap<TypeId, usize>, index: usize);
 
     unsafe fn create_component_map_for_key<R>(
@@ -94,7 +94,7 @@ pub trait RegistryStorage {
         R: Registry;
 }
 
-impl RegistryStorage for Null {
+impl Storage for Null {
     fn create_component_map(_component_map: &mut HashMap<TypeId, usize>, _index: usize) {}
 
     unsafe fn create_component_map_for_key<R>(
@@ -196,10 +196,10 @@ impl RegistryStorage for Null {
     }
 }
 
-impl<C, R> RegistryStorage for (C, R)
+impl<C, R> Storage for (C, R)
 where
     C: Component,
-    R: RegistryStorage,
+    R: Storage,
 {
     fn create_component_map(component_map: &mut HashMap<TypeId, usize>, index: usize) {
         component_map.insert(TypeId::of::<C>(), index);

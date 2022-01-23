@@ -1,4 +1,4 @@
-use crate::{archetype, archetype::Archetype, entity, internal::registry::RegistryDebug};
+use crate::{archetype, archetype::Archetype, entity, registry::RegistryDebug};
 use alloc::vec::Vec;
 use core::{
     fmt::{self, Debug},

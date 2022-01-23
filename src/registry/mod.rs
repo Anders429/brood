@@ -1,4 +1,20 @@
-use crate::{component::Component, internal::registry::RegistrySeal};
+mod debug;
+mod eq;
+mod seal;
+mod send;
+#[cfg(feature = "serde")]
+mod serde;
+mod sync;
+
+#[cfg(feature = "serde")]
+pub(crate) use self::serde::{RegistryDeserialize, RegistrySerialize};
+pub(crate) use debug::RegistryDebug;
+pub(crate) use eq::{RegistryEq, RegistryPartialEq};
+pub(crate) use send::RegistrySend;
+pub(crate) use sync::RegistrySync;
+
+use crate::component::Component;
+use seal::Seal;
 
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Null;
@@ -45,7 +61,7 @@ mod impl_serde {
     }
 }
 
-pub trait Registry: RegistrySeal {}
+pub trait Registry: Seal {}
 
 impl Registry for Null {}
 

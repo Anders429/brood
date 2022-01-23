@@ -1,5 +1,5 @@
 use super::World;
-use crate::internal::registry::RegistryDebug;
+use crate::registry::RegistryDebug;
 use core::fmt::{self, Debug};
 
 impl<R> Debug for World<R>
