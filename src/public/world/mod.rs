@@ -14,7 +14,7 @@ use crate::{
     entities::Entities,
     entity,
     entity::Entity,
-    internal::{archetype, archetypes::Archetypes, entity_allocator::EntityAllocator},
+    archetype, internal::{archetypes::Archetypes, entity_allocator::EntityAllocator},
     query::{filter::Filter, result, view::Views},
     registry::Registry,
 };

@@ -11,7 +11,7 @@ pub(crate) use iter::IterMut;
 pub(crate) use par_iter::ParIterMut;
 
 use crate::{
-    internal::{archetype, archetype::Archetype},
+    archetype, archetype::Archetype,
     registry::Registry,
 };
 use core::hash::{BuildHasher, Hash, Hasher};
@@ -129,7 +129,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        internal::{archetype, archetypes::Archetypes},
+        archetype, internal::archetypes::Archetypes,
         registry,
     };
     use alloc::vec;

@@ -1,11 +1,9 @@
 use crate::{
     component::Component,
     entity,
-    internal::{
-        archetype,
-        archetype::Archetype,
-        registry::{RegistryDeserialize, RegistrySerialize},
-    },
+    archetype,
+    archetype::Archetype,
+    internal::registry::{RegistryDeserialize, RegistrySerialize},
 };
 use alloc::vec::Vec;
 use core::{any::type_name, fmt, marker::PhantomData, mem::ManuallyDrop, write};

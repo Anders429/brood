@@ -1,4 +1,4 @@
-use crate::{internal::archetype::Archetype, registry::Registry};
+use crate::{archetype::Archetype, registry::Registry};
 use alloc::vec::Vec;
 
 impl<R> Drop for Archetype<R>

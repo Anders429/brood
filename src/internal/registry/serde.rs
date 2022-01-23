@@ -1,9 +1,7 @@
 use crate::{
     component::Component,
-    internal::{
-        archetype,
-        archetype::{DeserializeColumn, SerializeColumn},
-    },
+    archetype,
+    archetype::{DeserializeColumn, SerializeColumn},
     registry::{Null, Registry},
 };
 use ::serde::{de, de::SeqAccess, ser::SerializeTuple, Deserialize, Serialize};

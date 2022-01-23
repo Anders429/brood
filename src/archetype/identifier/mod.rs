@@ -181,7 +181,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{internal::archetype::Identifier, registry};
+    use crate::{archetype::Identifier, registry};
     use alloc::{vec, vec::Vec};
     use core::ptr;
     use hashbrown::HashSet;

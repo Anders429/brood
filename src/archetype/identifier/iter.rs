@@ -64,7 +64,7 @@ unsafe impl<R> IdentifierIterator<R> for IdentifierIter<R> where R: Registry {}
 #[cfg(test)]
 mod tests {
     use crate::{
-        internal::archetype::{Identifier, IdentifierIterator},
+        archetype::{Identifier, IdentifierIterator},
         registry,
     };
     use alloc::{vec, vec::Vec};

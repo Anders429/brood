@@ -1,4 +1,4 @@
-use crate::{internal::archetype::Identifier, registry::Registry};
+use crate::{archetype::Identifier, registry::Registry};
 use alloc::vec::Vec;
 use core::{fmt, marker::PhantomData, mem::ManuallyDrop};
 use serde::{

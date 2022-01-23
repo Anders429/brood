@@ -1,6 +1,6 @@
-use crate::internal::{
+use crate::{
     archetype::Archetype,
-    registry::{RegistryEq, RegistryPartialEq},
+    internal::registry::{RegistryEq, RegistryPartialEq},
 };
 use alloc::vec::Vec;
 use core::mem::ManuallyDrop;

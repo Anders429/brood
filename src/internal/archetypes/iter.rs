@@ -1,5 +1,5 @@
 use crate::{
-    internal::{archetype, archetype::Archetype},
+    archetype, archetype::Archetype,
     registry::Registry,
 };
 use core::marker::PhantomData;

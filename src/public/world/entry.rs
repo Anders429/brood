@@ -1,6 +1,6 @@
 use crate::{
     component::Component,
-    internal::{archetype, entity_allocator::Location},
+    archetype, internal::entity_allocator::Location,
     registry::Registry,
     world::World,
 };

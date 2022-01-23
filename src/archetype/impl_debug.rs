@@ -1,6 +1,6 @@
 use crate::{
     entity,
-    internal::{archetype, archetype::Archetype, registry::RegistryDebug},
+    archetype, archetype::Archetype, internal::registry::RegistryDebug,
 };
 use alloc::vec::Vec;
 use core::{
