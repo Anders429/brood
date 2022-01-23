@@ -2,6 +2,8 @@
 
 extern crate alloc;
 
+pub mod world;
+
 #[doc(hidden)]
 pub mod reexports;
 
@@ -10,3 +12,4 @@ mod internal;
 mod public;
 
 pub use public::*;
+pub use world::World;
