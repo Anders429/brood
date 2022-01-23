@@ -3,7 +3,7 @@ use alloc::vec::Vec;
 use core::{any::TypeId, mem::ManuallyDrop};
 use hashbrown::HashMap;
 
-pub trait EntityStorage {
+pub trait Storage {
     unsafe fn push_components(
         self,
         component_map: &HashMap<TypeId, usize>,
@@ -14,7 +14,7 @@ pub trait EntityStorage {
     unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>);
 }
 
-impl EntityStorage for Null {
+impl Storage for Null {
     unsafe fn push_components(
         self,
         _component_map: &HashMap<TypeId, usize>,
@@ -26,10 +26,10 @@ impl EntityStorage for Null {
     unsafe fn to_key(_key: &mut [u8], _component_map: &HashMap<TypeId, usize>) {}
 }
 
-impl<C, E> EntityStorage for (C, E)
+impl<C, E> Storage for (C, E)
 where
     C: Component,
-    E: EntityStorage,
+    E: Storage,
 {
     unsafe fn push_components(
         self,

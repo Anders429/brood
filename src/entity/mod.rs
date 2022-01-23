@@ -1,9 +1,10 @@
 mod identifier;
+mod seal;
 
 pub use identifier::Identifier;
 
-use crate::{component::Component, internal::entity::EntitySeal};
-use core::any::Any;
+use crate::component::Component;
+use seal::Seal;
 
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Null;
@@ -50,7 +51,7 @@ mod impl_serde {
     }
 }
 
-pub trait Entity: EntitySeal + Any {}
+pub trait Entity: Seal {}
 
 impl Entity for Null {}
 
