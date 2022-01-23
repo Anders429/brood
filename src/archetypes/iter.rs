@@ -1,7 +1,4 @@
-use crate::{
-    archetype, archetype::Archetype,
-    registry::Registry,
-};
+use crate::{archetype, archetype::Archetype, registry::Registry};
 use core::marker::PhantomData;
 use hashbrown::raw::RawIter;
 

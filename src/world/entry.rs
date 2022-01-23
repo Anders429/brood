@@ -1,8 +1,5 @@
 use crate::{
-    component::Component,
-    archetype, entity::allocator::Location,
-    registry::Registry,
-    world::World,
+    archetype, component::Component, entity::allocator::Location, registry::Registry, world::World,
 };
 use core::any::TypeId;
 

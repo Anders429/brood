@@ -10,11 +10,12 @@ mod impl_sync;
 pub use entry::Entry;
 
 use crate::{
+    archetype,
+    archetypes::Archetypes,
     entities,
     entities::Entities,
     entity,
     entity::Entity,
-    archetype, archetypes::Archetypes,
     query::{filter::Filter, result, view::Views},
     registry::Registry,
 };

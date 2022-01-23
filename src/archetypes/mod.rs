@@ -10,10 +10,7 @@ pub(crate) use iter::IterMut;
 #[cfg(feature = "parallel")]
 pub(crate) use par_iter::ParIterMut;
 
-use crate::{
-    archetype, archetype::Archetype,
-    registry::Registry,
-};
+use crate::{archetype, archetype::Archetype, registry::Registry};
 use core::hash::{BuildHasher, Hash, Hasher};
 use hashbrown::raw::RawTable;
 use iter::Iter;
@@ -128,10 +125,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        archetype, archetypes::Archetypes,
-        registry,
-    };
+    use crate::{archetype, archetypes::Archetypes, registry};
     use alloc::vec;
 
     macro_rules! create_components {

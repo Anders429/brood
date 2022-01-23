@@ -1,8 +1,8 @@
 use crate::{
-    component::Component,
-    entity,
     archetype,
     archetype::Archetype,
+    component::Component,
+    entity,
     internal::registry::{RegistryDeserialize, RegistrySerialize},
 };
 use alloc::vec::Vec;

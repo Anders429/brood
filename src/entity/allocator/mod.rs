@@ -4,7 +4,7 @@ mod impl_serde;
 #[cfg(feature = "serde")]
 pub(crate) use impl_serde::DeserializeAllocator;
 
-use crate::{entity, archetype, registry::Registry};
+use crate::{archetype, entity, registry::Registry};
 use alloc::{collections::VecDeque, vec::Vec};
 use core::{fmt, fmt::Debug, iter::ExactSizeIterator};
 

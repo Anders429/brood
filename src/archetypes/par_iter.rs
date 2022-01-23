@@ -1,7 +1,4 @@
-use crate::{
-    archetype::Archetype, archetypes::Archetypes,
-    registry::Registry,
-};
+use crate::{archetype::Archetype, archetypes::Archetypes, registry::Registry};
 use core::marker::PhantomData;
 use hashbrown::raw::rayon::RawParIter;
 use rayon::iter::{plumbing::UnindexedConsumer, ParallelIterator};

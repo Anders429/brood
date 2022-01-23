@@ -17,7 +17,7 @@ use crate::{
     entities,
     entities::Entities,
     entity,
-    entity::{Entity, allocator::Location},
+    entity::{allocator::Location, Entity},
     query::view::Views,
     registry::Registry,
 };

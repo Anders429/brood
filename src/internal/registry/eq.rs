@@ -1,6 +1,6 @@
 use crate::{
-    component::Component,
     archetype,
+    component::Component,
     registry::{Null, Registry},
 };
 use alloc::vec::Vec;

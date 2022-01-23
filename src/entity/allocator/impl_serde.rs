@@ -1,9 +1,5 @@
 use super::{Allocator, Location, Slot};
-use crate::{
-    entity,
-    archetypes::Archetypes,
-    registry::Registry,
-};
+use crate::{archetypes::Archetypes, entity, registry::Registry};
 use alloc::{format, vec, vec::Vec};
 use core::{fmt, marker::PhantomData};
 use serde::{
