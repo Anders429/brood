@@ -1,7 +1,7 @@
-use crate::{
-    internal::system::schedule::stage::StagesSeal,
-    system::{schedule::task::Task, ParSystem, System},
-};
+mod seal;
+
+use crate::system::{schedule::task::Task, ParSystem, System};
+use seal::Seal;
 
 pub enum Stage<S, P> {
     Start(Task<S, P>),
@@ -9,7 +9,7 @@ pub enum Stage<S, P> {
     Flush,
 }
 
-pub trait Stages<'a>: StagesSeal<'a> {}
+pub trait Stages<'a>: Seal<'a> {}
 
 pub struct Null;
 

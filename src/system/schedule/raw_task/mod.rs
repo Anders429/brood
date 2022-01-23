@@ -1,7 +1,7 @@
-use crate::{
-    internal::system::schedule::raw_task::RawTasksSeal,
-    system::{schedule::task::Task, ParSystem, System},
-};
+mod seal;
+
+use crate::system::{schedule::task::Task, ParSystem, System};
+use seal::Seal;
 
 pub enum RawTask<S, P> {
     Task(Task<S, P>),
@@ -10,7 +10,7 @@ pub enum RawTask<S, P> {
 
 pub struct Null;
 
-pub trait RawTasks<'a>: RawTasksSeal<'a> {}
+pub trait RawTasks<'a>: Seal<'a> {}
 
 impl<'a> RawTasks<'a> for Null {}
 

@@ -3,13 +3,14 @@ pub mod stage;
 
 pub(crate) mod task;
 
+mod sendable;
+
 mod builder;
 
 pub use builder::Builder;
 
-use crate::{
-    internal::system::schedule::sendable::SendableWorld, registry::Registry, world::World,
-};
+use crate::{registry::Registry, world::World};
+use sendable::SendableWorld;
 use stage::Stages;
 
 pub struct Schedule<S> {

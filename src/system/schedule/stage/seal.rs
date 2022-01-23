@@ -1,13 +1,15 @@
 use crate::{
-    internal::system::schedule::sendable::SendableWorld,
     registry::Registry,
     system::{
-        schedule::stage::{Null, Stage},
+        schedule::{
+            sendable::SendableWorld,
+            stage::{Null, Stage},
+        },
         ParSystem, System,
     },
 };
 
-pub trait StagesSeal<'a>: Send {
+pub trait Seal<'a>: Send {
     fn run<R>(&mut self, world: SendableWorld<'a, R>)
     where
         R: Registry + 'a;
@@ -29,7 +31,7 @@ pub trait StagesSeal<'a>: Send {
         R: Registry + 'a;
 }
 
-impl<'a> StagesSeal<'a> for Null {
+impl<'a> Seal<'a> for Null {
     fn run<R>(&mut self, _world: SendableWorld<'a, R>)
     where
         R: Registry + 'a,
@@ -61,11 +63,11 @@ impl<'a> StagesSeal<'a> for Null {
     }
 }
 
-impl<'a, S, P, L> StagesSeal<'a> for (Stage<S, P>, L)
+impl<'a, S, P, L> Seal<'a> for (Stage<S, P>, L)
 where
     S: System<'a> + Send,
     P: ParSystem<'a> + Send,
-    L: StagesSeal<'a>,
+    L: Seal<'a>,
 {
     fn run<R>(&mut self, world: SendableWorld<'a, R>)
     where

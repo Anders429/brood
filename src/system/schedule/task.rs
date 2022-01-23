@@ -1,7 +1,6 @@
 use crate::{
-    internal::system::schedule::sendable::SendableWorld,
     registry::Registry,
-    system::{ParSystem, System},
+    system::{schedule::sendable::SendableWorld, ParSystem, System},
     world::World,
 };
 

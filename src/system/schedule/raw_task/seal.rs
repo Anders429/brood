@@ -12,7 +12,7 @@ use crate::{
 use core::any::TypeId;
 use hashbrown::HashSet;
 
-pub trait RawTasksSeal<'a> {
+pub trait Seal<'a> {
     type Stages: Stages<'a>;
 
     fn into_stages(
@@ -24,7 +24,7 @@ pub trait RawTasksSeal<'a> {
     ) -> Self::Stages;
 }
 
-impl<'a> RawTasksSeal<'a> for Null {
+impl<'a> Seal<'a> for Null {
     type Stages = stage::Null;
 
     fn into_stages(
@@ -38,11 +38,11 @@ impl<'a> RawTasksSeal<'a> for Null {
     }
 }
 
-impl<'a, S, P, T> RawTasksSeal<'a> for (RawTask<S, P>, T)
+impl<'a, S, P, T> Seal<'a> for (RawTask<S, P>, T)
 where
     S: System<'a> + Send,
     P: ParSystem<'a> + Send,
-    T: RawTasksSeal<'a>,
+    T: Seal<'a>,
 {
     type Stages = (Stage<S, P>, T::Stages);
 
