@@ -1,5 +1,8 @@
-use crate::{component::Component, internal::entities::EntitiesSeal};
+mod seal;
+
+use crate::component::Component;
 use alloc::vec::Vec;
+use seal::Seal;
 
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Null;
@@ -46,7 +49,7 @@ mod impl_serde {
     }
 }
 
-pub trait Entities: EntitiesSeal {}
+pub trait Entities: Seal {}
 
 impl Entities for Null {}
 

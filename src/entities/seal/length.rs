@@ -1,13 +1,13 @@
 use crate::{component::Component, entities::Null};
 use alloc::vec::Vec;
 
-pub trait EntitiesLength {
+pub trait Length {
     fn component_len(&self) -> usize;
     fn check_len(&self) -> bool;
     fn check_len_against(&self, len: usize) -> bool;
 }
 
-impl EntitiesLength for Null {
+impl Length for Null {
     fn component_len(&self) -> usize {
         0
     }
@@ -21,10 +21,10 @@ impl EntitiesLength for Null {
     }
 }
 
-impl<C, E> EntitiesLength for (Vec<C>, E)
+impl<C, E> Length for (Vec<C>, E)
 where
     C: Component,
-    E: EntitiesLength,
+    E: Length,
 {
     fn component_len(&self) -> usize {
         self.0.len()
