@@ -2,6 +2,7 @@
 
 extern crate alloc;
 
+pub mod component;
 pub mod entity;
 pub mod world;
 
