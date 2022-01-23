@@ -9,6 +9,7 @@ pub mod world;
 pub mod reexports;
 
 mod archetype;
+mod archetypes;
 mod internal;
 mod public;
 

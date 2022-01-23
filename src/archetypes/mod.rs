@@ -129,7 +129,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        archetype, internal::archetypes::Archetypes,
+        archetype, archetypes::Archetypes,
         registry,
     };
     use alloc::vec;

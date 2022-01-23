@@ -1,5 +1,5 @@
 use crate::{
-    internal::{archetypes, query::filter::FilterSeal},
+    archetypes, internal::query::filter::FilterSeal,
     query::{
         filter::{And, Filter},
         view::Views,

@@ -1,9 +1,7 @@
 use crate::{
     entity,
-    internal::{
-        archetypes::Archetypes,
-        entity_allocator::{EntityAllocator, Location, Slot},
-    },
+    archetypes::Archetypes,
+    internal::entity_allocator::{EntityAllocator, Location, Slot},
     registry::Registry,
 };
 use alloc::{format, vec, vec::Vec};
