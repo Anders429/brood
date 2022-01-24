@@ -2,10 +2,18 @@
 
 extern crate alloc;
 
+pub mod component;
+pub mod entities;
+pub mod entity;
+pub mod query;
+pub mod registry;
+pub mod system;
+pub mod world;
+
 #[doc(hidden)]
 pub mod reexports;
 
-mod internal;
-mod public;
+mod archetype;
+mod archetypes;
 
-pub use public::*;
+pub use world::World;
