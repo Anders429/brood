@@ -15,5 +15,6 @@ pub mod reexports;
 
 mod archetype;
 mod archetypes;
+mod hlist;
 
 pub use world::World;
