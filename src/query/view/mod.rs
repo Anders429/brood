@@ -5,11 +5,7 @@ mod seal;
 #[cfg(feature = "parallel")]
 pub use par::{ParView, ParViews};
 
-use crate::{
-    component::Component,
-    entity,
-    query::filter::Filter,
-};
+use crate::{component::Component, entity, query::filter::Filter};
 use seal::{ViewSeal, ViewsSeal};
 
 pub trait View<'a>: Filter + ViewSeal<'a> {}
