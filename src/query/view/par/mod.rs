@@ -1,9 +1,11 @@
+mod seal;
+
 use crate::{
     component::Component,
     entity,
-    internal::query::par_view::{ParViewSeal, ParViewsSeal},
     query::{filter::Filter, view::Null},
 };
+use seal::{ParViewSeal, ParViewsSeal};
 
 pub trait ParView<'a>: Filter + ParViewSeal<'a> {}
 

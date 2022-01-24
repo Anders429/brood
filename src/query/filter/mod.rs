@@ -1,7 +1,10 @@
+mod seal;
+
+pub(crate) use seal::Seal;
+
 use crate::{
     component::Component,
     entity,
-    internal::query::filter::FilterSeal,
     query::{
         view,
         view::{View, Views},
@@ -9,7 +12,7 @@ use crate::{
 };
 use core::marker::PhantomData;
 
-pub trait Filter: FilterSeal {}
+pub trait Filter: Seal {}
 
 pub struct None;
 

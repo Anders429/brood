@@ -1,8 +1,7 @@
 use crate::{
     archetypes,
-    internal::query::filter::FilterSeal,
     query::{
-        filter::{And, Filter},
+        filter::{And, Filter, Seal},
         view::Views,
     },
     registry::Registry,

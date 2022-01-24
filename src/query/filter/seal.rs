@@ -10,17 +10,17 @@ use crate::{
 use core::any::TypeId;
 use hashbrown::HashMap;
 
-pub trait FilterSeal {
+pub trait Seal {
     unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool;
 }
 
-impl FilterSeal for None {
+impl Seal for None {
     unsafe fn filter(_key: &[u8], _component_map: &HashMap<TypeId, usize>) -> bool {
         true
     }
 }
 
-impl<C> FilterSeal for Has<C>
+impl<C> Seal for Has<C>
 where
     C: Component,
 {
@@ -32,7 +32,7 @@ where
     }
 }
 
-impl<F> FilterSeal for Not<F>
+impl<F> Seal for Not<F>
 where
     F: Filter,
 {
@@ -41,7 +41,7 @@ where
     }
 }
 
-impl<F1, F2> FilterSeal for And<F1, F2>
+impl<F1, F2> Seal for And<F1, F2>
 where
     F1: Filter,
     F2: Filter,
@@ -51,7 +51,7 @@ where
     }
 }
 
-impl<F1, F2> FilterSeal for Or<F1, F2>
+impl<F1, F2> Seal for Or<F1, F2>
 where
     F1: Filter,
     F2: Filter,
@@ -61,7 +61,7 @@ where
     }
 }
 
-impl<C> FilterSeal for &C
+impl<C> Seal for &C
 where
     C: Component,
 {
@@ -70,7 +70,7 @@ where
     }
 }
 
-impl<C> FilterSeal for &mut C
+impl<C> Seal for &mut C
 where
     C: Component,
 {
@@ -79,7 +79,7 @@ where
     }
 }
 
-impl<C> FilterSeal for Option<&C>
+impl<C> Seal for Option<&C>
 where
     C: Component,
 {
@@ -88,7 +88,7 @@ where
     }
 }
 
-impl<C> FilterSeal for Option<&mut C>
+impl<C> Seal for Option<&mut C>
 where
     C: Component,
 {
@@ -97,19 +97,19 @@ where
     }
 }
 
-impl FilterSeal for entity::Identifier {
+impl Seal for entity::Identifier {
     unsafe fn filter(_key: &[u8], _component_map: &HashMap<TypeId, usize>) -> bool {
         true
     }
 }
 
-impl FilterSeal for view::Null {
+impl Seal for view::Null {
     unsafe fn filter(_key: &[u8], _component_map: &HashMap<TypeId, usize>) -> bool {
         true
     }
 }
 
-impl<'a, V, W> FilterSeal for (V, W)
+impl<'a, V, W> Seal for (V, W)
 where
     V: View<'a>,
     W: Views<'a>,
