@@ -62,8 +62,8 @@ where
                     return result;
                 }
             }
-            let (_identifier, archetype) = self.archetypes_iter.find(|(identifier, _archetype)| unsafe {
-                And::<V, F>::filter(identifier.as_slice(), self.component_map)
+            let archetype = self.archetypes_iter.find(|archetype| unsafe {
+                And::<V, F>::filter(archetype.identifier().as_slice(), self.component_map)
             })?;
             self.current_results_iter = Some(archetype.view::<V>());
         }
