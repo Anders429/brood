@@ -80,6 +80,25 @@ where
             _ => (low, None),
         }
     }
+
+    #[inline]
+    fn fold<A, Fold>(self, mut init: A, mut fold: Fold) -> A
+    where
+        Fold: FnMut(A, Self::Item) -> A,
+    {
+        if let Some(results) = self.current_results_iter {
+            init = results.fold(init, &mut fold);
+        }
+
+        self.archetypes_iter.fold(init, |acc, archetype| {
+            if unsafe { And::<V, F>::filter(archetype.identifier().as_slice(), self.component_map) }
+            {
+                archetype.view::<V>().fold(acc, &mut fold)
+            } else {
+                acc
+            }
+        })
+    }
 }
 
 impl<'a, R, F, V> FusedIterator for Iter<'a, R, F, V>
