@@ -32,7 +32,7 @@ where
 #[macro_export]
 macro_rules! registry {
     ($component:ty $(,$components:ty)* $(,)?) => {
-        ($component, registry!($($components,)*))
+        ($component, $crate::registry!($($components,)*))
     };
     () => {
         $crate::registry::Null

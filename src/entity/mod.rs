@@ -26,7 +26,7 @@ where
 #[macro_export]
 macro_rules! entity {
     ($component:expr $(,$components:expr)* $(,)?) => {
-        ($component, entity!($($components,)*))
+        ($component, $crate::entity!($($components,)*))
     };
     () => {
         $crate::entity::Null
