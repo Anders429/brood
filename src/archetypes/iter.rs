@@ -31,9 +31,9 @@ where
     type Item = &'a Archetype<R>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.raw_iter.next().map(|archetype_bucket|
-            unsafe { archetype_bucket.as_ref() }
-        )
+        self.raw_iter
+            .next()
+            .map(|archetype_bucket| unsafe { archetype_bucket.as_ref() })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -70,8 +70,8 @@ where
     type Item = &'a mut Archetype<R>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.raw_iter.next().map(|archetype_bucket|
-            unsafe { archetype_bucket.as_mut() }
-        )
+        self.raw_iter
+            .next()
+            .map(|archetype_bucket| unsafe { archetype_bucket.as_mut() })
     }
 }

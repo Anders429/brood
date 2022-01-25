@@ -226,7 +226,7 @@ where
                         *slot = Some(Slot {
                             generation: entity_identifier.generation,
                             location: Some(Location {
-                                identifier: unsafe {archetype.identifier()},
+                                identifier: unsafe { archetype.identifier() },
                                 index: i,
                             }),
                         });

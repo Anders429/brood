@@ -14,7 +14,7 @@ where
 
         self.iter().all(|archetype| {
             other
-                .get(unsafe {archetype.identifier()})
+                .get(unsafe { archetype.identifier() })
                 .map_or(false, |other_archetype| archetype == other_archetype)
         })
     }
