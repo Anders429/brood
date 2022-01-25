@@ -6,7 +6,7 @@ use crate::{
     },
     registry::Registry,
 };
-use core::{any::TypeId, marker::PhantomData};
+use core::{any::TypeId, iter::FusedIterator, marker::PhantomData};
 use hashbrown::HashMap;
 
 pub struct Iter<'a, R, F, V>
@@ -17,8 +17,7 @@ where
 {
     archetypes_iter: archetypes::IterMut<'a, R>,
 
-    front_results_iter: Option<V::Results>,
-    back_results_iter: Option<V::Results>,
+    current_results_iter: Option<V::Results>,
 
     component_map: &'a HashMap<TypeId, usize>,
 
@@ -31,12 +30,6 @@ where
     F: Filter,
     V: Views<'a>,
 {
-    // fn filter((identifier, _archetype): (archetype::Identifier, &mut Archetype<R>)) -> bool {
-    //     unsafe {
-    //         And::<V, F>::filter(identifier.as_slice(), &self.component_map)
-    //     }
-    // }
-
     pub(crate) fn new(
         archetypes_iter: archetypes::IterMut<'a, R>,
         component_map: &'a HashMap<TypeId, usize>,
@@ -44,8 +37,7 @@ where
         Self {
             archetypes_iter,
 
-            front_results_iter: None,
-            back_results_iter: None,
+            current_results_iter: None,
 
             component_map,
 
@@ -65,30 +57,56 @@ where
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            if let Some(ref mut results) = self.front_results_iter {
-                match results.next() {
-                    result @ Some(_) => return result,
-                    None => self.front_results_iter = None,
+            if let Some(ref mut results) = self.current_results_iter {
+                if let result @ Some(_) = results.next() {
+                    return result;
                 }
             }
-            match self
-                .archetypes_iter
-                .find(|(identifier, _archetype)| unsafe {
-                    And::<V, F>::filter(identifier.as_slice(), self.component_map)
-                }) {
-                Some((_identifier, archetype)) => {
-                    self.front_results_iter = Some(archetype.view::<V>())
-                }
-                None => match self.back_results_iter.as_mut()?.next() {
-                    result @ Some(_) => return result,
-                    None => {
-                        self.back_results_iter = None;
-                        return None;
-                    }
-                },
-            }
+            let archetype = self.archetypes_iter.find(|archetype| unsafe {
+                And::<V, F>::filter(archetype.identifier().as_slice(), self.component_map)
+            })?;
+            self.current_results_iter = Some(archetype.view::<V>());
         }
     }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (low, high) = self
+            .current_results_iter
+            .as_ref()
+            .map_or((0, Some(0)), V::Results::size_hint);
+        match (self.archetypes_iter.size_hint(), high) {
+            ((0, Some(0)), Some(_)) => (low, high),
+            _ => (low, None),
+        }
+    }
+
+    #[inline]
+    fn fold<A, Fold>(self, mut init: A, mut fold: Fold) -> A
+    where
+        Fold: FnMut(A, Self::Item) -> A,
+    {
+        if let Some(results) = self.current_results_iter {
+            init = results.fold(init, &mut fold);
+        }
+
+        self.archetypes_iter.fold(init, |acc, archetype| {
+            if unsafe { And::<V, F>::filter(archetype.identifier().as_slice(), self.component_map) }
+            {
+                archetype.view::<V>().fold(acc, &mut fold)
+            } else {
+                acc
+            }
+        })
+    }
+}
+
+impl<'a, R, F, V> FusedIterator for Iter<'a, R, F, V>
+where
+    R: Registry + 'a,
+    F: Filter,
+    V: Views<'a>,
+{
 }
 
 unsafe impl<'a, R, F, V> Send for Iter<'a, R, F, V>

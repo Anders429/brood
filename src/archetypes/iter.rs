@@ -1,4 +1,4 @@
-use crate::{archetype, archetype::Archetype, registry::Registry};
+use crate::{archetype::Archetype, registry::Registry};
 use core::marker::PhantomData;
 use hashbrown::raw::RawIter;
 
@@ -28,13 +28,12 @@ impl<'a, R> Iterator for Iter<'a, R>
 where
     R: Registry + 'a,
 {
-    type Item = (archetype::IdentifierRef<R>, &'a Archetype<R>);
+    type Item = &'a Archetype<R>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.raw_iter.next().map(|archetype_bucket| {
-            let archetype = unsafe { archetype_bucket.as_ref() };
-            (unsafe { archetype.identifier() }, archetype)
-        })
+        self.raw_iter
+            .next()
+            .map(|archetype_bucket| unsafe { archetype_bucket.as_ref() })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -68,12 +67,15 @@ impl<'a, R> Iterator for IterMut<'a, R>
 where
     R: Registry + 'a,
 {
-    type Item = (archetype::IdentifierRef<R>, &'a mut Archetype<R>);
+    type Item = &'a mut Archetype<R>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.raw_iter.next().map(|archetype_bucket| {
-            let archetype = unsafe { archetype_bucket.as_mut() };
-            (unsafe { archetype.identifier() }, archetype)
-        })
+        self.raw_iter
+            .next()
+            .map(|archetype_bucket| unsafe { archetype_bucket.as_mut() })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.raw_iter.size_hint()
     }
 }

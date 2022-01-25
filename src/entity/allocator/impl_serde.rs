@@ -209,7 +209,7 @@ where
         }
 
         // Populate active slots from archetypes.
-        for (archetype_identifier, archetype) in archetypes.iter() {
+        for archetype in archetypes.iter() {
             for (i, entity_identifier) in archetype.entity_identifiers().enumerate() {
                 let slot = slots.get_mut(entity_identifier.index).ok_or_else(|| {
                     de::Error::custom(format!(
@@ -226,7 +226,7 @@ where
                         *slot = Some(Slot {
                             generation: entity_identifier.generation,
                             location: Some(Location {
-                                identifier: archetype_identifier,
+                                identifier: unsafe { archetype.identifier() },
                                 index: i,
                             }),
                         });

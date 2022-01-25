@@ -6,6 +6,11 @@ where
     R: RegistryDebug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_map().entries(self.iter()).finish()
+        f.debug_map()
+            .entries(
+                self.iter()
+                    .map(|archetype| (unsafe { archetype.identifier() }, archetype)),
+            )
+            .finish()
     }
 }
