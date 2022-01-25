@@ -6,7 +6,7 @@ use crate::{
     },
     registry::Registry,
 };
-use core::{any::TypeId, marker::PhantomData};
+use core::{any::TypeId, iter::FusedIterator, marker::PhantomData};
 use hashbrown::HashMap;
 
 pub struct Iter<'a, R, F, V>
@@ -90,6 +90,8 @@ where
         }
     }
 }
+
+impl<'a, R, F, V> FusedIterator for Iter<'a, R, F, V> where R: Registry + 'a, F: Filter, V: Views<'a> {}
 
 unsafe impl<'a, R, F, V> Send for Iter<'a, R, F, V>
 where
