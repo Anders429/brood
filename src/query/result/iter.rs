@@ -68,6 +68,18 @@ where
             self.current_results_iter = Some(archetype.view::<V>());
         }
     }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (low, high) = self
+            .current_results_iter
+            .as_ref()
+            .map_or((0, Some(0)), V::Results::size_hint);
+        match (self.archetypes_iter.size_hint(), high) {
+            ((0, Some(0)), Some(_)) => (low, high),
+            _ => (low, None),
+        }
+    }
 }
 
 impl<'a, R, F, V> FusedIterator for Iter<'a, R, F, V>

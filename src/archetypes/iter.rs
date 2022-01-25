@@ -74,4 +74,8 @@ where
             .next()
             .map(|archetype_bucket| unsafe { archetype_bucket.as_mut() })
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.raw_iter.size_hint()
+    }
 }
