@@ -17,8 +17,7 @@ where
 {
     archetypes_iter: archetypes::IterMut<'a, R>,
 
-    front_results_iter: Option<V::Results>,
-    back_results_iter: Option<V::Results>,
+    current_results_iter: Option<V::Results>,
 
     component_map: &'a HashMap<TypeId, usize>,
 
@@ -31,12 +30,6 @@ where
     F: Filter,
     V: Views<'a>,
 {
-    // fn filter((identifier, _archetype): (archetype::Identifier, &mut Archetype<R>)) -> bool {
-    //     unsafe {
-    //         And::<V, F>::filter(identifier.as_slice(), &self.component_map)
-    //     }
-    // }
-
     pub(crate) fn new(
         archetypes_iter: archetypes::IterMut<'a, R>,
         component_map: &'a HashMap<TypeId, usize>,
@@ -44,8 +37,7 @@ where
         Self {
             archetypes_iter,
 
-            front_results_iter: None,
-            back_results_iter: None,
+            current_results_iter: None,
 
             component_map,
 
@@ -65,28 +57,15 @@ where
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            if let Some(ref mut results) = self.front_results_iter {
-                match results.next() {
-                    result @ Some(_) => return result,
-                    None => self.front_results_iter = None,
+            if let Some(ref mut results) = self.current_results_iter {
+                if let result @ Some(_) = results.next() {
+                    return result;
                 }
             }
-            match self
-                .archetypes_iter
-                .find(|(identifier, _archetype)| unsafe {
-                    And::<V, F>::filter(identifier.as_slice(), self.component_map)
-                }) {
-                Some((_identifier, archetype)) => {
-                    self.front_results_iter = Some(archetype.view::<V>())
-                }
-                None => match self.back_results_iter.as_mut()?.next() {
-                    result @ Some(_) => return result,
-                    None => {
-                        self.back_results_iter = None;
-                        return None;
-                    }
-                },
-            }
+            let (_identifier, archetype) = self.archetypes_iter.find(|(identifier, _archetype)| unsafe {
+                And::<V, F>::filter(identifier.as_slice(), self.component_map)
+            })?;
+            self.current_results_iter = Some(archetype.view::<V>());
         }
     }
 }
