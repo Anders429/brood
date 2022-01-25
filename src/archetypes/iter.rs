@@ -28,13 +28,12 @@ impl<'a, R> Iterator for Iter<'a, R>
 where
     R: Registry + 'a,
 {
-    type Item = (archetype::IdentifierRef<R>, &'a Archetype<R>);
+    type Item = &'a Archetype<R>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.raw_iter.next().map(|archetype_bucket| {
-            let archetype = unsafe { archetype_bucket.as_ref() };
-            (unsafe { archetype.identifier() }, archetype)
-        })
+        self.raw_iter.next().map(|archetype_bucket|
+            unsafe { archetype_bucket.as_ref() }
+        )
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

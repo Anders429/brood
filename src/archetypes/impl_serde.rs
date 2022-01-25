@@ -17,7 +17,7 @@ where
     where
         S: Serializer,
     {
-        serializer.collect_seq(self.iter().map(|(_identifier, archetype)| archetype))
+        serializer.collect_seq(self.iter())
     }
 }
 

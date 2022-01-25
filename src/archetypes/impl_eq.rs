@@ -12,9 +12,9 @@ where
             return false;
         }
 
-        self.iter().all(|(identifier, archetype)| {
+        self.iter().all(|archetype| {
             other
-                .get(identifier)
+                .get(unsafe {archetype.identifier()})
                 .map_or(false, |other_archetype| archetype == other_archetype)
         })
     }
