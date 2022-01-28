@@ -14,6 +14,7 @@ use rayon::iter::{
     ParallelIterator,
 };
 
+#[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
 pub struct ParIter<'a, R, F, V>
 where
     R: Registry,

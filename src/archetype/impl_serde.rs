@@ -13,6 +13,7 @@ use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
 };
 
+#[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
 pub(crate) struct SerializeColumn<'a, C>(pub(crate) &'a Vec<C>)
 where
     C: Component + Serialize;
@@ -413,6 +414,7 @@ where
     }
 }
 
+#[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
 pub(crate) struct DeserializeColumn<'de, C>
 where
     C: Component + Deserialize<'de>,

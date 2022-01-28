@@ -4,6 +4,7 @@ mod impl_drop;
 mod impl_eq;
 mod impl_send;
 #[cfg(feature = "serde")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
 mod impl_serde;
 
 pub(crate) use identifier::{Identifier, IdentifierIterator, IdentifierRef};
@@ -171,6 +172,7 @@ where
     }
 
     #[cfg(feature = "parallel")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
     pub(crate) fn par_view<'a, V>(&mut self) -> V::ParResults
     where
         V: ParViews<'a>,
@@ -337,6 +339,7 @@ where
     }
 
     #[cfg(feature = "serde")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
     pub(crate) fn entity_identifiers(&self) -> impl Iterator<Item = &entity::Identifier> {
         unsafe { slice::from_raw_parts(self.entity_identifiers.0, self.length) }.iter()
     }

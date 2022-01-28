@@ -48,6 +48,7 @@ where
     }
 }
 
+#[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
 pub(crate) struct DeserializeAllocator<'a, R>
 where
     R: Registry,

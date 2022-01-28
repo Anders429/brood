@@ -4,6 +4,7 @@ use crate::{
     world::World,
 };
 
+#[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
 pub trait ParSystem<'a> {
     type Filter: Filter;
     type Views: ParViews<'a>;

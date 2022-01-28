@@ -1,6 +1,7 @@
 mod impl_debug;
 mod impl_eq;
 #[cfg(feature = "serde")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
 mod impl_serde;
 mod iter;
 #[cfg(feature = "parallel")]

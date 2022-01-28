@@ -8,6 +8,7 @@ use ::serde::{de, de::SeqAccess, ser::SerializeTuple, Deserialize, Serialize};
 use alloc::{format, vec::Vec};
 use core::{any::type_name, mem::ManuallyDrop};
 
+#[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
 pub trait RegistrySerialize: Registry {
     unsafe fn serialize_components_by_column<R, S>(
         components: &[(*mut u8, usize)],
@@ -120,6 +121,7 @@ where
     }
 }
 
+#[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
 pub trait RegistryDeserialize<'de>: Registry + 'de {
     unsafe fn deserialize_components_by_column<R, V>(
         components: &mut Vec<(*mut u8, usize)>,
