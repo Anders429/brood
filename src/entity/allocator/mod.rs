@@ -1,4 +1,5 @@
 #[cfg(feature = "serde")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
 mod impl_serde;
 
 #[cfg(feature = "serde")]

@@ -13,6 +13,7 @@ use crate::{registry::Registry, world::World};
 use sendable::SendableWorld;
 use stage::Stages;
 
+#[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
 pub struct Schedule<S> {
     stages: S,
 }

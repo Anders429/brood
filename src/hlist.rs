@@ -4,6 +4,7 @@ macro_rules! define_null {
         pub struct Null;
 
         #[cfg(feature = "serde")]
+        #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
         mod impl_serde {
             use super::Null;
             use core::fmt;

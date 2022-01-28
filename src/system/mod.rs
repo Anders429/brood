@@ -1,4 +1,5 @@
 #[cfg(feature = "parallel")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
 pub mod schedule;
 
 mod null;
@@ -9,6 +10,7 @@ pub use null::Null;
 #[cfg(feature = "parallel")]
 pub use par::ParSystem;
 #[cfg(feature = "parallel")]
+#[doc(inline)]
 pub use schedule::Schedule;
 
 use crate::{

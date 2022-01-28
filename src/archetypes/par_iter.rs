@@ -3,6 +3,7 @@ use core::marker::PhantomData;
 use hashbrown::raw::rayon::RawParIter;
 use rayon::iter::{plumbing::UnindexedConsumer, ParallelIterator};
 
+#[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
 pub(crate) struct ParIterMut<'a, R>
 where
     R: Registry,
@@ -45,6 +46,7 @@ impl<R> Archetypes<R>
 where
     R: Registry,
 {
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
     pub(crate) fn par_iter_mut(&mut self) -> ParIterMut<R> {
         ParIterMut::new(unsafe { self.raw_archetypes.par_iter() })
     }
