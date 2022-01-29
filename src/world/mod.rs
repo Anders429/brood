@@ -29,6 +29,35 @@ use alloc::{vec, vec::Vec};
 use core::any::TypeId;
 use hashbrown::HashMap;
 
+/// A container of entities.
+///
+/// A `World` can contain entities made of any combination of components contained in the
+/// [`Registry`] `R`. These entities are not stored in any defined order, and thier internal
+/// location is subject to change. Therefore, entities stored inside a `World` are uniquely
+/// identified using an `entity::Identifier`.
+///
+/// ``` rust
+/// use brood::{entity, registry, World};
+///
+/// // Define components.
+/// struct Foo(u32);
+/// struct Bar(bool);
+///
+/// // Create a world.
+/// let mut world = World::<registry!(Foo, Bar)>::new();
+///
+/// // Insert a new entity. The returned identifier uniquely identifies the entity.
+/// let entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+/// ```
+///
+/// Note that a `World` can only contain entities made of components defined in the `World`'s
+/// registry. Attempting to insert entities containing components not in the registry will result
+/// in a panic.
+///
+/// Components of entities can be queried using the [`query()`] method. `Schedule`s of `System`s
+/// can also be run over the components stored in the `World` using the [`run()`] method.
+///
+/// [`Registry`]: crate::Registry
 pub struct World<R>
 where
     R: Registry,
