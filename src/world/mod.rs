@@ -57,7 +57,9 @@ use hashbrown::HashMap;
 /// Components of entities can be queried using the [`query()`] method. `Schedule`s of `System`s
 /// can also be run over the components stored in the `World` using the [`run()`] method.
 ///
-/// [`Registry`]: crate::Registry
+/// [`query()`]: crate::World::query()
+/// [`Registry`]: crate::registry::Registry
+/// [`run()`]: crate::World::run()
 pub struct World<R>
 where
     R: Registry,
