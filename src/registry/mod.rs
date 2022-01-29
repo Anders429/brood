@@ -29,6 +29,31 @@ where
 {
 }
 
+/// Creates a registry from the provided components.
+///
+/// This macro allows a registry to be defined without needing to manually create a heterogeneous
+/// list of components. Given an arbitrary number of components, this macro will arrange them into
+/// nested tuples forming a heterogeneous list.
+///
+/// A registry is not normally instantiated. Its main purpose is to be used as a generic in the
+/// definition of a [`World`].
+///
+/// # Example
+/// ``` rust
+/// use brood::{registry, World};
+///
+/// // Define components `Foo` and `Bar`.
+/// struct Foo(u16);
+/// struct Bar(f32);
+///
+/// // Define a registry containing those components.
+/// type Registry = registry!(Foo, Bar);
+///
+/// // Define a world using the registry.
+/// let world = World::<Registry>::new();
+/// ```
+///
+/// [`World`]: crate::World
 #[macro_export]
 macro_rules! registry {
     ($component:ty $(,$components:ty)* $(,)?) => {
