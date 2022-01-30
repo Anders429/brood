@@ -86,6 +86,22 @@ where
         }
     }
 
+    /// Creates an empty `World`.
+    ///
+    /// Often, calls to `new()` are accompanied with a [`Registry`] to tell the compiler what
+    /// components the `World` can contain.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{registry, World};
+    ///
+    /// struct Foo(u32);
+    /// struct Bar(bool);
+    ///
+    /// type Registry = registry!(Foo, Bar);
+    ///
+    /// let world = World::<Registry>::new();
+    /// ```
     pub fn new() -> Self {
         Self::from_raw_parts(Archetypes::new(), entity::Allocator::new())
     }
