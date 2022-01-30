@@ -145,6 +145,26 @@ where
         }
     }
 
+    /// Insert multiple entities made from the same components, returning a [`Vec`] of [`entity::Identifier`]s.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entities, registry, World};
+    ///
+    /// struct Foo(u32);
+    /// struct Bar(bool);
+    ///
+    /// type Registry = registry!(Foo, Bar);
+    ///
+    /// let mut world = World::<Registry>::new();
+    ///
+    /// let entity_identiifers = world.extend(entities![(Foo(1), Bar(false)), (Foo(2), Bar(true))]);
+    /// ```
+    ///
+    /// # Panics
+    /// Panics if the entities contain any components not included in the `World`'s [`Registry`].
+    ///
+    /// [`Registry`]: crate::registry::Registry
     pub fn extend<E>(&mut self, entities: entities::Batch<E>) -> Vec<entity::Identifier>
     where
         E: Entities,
