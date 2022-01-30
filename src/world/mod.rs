@@ -237,6 +237,24 @@ where
             .map(|location| Entry::new(self, location))
     }
 
+    /// Remove the entity associated with an [`entity::Identifier`].
+    ///
+    /// If the entity has already been removed, this method will do nothing.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entity, registry, World};
+    ///
+    /// struct Foo(u32);
+    /// struct Bar(bool);
+    ///
+    /// type Registry = registry!(Foo, Bar);
+    ///
+    /// let mut world = World::<Registry>::new();
+    /// let entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+    ///
+    /// world.remove(entity_identifier);
+    /// ```
     pub fn remove(&mut self, entity_identifier: entity::Identifier) {
         // Get location of entity.
         if let Some(location) = self.entity_allocator.get(entity_identifier) {
