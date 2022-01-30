@@ -102,10 +102,32 @@ where
     ///
     /// let world = World::<Registry>::new();
     /// ```
+    ///
+    /// [`Registry`]: crate::registry::Registry
     pub fn new() -> Self {
         Self::from_raw_parts(Archetypes::new(), entity::Allocator::new())
     }
 
+    /// Insert an entity, returning an [`entity::Identifier`].
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entity, registry, World};
+    ///
+    /// struct Foo(u32);
+    /// struct Bar(bool);
+    ///
+    /// type Registry = registry!(Foo, Bar);
+    ///
+    /// let mut world = World::<Registry>::new();
+    ///
+    /// let entity_identifier = world.push(entity!(Foo(42), Bar(false)));
+    /// ```
+    ///
+    /// # Panics
+    /// Panics if the entity contains any components not included in the `World`'s [`Registry`].
+    ///
+    /// [`Registry`]: crate::registry::Registry
     pub fn push<E>(&mut self, entity: E) -> entity::Identifier
     where
         E: Entity,
