@@ -121,6 +121,25 @@ where
         }
     }
 
+    /// Remove a component from the entity.
+    ///
+    /// If the component is not present within the entity, nothing happens.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entity, registry, World};
+    ///
+    /// struct Foo(u32);
+    /// struct Bar(bool);
+    ///
+    /// type Registry = registry!(Foo, Bar);
+    ///
+    /// let mut world = World::<Registry>::new();
+    /// let entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+    /// let mut entry = world.entry(entity_identifier).unwrap();
+    ///
+    /// entry.remove::<Foo>();
+    /// ```
     pub fn remove<C>(&mut self)
     where
         C: Component,
