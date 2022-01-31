@@ -1,6 +1,6 @@
 mod seal;
 
-use crate::system::{schedule::task::Task, ParSystem, System};
+use crate::{hlist::define_null, system::{schedule::task::Task, ParSystem, System}};
 use seal::Seal;
 
 pub enum Stage<S, P> {
@@ -11,7 +11,7 @@ pub enum Stage<S, P> {
 
 pub trait Stages<'a>: Seal<'a> {}
 
-pub struct Null;
+define_null!();
 
 impl<'a> Stages<'a> for Null {}
 
