@@ -1,6 +1,6 @@
 mod seal;
 
-use crate::system::{schedule::task::Task, ParSystem, System};
+use crate::{hlist::define_null, system::{schedule::task::Task, ParSystem, System}};
 use seal::Seal;
 
 pub enum RawTask<S, P> {
@@ -8,7 +8,7 @@ pub enum RawTask<S, P> {
     Flush,
 }
 
-pub struct Null;
+define_null!();
 
 pub trait RawTasks<'a>: Seal<'a> {}
 
