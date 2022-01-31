@@ -182,6 +182,37 @@ where
         }
     }
 
+    /// Query for components contained within the `World` using the given [`Views`] `V` and
+    /// [`Filter`] `F`, returning an iterator over all components of entities matching the query.
+    ///
+    /// Note that the order of the entities returned by a query is not specified.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entity, query::{filter, result, views}, registry, World};
+    ///
+    /// struct Foo(u32);
+    /// struct Bar(bool);
+    ///
+    /// type Registry = registry!(Foo, Bar);
+    ///
+    /// let mut world = World::<Registry>::new();
+    /// let inserted_entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+    ///
+    /// // Note that the views provide implicit filters.
+    /// for result!(foo, entity_identifier) in world.query::<views!(&mut Foo, entity::Identifier), filter::Has<Bar>>() {
+    ///     // Allows immutable or mutable access to queried components.
+    ///     foo.0 = 100;
+    ///     // Also allows access to entity identifiers.
+    ///     assert_eq!(entity_identifier, inserted_entity_identifier);
+    /// }
+    /// ```
+    ///
+    /// For more information about `Views` and `Filter`, see the [`query`] module documentaion.
+    ///
+    /// [`Filter`]: crate::query::filter::Filter
+    /// [`query`]: crate::query
+    /// [`Views`]: crate::query::view::Views
     pub fn query<'a, V, F>(&'a mut self) -> result::Iter<'a, R, F, V>
     where
         V: Views<'a>,
