@@ -1,3 +1,9 @@
+//! A container of entities.
+//!
+//! Entities are primarily stored and interacted with through a [`World`] container. A `World`
+//! stores entities made with a combination of components contained in the `World`'s component 
+//! `Registry`.
+
 mod entry;
 mod impl_debug;
 mod impl_default;
