@@ -193,16 +193,17 @@ where
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
+    /// struct Baz(u32);
     ///
-    /// type Registry = registry!(Foo, Bar);
+    /// type Registry = registry!(Foo, Bar, Baz);
     ///
     /// let mut world = World::<Registry>::new();
-    /// let inserted_entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+    /// let inserted_entity_identifier = world.push(entity!(Foo(42), Bar(true), Baz(100)));
     ///
     /// // Note that the views provide implicit filters.
-    /// for result!(foo, entity_identifier) in world.query::<views!(&mut Foo, entity::Identifier), filter::Has<Bar>>() {
+    /// for result!(foo, baz, entity_identifier) in world.query::<views!(&mut Foo, &Baz, entity::Identifier), filter::Has<Bar>>() {
     ///     // Allows immutable or mutable access to queried components.
-    ///     foo.0 = 100;
+    ///     foo.0 = baz.0;
     ///     // Also allows access to entity identifiers.
     ///     assert_eq!(entity_identifier, inserted_entity_identifier);
     /// }
@@ -221,6 +222,43 @@ where
         result::Iter::new(self.archetypes.iter_mut(), &self.component_map)
     }
 
+    /// Query for components contained within the `World` using the given [`ParViews`] `V` and
+    /// [`Filter`] `F`, returning a [`ParallelIterator`] over all components of entities matching
+    /// the query.
+    ///
+    /// The difference between this method and [`query()`] is that this method allow results to be
+    /// operated on in parallel rather than sequentially.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entity, query::{filter, result, views}, registry, World};
+    /// use rayon::iter::ParallelIterator;
+    ///
+    /// struct Foo(u32);
+    /// struct Bar(bool);
+    /// struct Baz(u32);
+    ///
+    /// type Registry = registry!(Foo, Bar, Baz);
+    ///
+    /// let mut world = World::<Registry>::new();
+    /// let inserted_entity_identifier = world.push(entity!(Foo(42), Bar(true), Baz(100)));
+    ///
+    /// // Note that the views provide implicit filters.
+    /// world.par_query::<views!(&mut Foo, &Baz, entity::Identifier), filter::Has<Bar>>().for_each(|result!(foo, baz, entity_identifier)| {
+    ///     // Allows immutable or mutable access to queried components.
+    ///     foo.0 = baz.0;
+    ///     // Also allows access to entity identifiers.
+    ///     assert_eq!(entity_identifier, inserted_entity_identifier);
+    /// });
+    /// ```
+    ///
+    /// For more information about `ParViews` and `Filter`, see the [`query`] module documentaion.
+    ///
+    /// [`Filter`]: crate::query::filter::Filter
+    /// [`ParallelIterator`]: rayon::iter::ParallelIterator
+    /// [`ParViews`]: crate::query::view::ParViews
+    /// [`query`]: crate::query
+    /// [`query()`]: World::query()
     #[cfg(feature = "parallel")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
     pub fn par_query<'a, V, F>(&'a mut self) -> result::ParIter<'a, R, F, V>
