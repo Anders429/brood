@@ -183,7 +183,8 @@ where
     }
 
     /// Query for components contained within the `World` using the given [`Views`] `V` and
-    /// [`Filter`] `F`, returning an iterator over all components of entities matching the query.
+    /// [`Filter`] `F`, returning an [`Iterator`] over all components of entities matching the 
+    /// query.
     ///
     /// Note that the order of the entities returned by a query is not specified.
     ///
@@ -212,6 +213,7 @@ where
     /// For more information about `Views` and `Filter`, see the [`query`] module documentaion.
     ///
     /// [`Filter`]: crate::query::filter::Filter
+    /// [`Iterator`]: core::iter::Iterator
     /// [`query`]: crate::query
     /// [`Views`]: crate::query::view::Views
     pub fn query<'a, V, F>(&'a mut self) -> result::Iter<'a, R, F, V>
