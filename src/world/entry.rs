@@ -43,6 +43,26 @@ where
         Self { world, location }
     }
 
+    /// Add a component to the entity.
+    ///
+    /// If the component already exists, it is updated to the new value.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entity, registry, World};
+    ///
+    /// struct Foo(u32);
+    /// struct Bar(bool);
+    /// struct Baz(f64);
+    ///
+    /// type Registry = registry!(Foo, Bar, Baz);
+    ///
+    /// let mut world = World::<Registry>::new();
+    /// let entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+    /// let mut entry = world.entry(entity_identifier).unwrap();
+    ///
+    /// entry.add(Baz(1.5));
+    /// ```
     pub fn add<C>(&mut self, component: C)
     where
         C: Component,
