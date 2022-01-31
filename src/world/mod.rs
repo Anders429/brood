@@ -231,6 +231,30 @@ where
         schedule.run(self);
     }
 
+    /// Gets an [`Entry`] for the entity associated with an [`entity::Identifier`] for
+    /// component-level manipulation.
+    ///
+    /// If no such entity exists, [`None`] is returned.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entity, registry, World};
+    ///
+    /// struct Foo(u32);
+    /// struct Bar(bool);
+    ///
+    /// type Registry = registry!(Foo, Bar);
+    ///
+    /// let mut world = World::<Registry>::new();
+    /// let entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+    ///
+    /// let mut entry = world.entry(entity_identifier).unwrap();
+    /// // Remove the `Bar` component.
+    /// entry.remove::<Bar>();
+    /// ```
+    ///
+    /// [`Entry`]: crate::world::Entry
+    /// [`None`]: Option::None
     pub fn entry(&mut self, entity_identifier: entity::Identifier) -> Option<Entry<R>> {
         self.entity_allocator
             .get(entity_identifier)
