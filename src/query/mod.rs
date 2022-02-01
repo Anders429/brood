@@ -5,6 +5,6 @@ pub mod view;
 pub(crate) mod claim;
 
 #[doc(inline)]
-pub use crate::views;
+pub use view::views;
 #[doc(inline)]
 pub use result::result;
