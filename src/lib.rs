@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(doc_cfg, feature(doc_cfg))]
+#![cfg_attr(doc_cfg, feature(doc_cfg, decl_macro))]
 
 extern crate alloc;
 
@@ -16,6 +16,7 @@ pub mod reexports;
 
 mod archetype;
 mod archetypes;
+mod doc;
 mod hlist;
 
 #[doc(inline)]
