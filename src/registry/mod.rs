@@ -1,3 +1,29 @@
+//! A heterogeneous list of [`Component`]s.
+//!
+//! [`Registry`]s are most often defined using the [`registry!`] macro. The items contained wihtin
+//! this module should rarely be needed in user code.
+//!
+//! Recommended practice is to define a `Registry` as a custom type, and use that type when
+//! defining a [`World`].
+//!
+//! # Example
+//! ``` rust
+//! use brood::{registry, World};
+//!
+//! // Define components.
+//! struct Foo(usize);
+//! struct Bar(bool);
+//!
+//! type Registry = registry!(Foo, Bar);
+//!
+//! let world = World::<Registry>::new();
+//! ```
+//!
+//! [`Component`]: crate::component::Component
+//! [`Registry`]: crate::registry::Registry
+//! [`registry!`]: crate::registry!
+//! [`World`]: crate::world::World
+
 mod debug;
 mod eq;
 mod seal;
