@@ -18,6 +18,30 @@ use seal::Seal;
 
 define_null!();
 
+/// A heterogeneous list of [`Component`]s.
+///
+/// Registries are used when defining [`World`]s. In order for components to be stored within a
+/// `World`, they must be included in the `World`'s registry. However, care should be made to only
+/// include `Component`s that will be used, as unused `Component`s will cause unnecessary heap
+/// allocations.
+///
+/// While duplicate `Component`s can be included within a registry, it is not advised. There are no
+/// benefits to including multiple `Component`s, and the unused components cause higher memory
+/// allocation within a `World`.
+///
+/// # Example
+/// ``` rust
+/// use brood::registry;
+///
+/// // Define components.
+/// struct Foo(usize);
+/// struct Bar(bool);
+///
+/// type Registry = registry!(Foo, Bar);
+/// ```
+///
+/// [`Component`]: crate::component::Component
+/// [`World`]: crate::World
 pub trait Registry: Seal {}
 
 impl Registry for Null {}
