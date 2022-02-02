@@ -17,7 +17,6 @@ macro_rules! non_root_macro {
         }
     ) => (
         $(#[$m])*
-        #[doc(hidden)]
         #[cfg(not(doc_cfg))]
         #[macro_export]
         macro_rules! $name {
