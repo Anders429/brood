@@ -8,6 +8,13 @@ use crate::{
 };
 use core::hint::unreachable_unchecked;
 
+/// A null system.
+///
+/// As this is an empty `enum`, it can never be instantiated. Its main use is as a generic argument
+/// for [`Schedule`]s for the unused generic parameters of [`Stage`]s.
+///
+/// [`Schedule`]: crate::system::Schedule
+/// [`Stage`]: crate::system::schedule::stage::Stage
 pub enum Null {}
 
 impl<'a> System<'a> for Null {
