@@ -59,7 +59,6 @@ doc::non_root_macro! {
     /// [`System`]: crate::system::System
     /// [`View`]: crate::query::view::View
     /// [`World`]: crate::world::World
-    #[macro_export]
     macro_rules! views {
         ($view:ty $(,$views:ty)* $(,)?) => (
             ($view, $crate::views!($($views,)*))

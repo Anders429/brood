@@ -8,6 +8,7 @@ mod sendable;
 mod builder;
 
 pub use builder::Builder;
+pub use stage::stages;
 
 use crate::{registry::Registry, world::World};
 use sendable::SendableWorld;
