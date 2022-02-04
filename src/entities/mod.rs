@@ -1,3 +1,39 @@
+//! A heterogeneous list of batches of [`Component`]s stored within a [`World`].
+//!
+//! A [`Batch`] of [`Entities`] is a container of entities all made of the same combination of
+//! `Component`s. Inserting a `Batch` of `Entities` is much more efficient than storing them one at
+//! a time.
+//!
+//! `Batch`es of entities are most often defined using the [`entities!`] macro. The items
+//! contained within this module should rarely be needed in user code.
+//!
+//! `Entity`s are stored within [`World`]s to allow efficient querying and iteration with other
+//! entities of similar components. Since entities are defined as heterogeneous lists, they can be
+//! made of an arbitrary number of components. `World`s can store entities made up of any
+//! combination of components, so long as those components are stored in the `World`'s
+//! [`Registry`].
+//!
+//! # Example
+//! ``` rust
+//! use brood::{entities, registry, World};
+//!
+//! // Define components.
+//! struct Foo(usize);
+//! struct Bar(bool);
+//!
+//! type Registry = registry!(Foo, Bar);
+//!
+//! let mut world = World::<Registry>::new();
+//!
+//! world.extend(entities!((Foo(42), Bar(false)), (Foo(100), Bar(true))));
+//! ```
+//!
+//! [`Batch`]: crate::entities::Batch
+//! [`Component`]: crate::component::Component
+//! [`Entities`]: crate::entities::Entities
+//! [`entities!`]: crate::entities!
+//! [`World`]: crate::world::World
+
 mod seal;
 
 use crate::{component::Component, hlist::define_null};
