@@ -1,3 +1,49 @@
+//! Views over entities.
+//!
+//! Along with [`Filter`]s, [`Views`] are what make up a query over entities stored wihin a
+//! [`World`]. `Views` are how queries specify what [`Component`]s should be borrowed within query
+//! results.
+//!
+//! There are five types of [`View`]s that can be used when defining a query:
+//! - **`&C`** - Borrows the `Component` `C` immutably, filtering out any entities that do not
+//! contain `C`.
+//! - **`&mut C`** - Borrows the `Component` `C` mutably, filtering out any entities that do not
+//! contain `C`.
+//! - **`Option<&C>`** - Borrows the `Component` `C` immutably if present in the entity. Returns
+//! [`None`] otherwise.
+//! - **`Option<&mut C>`** - Borrows the `Component` `C` mutably if present in the entity. Returns
+//! [`None`] otherwise.
+//! - **[`entity::Identifier`]** - Returns the `entity::Identifier` of each entity in the query
+//! results.
+//!
+//! `Views` is a heterogeneous list of individual `View`s. Therefore, it is easiest to define them
+//! using the [`views!`] macro.
+//!
+//! # Example
+//! ``` rust
+//! use brood::{entity, query::views};
+//!
+//! // Define components.
+//! struct Foo(u32);
+//! struct Bar(bool);
+//! struct Baz(f64);
+//!
+//! type Views<'a> = views!(&'a mut Foo, &'a Bar, Option<&'a Baz>, entity::Identifier);
+//! ```
+//!
+//! Note that the lifetime `'a` can often be omitted when [`query`]ing a [`World`], but is required
+//! when defining a [`System`].
+//!
+//! [`Component`]: crate::component::Component
+//! [`entity::Identifier`]: crate::entity::Identifier
+//! [`Filter`]: crate::query::filter::Filter
+//! [`query`]: crate::world::World::query()
+//! [`System`]: crate::system::System
+//! [`View`]: crate::query::view::View
+//! [`Views`]: crate::query::view::Views
+//! [`views!`]: crate::query::views!
+//! [`World`]: crate::world::World.
+
 #[cfg(feature = "parallel")]
 mod par;
 mod seal;
