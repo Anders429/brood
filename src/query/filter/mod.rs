@@ -86,6 +86,28 @@ where
 
 impl<F> Filter for Not<F> where F: Filter {}
 
+/// Filter entities which are filtered by two [`Filter`]s.
+///
+/// This filter is a logical `and` between two `Filter`s `F1` and `F2`. Any entity filtered out by
+/// either `Filter` will be filtered out by the `And` filter.
+///
+/// # Example
+/// ``` rust
+/// use brood::query::filter;
+///
+/// // Define components.
+/// struct Foo(usize);
+/// struct Bar(bool);
+///
+/// // Define filters based on the above components.
+/// type HasFoo = filter::Has<Foo>;
+/// type HasBar = filter::Has<Bar>;
+///
+/// // Define a filter using a combination of the above filters.
+/// type HasFooAndBar = filter::And<HasFoo, HasBar>;
+/// ```
+///
+/// [`Filter`]: crate::query::filter::Filter
 pub struct And<F1, F2>
 where
     F1: Filter,
