@@ -124,6 +124,28 @@ where
 {
 }
 
+/// Filter entities which are filtered by one of two [`Filter`]s.
+///
+/// This filter is a logical `or` between two `Filter`s `F1` and `F2`. Any entity filtered out by
+/// both `Filter`s will be filtered out by the `Or` filter.
+///
+/// # Example
+/// ``` rust
+/// use brood::query::filter;
+///
+/// // Define components.
+/// struct Foo(usize);
+/// struct Bar(bool);
+///
+/// // Define filters based on the above components.
+/// type HasFoo = filter::Has<Foo>;
+/// type HasBar = filter::Has<Bar>;
+///
+/// // Define a filter using a combination of the above filters.
+/// type HasFooOrBar = filter::Or<HasFoo, HasBar>;
+/// ```
+///
+/// [`Filter`]: crate::query::filter::Filter
 pub struct Or<F1, F2>
 where
     F1: Filter,
