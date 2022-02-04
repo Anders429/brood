@@ -1,3 +1,42 @@
+//! A heterogeneous list of [`Component`]s.
+//!
+//! [`Entity`]s are most often defined using the [`entity!`] macro. The items contained within this
+//! module should rarely be needed in user code, apart from [`Identifier`].
+//!
+//! `Entity`s are stored within [`World`]s to allow efficient querying and iteration with other
+//! entities of similar components. Since entities are defined as heterogeneous lists, they can be
+//! made of an arbitrary number of components. `World`s can store entities made up of any
+//! combination of components, so long as those components are stored in the `World`'s
+//! [`Registry`].
+//!
+//! # Example
+//! ``` rust
+//! use brood::{entity, registry, World};
+//!
+//! // Define components.
+//! struct Foo(usize);
+//! struct Bar(bool);
+//!
+//! type Registry = registry!(Foo, Bar);
+//!
+//! let mut world = World::<Registry>::new();
+//!
+//! // Store an entity containing both `Foo` and `Bar`.
+//! world.push(entity!(Foo(42), Bar(false)));
+//! 
+//! // Store an entity containing only `Bar`.
+//! world.push(entity!(Bar(true)));
+//!
+//! // Store an entity containing zero components.
+//! world.push(entity!());
+//! ```
+//!
+//! [`Entity`]: crate::entity::Entity
+//! [`entity!`]: crate::entity!
+//! [`Identifier`]: crate::entity::Identifier
+//! [`Registry`]: crate::registry::Registry
+//! [`World`]: crate::world::World
+
 pub(crate) mod allocator;
 
 mod identifier;

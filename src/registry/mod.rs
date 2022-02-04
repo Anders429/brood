@@ -1,6 +1,6 @@
 //! A heterogeneous list of [`Component`]s.
 //!
-//! [`Registry`]s are most often defined using the [`registry!`] macro. The items contained wihtin
+//! [`Registry`]s are most often defined using the [`registry!`] macro. The items contained within
 //! this module should rarely be needed in user code.
 //!
 //! Recommended practice is to define a `Registry` as a custom type, and use that type when
