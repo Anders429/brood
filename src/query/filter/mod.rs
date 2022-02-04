@@ -12,6 +12,21 @@ use crate::{
 };
 use core::marker::PhantomData;
 
+/// A filter for entities.
+///
+/// `Filter`s are used to filter results when querying entities. Along with [`Views`], they are
+/// what make up a query over a [`World`]. They provide the ability to query based on a 
+/// [`Component`] without actually having to borrow the `Component`'s value.
+///
+/// Note that some `Views` provide implicit `Filter`s. Specifically, non-optional views over a
+/// `Component` `C` (`&C` and `&mut C`) both implicitly [`And`] a [`Has<C>`] `Filter` with other
+/// `Filter`s.
+///
+/// [`And`]: crate::query::filter::And
+/// [`Component`]: crate::component::Component
+/// [`Has<C>`]: crate::query::filter::Has
+/// [`Views`]: crate::query::view::Views
+/// [`World`]: crate::world::World
 pub trait Filter: Seal {}
 
 /// An empty filter.
