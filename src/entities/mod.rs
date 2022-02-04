@@ -32,6 +32,7 @@
 //! [`Component`]: crate::component::Component
 //! [`Entities`]: crate::entities::Entities
 //! [`entities!`]: crate::entities!
+//! [`Registry`]: crate::registry::Registry
 //! [`World`]: crate::world::World
 
 mod seal;
@@ -42,6 +43,34 @@ use seal::Seal;
 
 define_null!();
 
+/// A heterogeneous list of columns of [`Component`]s.
+///
+/// In order for `Entities` to be able to be used, it must be contained within a [`Batch`]. This
+/// guarnatees that the length of all columns within the heterogeneous list are equal.
+///
+/// Entities are stored within [`World`]s. In order for an entity to be able to be stored within a
+/// `World`, that `World`'s [`Registry`] must include the `Component`s that make up an entity.
+///
+/// Note that entities must consist of unique component types. Duplicate components are not
+/// supported. When multiple components of the same type are included in an entity, a `World` will
+/// only store one of those components. 
+///
+/// # Example
+/// ``` rust
+/// use brood::entities;
+///
+/// // Define components.
+/// struct Foo(usize);
+/// struct Bar(bool);
+///
+/// // Creates `Entities` wrapped in a `Batch` struct.
+/// let entities = entities!((Foo(42), Bar(true)), (Foo(100), Bar(false)));
+/// ```
+///
+/// [`Batch`]: crate::entities::Batch
+/// [`Component`]: crate::component::Component
+/// [`Registry`]: crate::registry::Registry
+/// [`World`]: crate::world::World
 pub trait Entities: Seal {}
 
 impl Entities for Null {}
