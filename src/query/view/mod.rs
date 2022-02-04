@@ -112,6 +112,35 @@ impl<'a> View<'a> for entity::Identifier {}
 
 define_null!();
 
+/// A heterogeneous list of [`View`]s.
+///
+/// Along with [`Filter`]s, `Views` are what make up a query over entities stored wihin a
+/// [`World`]. `Views` are how queries specify what [`Component`]s should be borrowed within query
+/// results.
+///
+/// Note that while multiple immutable borrows of `Component`s are allowed within a `Views`, if a
+/// component is borrowed mutably in a `Views` it cannot be borrowed again within the same `Views`.
+/// In other words, borrows in `Views` must follow Rust's
+/// [borrowing rules](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html).
+///
+/// As `Views` is a heterogeneous list, it is most easily constructed using the [`views!`] macro.
+///
+/// # Example
+/// ``` rust
+/// use brood::query::views;
+///
+/// // Define components.
+/// struct Foo(u32);
+/// struct Bar(bool);
+///
+/// type Views<'a> = views!(&'a mut Foo, &'a Bar);
+/// ```
+///
+/// [`Component`]: crate::component::Component
+/// [`Filter`]: crate::query::filter::Filter
+/// [`View`]: crate::query::view::View
+/// [`views!`]: crate::query::views!
+/// [`World`]: crate::world::World
 pub trait Views<'a>: Filter + ViewsSeal<'a> {}
 
 impl<'a> Views<'a> for Null {}
