@@ -53,6 +53,28 @@ where
 {
 }
 
+/// A batch of entity columns of unified length.
+///
+/// This is a wrapper for an [`Entities`] heterogeneous list of columns of components, with the
+/// guarantee that all columns are of the same length. In other words, this is a collection of
+/// entities separated column-wise into their components.
+///
+/// A `Batch` is most often created using the [`entities!`] macro.
+///
+/// # Example
+/// ``` rust
+/// use brood::entities;
+///
+/// // Define components.
+/// struct Foo(usize);
+/// struct Bar(bool);
+///
+/// // This defines a `Batch` of entities, with guaranteed equal column length.
+/// let entities = entities!((Foo(42), Bar(false)), (Foo(100), Bar(true)));
+/// ```
+///
+/// [`Entities`]: crate::entities::Entities
+/// [`entities!`]: crate::entities!
 pub struct Batch<E>
 where
     E: Entities,
@@ -64,11 +86,54 @@ impl<E> Batch<E>
 where
     E: Entities,
 {
+    /// Creates a new `Batch`, wrapping the given [`Entities`] heterogeneous list.
+    ///
+    /// This method performs a run-time check to ensure the columns are all the same length.
+    ///
+    /// Note that this method can only be called using a raw heterogeneous list of entity columns.
+    /// There is currently no macro that can make the call simpler. It is recommended to use the
+    /// [`entities!`] macro instead of this method. 
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entities, entities::Batch};
+    ///
+    /// // Define components.
+    /// struct Foo(usize);
+    /// struct Bar(bool);
+    ///
+    /// let batch = Batch::new((vec![42; 10], (vec![true; 10] ,entities::Null)));
+    /// ```
+    ///
+    /// [`Entities`]: crate::entities::Entities
+    /// [`entities!]: crate::entities!
     pub fn new(entities: E) -> Self {
         assert!(entities.check_len());
         unsafe { Self::new_unchecked(entities) }
     }
 
+    /// Creates a new `Batch`, wrapping the given [`Entities`] heterogeneous list, skipping any
+    /// run-time checks for column length.
+    /// 
+    /// Note that this method can only be called using a raw heterogeneous list of entity columns.
+    /// There is currently no macro that can make the call simpler. It is recommended to use the
+    /// [`entities!`] macro instead of this method.
+    ///
+    /// # Safety
+    /// The caller must guarantee that the lengths of all columns within `entities` are equal.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entities, entities::Batch};
+    ///
+    /// // Define components.
+    /// struct Foo(usize);
+    /// struct Bar(bool);
+    ///
+    /// let batch = unsafe { Batch::new_unchecked((vec![42; 10], (vec![true; 10] ,entities::Null))) };
+    /// ```
+    /// [`Entities`]: crate::entities::Entities
+    /// [`entities!]: crate::entities!
     pub unsafe fn new_unchecked(entities: E) -> Self {
         Self { entities }
     }
