@@ -54,6 +54,50 @@ pub use par::{ParView, ParViews};
 use crate::{component::Component, doc, entity, hlist::define_null, query::filter::Filter};
 use seal::{ViewSeal, ViewsSeal};
 
+/// A view over a single aspect of an entity.
+///
+/// Here, the world "aspect" means either a [`Component`] or the entity's [`Identifier`].
+/// Specifically, `View` is implemented for each of the following five types, providing the
+/// specified view into the entity:
+/// - **`&C`** - Borrows the `Component` `C` immutably, filtering out any entities that do not
+/// contain `C`.
+/// - **`&mut C`** - Borrows the `Component` `C` mutably, filtering out any entities that do not
+/// contain `C`.
+/// - **`Option<&C>`** - Borrows the `Component` `C` immutably if present in the entity. Returns
+/// [`None`] otherwise.
+/// - **`Option<&mut C>`** - Borrows the `Component` `C` mutably if present in the entity. Returns
+/// [`None`] otherwise.
+/// - **[`entity::Identifier`]** - Returns the `entity::Identifier` of each entity in the query
+/// results.
+///
+/// # Example
+/// ``` rust
+/// // Define a component.
+/// struct Foo(usize);
+///
+/// // Define a view over that component.
+/// type FooView<'a> = &'a Foo;
+/// ```
+///
+/// Note that a single `View` by itself isn't very useful. To be usable in querying a [`World`],
+/// a [`Views`] heterogeneous list must be used. It is recommended to use the [`views!`] macro to
+/// construct this heterogeneous list.
+///
+/// ``` rust
+/// use brood::query::views;
+///
+/// // Define components.
+/// struct Foo(u32);
+/// struct Bar(bool);
+///
+/// type Views<'a> = views!(&'a mut Foo, &'a Bar);
+/// ```
+///
+/// [`Component`]: crate::component::Component
+/// [`Identifier`]: crate::entity::Identifier
+/// [`Views`]: crate::query::view::Views
+/// [`views!`]: crate::query::views!
+/// [`World`]: crate::world::World
 pub trait View<'a>: Filter + ViewSeal<'a> {}
 
 impl<'a, C> View<'a> for &C where C: Component {}
