@@ -12,6 +12,29 @@ use seal::Seal;
 
 define_null!();
 
+/// A heterogeneous list of [`Component`]s.
+///
+/// Entities are stored within [`World`]s. In order for an entity to be able to be stored within a
+/// `World`, that `World`'s [`Registry`] must include the `Component`s that make up an entity.
+///
+/// Note that entities must consist of unique component types. Duplicate components are not
+/// supported. When multiple components of the same type are included in an entity, a `World` will
+/// only store one of those components. 
+///
+/// # Example
+/// ``` rust
+/// use brood::entity;
+///
+/// // Define components.
+/// struct Foo(usize);
+/// struct Bar(bool);
+///
+/// let entity = entity!(Foo(42), Bar(true));
+/// ```
+///
+/// [`Component`]: crate::component::Component
+/// [`Registry`]: crate::registry::Registry
+/// [`World`]: crate::world::World
 pub trait Entity: Seal {}
 
 impl Entity for Null {}
