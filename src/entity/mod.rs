@@ -1,4 +1,4 @@
-//! A heterogeneous list of [`Component`]s.
+//! A heterogeneous list of [`Component`]s stored within a [`World`].
 //!
 //! [`Entity`]s are most often defined using the [`entity!`] macro. The items contained within this
 //! module should rarely be needed in user code, apart from [`Identifier`].

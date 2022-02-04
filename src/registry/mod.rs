@@ -1,4 +1,4 @@
-//! A heterogeneous list of [`Component`]s.
+//! A heterogeneous list of registered [`Component`]s.
 //!
 //! [`Registry`]s are most often defined using the [`registry!`] macro. The items contained within
 //! this module should rarely be needed in user code.
