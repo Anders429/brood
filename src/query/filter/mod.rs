@@ -20,7 +20,7 @@ impl Filter for None {}
 
 /// Filter based on whether a [`Component`] is present in an entity.
 ///
-/// This filters out any entities which do not have the component `C`. No borrow of the value `C`
+/// This filters out any entities which do not have the `Component` `C`. No borrow of the value `C`
 /// from the entity is required.
 ///
 /// # Example'
@@ -44,6 +44,25 @@ where
 
 impl<C> Filter for Has<C> where C: Component {}
 
+/// Filter using the logical inverse of another [`Filter`].
+///
+/// This filters out any entities which would not have been filtered by the `Filter` `F`.
+///
+/// # Example
+/// ``` rust
+/// use brood::query::filter;
+///
+/// // Define a component.
+/// struct Foo(usize);
+///
+/// // Define a filter for the component above.
+/// type HasFoo = filter::Has<Foo>;
+///
+/// // Define a component that is the inverse of the filter above.
+/// type DoesNotHaveFoo = filter::Not<HasFoo>;
+/// ```
+///
+/// [`Filter`]: crate::query::filter::Filter
 pub struct Not<F>
 where
     F: Filter,
