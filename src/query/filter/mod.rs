@@ -18,6 +18,23 @@ pub struct None;
 
 impl Filter for None {}
 
+/// Filter based on whether a [`Component`] is present in an entity.
+///
+/// This filters out any entities which do not have the component `C`. No borrow of the value `C`
+/// from the entity is required.
+///
+/// # Example'
+/// ``` rust
+/// use brood::query::filter;
+///
+/// // Define a component.
+/// struct Foo(usize);
+///
+/// // Define a filter for the component above.
+/// type HasFoo = filter::Has<Foo>;
+/// ```
+///
+/// [`Component`]: crate::component::Component
 pub struct Has<C>
 where
     C: Component,
