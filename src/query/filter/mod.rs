@@ -14,6 +14,20 @@ use core::marker::PhantomData;
 
 pub trait Filter: Seal {}
 
+/// An empty filter.
+///
+/// This filter is used when a filter is required but nothing is needed to be filtered. For
+/// example, some queries don't need any additional filtering beyond the filtering already provided
+/// by their [`Views`]. This filter can be provided in those cases.
+///
+/// # Example
+/// ``` rust
+/// use brood::query::filter;
+///
+/// type NoFilter = filter::None;
+/// ```
+///
+/// [`Views`]: crate::query::view::Views
 pub struct None;
 
 impl Filter for None {}
