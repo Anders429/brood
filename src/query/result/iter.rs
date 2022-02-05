@@ -12,7 +12,9 @@ use hashbrown::HashMap;
 /// An [`Iterator`] over the results of a query.
 ///
 /// Yields results based on the specified [`Views`] `V` and [`Filter`] `F`, returning the
-/// [`Component`]s viewed. The entities iterated are not in any specified order.
+/// [`Component`]s viewed. The entities iterated are not in any specified order. The yielded views
+/// will be heterogeneous lists, so the [`result!`] macro is recommended to create identifiers for
+/// them.
 ///
 /// This `struct` is created by the [`query`] method on [`World`].
 ///
@@ -38,6 +40,7 @@ use hashbrown::HashMap;
 /// [`Component`]: crate::component::Component
 /// [`Filter`]: crate::query::filter::Filter
 /// [`query`]: crate::world::World::query()
+/// [`result!`]: crate::query::result!
 /// [`Views`]: crate::query::view::Views
 /// [`World`]: crate::world::World
 pub struct Iter<'a, R, F, V>
