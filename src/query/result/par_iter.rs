@@ -14,6 +14,41 @@ use rayon::iter::{
     ParallelIterator,
 };
 
+/// A [`ParallelIterator`] over the results of a query.
+///
+/// Yields results based on the specified [`ParViews`] `V` and [`Filter`] `F`, return the
+/// [`Component`]s viewed. The yielded views will be heterogeneous lists, so the [`result!`] macro
+/// is recommended to create identifiers for them.
+///
+/// This `struct` is created by the [`par_query`] method on [`World`].
+///
+/// # Example
+/// ``` rust
+/// use brood::{entity, query::{filter, result, views}, registry, World};
+/// use rayon::iter::ParallelIterator;
+///
+/// struct Foo(u32);
+/// struct Bar(bool);
+///
+/// type Registry = registry!(Foo, Bar);
+///
+/// let mut world = World::<Registry>::new();
+/// world.push(entity!(Foo(42), Bar(true)));
+///
+/// world.par_query::<views!(&mut Foo, &Bar), filter::None>().for_each(|result!(foo, bar)| {
+///     if bar.0 {
+///         foo.0 += 1;
+///     }
+/// });
+/// ```
+///
+/// [`Component`]: crate::component::Component
+/// [`Filter`]: crate::query::filter::Filter
+/// [`ParallelIterator`]: rayon::iter::ParallelIterator
+/// [`par_query`]: crate::world::World::par_query()
+/// [`ParViews`]: crate::query::view::ParViews
+/// [`result!`]: crate::query::result!
+/// [`World`]: crate::world::World
 #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
 pub struct ParIter<'a, R, F, V>
 where
