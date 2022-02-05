@@ -9,6 +9,37 @@ use crate::{
 use core::{any::TypeId, iter::FusedIterator, marker::PhantomData};
 use hashbrown::HashMap;
 
+/// An [`Iterator`] over the results of a query.
+///
+/// Yields results based on the specified [`Views`] `V` and [`Filter`] `F`, returning the
+/// [`Component`]s viewed. The entities iterated are not in any specified order.
+///
+/// This `struct` is created by the [`query`] method on [`World`].
+///
+/// # Example
+/// ``` rust
+/// use brood::{entity, query::{filter, result, views}, registry, World};
+///
+/// struct Foo(u32);
+/// struct Bar(bool);
+///
+/// type Registry = registry!(Foo, Bar);
+///
+/// let mut world = World::<Registry>::new();
+/// world.push(entity!(Foo(42), Bar(true)));
+///
+/// for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None>() {
+///     if bar.0 {
+///         foo.0 += 1;
+///     }
+/// }
+/// ```
+///
+/// [`Component`]: crate::component::Component
+/// [`Filter`]: crate::query::filter::Filter
+/// [`query`]: crate::world::World::query()
+/// [`Views`]: crate::query::view::Views
+/// [`World`]: crate::world::World
 pub struct Iter<'a, R, F, V>
 where
     R: Registry,
