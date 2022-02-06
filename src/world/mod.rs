@@ -1,7 +1,7 @@
 //! A container of entities.
 //!
 //! Entities are primarily stored and interacted with through a [`World`] container. A `World`
-//! stores entities made with a combination of components contained in the `World`'s component 
+//! stores entities made with a combination of components contained in the `World`'s component
 //! `Registry`.
 
 mod entry;
@@ -189,7 +189,7 @@ where
     }
 
     /// Query for components contained within the `World` using the given [`Views`] `V` and
-    /// [`Filter`] `F`, returning an [`Iterator`] over all components of entities matching the 
+    /// [`Filter`] `F`, returning an [`Iterator`] over all components of entities matching the
     /// query.
     ///
     /// Note that the order of the entities returned by a query is not specified.

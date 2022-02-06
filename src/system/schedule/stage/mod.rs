@@ -12,7 +12,11 @@
 
 mod seal;
 
-use crate::{doc, hlist::define_null, system::{schedule::task::Task, ParSystem, System}};
+use crate::{
+    doc,
+    hlist::define_null,
+    system::{schedule::task::Task, ParSystem, System},
+};
 use seal::Seal;
 
 /// A single step in a stage.
@@ -81,7 +85,7 @@ doc::non_root_macro! {
     ///         // Operate on result here.
     ///     }
     /// }
-    /// 
+    ///
     /// // Define a Parallel System.
     /// struct Bar;
     /// impl<'a> ParSystem<'a> for Bar {
@@ -103,7 +107,7 @@ doc::non_root_macro! {
     /// };
     /// ```
     ///
-    /// The above example will create stages operating the system `Foo`, followed by performing 
+    /// The above example will create stages operating the system `Foo`, followed by performing
     /// post-processing, and then run the parallel system `Bar`.
     ///
     /// [`ParSystem`]: crate::system::ParSystem

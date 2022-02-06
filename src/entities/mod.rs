@@ -53,7 +53,7 @@ define_null!();
 ///
 /// Note that entities must consist of unique component types. Duplicate components are not
 /// supported. When multiple components of the same type are included in an entity, a `World` will
-/// only store one of those components. 
+/// only store one of those components.
 ///
 /// # Example
 /// ``` rust
@@ -121,7 +121,7 @@ where
     ///
     /// Note that this method can only be called using a raw heterogeneous list of entity columns.
     /// There is currently no macro that can make the call simpler. It is recommended to use the
-    /// [`entities!`] macro instead of this method. 
+    /// [`entities!`] macro instead of this method.
     ///
     /// # Example
     /// ``` rust
@@ -143,7 +143,7 @@ where
 
     /// Creates a new `Batch`, wrapping the given [`Entities`] heterogeneous list, skipping any
     /// run-time checks for column length.
-    /// 
+    ///
     /// Note that this method can only be called using a raw heterogeneous list of entity columns.
     /// There is currently no macro that can make the call simpler. It is recommended to use the
     /// [`entities!`] macro instead of this method.

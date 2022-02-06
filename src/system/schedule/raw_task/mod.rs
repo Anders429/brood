@@ -8,7 +8,10 @@
 
 mod seal;
 
-use crate::{hlist::define_null, system::{schedule::task::Task, ParSystem, System}};
+use crate::{
+    hlist::define_null,
+    system::{schedule::task::Task, ParSystem, System},
+};
 use seal::Seal;
 
 /// A single task waiting to be scheduled.

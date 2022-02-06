@@ -23,7 +23,7 @@
 //!
 //! // Store an entity containing both `Foo` and `Bar`.
 //! world.push(entity!(Foo(42), Bar(false)));
-//! 
+//!
 //! // Store an entity containing only `Bar`.
 //! world.push(entity!(Bar(true)));
 //!
@@ -58,7 +58,7 @@ define_null!();
 ///
 /// Note that entities must consist of unique component types. Duplicate components are not
 /// supported. When multiple components of the same type are included in an entity, a `World` will
-/// only store one of those components. 
+/// only store one of those components.
 ///
 /// # Example
 /// ``` rust

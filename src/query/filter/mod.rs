@@ -1,7 +1,7 @@
 //! Filters for entities.
 //!
 //! `Filter`s are used to filter results when querying entities. Along with [`Views`], they are
-//! what make up a query over a [`World`]. They provide the ability to query based on a 
+//! what make up a query over a [`World`]. They provide the ability to query based on a
 //! [`Component`] without actually having to borrow the `Component`'s value.
 //!
 //! Note that some `Views` provide implicit `Filter`s. Specifically, non-optional views over a
@@ -31,7 +31,7 @@ use core::marker::PhantomData;
 /// A filter for entities.
 ///
 /// `Filter`s are used to filter results when querying entities. Along with [`Views`], they are
-/// what make up a query over a [`World`]. They provide the ability to query based on a 
+/// what make up a query over a [`World`]. They provide the ability to query based on a
 /// [`Component`] without actually having to borrow the `Component`'s value.
 ///
 /// Note that some `Views` provide implicit `Filter`s. Specifically, non-optional views over a
