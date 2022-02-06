@@ -99,7 +99,7 @@ jobs:
     - uses: actions-rs/cargo@v1
       with:
         command: hack
-        args: clippy --feature-powerset --optional-deps
+        args: clippy --feature-powerset --optional-deps -- --deny warnings
 
   msrv:
     runs-on: ubuntu-latest
