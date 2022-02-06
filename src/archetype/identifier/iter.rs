@@ -55,10 +55,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        archetype::Identifier,
-        registry,
-    };
+    use crate::{archetype::Identifier, registry};
     use alloc::{vec, vec::Vec};
 
     macro_rules! create_components {

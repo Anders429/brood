@@ -27,7 +27,8 @@ where
             }
             Task::Par(system) => {
                 // Query world using system.
-                let result = unsafe { (&mut *world.0).par_query_unchecked::<P::Views, P::Filter>() };
+                let result =
+                    unsafe { (&mut *world.0).par_query_unchecked::<P::Views, P::Filter>() };
                 // Run system using the query result.
                 system.run(result);
             }
