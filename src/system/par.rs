@@ -47,6 +47,40 @@ pub trait ParSystem<'a> {
     type Filter: Filter;
     type Views: ParViews<'a>;
 
+    /// Logic to be run over the parallel query result.
+    ///
+    /// Any action performed using the query result should be performed here. If any modifications
+    /// to the [`World`] itself are desired based on the query result, those should be performed in
+    /// the [`world_post_processing`] method.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{query::{filter, result, views}, registry::Registry, system::ParSystem};
+    /// use rayon::iter::ParallelIterator;
+    ///
+    /// // Define components.
+    /// struct Foo(usize);
+    /// struct Bar(bool);
+    ///
+    /// // Define parallel system to operate on those components.
+    /// struct MySystem;
+    ///
+    /// impl<'a> ParSystem<'a> for MySystem {
+    ///     type Views = views!(&'a mut Foo, &'a Bar);
+    ///     type Filter = filter::None;
+    ///
+    ///     fn run<R>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, Self::Views>) where R: Registry + 'a {
+    ///         query_results.for_each(|result!(foo, bar)| {
+    ///             if bar.0 {
+    ///                 foo.0 += 1;
+    ///             }
+    ///         });
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// [`World`]: crate::world::World
+    /// [`world_post_processing`]: crate::system::System::world_post_processing()
     fn run<R>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, Self::Views>)
     where
         R: Registry + 'a;
