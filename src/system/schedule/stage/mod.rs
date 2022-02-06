@@ -1,14 +1,35 @@
+//! Tasks scheduled in stages.
+//!
+//! [`Stages`] are [`System`]s that are scheduled to run in order, with parallelizable stages
+//! already grouped together. These are created by a [`schedule::Builder`]. User-facing code will
+//! not normally need to create `Stages` outside of the `schedule::Builder`. However, if a defined
+//! type of a `Stages` is needed, a [`stages!`] macro is provided to easily define the type.
+//!
+//! [`schedule::Builder`]: crate::system::schedule::Builder
+//! [`Stages`]: crate::system::schedule::stage::Stages
+//! [`stages!`]: crate::system::schedule::stages!
+//! [`System`]: crate::system::System
+
 mod seal;
 
 use crate::{doc, hlist::define_null, system::{schedule::task::Task, ParSystem, System}};
 use seal::Seal;
 
+/// A single step in a stage.
+///
+/// A step is a single task in a stage, along with information about whether this task is the
+/// beginning of a new stage or if it is a continuation of the current stage.
 pub enum Stage<S, P> {
     Start(Task<S, P>),
     Continue(Task<S, P>),
     Flush,
 }
 
+/// A heterogeneous list of [`Stage`]s.
+///
+/// The ordered `Stage`s provided here define the actual stages of the schedule. Note that the
+/// stages are defined inside-out, with the last of the heterogeneous list being the beginning of
+/// the list of stages.
 pub trait Stages<'a>: Seal<'a> {}
 
 define_null!();
