@@ -14,27 +14,27 @@ where
     S: System<'a>,
     P: ParSystem<'a>,
 {
-    pub(crate) fn run<R>(&mut self, world: SendableWorld<'a, R>)
+    pub(crate) fn run<R>(&mut self, world: SendableWorld<R>)
     where
-        R: Registry,
+        R: Registry + 'a,
     {
         match self {
             Task::Seq(system) => {
                 // Query world using system.
-                let result = unsafe { world.0.query_unchecked::<S::Views, S::Filter>() };
+                let result = unsafe { (&mut *world.0).query_unchecked::<S::Views, S::Filter>() };
                 // Run system using the query result.
                 system.run(result);
             }
             Task::Par(system) => {
                 // Query world using system.
-                let result = unsafe { world.0.par_query_unchecked::<P::Views, P::Filter>() };
+                let result = unsafe { (&mut *world.0).par_query_unchecked::<P::Views, P::Filter>() };
                 // Run system using the query result.
                 system.run(result);
             }
         }
     }
 
-    pub(crate) fn flush<R>(&mut self, world: SendableWorld<'a, R>)
+    pub(crate) fn flush<R>(&mut self, world: SendableWorld<R>)
     where
         R: Registry,
     {

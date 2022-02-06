@@ -10,53 +10,53 @@ use crate::{
 };
 
 pub trait Seal<'a>: Send {
-    fn run<R>(&mut self, world: SendableWorld<'a, R>)
+    fn run<R>(&mut self, world: SendableWorld<R>)
     where
         R: Registry + 'a;
 
-    fn defer<R>(&mut self, world: SendableWorld<'a, R>)
+    fn defer<R>(&mut self, world: SendableWorld<R>)
     where
         R: Registry + 'a;
 
-    fn run_current<R>(&mut self, world: SendableWorld<'a, R>)
+    fn run_current<R>(&mut self, world: SendableWorld<R>)
     where
         R: Registry + 'a;
 
-    fn run_continuing<R>(&mut self, world: SendableWorld<'a, R>)
+    fn run_continuing<R>(&mut self, world: SendableWorld<R>)
     where
         R: Registry + 'a;
 
-    fn flush<R>(&mut self, world: SendableWorld<'a, R>)
+    fn flush<R>(&mut self, world: SendableWorld<R>)
     where
         R: Registry + 'a;
 }
 
 impl<'a> Seal<'a> for Null {
-    fn run<R>(&mut self, _world: SendableWorld<'a, R>)
+    fn run<R>(&mut self, _world: SendableWorld<R>)
     where
         R: Registry + 'a,
     {
     }
 
-    fn defer<R>(&mut self, _world: SendableWorld<'a, R>)
+    fn defer<R>(&mut self, _world: SendableWorld<R>)
     where
         R: Registry + 'a,
     {
     }
 
-    fn run_current<R>(&mut self, _world: SendableWorld<'a, R>)
+    fn run_current<R>(&mut self, _world: SendableWorld<R>)
     where
         R: Registry + 'a,
     {
     }
 
-    fn run_continuing<R>(&mut self, _world: SendableWorld<'a, R>)
+    fn run_continuing<R>(&mut self, _world: SendableWorld<R>)
     where
         R: Registry + 'a,
     {
     }
 
-    fn flush<R>(&mut self, _world: SendableWorld<'a, R>)
+    fn flush<R>(&mut self, _world: SendableWorld<R>)
     where
         R: Registry + 'a,
     {
@@ -69,7 +69,7 @@ where
     P: ParSystem<'a> + Send,
     L: Seal<'a>,
 {
-    fn run<R>(&mut self, world: SendableWorld<'a, R>)
+    fn run<R>(&mut self, world: SendableWorld<R>)
     where
         R: Registry + 'a,
     {
@@ -77,7 +77,7 @@ where
         self.run_current(world);
     }
 
-    fn defer<R>(&mut self, world: SendableWorld<'a, R>)
+    fn defer<R>(&mut self, world: SendableWorld<R>)
     where
         R: Registry + 'a,
     {
@@ -91,7 +91,7 @@ where
         }
     }
 
-    fn run_current<R>(&mut self, world: SendableWorld<'a, R>)
+    fn run_current<R>(&mut self, world: SendableWorld<R>)
     where
         R: Registry + 'a,
     {
@@ -115,7 +115,7 @@ where
         }
     }
 
-    fn run_continuing<R>(&mut self, world: SendableWorld<'a, R>)
+    fn run_continuing<R>(&mut self, world: SendableWorld<R>)
     where
         R: Registry + 'a,
     {
@@ -137,7 +137,7 @@ where
         }
     }
 
-    fn flush<R>(&mut self, world: SendableWorld<'a, R>)
+    fn flush<R>(&mut self, world: SendableWorld<R>)
     where
         R: Registry + 'a,
     {
