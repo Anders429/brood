@@ -1,13 +1,7 @@
 use crate::registry::Registry;
 use core::marker::PhantomData;
 
-pub unsafe trait IdentifierIterator<R>: Iterator<Item = bool>
-where
-    R: Registry,
-{
-}
-
-pub(crate) struct IdentifierIter<R>
+pub struct IdentifierIter<R>
 where
     R: Registry,
 {
@@ -59,12 +53,10 @@ where
     }
 }
 
-unsafe impl<R> IdentifierIterator<R> for IdentifierIter<R> where R: Registry {}
-
 #[cfg(test)]
 mod tests {
     use crate::{
-        archetype::{Identifier, IdentifierIterator},
+        archetype::Identifier,
         registry,
     };
     use alloc::{vec, vec::Vec};
@@ -167,14 +159,5 @@ mod tests {
             unsafe { buffer.iter() }.collect::<Vec<bool>>(),
             vec![false, false, false, false, false, false, false, false, false]
         );
-    }
-
-    #[test]
-    fn impl_identifier_iterator() {
-        fn assert_impls_identifier_iterator(_iter: impl IdentifierIterator<Registry>) {}
-
-        let buffer = unsafe { Identifier::<Registry>::new(vec![0, 0, 0, 0]) };
-
-        assert_impls_identifier_iterator(unsafe { buffer.iter() });
     }
 }

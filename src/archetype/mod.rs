@@ -7,7 +7,7 @@ mod impl_send;
 #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
 mod impl_serde;
 
-pub(crate) use identifier::{Identifier, IdentifierIterator, IdentifierRef};
+pub(crate) use identifier::{Identifier, IdentifierIter, IdentifierRef};
 #[cfg(feature = "serde")]
 pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
 

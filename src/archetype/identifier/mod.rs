@@ -3,7 +3,7 @@
 mod impl_serde;
 mod iter;
 
-pub use iter::IdentifierIterator;
+pub(crate) use iter::IdentifierIter;
 
 use crate::registry::Registry;
 use alloc::vec::Vec;
@@ -15,7 +15,6 @@ use core::{
     mem::ManuallyDrop,
     slice,
 };
-use iter::IdentifierIter;
 
 pub(crate) struct Identifier<R>
 where
