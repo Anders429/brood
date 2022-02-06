@@ -352,20 +352,23 @@ where
         C_: Component,
         R_: Registry,
     {
-        if identifier_iter.next().unwrap_unchecked() {
-            if TypeId::of::<C>() != TypeId::of::<C_>() {
-                let component_column = components.get_unchecked_mut(0);
-                let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
-                    component_column.0.cast::<C>(),
-                    length,
-                    component_column.1,
-                ));
-                v.push(buffer.cast::<C>().read());
-                *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());
+        if TypeId::of::<C>() == TypeId::of::<C_>() {
+            // Skip this component in the buffer.
+            buffer = buffer.add(size_of::<C>());
+            // Pop the next identifier bit. We don't need to look at it, since the component is
+            // being skipped anyway.
+            identifier_iter.next();
+        } else if identifier_iter.next().unwrap_unchecked() {
+            let component_column = components.get_unchecked_mut(0);
+            let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
+                component_column.0.cast::<C>(),
+                length,
+                component_column.1,
+            ));
+            v.push(buffer.cast::<C>().read());
+            *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());
 
-                components = components.get_unchecked_mut(1..);
-            }
-
+            components = components.get_unchecked_mut(1..);
             buffer = buffer.add(size_of::<C>());
         }
 

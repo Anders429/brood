@@ -1,5 +1,11 @@
 macro_rules! define_null {
     () => {
+        /// Represents the end of a heterogeneous list.
+        ///
+        /// This struct is used when defining heterogeneous lists. Normally, it will be constructed
+        /// by a macro and the user will not have to interact directly with it. `Null` is placed at
+        /// the inner-most level of the nested tuples that make up a heterogeneous list to denote
+        /// the end of the list.
         #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
         pub struct Null;
 

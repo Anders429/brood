@@ -3,6 +3,30 @@ use crate::{
 };
 use core::any::TypeId;
 
+/// A view into a single entity in a [`World`].
+///
+/// This struct is constructed by the [`entry`] method on `World`.
+///
+/// # Example
+/// An entry for an entity can be obtained from an [`entity::Identifier`] as follows:
+///
+/// ``` rust
+/// use brood::{entity, registry, World};
+///
+/// struct Foo(u32);
+/// struct Bar(bool);
+///
+/// type Registry = registry!(Foo, Bar);
+///
+/// let mut world = World::<Registry>::new();
+/// let entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+///
+/// let mut entry = world.entry(entity_identifier).unwrap();
+/// ```
+///
+/// [`entity::Identifier`]: crate::entity::Identifier
+/// [`entry`]: crate::World::entry()
+/// [`World`]: crate::World
 pub struct Entry<'a, R>
 where
     R: Registry,
@@ -19,6 +43,26 @@ where
         Self { world, location }
     }
 
+    /// Add a component to the entity.
+    ///
+    /// If the component already exists, it is updated to the new value.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entity, registry, World};
+    ///
+    /// struct Foo(u32);
+    /// struct Bar(bool);
+    /// struct Baz(f64);
+    ///
+    /// type Registry = registry!(Foo, Bar, Baz);
+    ///
+    /// let mut world = World::<Registry>::new();
+    /// let entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+    /// let mut entry = world.entry(entity_identifier).unwrap();
+    ///
+    /// entry.add(Baz(1.5));
+    /// ```
     pub fn add<C>(&mut self, component: C)
     where
         C: Component,
@@ -77,6 +121,25 @@ where
         }
     }
 
+    /// Remove a component from the entity.
+    ///
+    /// If the component is not present within the entity, nothing happens.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entity, registry, World};
+    ///
+    /// struct Foo(u32);
+    /// struct Bar(bool);
+    ///
+    /// type Registry = registry!(Foo, Bar);
+    ///
+    /// let mut world = World::<Registry>::new();
+    /// let entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+    /// let mut entry = world.entry(entity_identifier).unwrap();
+    ///
+    /// entry.remove::<Foo>();
+    /// ```
     pub fn remove<C>(&mut self)
     where
         C: Component,
