@@ -165,7 +165,7 @@ pub trait System<'a> {
     ///
     ///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>) where R: Registry + 'a {
     ///         for result!(foo, bar, entity_identifier) in query_results {
-    ///             // If `bar` is true, increment `foo`. Otherwise, remove the entity in post proessing.
+    ///             // If `bar` is true, increment `foo`. Otherwise, remove the entity in post processing.
     ///             if bar.0 {
     ///                 foo.0 += 1;
     ///             } else {
