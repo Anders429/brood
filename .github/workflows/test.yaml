@@ -85,6 +85,22 @@ jobs:
         command: hack
         args: check --feature-powerset --optional-deps
 
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+    - uses: actions-rs/install@v0.1
+      with:
+        crate: cargo-hack
+    - uses: actions-rs/cargo@v1
+      with:
+        command: hack
+        args: clippy --feature-powerset --optional-deps
+
   msrv:
     runs-on: ubuntu-latest
     steps:
