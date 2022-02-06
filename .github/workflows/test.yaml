@@ -93,6 +93,7 @@ jobs:
       with:
         toolchain: nightly
         override: true
+        components: clippy
     - uses: actions-rs/install@v0.1
       with:
         crate: cargo-hack
