@@ -1,3 +1,56 @@
+//! A list of [`System`]s to be run in stages.
+//!
+//! [`Schedule`]s are created using a builder pattern. `System`s are provided in the desired order
+//! they are to be run, and the stages in which those `System`s are run is automatically derived.
+//!
+//! The advantage of defining a `Schedule` is that `System`s are allowed to be run in parallel as
+//! long as their [`Views`] can be borrowed simultaneously.
+//!
+//! # Example
+//! The below example will execute both `SystemA` and `SystemB` in parallel, since their views can
+//! be borrowed simultaneously.
+//!
+//! ``` rust
+//! use brood::{query::{filter, result, views}, registry::Registry, system::{Schedule, System}};
+//!
+//! // Define components.
+//! struct Foo(usize);
+//! struct Bar(bool);
+//! struct Baz(f64);
+//!
+//! struct SystemA;
+//!
+//! impl<'a> System<'a> for SystemA {
+//!     type Views = views!(&'a mut Foo, &'a Bar);
+//!     type Filter = filter::None;
+//!
+//!     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>) where R: Registry + 'a {
+//!         for result!(foo, bar) in query_results {
+//!             // Do something...
+//!         }
+//!     }
+//! }
+//!
+//! struct SystemB;
+//!
+//! impl<'a> System<'a> for SystemB {
+//!     type Views = views!(&'a mut Baz, &'a Bar);
+//!     type Filter = filter::None;
+//!
+//!     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>) where R: Registry + 'a {
+//!         for result!(baz, bar) in query_results {
+//!             // Do something...
+//!         }
+//!     }
+//! }
+//!
+//! let schedule = Schedule::builder().system(SystemA).system(SystemB).build();
+//! ```
+//!
+//! [`Schedule`]: crate::system::schedule::Schedule
+//! [`System`]: crate::system::System
+//! [`Views`]: crate::query::view::Views
+
 pub mod raw_task;
 pub mod stage;
 
