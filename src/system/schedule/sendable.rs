@@ -9,7 +9,7 @@ where
     R: Registry,
 {
     fn clone(&self) -> Self {
-        Self(self.0.clone())
+        Self(<&World<R>>::clone(&self.0))
     }
 }
 
