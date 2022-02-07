@@ -113,12 +113,12 @@ jobs:
     - uses: actions-rs/install@v0.1
       with:
         crate: cargo-hack
-    - env:
-      MIRIFLAGS: -Zmiri-disable-isolation -Zmiri-ignore-leaks
     - uses: actions-rs/cargo@v1
       with:
         command: hack
         args: miri test --feature-powerset --optional-deps
+      env:
+        MIRIFLAGS: -Zmiri-disable-isolation -Zmiri-ignore-leaks
 
   valgrind:
     runs-on: ubuntu-latest
