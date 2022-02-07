@@ -134,6 +134,8 @@ jobs:
       with:
         command: hack
         args: miri test --feature-powerset --optional-deps
+      env:
+        MIRIFLAGS: -Zmiri-disable-isolation -Zmiri-ignore-leaks
 
   valgrind:
     runs-on: ubuntu-latest
