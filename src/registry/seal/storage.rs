@@ -284,7 +284,7 @@ where
                 component_column.1,
             ));
 
-            ptr::write(buffer as *mut C, v.swap_remove(index));
+            ptr::write_unaligned(buffer as *mut C, v.swap_remove(index));
             buffer = buffer.add(size_of::<C>());
 
             components = components.get_unchecked(1..);
@@ -324,7 +324,7 @@ where
                     length,
                     component_column.1,
                 ));
-                v.push(buffer.cast::<C>().read());
+                v.push(buffer.cast::<C>().read_unaligned());
                 buffer = buffer.add(size_of::<C>());
 
                 *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());
@@ -365,7 +365,7 @@ where
                 length,
                 component_column.1,
             ));
-            v.push(buffer.cast::<C>().read());
+            v.push(buffer.cast::<C>().read_unaligned());
             *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());
 
             components = components.get_unchecked_mut(1..);
