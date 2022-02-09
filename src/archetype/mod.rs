@@ -344,3 +344,23 @@ where
         unsafe { slice::from_raw_parts(self.entity_identifiers.0, self.length) }.iter()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Archetype, Identifier};
+    use crate::registry;
+    use alloc::vec;
+
+    // Define components for testing.
+    struct A;
+    struct B;
+    struct C;
+
+    type Registry = registry!(A, B, C);
+
+    #[test]
+    fn new() {
+        let mut identifier = unsafe {Identifier::<Registry>::new(vec![0])};
+        let archetype = unsafe {Archetype::new(identifier)};
+    }
+}
