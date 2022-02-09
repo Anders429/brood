@@ -113,3 +113,26 @@ macro_rules! registry {
         $crate::registry::Null
     };
 }
+
+
+
+#[cfg(test)]
+mod tests {
+    use crate::registry;
+
+    // Test components.
+    struct A;
+    struct B;
+
+    fn empty() {
+        type Registry = registry!();
+    }
+
+    fn non_empty() {
+        type Registry = registry!(A, B);
+    }
+
+    fn duplicate_components() {
+        type Registry = registry!(A, B, A);
+    }
+}
