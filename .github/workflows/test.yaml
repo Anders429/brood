@@ -31,6 +31,29 @@ jobs:
         command: hack
         args: test --feature-powerset --optional-deps
 
+  mutants:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - 1.58.0
+          - stable
+          - beta
+          - nightly
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        override: true
+    - uses: actions-rs/install@v0.1
+      with:
+        crate: cargo-mutants
+    - run: printf '\n[lib]\ndoctest = false\n' >> Cargo.toml
+    - uses: actions-rs/cargo@v1
+      with:
+        command: mutants
+
   no_std:
     runs-on: ubuntu-latest
     strategy:
