@@ -11,6 +11,9 @@ use core::{
 };
 
 pub trait RegistryDebug: Registry {
+    // TODO: Remove attribute when https://github.com/rust-lang/rust-clippy/issues/8366 is
+    // resolved.
+    #[allow(clippy::ptr_arg)]
     unsafe fn extract_component_pointers<R>(
         index: usize,
         components: &[(*mut u8, usize)],

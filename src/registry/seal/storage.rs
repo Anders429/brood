@@ -23,6 +23,9 @@ pub trait Storage {
     ) where
         R: Registry;
 
+    // TODO: Remove attribute when https://github.com/rust-lang/rust-clippy/issues/8366 is
+    // resolved.
+    #[allow(clippy::ptr_arg)]
     unsafe fn new_components_with_capacity<R>(
         components: &mut Vec<(*mut u8, usize)>,
         length: usize,
