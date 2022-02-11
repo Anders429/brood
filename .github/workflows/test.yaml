@@ -50,10 +50,9 @@ jobs:
     - uses: actions-rs/install@v0.1
       with:
         crate: cargo-mutants
-    - run: printf '\n[lib]\ndoctest = false\n' >> Cargo.toml
     - uses: actions-rs/cargo@v1
       with:
-        command: mutants
+        command: mutants -- --all-targets --all-features
 
   no_std:
     runs-on: ubuntu-latest
