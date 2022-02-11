@@ -11,18 +11,21 @@ use core::{
 };
 
 pub trait RegistryDebug: Registry {
+    // TODO: Remove attribute when https://github.com/rust-lang/rust-clippy/issues/8366 is
+    // resolved.
+    #[allow(clippy::ptr_arg)]
     unsafe fn extract_component_pointers<R>(
         index: usize,
         components: &[(*mut u8, usize)],
         pointers: &mut Vec<*const u8>,
-        identifier_iter: impl archetype::IdentifierIterator<R>,
+        identifier_iter: archetype::IdentifierIter<R>,
     ) where
         R: Registry;
 
     unsafe fn debug_components<'a, 'b, R>(
         pointers: &[*const u8],
         debug_map: &mut DebugMap<'a, 'b>,
-        identifier_iter: impl archetype::IdentifierIterator<R>,
+        identifier_iter: archetype::IdentifierIter<R>,
     ) where
         R: Registry;
 }
@@ -32,7 +35,7 @@ impl RegistryDebug for Null {
         _index: usize,
         _components: &[(*mut u8, usize)],
         _pointers: &mut Vec<*const u8>,
-        _identifier_iter: impl archetype::IdentifierIterator<R>,
+        _identifier_iter: archetype::IdentifierIter<R>,
     ) where
         R: Registry,
     {
@@ -41,7 +44,7 @@ impl RegistryDebug for Null {
     unsafe fn debug_components<'a, 'b, R>(
         _pointers: &[*const u8],
         _debug_map: &mut DebugMap<'a, 'b>,
-        _identifier_iter: impl archetype::IdentifierIterator<R>,
+        _identifier_iter: archetype::IdentifierIter<R>,
     ) where
         R: Registry,
     {
@@ -57,7 +60,7 @@ where
         index: usize,
         mut components: &[(*mut u8, usize)],
         pointers: &mut Vec<*const u8>,
-        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+        mut identifier_iter: archetype::IdentifierIter<R_>,
     ) where
         R_: Registry,
     {
@@ -72,7 +75,7 @@ where
     unsafe fn debug_components<'a, 'b, R_>(
         mut pointers: &[*const u8],
         debug_map: &mut DebugMap<'a, 'b>,
-        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+        mut identifier_iter: archetype::IdentifierIter<R_>,
     ) where
         R_: Registry,
     {

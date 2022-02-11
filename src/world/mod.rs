@@ -279,24 +279,22 @@ where
 
     #[cfg(feature = "parallel")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
-    pub(crate) unsafe fn query_unchecked<'a, V, F>(&'a self) -> result::Iter<'a, R, F, V>
+    pub(crate) unsafe fn query_unchecked<'a, V, F>(&'a mut self) -> result::Iter<'a, R, F, V>
     where
         V: Views<'a>,
         F: Filter,
     {
-        let mut_self = &mut *(self as *const World<R> as *mut World<R>);
-        result::Iter::new(mut_self.archetypes.iter_mut(), &self.component_map)
+        result::Iter::new(self.archetypes.iter_mut(), &self.component_map)
     }
 
     #[cfg(feature = "parallel")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
-    pub(crate) unsafe fn par_query_unchecked<'a, V, F>(&'a self) -> result::ParIter<'a, R, F, V>
+    pub(crate) unsafe fn par_query_unchecked<'a, V, F>(&'a mut self) -> result::ParIter<'a, R, F, V>
     where
         V: ParViews<'a>,
         F: Filter,
     {
-        let mut_self = &mut *(self as *const World<R> as *mut World<R>);
-        result::ParIter::new(mut_self.archetypes.par_iter_mut(), &self.component_map)
+        result::ParIter::new(self.archetypes.par_iter_mut(), &self.component_map)
     }
 
     #[cfg(feature = "parallel")]

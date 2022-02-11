@@ -14,7 +14,7 @@ pub trait RegistrySerialize: Registry {
         components: &[(*mut u8, usize)],
         length: usize,
         tuple: &mut S,
-        identifier_iter: impl archetype::IdentifierIterator<R>,
+        identifier_iter: archetype::IdentifierIter<R>,
     ) -> Result<(), S::Error>
     where
         R: Registry,
@@ -25,7 +25,7 @@ pub trait RegistrySerialize: Registry {
         length: usize,
         index: usize,
         tuple: &mut S,
-        identifier_iter: impl archetype::IdentifierIterator<R>,
+        identifier_iter: archetype::IdentifierIter<R>,
     ) -> Result<(), S::Error>
     where
         R: Registry,
@@ -37,7 +37,7 @@ impl RegistrySerialize for Null {
         _components: &[(*mut u8, usize)],
         _length: usize,
         _tuple: &mut S,
-        _identifier_iter: impl archetype::IdentifierIterator<R>,
+        _identifier_iter: archetype::IdentifierIter<R>,
     ) -> Result<(), S::Error>
     where
         R: Registry,
@@ -51,7 +51,7 @@ impl RegistrySerialize for Null {
         _length: usize,
         _index: usize,
         _tuple: &mut S,
-        _identifier_iter: impl archetype::IdentifierIterator<R>,
+        _identifier_iter: archetype::IdentifierIter<R>,
     ) -> Result<(), S::Error>
     where
         R: Registry,
@@ -70,7 +70,7 @@ where
         mut components: &[(*mut u8, usize)],
         length: usize,
         tuple: &mut S,
-        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+        mut identifier_iter: archetype::IdentifierIter<R_>,
     ) -> Result<(), S::Error>
     where
         R_: Registry,
@@ -97,7 +97,7 @@ where
         length: usize,
         index: usize,
         tuple: &mut S,
-        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+        mut identifier_iter: archetype::IdentifierIter<R_>,
     ) -> Result<(), S::Error>
     where
         R_: Registry,
@@ -123,11 +123,14 @@ where
 
 #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
 pub trait RegistryDeserialize<'de>: Registry + 'de {
+    // TODO: Remove attribute when https://github.com/rust-lang/rust-clippy/issues/8366 is
+    // resolved.
+    #[allow(clippy::ptr_arg)]
     unsafe fn deserialize_components_by_column<R, V>(
         components: &mut Vec<(*mut u8, usize)>,
         length: usize,
         seq: &mut V,
-        identifier_iter: impl archetype::IdentifierIterator<R>,
+        identifier_iter: archetype::IdentifierIter<R>,
     ) -> Result<(), V::Error>
     where
         R: Registry,
@@ -137,7 +140,7 @@ pub trait RegistryDeserialize<'de>: Registry + 'de {
         components: &mut [(*mut u8, usize)],
         length: usize,
         seq: &mut V,
-        identifier_iter: impl archetype::IdentifierIterator<R>,
+        identifier_iter: archetype::IdentifierIter<R>,
     ) -> Result<(), V::Error>
     where
         R: Registry,
@@ -149,7 +152,7 @@ impl<'de> RegistryDeserialize<'de> for Null {
         _components: &mut Vec<(*mut u8, usize)>,
         _length: usize,
         _seq: &mut V,
-        _identifier_iter: impl archetype::IdentifierIterator<R>,
+        _identifier_iter: archetype::IdentifierIter<R>,
     ) -> Result<(), V::Error>
     where
         R: Registry,
@@ -162,7 +165,7 @@ impl<'de> RegistryDeserialize<'de> for Null {
         _components: &mut [(*mut u8, usize)],
         _length: usize,
         _seq: &mut V,
-        _identifier_iter: impl archetype::IdentifierIterator<R>,
+        _identifier_iter: archetype::IdentifierIter<R>,
     ) -> Result<(), V::Error>
     where
         R: Registry,
@@ -181,7 +184,7 @@ where
         components: &mut Vec<(*mut u8, usize)>,
         length: usize,
         seq: &mut V,
-        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+        mut identifier_iter: archetype::IdentifierIter<R_>,
     ) -> Result<(), V::Error>
     where
         R_: Registry,
@@ -204,7 +207,7 @@ where
         mut components: &mut [(*mut u8, usize)],
         length: usize,
         seq: &mut V,
-        mut identifier_iter: impl archetype::IdentifierIterator<R_>,
+        mut identifier_iter: archetype::IdentifierIter<R_>,
     ) -> Result<(), V::Error>
     where
         R_: Registry,
