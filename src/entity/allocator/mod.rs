@@ -216,7 +216,9 @@ where
         identifier: entity::Identifier,
         index: usize,
     ) {
-        self.slots.get_unchecked_mut(identifier.index).location
+        self.slots
+            .get_unchecked_mut(identifier.index)
+            .location
             .as_mut()
             .unwrap_unchecked()
             .index = index;
