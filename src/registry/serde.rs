@@ -123,6 +123,9 @@ where
 
 #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
 pub trait RegistryDeserialize<'de>: Registry + 'de {
+    // TODO: Remove attribute when https://github.com/rust-lang/rust-clippy/issues/8366 is
+    // resolved.
+    #[allow(clippy::ptr_arg)]
     unsafe fn deserialize_components_by_column<R, V>(
         components: &mut Vec<(*mut u8, usize)>,
         length: usize,
