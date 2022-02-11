@@ -13,3 +13,17 @@ where
     R: RegistrySend,
 {
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::registry;
+
+    fn is_send<R>() where R: Send {}
+
+    #[test]
+    fn empty() {
+        type Registry = registry!();
+
+        is_send::<Registry>();
+    }
+}

@@ -124,14 +124,17 @@ mod tests {
     struct A;
     struct B;
 
+    #[test]
     fn empty() {
         type Registry = registry!();
     }
 
+    #[test]
     fn non_empty() {
         type Registry = registry!(A, B);
     }
 
+    #[test]
     fn duplicate_components() {
         type Registry = registry!(A, B, A);
     }
