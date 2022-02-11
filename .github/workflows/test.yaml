@@ -52,7 +52,8 @@ jobs:
         crate: cargo-mutants
     - uses: actions-rs/cargo@v1
       with:
-        command: mutants -- --all-targets --all-features
+        command: mutants
+        args: -- --all-targets --all-features
 
   no_std:
     runs-on: ubuntu-latest
