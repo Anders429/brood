@@ -36,6 +36,7 @@ impl AssertionBuffer {
     /// Create a new empty buffer.
     ///
     /// It is recommended to use [`with_capacity`] if possible, as it will save allocations.
+    #[cfg(feature = "parallel")]
     pub(crate) fn new() -> Self {
         Self::with_capacity(0)
     }
@@ -110,6 +111,7 @@ mod tests {
     struct A;
     struct B;
 
+    #[cfg(feature = "parallel")]
     #[test]
     fn new() {
         let buffer = AssertionBuffer::new();
