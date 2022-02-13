@@ -67,13 +67,7 @@ where
     where
         C: Component,
     {
-        let component_index = unsafe {
-            *self
-                .world
-                .component_map
-                .get(&TypeId::of::<C>())
-                .unwrap_unchecked()
-        };
+        let component_index = *self.world.component_map.get(&TypeId::of::<C>()).unwrap();
         if unsafe { self.location.identifier.get_unchecked(component_index) } {
             // The component already exists within this entity. Replace it.
             unsafe {
@@ -144,13 +138,7 @@ where
     where
         C: Component,
     {
-        let component_index = unsafe {
-            *self
-                .world
-                .component_map
-                .get(&TypeId::of::<C>())
-                .unwrap_unchecked()
-        };
+        let component_index = *self.world.component_map.get(&TypeId::of::<C>()).unwrap();
         if unsafe { self.location.identifier.get_unchecked(component_index) } {
             // The component exists and needs to be removed.
             let (entity_identifier, current_component_bytes) = unsafe {
