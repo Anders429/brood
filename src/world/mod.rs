@@ -289,6 +289,26 @@ where
 
     #[cfg(feature = "parallel")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+    pub(crate) unsafe fn query_unchecked<'a, V, F>(&'a mut self) -> result::Iter<'a, R, F, V>
+    where
+        V: Views<'a>,
+        F: Filter,
+    {
+        result::Iter::new(self.archetypes.iter_mut(), &self.component_map)
+    }
+
+    #[cfg(feature = "parallel")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+    pub(crate) unsafe fn par_query_unchecked<'a, V, F>(&'a mut self) -> result::ParIter<'a, R, F, V>
+    where
+        V: ParViews<'a>,
+        F: Filter,
+    {
+        result::ParIter::new(self.archetypes.par_iter_mut(), &self.component_map)
+    }
+
+    #[cfg(feature = "parallel")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
     pub fn run<'a, S>(&'a mut self, schedule: &'a mut Schedule<S>)
     where
         S: Stages<'a>,
