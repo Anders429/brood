@@ -1,7 +1,7 @@
 use crate::{
     component::Component,
     entity,
-    query::{claim::Claim, result, view::Null},
+    query::{claim::Claim, result, view::{AssertionBuffer, Null}},
 };
 use core::{any::TypeId, iter, slice};
 use either::Either;
@@ -16,6 +16,10 @@ pub trait ViewSeal<'a>: Claim {
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result;
+
+    fn assert_claim(
+        buffer: &mut AssertionBuffer,
+    );
 }
 
 impl<'a, C> ViewSeal<'a> for &C
@@ -38,6 +42,12 @@ where
         )
         .iter()
     }
+
+    fn assert_claim(
+        buffer: &mut AssertionBuffer,
+    ) {
+        buffer.claim_immutable::<C>();
+    }
 }
 
 impl<'a, C> ViewSeal<'a> for &mut C
@@ -59,6 +69,12 @@ where
             length,
         )
         .iter_mut()
+    }
+
+    fn assert_claim(
+        buffer: &mut AssertionBuffer,
+    ) {
+        buffer.claim_mutable::<C>();
     }
 }
 
@@ -90,6 +106,12 @@ where
             None => Either::Left(iter::repeat(None).take(length)),
         }
     }
+
+    fn assert_claim(
+        buffer: &mut AssertionBuffer,
+    ) {
+        buffer.claim_immutable::<C>();
+    }
 }
 
 impl<'a, C> ViewSeal<'a> for Option<&mut C>
@@ -120,6 +142,12 @@ where
             None => Either::Left(iter::repeat_with(none as fn() -> Option<&'a mut C>).take(length)),
         }
     }
+
+    fn assert_claim(
+        buffer: &mut AssertionBuffer,
+    ) {
+        buffer.claim_mutable::<C>();
+    }
 }
 
 impl<'a> ViewSeal<'a> for entity::Identifier {
@@ -135,6 +163,10 @@ impl<'a> ViewSeal<'a> for entity::Identifier {
             .iter()
             .cloned()
     }
+
+    fn assert_claim(
+        _buffer: &mut AssertionBuffer,
+    ) {}
 }
 
 pub trait ViewsSeal<'a>: Claim {
@@ -146,6 +178,10 @@ pub trait ViewsSeal<'a>: Claim {
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results;
+
+    fn assert_claims(
+        buffer: &mut AssertionBuffer,
+    );
 }
 
 impl<'a> ViewsSeal<'a> for Null {
@@ -159,6 +195,10 @@ impl<'a> ViewsSeal<'a> for Null {
     ) -> Self::Results {
         iter::repeat(result::Null)
     }
+
+    fn assert_claims(
+        _buffer: &mut AssertionBuffer,
+    ) {}
 }
 
 impl<'a, V, W> ViewsSeal<'a> for (V, W)
@@ -180,5 +220,12 @@ where
             length,
             component_map,
         ))
+    }
+
+    fn assert_claims(
+        buffer: &mut AssertionBuffer,
+    ) {
+        V::assert_claim(buffer);
+        W::assert_claims(buffer);
     }
 }
