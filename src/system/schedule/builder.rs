@@ -1,4 +1,5 @@
 use crate::{
+    query::view,
     system,
     system::{
         schedule::{
@@ -130,6 +131,7 @@ where
                 &mut HashSet::new(),
                 &mut HashSet::new(),
                 &mut HashSet::new(),
+                &mut view::AssertionBuffer::new(),
             ),
         }
     }
