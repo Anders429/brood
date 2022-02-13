@@ -33,6 +33,13 @@ pub struct AssertionBuffer {
 }
 
 impl AssertionBuffer {
+    /// Create a new empty buffer.
+    ///
+    /// It is recommended to use [`with_capacity`] if possible, as it will save allocations.
+    pub(crate) fn new() -> Self {
+        Self::with_capacity(0)
+    }
+
     /// Create a new buffer with the given capacity.
     ///
     /// A buffer created this way will have the capacity to ensure this number of components are
@@ -93,6 +100,14 @@ mod tests {
     // Test components.
     struct A;
     struct B;
+
+    #[test]
+    fn new() {
+        let buffer = AssertionBuffer::new();
+
+        assert!(buffer.mutable_claims.is_empty());
+        assert!(buffer.immutable_claims.is_empty());
+    }
 
     #[test]
     fn with_capacity() {

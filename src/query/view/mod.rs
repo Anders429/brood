@@ -47,7 +47,8 @@
 mod assertion_buffer;
 #[cfg(feature = "parallel")]
 mod par;
-mod seal;
+
+pub(crate) mod seal;
 
 #[cfg(feature = "parallel")]
 pub use par::{ParView, ParViews};
