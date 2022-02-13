@@ -25,7 +25,7 @@ use hashbrown::HashSet;
 /// large amount of unstable nightly features.
 ///
 /// [`Views`]: crate::query::view::Views
-pub(crate) struct AssertionBuffer {
+pub struct AssertionBuffer {
     /// Components that are viewed mutably.
     mutable_claims: HashSet<TypeId>,
     /// Components that are viewed immutably.

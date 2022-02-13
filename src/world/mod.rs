@@ -23,7 +23,7 @@ use crate::{
     entities::Entities,
     entity,
     entity::Entity,
-    query::{filter::Filter, result, view::Views},
+    query::{filter::Filter, result, view, view::Views},
     registry::Registry,
 };
 #[cfg(feature = "parallel")]
@@ -74,6 +74,8 @@ where
     entity_allocator: entity::Allocator<R>,
 
     component_map: HashMap<TypeId, usize>,
+
+    view_assertion_buffer: view::AssertionBuffer,
 }
 
 impl<R> World<R>
@@ -89,6 +91,8 @@ where
             entity_allocator,
 
             component_map,
+
+            view_assertion_buffer: view::AssertionBuffer::with_capacity(R::LEN),
         }
     }
 
@@ -227,6 +231,9 @@ where
         V: Views<'a>,
         F: Filter,
     {
+        self.view_assertion_buffer.clear();
+        V::assert_claims(&mut self.view_assertion_buffer);
+
         result::Iter::new(self.archetypes.iter_mut(), &self.component_map)
     }
 
@@ -274,6 +281,9 @@ where
         V: ParViews<'a>,
         F: Filter,
     {
+        self.view_assertion_buffer.clear();
+        V::assert_claims(&mut self.view_assertion_buffer);
+        
         result::ParIter::new(self.archetypes.par_iter_mut(), &self.component_map)
     }
 
