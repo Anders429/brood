@@ -7,7 +7,7 @@
 //! [`Views`]: crate::query::view::Views
 
 use crate::component::Component;
-use core::any::{TypeId, type_name};
+use core::any::{type_name, TypeId};
 use hashbrown::HashSet;
 
 /// A buffer for performing assertions on [`Views`].
@@ -17,7 +17,7 @@ use hashbrown::HashSet;
 /// each component is either only borrowed once mutably, or is borrowed multiple times immutably.
 /// If any claim run through the buffer breaks these rules, a panic will occur.
 ///
-/// It is recommended to create a single buffer with the capacity of a registry and reuse it for 
+/// It is recommended to create a single buffer with the capacity of a registry and reuse it for
 /// every check to avoid unnecessary allocations.
 ///
 /// In the future, it would be ideal to move this check to compile time. However, running a check
@@ -60,9 +60,15 @@ impl AssertionBuffer {
     ///
     /// # Panics
     /// This method will panic if the component is already claimed, either mutably or immutably.
-    pub(crate) fn claim_mutable<C>(&mut self) where C: Component {
+    pub(crate) fn claim_mutable<C>(&mut self)
+    where
+        C: Component,
+    {
         if self.mutable_claims.contains(&TypeId::of::<C>()) {
-            panic!("the component {} cannot be viewed as mutable when it is already viewed as mutable", type_name::<C>());
+            panic!(
+                "the component {} cannot be viewed as mutable when it is already viewed as mutable",
+                type_name::<C>()
+            );
         } else if self.immutable_claims.contains(&TypeId::of::<C>()) {
             panic!("the component {} cannot be viewed as mutable when it is already viewed as immutable", type_name::<C>());
         }
@@ -75,7 +81,10 @@ impl AssertionBuffer {
     /// # Panics
     /// This method will panic if the component is already claimed mutably. Note that components
     /// may be claimed immutably more than once.
-    pub(crate) fn claim_immutable<C>(&mut self) where C: Component {
+    pub(crate) fn claim_immutable<C>(&mut self)
+    where
+        C: Component,
+    {
         if self.mutable_claims.contains(&TypeId::of::<C>()) {
             panic!("the component {} cannot be viewed as immutable when it is already viewed as mutable", type_name::<C>());
         }
@@ -156,7 +165,7 @@ mod tests {
         buffer.claim_mutable::<A>();
         buffer.claim_immutable::<A>();
     }
-    
+
     #[test]
     #[should_panic]
     fn claim_immutable_than_mutable() {
