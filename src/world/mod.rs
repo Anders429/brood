@@ -283,10 +283,11 @@ where
     {
         self.view_assertion_buffer.clear();
         V::assert_claims(&mut self.view_assertion_buffer);
-        
+
         result::ParIter::new(self.archetypes.par_iter_mut(), &self.component_map)
     }
 
+    /// Performs a query, skipping checks on views.
     #[cfg(feature = "parallel")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
     pub(crate) unsafe fn query_unchecked<'a, V, F>(&'a mut self) -> result::Iter<'a, R, F, V>
@@ -297,6 +298,7 @@ where
         result::Iter::new(self.archetypes.iter_mut(), &self.component_map)
     }
 
+    /// Performs a parallel query, skipping checks on views.
     #[cfg(feature = "parallel")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
     pub(crate) unsafe fn par_query_unchecked<'a, V, F>(&'a mut self) -> result::ParIter<'a, R, F, V>

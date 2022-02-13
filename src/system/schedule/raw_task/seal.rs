@@ -1,5 +1,5 @@
 use crate::{
-    query::claim::Claim,
+    query::{claim::Claim, view, view::seal::ViewsSeal},
     system::{
         schedule::{
             raw_task::{Null, RawTask},
@@ -21,6 +21,7 @@ pub trait Seal<'a> {
         immutable_claims: &mut HashSet<TypeId>,
         mutable_buffer: &mut HashSet<TypeId>,
         immutable_buffer: &mut HashSet<TypeId>,
+        view_assertion_buffer: &mut view::AssertionBuffer,
     ) -> Self::Stages;
 }
 
@@ -33,6 +34,7 @@ impl<'a> Seal<'a> for Null {
         _immutable_claims: &mut HashSet<TypeId>,
         _mutable_buffer: &mut HashSet<TypeId>,
         _immutable_buffer: &mut HashSet<TypeId>,
+        _view_assertion_buffer: &mut view::AssertionBuffer,
     ) -> Self::Stages {
         stage::Null
     }
@@ -52,18 +54,26 @@ where
         immutable_claims: &mut HashSet<TypeId>,
         mutable_buffer: &mut HashSet<TypeId>,
         immutable_buffer: &mut HashSet<TypeId>,
+        view_assertion_buffer: &mut view::AssertionBuffer,
     ) -> Self::Stages {
         let prev_stages = self.1.into_stages(
             mutable_claims,
             immutable_claims,
             mutable_buffer,
             immutable_buffer,
+            view_assertion_buffer,
         );
 
         match self.0 {
             RawTask::Task(task) => {
                 mutable_buffer.clear();
                 immutable_buffer.clear();
+
+                // Assert that this system's views are sound.
+                view_assertion_buffer.clear();
+                S::Views::assert_claims(view_assertion_buffer);
+                view_assertion_buffer.clear();
+                P::Views::assert_claims(view_assertion_buffer);
 
                 // Identify this stage's claims on components.
                 S::Views::claim(mutable_buffer, immutable_buffer);
