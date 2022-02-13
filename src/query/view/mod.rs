@@ -44,12 +44,15 @@
 //! [`views!`]: crate::query::views!
 //! [`World`]: crate::world::World.
 
+mod assertion_buffer;
 #[cfg(feature = "parallel")]
 mod par;
 mod seal;
 
 #[cfg(feature = "parallel")]
 pub use par::{ParView, ParViews};
+
+pub(crate) use assertion_buffer::AssertionBuffer;
 
 use crate::{component::Component, doc, entity, hlist::define_null, query::filter::Filter};
 use seal::{ViewSeal, ViewsSeal};
