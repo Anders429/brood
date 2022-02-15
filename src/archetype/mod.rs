@@ -18,7 +18,10 @@ use crate::{
     entities,
     entities::Entities,
     entity,
-    entity::{allocator::Location, Entity},
+    entity::{
+        allocator::{Location, Locations},
+        Entity,
+    },
     query::view::Views,
     registry::Registry,
 };
@@ -134,12 +137,10 @@ where
             .entities
             .extend_components(&self.component_map, &mut self.components, self.length);
 
-        let entity_identifiers = entity_allocator.allocate_batch(
-            (self.length..(self.length + component_len)).map(|index| Location {
-                identifier: self.identifier_buffer.as_ref(),
-                index,
-            }),
-        );
+        let entity_identifiers = entity_allocator.allocate_batch(Locations::new(
+            self.length..(self.length + component_len),
+            self.identifier_buffer.as_ref(),
+        ));
 
         let mut entity_identifiers_v = ManuallyDrop::new(Vec::from_raw_parts(
             self.entity_identifiers.0,
