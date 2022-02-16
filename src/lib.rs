@@ -18,6 +18,7 @@ mod archetype;
 mod archetypes;
 mod doc;
 mod hlist;
+mod r#macro;
 
 #[doc(inline)]
 pub use world::World;
