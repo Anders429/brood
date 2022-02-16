@@ -1,0 +1,5 @@
+error: no rules expected the token `,`
+ --> tests/trybuild/stages/par_system_no_colon.rs:4:15
+  |
+4 |     par_system,
+  |               ^ no rules expected this token in macro call
