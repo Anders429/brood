@@ -9,3 +9,5 @@ macro_rules! trybuild_test {
 }
 
 trybuild_test!(entities);
+#[cfg(feature = "parallel")]
+trybuild_test!(stages);

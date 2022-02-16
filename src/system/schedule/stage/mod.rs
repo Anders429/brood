@@ -127,8 +127,11 @@ doc::non_root_macro! {
         (internal @ $processed:ty; flush, $($idents:tt $(: $systems:tt)?),* $(,)?) => (
             stages!(internal @ ($crate::system::schedule::stage::Stage<$crate::system::Null, $crate::system::Null>, $processed); $($idents $(: $systems)?,)*)
         );
-        (internal @ $processed:ty; $($idents:tt $(: $systems:tt)?),* $(,)?) => (
+        (internal @ $processed:ty;) => (
             $processed
+        );
+        (internal @ $processed:ty; $ident:tt $(: $system:tt)?, $($idents:tt $(: $systems:tt)?),* $(,)?) => (
+            $crate::unexpected!($ident $(: $system:tt)?)
         );
     }
 }
