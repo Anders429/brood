@@ -234,7 +234,7 @@ macro_rules! stages_internal {
     (@par_system $processed:ty; (, $($rest:tt)*) ($comma:tt $($copy:tt)*)) => (
         $crate::unexpected!($comma)
     );
-    
+
     // Match any other unexpected input. This will output an error.
     (@par_system $processed:ty; ($($rest:tt)*) $copy:tt) => (
         $crate::unexpected!($($rest)*)
@@ -249,7 +249,7 @@ macro_rules! stages_internal {
     // Note that we require two copies of the input token tree here. The first is matched on, and
     // the second is used to trigger errors.
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    
+
     // Match a comma.
     (@flush $processed:ty; (, $($rest:tt)*) $copy:tt) => (
         $crate::stages_internal!(@task ($crate::system::schedule::stage::Stage<$crate::system::Null, $crate::system::Null>, $processed); ($($rest)*) ($($rest)*))
@@ -265,7 +265,7 @@ macro_rules! stages_internal {
     (@flush $processed:ty; () ()) => (
         $crate::stages_internal!(@task ($crate::system::schedule::stage::Stage<$crate::system::Null, $crate::system::Null>, $processed); () ())
     );
-    
+
     // Match any other unexpected input. This will output an error.
     (@flush $processed:ty; ($($rest:tt)*) $copy:tt) => (
         $crate::unexpected!($($rest)*)
