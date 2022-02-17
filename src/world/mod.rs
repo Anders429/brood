@@ -200,7 +200,11 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entity, query::{filter, result, views}, registry, World};
+    /// use brood::{
+    ///     entity,
+    ///     query::{filter, result, views},
+    ///     registry, World,
+    /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
@@ -212,7 +216,9 @@ where
     /// let inserted_entity_identifier = world.push(entity!(Foo(42), Bar(true), Baz(100)));
     ///
     /// // Note that the views provide implicit filters.
-    /// for result!(foo, baz, entity_identifier) in world.query::<views!(&mut Foo, &Baz, entity::Identifier), filter::Has<Bar>>() {
+    /// for result!(foo, baz, entity_identifier) in
+    ///     world.query::<views!(&mut Foo, &Baz, entity::Identifier), filter::Has<Bar>>()
+    /// {
     ///     // Allows immutable or mutable access to queried components.
     ///     foo.0 = baz.0;
     ///     // Also allows access to entity identifiers.
@@ -246,7 +252,11 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entity, query::{filter, result, views}, registry, World};
+    /// use brood::{
+    ///     entity,
+    ///     query::{filter, result, views},
+    ///     registry, World,
+    /// };
     /// use rayon::iter::ParallelIterator;
     ///
     /// struct Foo(u32);
@@ -259,12 +269,14 @@ where
     /// let inserted_entity_identifier = world.push(entity!(Foo(42), Bar(true), Baz(100)));
     ///
     /// // Note that the views provide implicit filters.
-    /// world.par_query::<views!(&mut Foo, &Baz, entity::Identifier), filter::Has<Bar>>().for_each(|result!(foo, baz, entity_identifier)| {
-    ///     // Allows immutable or mutable access to queried components.
-    ///     foo.0 = baz.0;
-    ///     // Also allows access to entity identifiers.
-    ///     assert_eq!(entity_identifier, inserted_entity_identifier);
-    /// });
+    /// world
+    ///     .par_query::<views!(&mut Foo, &Baz, entity::Identifier), filter::Has<Bar>>()
+    ///     .for_each(|result!(foo, baz, entity_identifier)| {
+    ///         // Allows immutable or mutable access to queried components.
+    ///         foo.0 = baz.0;
+    ///         // Also allows access to entity identifiers.
+    ///         assert_eq!(entity_identifier, inserted_entity_identifier);
+    ///     });
     /// ```
     ///
     /// For more information about `ParViews` and `Filter`, see the [`query`] module documentaion.

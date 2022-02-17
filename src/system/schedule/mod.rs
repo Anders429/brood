@@ -11,7 +11,11 @@
 //! be borrowed simultaneously.
 //!
 //! ``` rust
-//! use brood::{query::{filter, result, views}, registry::Registry, system::{Schedule, System}};
+//! use brood::{
+//!     query::{filter, result, views},
+//!     registry::Registry,
+//!     system::{Schedule, System},
+//! };
 //!
 //! // Define components.
 //! struct Foo(usize);
@@ -24,7 +28,10 @@
 //!     type Views = views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
 //!
-//!     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>) where R: Registry + 'a {
+//!     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+//!     where
+//!         R: Registry + 'a,
+//!     {
 //!         for result!(foo, bar) in query_results {
 //!             // Do something...
 //!         }
@@ -37,7 +44,10 @@
 //!     type Views = views!(&'a mut Baz, &'a Bar);
 //!     type Filter = filter::None;
 //!
-//!     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>) where R: Registry + 'a {
+//!     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+//!     where
+//!         R: Registry + 'a,
+//!     {
 //!         for result!(baz, bar) in query_results {
 //!             // Do something...
 //!         }
@@ -78,7 +88,11 @@ use stage::Stages;
 /// be borrowed simultaneously.
 ///
 /// ``` rust
-/// use brood::{query::{filter, result, views}, registry::Registry, system::{Schedule, System}};
+/// use brood::{
+///     query::{filter, result, views},
+///     registry::Registry,
+///     system::{Schedule, System},
+/// };
 ///
 /// // Define components.
 /// struct Foo(usize);
@@ -91,7 +105,10 @@ use stage::Stages;
 ///     type Views = views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>) where R: Registry + 'a {
+///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+///     where
+///         R: Registry + 'a,
+///     {
 ///         for result!(foo, bar) in query_results {
 ///             // Do something...
 ///         }
@@ -104,7 +121,10 @@ use stage::Stages;
 ///     type Views = views!(&'a mut Baz, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>) where R: Registry + 'a {
+///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+///     where
+///         R: Registry + 'a,
+///     {
 ///         for result!(baz, bar) in query_results {
 ///             // Do something...
 ///         }

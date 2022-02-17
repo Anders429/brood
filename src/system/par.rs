@@ -12,7 +12,11 @@ use crate::{
 ///
 /// # Example
 /// ``` rust
-/// use brood::{query::{filter, result, views}, registry::Registry, system::ParSystem};
+/// use brood::{
+///     query::{filter, result, views},
+///     registry::Registry,
+///     system::ParSystem,
+/// };
 /// use rayon::iter::ParallelIterator;
 ///
 /// // Define components.
@@ -26,7 +30,10 @@ use crate::{
 ///     type Views = views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, Self::Views>) where R: Registry + 'a {
+///     fn run<R>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, Self::Views>)
+///     where
+///         R: Registry + 'a,
+///     {
 ///         query_results.for_each(|result!(foo, bar)| {
 ///             if bar.0 {
 ///                 foo.0 += 1;
@@ -55,7 +62,11 @@ pub trait ParSystem<'a> {
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{query::{filter, result, views}, registry::Registry, system::ParSystem};
+    /// use brood::{
+    ///     query::{filter, result, views},
+    ///     registry::Registry,
+    ///     system::ParSystem,
+    /// };
     /// use rayon::iter::ParallelIterator;
     ///
     /// // Define components.
@@ -69,7 +80,10 @@ pub trait ParSystem<'a> {
     ///     type Views = views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, Self::Views>) where R: Registry + 'a {
+    ///     fn run<R>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, Self::Views>)
+    ///     where
+    ///         R: Registry + 'a,
+    ///     {
     ///         query_results.for_each(|result!(foo, bar)| {
     ///             if bar.0 {
     ///                 foo.0 += 1;

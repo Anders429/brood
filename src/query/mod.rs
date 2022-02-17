@@ -13,7 +13,11 @@
 //! and filters out entities that do not have the component `Baz`.
 //!
 //! ``` rust
-//! use brood::{entity, query::{filter, result, views}, registry, World};
+//! use brood::{
+//!     entity,
+//!     query::{filter, result, views},
+//!     registry, World,
+//! };
 //!
 //! // Define components.
 //! struct Foo(u32);
