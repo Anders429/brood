@@ -16,7 +16,11 @@
 //! modified during iteration.
 //!
 //! ``` rust
-//! use brood::{entity, query::{filter, result, views}, registry, World};
+//! use brood::{
+//!     entity,
+//!     query::{filter, result, views},
+//!     registry, World,
+//! };
 //!
 //! struct Foo(u32);
 //! struct Bar(bool);

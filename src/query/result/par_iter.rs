@@ -24,7 +24,11 @@ use rayon::iter::{
 ///
 /// # Example
 /// ``` rust
-/// use brood::{entity, query::{filter, result, views}, registry, World};
+/// use brood::{
+///     entity,
+///     query::{filter, result, views},
+///     registry, World,
+/// };
 /// use rayon::iter::ParallelIterator;
 ///
 /// struct Foo(u32);
@@ -35,11 +39,13 @@ use rayon::iter::{
 /// let mut world = World::<Registry>::new();
 /// world.push(entity!(Foo(42), Bar(true)));
 ///
-/// world.par_query::<views!(&mut Foo, &Bar), filter::None>().for_each(|result!(foo, bar)| {
-///     if bar.0 {
-///         foo.0 += 1;
-///     }
-/// });
+/// world
+///     .par_query::<views!(&mut Foo, &Bar), filter::None>()
+///     .for_each(|result!(foo, bar)| {
+///         if bar.0 {
+///             foo.0 += 1;
+///         }
+///     });
 /// ```
 ///
 /// [`Component`]: crate::component::Component
