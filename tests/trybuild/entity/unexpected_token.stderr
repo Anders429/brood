@@ -1,0 +1,5 @@
+error: no rules expected the token `+`
+ --> tests/trybuild/entity/unexpected_token.rs:8:29
+  |
+8 |     let entity = entity!(A, + B,);
+  |                             ^ no rules expected this token in macro call
