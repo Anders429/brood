@@ -1,0 +1,5 @@
+error: no rules expected the token `,`
+ --> tests/trybuild/entity/comma_alone.rs:4:26
+  |
+4 |     let entity = entity!(,);
+  |                          ^ no rules expected this token in macro call
