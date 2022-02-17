@@ -227,10 +227,10 @@ macro_rules! entities {
             )
         }
     };
-    ($(($($components:expr),*)),* $(,)?) => {
+    ($(($($components:expr),*)),+ $(,)?) => {
         unsafe {
             $crate::entities::Batch::new_unchecked(
-                $crate::entities!(@transpose [] $(($($components),*)),*)
+                $crate::entities!(@transpose [] $(($($components),*)),+)
             )
         }
     };
@@ -244,18 +244,21 @@ macro_rules! entities {
             $crate::entities::Batch::new_unchecked($crate::entities::Null)
         }
     };
+
     (@cloned ($component:expr $(,$components:expr)* $(,)?); $n:expr) => {
         ($crate::reexports::vec![$component; $n], $crate::entities!(@cloned ($($components),*); $n))
     };
     (@cloned (); $n:expr) => {
         $crate::entities::Null
     };
+
     (@transpose [$([$($column:expr),*])*] $(($component:expr $(,$components:expr)*  $(,)?)),*) => {
         $crate::entities!(@transpose [$([$($column),*])* [$($component),*]] $(($($components),*)),*)
     };
     (@transpose [$([$($column:expr),*])*] $(()),*) => {
         $crate::entities!(@as_vec ($(($($column),*)),*))
     };
+
     (@as_vec (($($column:expr),*) $(,($($columns:expr),*))* $(,)?)) => {
         ($crate::reexports::vec![$($column),*], $crate::entities!(@as_vec ($(($($columns),*)),*)))
     };
