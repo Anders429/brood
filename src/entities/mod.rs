@@ -131,7 +131,7 @@ where
     /// struct Foo(usize);
     /// struct Bar(bool);
     ///
-    /// let batch = Batch::new((vec![42; 10], (vec![true; 10] ,entities::Null)));
+    /// let batch = Batch::new((vec![42; 10], (vec![true; 10], entities::Null)));
     /// ```
     ///
     /// [`Entities`]: crate::entities::Entities
@@ -159,7 +159,7 @@ where
     /// struct Foo(usize);
     /// struct Bar(bool);
     ///
-    /// let batch = unsafe { Batch::new_unchecked((vec![42; 10], (vec![true; 10] ,entities::Null))) };
+    /// let batch = unsafe { Batch::new_unchecked((vec![42; 10], (vec![true; 10], entities::Null))) };
     /// ```
     /// [`Entities`]: crate::entities::Entities
     /// [`entities!]: crate::entities!
