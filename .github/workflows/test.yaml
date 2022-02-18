@@ -165,7 +165,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: sudo apt-get install valgrind
+    - run: wget https://sourceware.org/pub/valgrind/valgrind-3.18.1.tar.bz2
+    - run: tar xvf valgrind-3.18.1.tar.bz2
+    - run: cd valgrind-3.18.1
+    - run: sudo make install
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: nightly
