@@ -17,3 +17,4 @@ trybuild_test!(entity);
 trybuild_test!(registry);
 #[cfg(feature = "parallel")]
 trybuild_test!(stages);
+trybuild_test!(views);
