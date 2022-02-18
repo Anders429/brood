@@ -167,7 +167,7 @@ jobs:
     - uses: actions/checkout@v2
     - run: wget https://sourceware.org/pub/valgrind/valgrind-3.18.1.tar.bz2
     - run: tar xvf valgrind-3.18.1.tar.bz2
-    - run: /configure
+    - run: ./configure
       working-directory: ./valgrind-3.18.1
     - run: make
       working-directory: ./valgrind-3.18.1
