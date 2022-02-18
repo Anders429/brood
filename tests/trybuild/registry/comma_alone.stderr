@@ -1,5 +1,5 @@
 error: no rules expected the token `,`
- --> tests/trybuild/registry/comma_alone.rs:4:30
+ --> tests/trybuild/registry/comma_alone.rs:3:27
   |
-4 |     let registry = registry!(,);
-  |                              ^ no rules expected this token in macro call
+3 | type Registry = registry!(,);
+  |                           ^ no rules expected this token in macro call

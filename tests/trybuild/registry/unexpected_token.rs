@@ -4,6 +4,6 @@ use brood::registry;
 struct A;
 struct B;
 
-fn main() {
-    let registry = registry!(A, + B,);
-}
+type Registry = registry!(A, + B,);
+
+fn main() {}

@@ -1,5 +1,5 @@
 error: no rules expected the token `+`
- --> tests/trybuild/registry/unexpected_token.rs:8:33
+ --> tests/trybuild/registry/unexpected_token.rs:7:30
   |
-8 |     let registry = registry!(A, + B,);
-  |                                 ^ no rules expected this token in macro call
+7 | type Registry = registry!(A, + B,);
+  |                              ^ no rules expected this token in macro call

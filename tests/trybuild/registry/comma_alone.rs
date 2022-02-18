@@ -1,5 +1,5 @@
 use brood::registry;
 
-fn main() {
-    let registry = registry!(,);
-}
+type Registry = registry!(,);
+
+fn main() {}
