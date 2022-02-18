@@ -173,7 +173,7 @@ jobs:
       working-directory: ./valgrind-3.18.1
     - run: sudo make install
       working-directory: ./valgrind-3.18.1
-    - run: apt-get install libc6-dbg:i386
+    - run: sudo apt-get install libc6-dbg:i386
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: nightly
