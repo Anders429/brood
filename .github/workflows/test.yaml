@@ -144,6 +144,7 @@ jobs:
     - run: wget https://sourceware.org/pub/valgrind/valgrind-3.18.1.tar.bz2
     - run: tar xvf valgrind-3.18.1.tar.bz2
     - run: cd valgrind-3.18.1
+    - run: ./configure
     - run: make
     - run: sudo make install
     - uses: actions-rs/toolchain@v1
