@@ -194,7 +194,7 @@ where
                 .ok_or_else(|| {
                     de::Error::custom(format!("expected a column of type `{}`", type_name::<C>()))
                 })?;
-            components.push((component_column.0 as *mut u8, component_column.1));
+            components.push((component_column.0.cast::<u8>(), component_column.1));
         }
 
         R::deserialize_components_by_column(components, length, seq, identifier_iter)

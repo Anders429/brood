@@ -229,7 +229,7 @@ where
     {
         if identifier_iter.next().unwrap_unchecked() {
             let mut v = ManuallyDrop::new(Vec::<C>::with_capacity(length));
-            components.push((v.as_mut_ptr() as *mut u8, v.capacity()));
+            components.push((v.as_mut_ptr().cast::<u8>(), v.capacity()));
         }
 
         R::new_components_with_capacity(components, length, identifier_iter);
@@ -284,7 +284,7 @@ where
                 component_column.1,
             ));
 
-            ptr::write_unaligned(buffer as *mut C, v.swap_remove(index));
+            ptr::write_unaligned(buffer.cast::<C>(), v.swap_remove(index));
             buffer = buffer.add(size_of::<C>());
 
             components = components.get_unchecked(1..);
@@ -317,7 +317,7 @@ where
                 v.push(component.assume_init());
                 component = MaybeUninit::uninit();
 
-                *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());
+                *component_column = (v.as_mut_ptr().cast::<u8>(), v.capacity());
             } else {
                 let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
                     component_column.0.cast::<C>(),
@@ -327,7 +327,7 @@ where
                 v.push(buffer.cast::<C>().read_unaligned());
                 buffer = buffer.add(size_of::<C>());
 
-                *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());
+                *component_column = (v.as_mut_ptr().cast::<u8>(), v.capacity());
             }
 
             components = components.get_unchecked_mut(1..);
@@ -366,7 +366,7 @@ where
                 component_column.1,
             ));
             v.push(buffer.cast::<C>().read_unaligned());
-            *component_column = (v.as_mut_ptr() as *mut u8, v.capacity());
+            *component_column = (v.as_mut_ptr().cast::<u8>(), v.capacity());
 
             components = components.get_unchecked_mut(1..);
             buffer = buffer.add(size_of::<C>());
