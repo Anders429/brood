@@ -1,3 +1,5 @@
+#![cfg(not(skip_trybuild))]
+
 macro_rules! trybuild_test {
     ($test_name:ident) => {
         #[test]

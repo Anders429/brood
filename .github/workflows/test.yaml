@@ -136,6 +136,7 @@ jobs:
         args: miri test --feature-powerset --optional-deps
       env:
         MIRIFLAGS: -Zmiri-disable-isolation -Zmiri-ignore-leaks
+        RUSTFLAGS: --cfg skip_trybuild
 
   valgrind:
     runs-on: ubuntu-latest
@@ -164,6 +165,8 @@ jobs:
       with:
         command: hack
         args: valgrind test --feature-powerset --optional-deps
+        env:
+          RUSTFLAGS: --cfg skip_trybuild
 
   codecov:
     runs-on: ubuntu-latest
