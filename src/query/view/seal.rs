@@ -39,7 +39,7 @@ where
         slice::from_raw_parts::<'a, C>(
             columns
                 .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
-                .0 as *mut C,
+                .0.cast::<C>(),
             length,
         )
         .iter()
@@ -65,7 +65,7 @@ where
         slice::from_raw_parts_mut::<'a, C>(
             columns
                 .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
-                .0 as *mut C,
+                .0.cast::<C>(),
             length,
         )
         .iter_mut()
@@ -97,7 +97,7 @@ where
     ) -> Self::Result {
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
-                slice::from_raw_parts(columns.get_unchecked(*index).0 as *mut C, length)
+                slice::from_raw_parts(columns.get_unchecked(*index).0.cast::<C>(), length)
                     .iter()
                     .map(wrap_some),
             ),
@@ -131,7 +131,7 @@ where
 
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
-                slice::from_raw_parts_mut(columns.get_unchecked(*index).0 as *mut C, length)
+                slice::from_raw_parts_mut(columns.get_unchecked(*index).0.cast::<C>(), length)
                     .iter_mut()
                     .map(wrap_some),
             ),
