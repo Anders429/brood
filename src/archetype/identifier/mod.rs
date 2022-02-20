@@ -113,15 +113,15 @@ where
         slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8)
     }
 
-    pub(crate) unsafe fn iter(&self) -> IdentifierIter<R> {
+    pub(crate) unsafe fn iter(self) -> IdentifierIter<R> {
         IdentifierIter::<R>::new(self.pointer)
     }
 
-    pub(crate) fn as_vec(&self) -> Vec<u8> {
+    pub(crate) fn as_vec(self) -> Vec<u8> {
         unsafe { self.as_slice() }.to_vec()
     }
 
-    pub(crate) unsafe fn get_unchecked(&self, index: usize) -> bool {
+    pub(crate) unsafe fn get_unchecked(self, index: usize) -> bool {
         (self.as_slice().get_unchecked(index / 8) >> (index % 8) & 1) != 0
     }
 }
