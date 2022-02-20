@@ -8,7 +8,7 @@ use core::{
     any::{type_name, TypeId},
     fmt::DebugList,
     marker::PhantomData,
-    mem::{size_of, ManuallyDrop, MaybeUninit},
+    mem::{drop, size_of, ManuallyDrop, MaybeUninit},
     ptr,
 };
 use hashbrown::HashMap;
@@ -390,11 +390,11 @@ where
     {
         if identifier_iter.next().unwrap_unchecked() {
             let component_column = components.get_unchecked(0);
-            let _ = Vec::<C>::from_raw_parts(
+            drop(Vec::<C>::from_raw_parts(
                 component_column.0.cast::<C>(),
                 length,
                 component_column.1,
-            );
+            ));
             components = components.get_unchecked(1..);
         }
         R::free_components(components, length, identifier_iter);
@@ -414,11 +414,11 @@ where
                     return;
                 }
             };
-            let _ = Vec::<C>::from_raw_parts(
+            drop(Vec::<C>::from_raw_parts(
                 component_column.0.cast::<C>(),
                 length,
                 component_column.1,
-            );
+            ));
             components = match components.get(1..) {
                 Some(components) => components,
                 None => {

@@ -12,7 +12,7 @@ use core::{
     fmt::Debug,
     hash::{Hash, Hasher},
     marker::PhantomData,
-    mem::ManuallyDrop,
+    mem::{drop, ManuallyDrop},
     slice,
 };
 
@@ -75,9 +75,9 @@ where
     R: Registry,
 {
     fn drop(&mut self) {
-        unsafe {
-            let _ = Vec::from_raw_parts(self.pointer, (R::LEN + 7) / 8, self.capacity);
-        }
+        drop(unsafe {
+            Vec::from_raw_parts(self.pointer, (R::LEN + 7) / 8, self.capacity)
+        })
     }
 }
 
