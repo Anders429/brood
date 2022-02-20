@@ -74,8 +74,8 @@ where
                 self.world
                     .archetypes
                     .get_unchecked_mut(self.location.identifier)
-                    .set_component_unchecked(self.location.index, component)
-            };
+                    .set_component_unchecked(self.location.index, component);
+            }
         } else {
             // The component needs to be added to the entity.
             let (entity_identifier, current_component_bytes) = unsafe {

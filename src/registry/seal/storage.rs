@@ -378,7 +378,7 @@ where
             components,
             length,
             identifier_iter,
-        )
+        );
     }
 
     unsafe fn free_components<R_>(
