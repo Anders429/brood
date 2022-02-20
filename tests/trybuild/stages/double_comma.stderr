@@ -1,0 +1,5 @@
+error: no rules expected the token `,`
+ --> tests/trybuild/stages/double_comma.rs:4:11
+  |
+4 |     flush,,
+  |           ^ no rules expected this token in macro call

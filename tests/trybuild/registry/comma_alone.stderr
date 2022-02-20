@@ -1,0 +1,5 @@
+error: no rules expected the token `,`
+ --> tests/trybuild/registry/comma_alone.rs:3:27
+  |
+3 | type Registry = registry!(,);
+  |                           ^ no rules expected this token in macro call

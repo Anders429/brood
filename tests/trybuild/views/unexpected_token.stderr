@@ -1,0 +1,5 @@
+error: no rules expected the token `+`
+ --> tests/trybuild/views/unexpected_token.rs:7:25
+  |
+7 | type Views = views!(&A, + &B,);
+  |                         ^ no rules expected this token in macro call

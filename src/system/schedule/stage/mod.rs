@@ -115,20 +115,159 @@ doc::non_root_macro! {
     /// [`schedule::Builder`]: crate::system::schedule::Builder
     /// [`System`]: crate::system::System
     macro_rules! stages {
-        ($($idents:tt $(: $systems:tt)?),* $(,)?) => (
-            stages!(internal @ $crate::system::schedule::stage::Null; $($idents $(: $systems)?,)*)
-        );
-        (internal @ $processed:ty; system: $system:ty, $($idents:tt $(: $systems:tt)?),* $(,)?) => (
-            stages!(internal @ ($crate::system::schedule::stage::Stage<$system, $crate::system::Null>, $processed); $($idents $(: $systems)?,)*)
-        );
-        (internal @ $processed:ty; par_system: $par_system:ty, $($idents:tt $(: $systems:tt)?),* $(,)?) => (
-            stages!(internal @ ($crate::system::schedule::stage::Stage<$crate::system::Null, $par_system>, $processed); $($idents $(: $systems)?,)*)
-        );
-        (internal @ $processed:ty; flush, $($idents:tt $(: $systems:tt)?),* $(,)?) => (
-            stages!(internal @ ($crate::system::schedule::stage::Stage<$crate::system::Null, $crate::system::Null>, $processed); $($idents $(: $systems)?,)*)
-        );
-        (internal @ $processed:ty; $($idents:tt $(: $systems:tt)?),* $(,)?) => (
-            $processed
+        // Entry point for the macro.
+        //
+        // This just calls into the internal macro with all of the correct parameters.
+        ($($tt:tt)*) => (
+            $crate::stages_internal!(@task $crate::system::schedule::stage::Null; ($($tt)*) ($($tt)*))
         );
     }
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! stages_internal {
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // Generic task macro.
+    //
+    // These patterns are for matching and processing generic tasks listed in the token tree. When
+    // each of the valid task types (system, par_system, and flush) are encountered, the tokens are
+    // passed to the appropriate patterns (@system, @par_system, and @flush) to be consumed.
+    //
+    // Note that we require two copies of the input token tree here. The first is matched on, and
+    // the second is used to trigger errors.
+    //
+    // Invoked as:
+    // $crate::stages_internal!(@task $crate::system::schedule::stage::Null; ($($tt)*) ($($tt)*))
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Match a system task.
+    (@task $processed:ty; (system $($rest:tt)*) $copy:tt) => (
+        $crate::stages_internal!(@system $processed; ($($rest)*) ($($rest)*))
+    );
+
+    // Match a par_system task.
+    (@task $processed:ty; (par_system $($rest:tt)*) $copy:tt) => (
+        $crate::stages_internal!(@par_system $processed; ($($rest)*) ($($rest)*))
+    );
+
+    // Match a flush task.
+    (@task $processed:ty; (flush $($rest:tt)*) $copy:tt) => (
+        $crate::stages_internal!(@flush $processed; ($($rest)*) ($($rest)*))
+    );
+
+    // End case. We return the processed result.
+    (@task $processed:ty; () ()) => (
+        $processed
+    );
+
+    // Match any other unexpected input. This will output an error.
+    (@task $processed:ty; ($($rest:tt)*) $copy:tt) => (
+        $crate::unexpected!($($rest)*)
+    );
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // System task macro.
+    //
+    // These patterns match the remainder of a system task entry. This will match a colon followed
+    // by a system type. Trailing commas are also matched here.
+    //
+    // Note that we require two copies of the input token tree here. The first is matched on, and
+    // the second is used to trigger errors.
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Match a system type without a trailing comma. This will only match at the end of the token
+    // tree.
+    (@system $processed:ty; (: $system:ty) $copy:tt) => {
+        $crate::stages_internal(@task ($crate::system::schedule::stage::Stage<$system, $crate::system::Null>, $processed); () ())
+    };
+
+    // Match a system type with a trailing comma.
+    (@system $processed:ty; (: $system:ty, $($rest:tt)*) $copy:tt) => (
+        $crate::stages_internal!(@task ($crate::system::schedule::stage::Stage<$system, $crate::system::Null>, $processed); ($($rest)*) ($($rest)*))
+    );
+
+    // Match a system type with no trailing comma not at the end of the token tree. This will
+    // output an error.
+    (@system $processed:ty; (: $system:tt $($rest:tt)*) $copy:tt) => {
+        $crate::unexpected!($($rest)*)
+    };
+
+    // Match a comma with no system type provided. This will output an error.
+    (@system $processed:ty; (, $($rest:tt)*) ($comma:tt $($copy:tt)*)) => (
+        $crate::unexpected!($comma)
+    );
+
+    // Match any other unexpected input. This will output an error.
+    (@system $processed:ty; ($($rest:tt)*) $copy:tt) => (
+        $crate::unexpected!($($rest)*)
+    );
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // Parallel system task macro.
+    //
+    // These patterns match the remainder of a par_system task entry. This will match a colon
+    // followed by a parallel system type. Trailing commas are also matched here.
+    //
+    // Note that we require two copies of the input token tree here. The first is matched on, and
+    // the second is used to trigger errors.
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Match a parallel system type without a trailing comma. This will only match at the end of
+    // the token tree.
+    (@par_system $processed:ty; (: $par_system:ty) $copy:tt) => (
+        $crate::stages_internal!(@task ($crate::system::schedule::stage::Stage<$crate::system::Null, $par_system>, $processed); () ())
+    );
+
+    // Match a parallel system type with a trailing comma.
+    (@par_system $processed:ty; (: $par_system:ty, $($rest:tt)*) $copy:tt) => (
+        $crate::stages_internal!(@task ($crate::system::schedule::stage::Stage<$crate::system::Null, $par_system>, $processed); ($($rest)*) ($($rest)*))
+    );
+
+    // Match a parallel system type with no trailing comma not at the end of the token tree. This
+    // will output an error.
+    (@par_system $processed:ty; (: $par_system:tt $($rest:tt)*) $copy:tt) => {
+        $crate::unexpected!($($rest)*)
+    };
+
+    // Match a comma with no parallel system type provided. This will output an error.
+    (@par_system $processed:ty; (, $($rest:tt)*) ($comma:tt $($copy:tt)*)) => (
+        $crate::unexpected!($comma)
+    );
+
+    // Match any other unexpected input. This will output an error.
+    (@par_system $processed:ty; ($($rest:tt)*) $copy:tt) => (
+        $crate::unexpected!($($rest)*)
+    );
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // Flush task macro.
+    //
+    // These patterns match the remainder of a flush task entry, which is only either a comma or
+    // nothing.
+    //
+    // Note that we require two copies of the input token tree here. The first is matched on, and
+    // the second is used to trigger errors.
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Match a comma.
+    (@flush $processed:ty; (, $($rest:tt)*) $copy:tt) => (
+        $crate::stages_internal!(@task ($crate::system::schedule::stage::Stage<$crate::system::Null, $crate::system::Null>, $processed); ($($rest)*) ($($rest)*))
+    );
+
+    // Match a colon. This is invalid and will output an error.
+    (@flush $processed:ty; (: $($rest:tt)*) ($colon:tt $($copy:tt)*)) => (
+        $crate::unexpected!($colon)
+    );
+
+    // Match nothing. This will only occur at the end of the input token tree, which is the only
+    // time when a trailing comma is not required.
+    (@flush $processed:ty; () ()) => (
+        $crate::stages_internal!(@task ($crate::system::schedule::stage::Stage<$crate::system::Null, $crate::system::Null>, $processed); () ())
+    );
+
+    // Match any other unexpected input. This will output an error.
+    (@flush $processed:ty; ($($rest:tt)*) $copy:tt) => (
+        $crate::unexpected!($($rest)*)
+    );
 }

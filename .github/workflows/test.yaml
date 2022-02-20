@@ -136,12 +136,21 @@ jobs:
         args: miri test --feature-powerset --optional-deps
       env:
         MIRIFLAGS: -Zmiri-disable-isolation -Zmiri-ignore-leaks
+        RUSTFLAGS: --cfg skip_trybuild
 
   valgrind:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: sudo apt-get install valgrind
+    - run: wget https://sourceware.org/pub/valgrind/valgrind-3.18.1.tar.bz2
+    - run: tar xvf valgrind-3.18.1.tar.bz2
+    - run: ./configure
+      working-directory: ./valgrind-3.18.1
+    - run: make
+      working-directory: ./valgrind-3.18.1
+    - run: sudo make install
+      working-directory: ./valgrind-3.18.1
+    - run: sudo apt-get install libc6-dbg
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: nightly
@@ -156,6 +165,8 @@ jobs:
       with:
         command: hack
         args: valgrind test --feature-powerset --optional-deps
+      env:
+        RUSTFLAGS: --cfg skip_trybuild
 
   codecov:
     runs-on: ubuntu-latest

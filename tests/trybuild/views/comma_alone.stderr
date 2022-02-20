@@ -1,0 +1,5 @@
+error: no rules expected the token `,`
+ --> tests/trybuild/views/comma_alone.rs:3:21
+  |
+3 | type Views = views!(,);
+  |                     ^ no rules expected this token in macro call

@@ -1,0 +1,5 @@
+error: no rules expected the token `+`
+ --> tests/trybuild/result/unexpected_token.rs:8:20
+  |
+8 |     let result!(a, + b) = (A, (A, result::Null));
+  |                    ^ no rules expected this token in macro call

@@ -1,0 +1,5 @@
+error: no rules expected the token `+`
+ --> tests/trybuild/registry/unexpected_token.rs:7:30
+  |
+7 | type Registry = registry!(A, + B,);
+  |                              ^ no rules expected this token in macro call

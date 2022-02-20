@@ -1,0 +1,5 @@
+error[E0308]: mismatched types
+  --> tests/trybuild/entities/length_not_integer.rs:10:38
+   |
+10 |     let entities = entities!((A, B); 1.5);
+   |                                      ^^^ expected `usize`, found floating-point number
