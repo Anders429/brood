@@ -354,7 +354,7 @@ where
                         &mut components,
                         self.0.length,
                         self.0.identifier.iter(),
-                    )
+                    );
                 }
                 let mut vec_length = 0;
 

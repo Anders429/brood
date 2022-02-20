@@ -61,7 +61,7 @@ where
                     buffer.push(
                         seq.next_element()?
                             .ok_or_else(|| de::Error::invalid_length(i, &self))?,
-                    )
+                    );
                 }
 
                 // Check that trailing bits are not set.

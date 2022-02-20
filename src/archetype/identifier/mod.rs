@@ -77,7 +77,7 @@ where
     fn drop(&mut self) {
         drop(unsafe {
             Vec::from_raw_parts(self.pointer, (R::LEN + 7) / 8, self.capacity)
-        })
+        });
     }
 }
 
