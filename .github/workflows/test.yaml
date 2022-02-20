@@ -165,8 +165,8 @@ jobs:
       with:
         command: hack
         args: valgrind test --feature-powerset --optional-deps
-        env:
-          RUSTFLAGS: --cfg skip_trybuild
+      env:
+        RUSTFLAGS: --cfg skip_trybuild
 
   codecov:
     runs-on: ubuntu-latest
