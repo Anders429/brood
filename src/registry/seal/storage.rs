@@ -19,19 +19,19 @@ pub trait Storage {
     unsafe fn create_component_map_for_key<R>(
         component_map: &mut HashMap<TypeId, usize>,
         index: usize,
-        identifier_iter: archetype::IdentifierIter<R>,
+        identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry;
 
     unsafe fn new_components_with_capacity<R>(
         components: &mut Vec<(*mut u8, usize)>,
         length: usize,
-        identifier_iter: archetype::IdentifierIter<R>,
+        identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry;
 
     unsafe fn size_of_components_for_identifier<R>(
-        identifier_iter: archetype::IdentifierIter<R>,
+        identifier_iter: archetype::identifier::Iter<R>,
     ) -> usize
     where
         R: Registry;
@@ -40,7 +40,7 @@ pub trait Storage {
         index: usize,
         components: &[(*mut u8, usize)],
         length: usize,
-        identifier_iter: archetype::IdentifierIter<R>,
+        identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry;
 
@@ -49,7 +49,7 @@ pub trait Storage {
         buffer: *mut u8,
         components: &[(*mut u8, usize)],
         length: usize,
-        identifier_iter: archetype::IdentifierIter<R>,
+        identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry;
 
@@ -58,7 +58,7 @@ pub trait Storage {
         component: MaybeUninit<C>,
         components: &mut [(*mut u8, usize)],
         length: usize,
-        identifier_iter: archetype::IdentifierIter<R>,
+        identifier_iter: archetype::identifier::Iter<R>,
     ) where
         C: Component,
         R: Registry;
@@ -68,7 +68,7 @@ pub trait Storage {
         component: PhantomData<C>,
         components: &mut [(*mut u8, usize)],
         length: usize,
-        identifier_iter: archetype::IdentifierIter<R>,
+        identifier_iter: archetype::identifier::Iter<R>,
     ) where
         C: Component,
         R: Registry;
@@ -76,20 +76,20 @@ pub trait Storage {
     unsafe fn free_components<R>(
         components: &[(*mut u8, usize)],
         length: usize,
-        identifier_iter: archetype::IdentifierIter<R>,
+        identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry;
 
     unsafe fn try_free_components<R>(
         components: &[(*mut u8, usize)],
         length: usize,
-        identifier_iter: archetype::IdentifierIter<R>,
+        identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry;
 
     unsafe fn debug_identifier<R>(
         debug_list: &mut DebugList,
-        identifier_iter: archetype::IdentifierIter<R>,
+        identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry;
 }
@@ -100,7 +100,7 @@ impl Storage for Null {
     unsafe fn create_component_map_for_key<R>(
         _component_map: &mut HashMap<TypeId, usize>,
         _index: usize,
-        _identifier_iter: archetype::IdentifierIter<R>,
+        _identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry,
     {
@@ -109,14 +109,14 @@ impl Storage for Null {
     unsafe fn new_components_with_capacity<R>(
         _components: &mut Vec<(*mut u8, usize)>,
         _length: usize,
-        _identifier_iter: archetype::IdentifierIter<R>,
+        _identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry,
     {
     }
 
     unsafe fn size_of_components_for_identifier<R>(
-        _identifier_iter: archetype::IdentifierIter<R>,
+        _identifier_iter: archetype::identifier::Iter<R>,
     ) -> usize
     where
         R: Registry,
@@ -128,7 +128,7 @@ impl Storage for Null {
         _index: usize,
         _components: &[(*mut u8, usize)],
         _length: usize,
-        _identifier_iter: archetype::IdentifierIter<R>,
+        _identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry,
     {
@@ -139,7 +139,7 @@ impl Storage for Null {
         _buffer: *mut u8,
         _components: &[(*mut u8, usize)],
         _length: usize,
-        _identifier_iter: archetype::IdentifierIter<R>,
+        _identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry,
     {
@@ -150,7 +150,7 @@ impl Storage for Null {
         _component: MaybeUninit<C>,
         _components: &mut [(*mut u8, usize)],
         _length: usize,
-        _identifier_iter: archetype::IdentifierIter<R>,
+        _identifier_iter: archetype::identifier::Iter<R>,
     ) where
         C: Component,
         R: Registry,
@@ -162,7 +162,7 @@ impl Storage for Null {
         _component: PhantomData<C>,
         _components: &mut [(*mut u8, usize)],
         _length: usize,
-        _identifier_iter: archetype::IdentifierIter<R>,
+        _identifier_iter: archetype::identifier::Iter<R>,
     ) where
         C: Component,
         R: Registry,
@@ -172,7 +172,7 @@ impl Storage for Null {
     unsafe fn free_components<R>(
         _components: &[(*mut u8, usize)],
         _length: usize,
-        _identifier_iter: archetype::IdentifierIter<R>,
+        _identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry,
     {
@@ -181,7 +181,7 @@ impl Storage for Null {
     unsafe fn try_free_components<R>(
         _components: &[(*mut u8, usize)],
         _length: usize,
-        _identifier_iter: archetype::IdentifierIter<R>,
+        _identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry,
     {
@@ -189,7 +189,7 @@ impl Storage for Null {
 
     unsafe fn debug_identifier<R>(
         _debug_list: &mut DebugList,
-        _identifier_iter: archetype::IdentifierIter<R>,
+        _identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry,
     {
@@ -209,7 +209,7 @@ where
     unsafe fn create_component_map_for_key<R_>(
         component_map: &mut HashMap<TypeId, usize>,
         mut index: usize,
-        mut identifier_iter: archetype::IdentifierIter<R_>,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
     ) where
         R_: Registry,
     {
@@ -223,7 +223,7 @@ where
     unsafe fn new_components_with_capacity<R_>(
         components: &mut Vec<(*mut u8, usize)>,
         length: usize,
-        mut identifier_iter: archetype::IdentifierIter<R_>,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
     ) where
         R_: Registry,
     {
@@ -236,7 +236,7 @@ where
     }
 
     unsafe fn size_of_components_for_identifier<R_>(
-        mut identifier_iter: archetype::IdentifierIter<R_>,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
     ) -> usize
     where
         R_: Registry,
@@ -249,7 +249,7 @@ where
         index: usize,
         mut components: &[(*mut u8, usize)],
         length: usize,
-        mut identifier_iter: archetype::IdentifierIter<R_>,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
     ) where
         R_: Registry,
     {
@@ -272,7 +272,7 @@ where
         mut buffer: *mut u8,
         mut components: &[(*mut u8, usize)],
         length: usize,
-        mut identifier_iter: archetype::IdentifierIter<R_>,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
     ) where
         R_: Registry,
     {
@@ -297,7 +297,7 @@ where
         mut component: MaybeUninit<C_>,
         mut components: &mut [(*mut u8, usize)],
         length: usize,
-        mut identifier_iter: archetype::IdentifierIter<R_>,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
     ) where
         C_: Component,
         R_: Registry,
@@ -347,7 +347,7 @@ where
         component: PhantomData<C_>,
         mut components: &mut [(*mut u8, usize)],
         length: usize,
-        mut identifier_iter: archetype::IdentifierIter<R_>,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
     ) where
         C_: Component,
         R_: Registry,
@@ -384,7 +384,7 @@ where
     unsafe fn free_components<R_>(
         mut components: &[(*mut u8, usize)],
         length: usize,
-        mut identifier_iter: archetype::IdentifierIter<R_>,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
     ) where
         R_: Registry,
     {
@@ -403,7 +403,7 @@ where
     unsafe fn try_free_components<R_>(
         mut components: &[(*mut u8, usize)],
         length: usize,
-        mut identifier_iter: archetype::IdentifierIter<R_>,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
     ) where
         R_: Registry,
     {
@@ -431,7 +431,7 @@ where
 
     unsafe fn debug_identifier<R_>(
         debug_list: &mut DebugList,
-        mut identifier_iter: archetype::IdentifierIter<R_>,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
     ) where
         R_: Registry,
     {
