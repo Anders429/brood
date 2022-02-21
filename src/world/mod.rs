@@ -114,6 +114,7 @@ where
     /// ```
     ///
     /// [`Registry`]: crate::registry::Registry
+    #[must_use]
     pub fn new() -> Self {
         Self::from_raw_parts(Archetypes::new(), entity::Allocator::new())
     }
