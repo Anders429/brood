@@ -11,7 +11,7 @@ pub trait RegistryPartialEq: Registry {
         components_a: &[(*mut u8, usize)],
         components_b: &[(*mut u8, usize)],
         length: usize,
-        identifier_iter: archetype::IdentifierIter<R>,
+        identifier_iter: archetype::identifier::Iter<R>,
     ) -> bool
     where
         R: Registry;
@@ -22,7 +22,7 @@ impl RegistryPartialEq for Null {
         _components_a: &[(*mut u8, usize)],
         _components_b: &[(*mut u8, usize)],
         _length: usize,
-        _identifier_iter: archetype::IdentifierIter<R>,
+        _identifier_iter: archetype::identifier::Iter<R>,
     ) -> bool
     where
         R: Registry,
@@ -40,7 +40,7 @@ where
         mut components_a: &[(*mut u8, usize)],
         mut components_b: &[(*mut u8, usize)],
         length: usize,
-        mut identifier_iter: archetype::IdentifierIter<R_>,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
     ) -> bool
     where
         R_: Registry,

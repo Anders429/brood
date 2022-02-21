@@ -3,7 +3,7 @@
 mod impl_serde;
 mod iter;
 
-pub(crate) use iter::IdentifierIter;
+pub use iter::Iter;
 
 use crate::registry::Registry;
 use alloc::vec::Vec;
@@ -52,8 +52,8 @@ where
         }
     }
 
-    pub(crate) unsafe fn iter(&self) -> IdentifierIter<R> {
-        IdentifierIter::<R>::new(self.pointer)
+    pub(crate) unsafe fn iter(&self) -> Iter<R> {
+        Iter::<R>::new(self.pointer)
     }
 
     pub(crate) fn size_of_components(&self) -> usize {
@@ -111,8 +111,8 @@ where
         slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8)
     }
 
-    pub(crate) unsafe fn iter(self) -> IdentifierIter<R> {
-        IdentifierIter::<R>::new(self.pointer)
+    pub(crate) unsafe fn iter(self) -> Iter<R> {
+        Iter::<R>::new(self.pointer)
     }
 
     pub(crate) fn as_vec(self) -> Vec<u8> {
