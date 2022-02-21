@@ -63,6 +63,9 @@ where
     ///
     /// entry.add(Baz(1.5));
     /// ```
+    ///
+    /// # Panics
+    /// Panics if the component `C` is not in the registry R.
     pub fn add<C>(&mut self, component: C)
     where
         C: Component,
@@ -134,6 +137,9 @@ where
     ///
     /// entry.remove::<Foo>();
     /// ```
+    ///
+    /// # Panics
+    /// Panics if the component `C` is not in the registry R.
     pub fn remove<C>(&mut self)
     where
         C: Component,
