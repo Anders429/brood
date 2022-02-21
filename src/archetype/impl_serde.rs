@@ -6,7 +6,13 @@ use crate::{
     registry::{RegistryDeserialize, RegistrySerialize},
 };
 use alloc::vec::Vec;
-use core::{any::type_name, fmt, marker::PhantomData, mem::ManuallyDrop, write};
+use core::{
+    any::type_name,
+    fmt,
+    marker::PhantomData,
+    mem::{drop, ManuallyDrop},
+    write,
+};
 use serde::{
     de::{self, DeserializeSeed, SeqAccess, Visitor},
     ser::SerializeTuple,
@@ -354,7 +360,7 @@ where
                         &mut components,
                         self.0.length,
                         self.0.identifier.iter(),
-                    )
+                    );
                 }
                 let mut vec_length = 0;
 
@@ -368,13 +374,13 @@ where
                         )
                     });
                     if let Err(error) = result {
-                        let _ = unsafe {
+                        drop(unsafe {
                             Vec::from_raw_parts(
                                 entity_identifiers.0,
                                 vec_length,
                                 entity_identifiers.1,
                             )
-                        };
+                        });
                         unsafe {
                             R::free_components(&components, vec_length, self.0.identifier.iter());
                         }
@@ -384,13 +390,13 @@ where
                     if let Some(()) = unsafe { result.unwrap_unchecked() } {
                         vec_length += 1;
                     } else {
-                        let _ = unsafe {
+                        drop(unsafe {
                             Vec::from_raw_parts(
                                 entity_identifiers.0,
                                 vec_length,
                                 entity_identifiers.1,
                             )
-                        };
+                        });
                         unsafe {
                             R::free_components(&components, vec_length, self.0.identifier.iter());
                         }
@@ -545,13 +551,13 @@ where
                 };
                 if let Err(error) = result {
                     // Free columns, since they are invalid and must be dropped.
-                    let _ = unsafe {
+                    drop(unsafe {
                         Vec::from_raw_parts(
                             entity_identifiers.0,
                             self.0.length,
                             entity_identifiers.1,
                         )
-                    };
+                    });
                     unsafe {
                         R::try_free_components(
                             &components,
@@ -585,6 +591,7 @@ impl<'de, R> Deserialize<'de> for Archetype<R>
 where
     R: RegistryDeserialize<'de>,
 {
+    #[allow(clippy::too_many_lines)]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,

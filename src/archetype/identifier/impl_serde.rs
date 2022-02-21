@@ -61,7 +61,7 @@ where
                     buffer.push(
                         seq.next_element()?
                             .ok_or_else(|| de::Error::invalid_length(i, &self))?,
-                    )
+                    );
                 }
 
                 // Check that trailing bits are not set.
@@ -71,7 +71,7 @@ where
                     && unsafe { buffer.get_unchecked((R::LEN + 7) / 8 - 1) } & (255 << bit) != 0
                 {
                     return Err(de::Error::invalid_value(
-                        Unexpected::Unsigned(*byte as u64),
+                        Unexpected::Unsigned(u64::from(*byte)),
                         &self,
                     ));
                 }

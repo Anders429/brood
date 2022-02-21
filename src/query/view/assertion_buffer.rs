@@ -65,14 +65,16 @@ impl AssertionBuffer {
     where
         C: Component,
     {
-        if self.mutable_claims.contains(&TypeId::of::<C>()) {
-            panic!(
-                "the component {} cannot be viewed as mutable when it is already viewed as mutable",
-                type_name::<C>()
-            );
-        } else if self.immutable_claims.contains(&TypeId::of::<C>()) {
-            panic!("the component {} cannot be viewed as mutable when it is already viewed as immutable", type_name::<C>());
-        }
+        assert!(
+            !self.mutable_claims.contains(&TypeId::of::<C>()),
+            "the component {} cannot be viewed as mutable when it is already viewed as mutable",
+            type_name::<C>()
+        );
+        assert!(
+            !self.immutable_claims.contains(&TypeId::of::<C>()),
+            "the component {} cannot be viewed as mutable when it is already viewed as immutable",
+            type_name::<C>()
+        );
 
         self.mutable_claims.insert(TypeId::of::<C>());
     }
@@ -86,9 +88,11 @@ impl AssertionBuffer {
     where
         C: Component,
     {
-        if self.mutable_claims.contains(&TypeId::of::<C>()) {
-            panic!("the component {} cannot be viewed as immutable when it is already viewed as mutable", type_name::<C>());
-        }
+        assert!(
+            !self.mutable_claims.contains(&TypeId::of::<C>()),
+            "the component {} cannot be viewed as immutable when it is already viewed as mutable",
+            type_name::<C>()
+        );
 
         self.immutable_claims.insert(TypeId::of::<C>());
     }

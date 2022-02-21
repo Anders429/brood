@@ -1,4 +1,3 @@
-mod identifier;
 mod impl_debug;
 mod impl_drop;
 mod impl_eq;
@@ -7,7 +6,9 @@ mod impl_send;
 #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
 mod impl_serde;
 
-pub(crate) use identifier::{Identifier, IdentifierIter, IdentifierRef};
+pub(crate) mod identifier;
+
+pub(crate) use identifier::{Identifier, IdentifierRef};
 #[cfg(feature = "serde")]
 pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
 
@@ -200,7 +201,8 @@ where
                         .get(&TypeId::of::<C>())
                         .unwrap_unchecked(),
                 )
-                .0 as *mut C,
+                .0
+                .cast::<C>(),
             self.length,
         )
         .get_unchecked_mut(index) = component;
@@ -273,14 +275,14 @@ where
     pub(crate) unsafe fn push_from_buffer_and_component<C>(
         &mut self,
         entity_identifier: entity::Identifier,
-        buffer: Vec<u8>,
+        buffer: *const u8,
         component: C,
     ) -> usize
     where
         C: Component,
     {
         R::push_components_from_buffer_and_component(
-            buffer.as_ptr(),
+            buffer,
             MaybeUninit::new(component),
             &mut self.components,
             self.length,
@@ -306,13 +308,13 @@ where
     pub(crate) unsafe fn push_from_buffer_skipping_component<C>(
         &mut self,
         entity_identifier: entity::Identifier,
-        buffer: Vec<u8>,
+        buffer: *const u8,
     ) -> usize
     where
         C: Component,
     {
         R::push_components_from_buffer_skipping_component(
-            buffer.as_ptr(),
+            buffer,
             PhantomData::<C>,
             &mut self.components,
             self.length,

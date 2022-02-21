@@ -15,14 +15,14 @@ pub trait RegistryDebug: Registry {
         index: usize,
         components: &[(*mut u8, usize)],
         pointers: &mut Vec<*const u8>,
-        identifier_iter: archetype::IdentifierIter<R>,
+        identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry;
 
     unsafe fn debug_components<'a, 'b, R>(
         pointers: &[*const u8],
         debug_map: &mut DebugMap<'a, 'b>,
-        identifier_iter: archetype::IdentifierIter<R>,
+        identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry;
 }
@@ -32,7 +32,7 @@ impl RegistryDebug for Null {
         _index: usize,
         _components: &[(*mut u8, usize)],
         _pointers: &mut Vec<*const u8>,
-        _identifier_iter: archetype::IdentifierIter<R>,
+        _identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry,
     {
@@ -41,7 +41,7 @@ impl RegistryDebug for Null {
     unsafe fn debug_components<'a, 'b, R>(
         _pointers: &[*const u8],
         _debug_map: &mut DebugMap<'a, 'b>,
-        _identifier_iter: archetype::IdentifierIter<R>,
+        _identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry,
     {
@@ -57,7 +57,7 @@ where
         index: usize,
         mut components: &[(*mut u8, usize)],
         pointers: &mut Vec<*const u8>,
-        mut identifier_iter: archetype::IdentifierIter<R_>,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
     ) where
         R_: Registry,
     {
@@ -72,7 +72,7 @@ where
     unsafe fn debug_components<'a, 'b, R_>(
         mut pointers: &[*const u8],
         debug_map: &mut DebugMap<'a, 'b>,
-        mut identifier_iter: archetype::IdentifierIter<R_>,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
     ) where
         R_: Registry,
     {

@@ -3,7 +3,7 @@
 mod impl_serde;
 mod iter;
 
-pub(crate) use iter::IdentifierIter;
+pub use iter::Iter;
 
 use crate::registry::Registry;
 use alloc::vec::Vec;
@@ -12,7 +12,7 @@ use core::{
     fmt::Debug,
     hash::{Hash, Hasher},
     marker::PhantomData,
-    mem::ManuallyDrop,
+    mem::{drop, ManuallyDrop},
     slice,
 };
 
@@ -52,8 +52,8 @@ where
         }
     }
 
-    pub(crate) unsafe fn iter(&self) -> IdentifierIter<R> {
-        IdentifierIter::<R>::new(self.pointer)
+    pub(crate) unsafe fn iter(&self) -> Iter<R> {
+        Iter::<R>::new(self.pointer)
     }
 
     pub(crate) fn size_of_components(&self) -> usize {
@@ -75,9 +75,7 @@ where
     R: Registry,
 {
     fn drop(&mut self) {
-        unsafe {
-            let _ = Vec::from_raw_parts(self.pointer, (R::LEN + 7) / 8, self.capacity);
-        }
+        drop(unsafe { Vec::from_raw_parts(self.pointer, (R::LEN + 7) / 8, self.capacity) });
     }
 }
 
@@ -113,15 +111,15 @@ where
         slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8)
     }
 
-    pub(crate) unsafe fn iter(&self) -> IdentifierIter<R> {
-        IdentifierIter::<R>::new(self.pointer)
+    pub(crate) unsafe fn iter(self) -> Iter<R> {
+        Iter::<R>::new(self.pointer)
     }
 
-    pub(crate) fn as_vec(&self) -> Vec<u8> {
+    pub(crate) fn as_vec(self) -> Vec<u8> {
         unsafe { self.as_slice() }.to_vec()
     }
 
-    pub(crate) unsafe fn get_unchecked(&self, index: usize) -> bool {
+    pub(crate) unsafe fn get_unchecked(self, index: usize) -> bool {
         (self.as_slice().get_unchecked(index / 8) >> (index % 8) & 1) != 0
     }
 }

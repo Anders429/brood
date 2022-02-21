@@ -1,7 +1,7 @@
 use crate::registry::Registry;
 use core::marker::PhantomData;
 
-pub struct IdentifierIter<R>
+pub struct Iter<R>
 where
     R: Registry,
 {
@@ -13,7 +13,7 @@ where
     position: usize,
 }
 
-impl<R> IdentifierIter<R>
+impl<R> Iter<R>
 where
     R: Registry,
 {
@@ -29,7 +29,7 @@ where
     }
 }
 
-impl<R> Iterator for IdentifierIter<R>
+impl<R> Iterator for Iter<R>
 where
     R: Registry,
 {

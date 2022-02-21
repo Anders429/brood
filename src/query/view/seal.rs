@@ -39,7 +39,8 @@ where
         slice::from_raw_parts::<'a, C>(
             columns
                 .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
-                .0 as *mut C,
+                .0
+                .cast::<C>(),
             length,
         )
         .iter()
@@ -65,7 +66,8 @@ where
         slice::from_raw_parts_mut::<'a, C>(
             columns
                 .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
-                .0 as *mut C,
+                .0
+                .cast::<C>(),
             length,
         )
         .iter_mut()
@@ -76,6 +78,7 @@ where
     }
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn wrap_some<T>(val: T) -> Option<T> {
     Some(val)
 }
@@ -97,7 +100,7 @@ where
     ) -> Self::Result {
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
-                slice::from_raw_parts(columns.get_unchecked(*index).0 as *mut C, length)
+                slice::from_raw_parts(columns.get_unchecked(*index).0.cast::<C>(), length)
                     .iter()
                     .map(wrap_some),
             ),
@@ -131,7 +134,7 @@ where
 
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
-                slice::from_raw_parts_mut(columns.get_unchecked(*index).0 as *mut C, length)
+                slice::from_raw_parts_mut(columns.get_unchecked(*index).0.cast::<C>(), length)
                     .iter_mut()
                     .map(wrap_some),
             ),
@@ -145,7 +148,7 @@ where
 }
 
 impl<'a> ViewSeal<'a> for entity::Identifier {
-    type Result = iter::Cloned<slice::Iter<'a, Self>>;
+    type Result = iter::Copied<slice::Iter<'a, Self>>;
 
     unsafe fn view(
         _columns: &[(*mut u8, usize)],
@@ -155,7 +158,7 @@ impl<'a> ViewSeal<'a> for entity::Identifier {
     ) -> Self::Result {
         slice::from_raw_parts_mut::<'a, Self>(entity_identifiers.0, length)
             .iter()
-            .cloned()
+            .copied()
     }
 
     fn assert_claim(_buffer: &mut AssertionBuffer) {}

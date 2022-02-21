@@ -63,6 +63,9 @@ where
     ///
     /// entry.add(Baz(1.5));
     /// ```
+    ///
+    /// # Panics
+    /// Panics if the component `C` is not in the registry R.
     pub fn add<C>(&mut self, component: C)
     where
         C: Component,
@@ -74,8 +77,8 @@ where
                 self.world
                     .archetypes
                     .get_unchecked_mut(self.location.identifier)
-                    .set_component_unchecked(self.location.index, component)
-            };
+                    .set_component_unchecked(self.location.index, component);
+            }
         } else {
             // The component needs to be added to the entity.
             let (entity_identifier, current_component_bytes) = unsafe {
@@ -100,7 +103,7 @@ where
             let index = unsafe {
                 archetype.push_from_buffer_and_component(
                     entity_identifier,
-                    current_component_bytes,
+                    current_component_bytes.as_ptr(),
                     component,
                 )
             };
@@ -134,6 +137,9 @@ where
     ///
     /// entry.remove::<Foo>();
     /// ```
+    ///
+    /// # Panics
+    /// Panics if the component `C` is not in the registry R.
     pub fn remove<C>(&mut self)
     where
         C: Component,
@@ -164,7 +170,7 @@ where
             let index = unsafe {
                 archetype.push_from_buffer_skipping_component::<C>(
                     entity_identifier,
-                    current_component_bytes,
+                    current_component_bytes.as_ptr(),
                 )
             };
 
