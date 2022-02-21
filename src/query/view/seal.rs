@@ -145,7 +145,7 @@ where
 }
 
 impl<'a> ViewSeal<'a> for entity::Identifier {
-    type Result = iter::Cloned<slice::Iter<'a, Self>>;
+    type Result = iter::Copied<slice::Iter<'a, Self>>;
 
     unsafe fn view(
         _columns: &[(*mut u8, usize)],
@@ -155,7 +155,7 @@ impl<'a> ViewSeal<'a> for entity::Identifier {
     ) -> Self::Result {
         slice::from_raw_parts_mut::<'a, Self>(entity_identifiers.0, length)
             .iter()
-            .cloned()
+            .copied()
     }
 
     fn assert_claim(_buffer: &mut AssertionBuffer) {}
