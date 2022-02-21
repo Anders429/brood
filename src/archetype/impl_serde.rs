@@ -591,6 +591,7 @@ impl<'de, R> Deserialize<'de> for Archetype<R>
 where
     R: RegistryDeserialize<'de>,
 {
+    #[allow(clippy::too_many_lines)]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
