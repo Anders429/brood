@@ -75,6 +75,7 @@ where
     }
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn wrap_some<T>(val: T) -> Option<T> {
     Some(val)
 }

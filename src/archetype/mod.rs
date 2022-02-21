@@ -273,14 +273,14 @@ where
     pub(crate) unsafe fn push_from_buffer_and_component<C>(
         &mut self,
         entity_identifier: entity::Identifier,
-        buffer: Vec<u8>,
+        buffer: *const u8,
         component: C,
     ) -> usize
     where
         C: Component,
     {
         R::push_components_from_buffer_and_component(
-            buffer.as_ptr(),
+            buffer,
             MaybeUninit::new(component),
             &mut self.components,
             self.length,
@@ -306,13 +306,13 @@ where
     pub(crate) unsafe fn push_from_buffer_skipping_component<C>(
         &mut self,
         entity_identifier: entity::Identifier,
-        buffer: Vec<u8>,
+        buffer: *const u8,
     ) -> usize
     where
         C: Component,
     {
         R::push_components_from_buffer_skipping_component(
-            buffer.as_ptr(),
+            buffer,
             PhantomData::<C>,
             &mut self.components,
             self.length,
