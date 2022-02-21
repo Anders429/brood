@@ -66,6 +66,11 @@ where
 
         match self.0 {
             RawTask::Task(task) => {
+                // Helper function to check whether the intersection betwen two sets is nonempty.
+                fn intersects(a: &HashSet<TypeId>, b: &HashSet<TypeId>) -> bool {
+                    a.intersection(b).next().is_some()
+                }
+
                 mutable_buffer.clear();
                 immutable_buffer.clear();
 
@@ -78,11 +83,6 @@ where
                 // Identify this stage's claims on components.
                 S::Views::claim(mutable_buffer, immutable_buffer);
                 P::Views::claim(mutable_buffer, immutable_buffer);
-
-                // Helper function to check whether the intersection betwen two sets is nonempty.
-                fn intersects(a: &HashSet<TypeId>, b: &HashSet<TypeId>) -> bool {
-                    a.intersection(b).next().is_some()
-                }
 
                 // If the claims are incompatible, a new stage must begin.
                 //
