@@ -136,6 +136,9 @@ where
     ///
     /// [`Entities`]: crate::entities::Entities
     /// [`entities!]: crate::entities!
+    ///
+    /// # Panics
+    /// Panics if the columns are not all the same length.
     pub fn new(entities: E) -> Self {
         assert!(entities.check_len());
         unsafe { Self::new_unchecked(entities) }
