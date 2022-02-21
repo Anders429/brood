@@ -100,7 +100,7 @@ where
             let index = unsafe {
                 archetype.push_from_buffer_and_component(
                     entity_identifier,
-                    current_component_bytes,
+                    current_component_bytes.as_ptr(),
                     component,
                 )
             };
@@ -164,7 +164,7 @@ where
             let index = unsafe {
                 archetype.push_from_buffer_skipping_component::<C>(
                     entity_identifier,
-                    current_component_bytes,
+                    current_component_bytes.as_ptr(),
                 )
             };
 
