@@ -155,6 +155,7 @@ impl Schedule<stage::Null> {
     /// ```
     ///
     /// [`schedule::Builder`]: crate::system::schedule::Builder
+    #[must_use]
     pub fn builder() -> Builder<raw_task::Null> {
         Builder::new()
     }
