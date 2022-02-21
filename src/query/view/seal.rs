@@ -39,7 +39,8 @@ where
         slice::from_raw_parts::<'a, C>(
             columns
                 .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
-                .0.cast::<C>(),
+                .0
+                .cast::<C>(),
             length,
         )
         .iter()
@@ -65,7 +66,8 @@ where
         slice::from_raw_parts_mut::<'a, C>(
             columns
                 .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
-                .0.cast::<C>(),
+                .0
+                .cast::<C>(),
             length,
         )
         .iter_mut()

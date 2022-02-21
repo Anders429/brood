@@ -6,7 +6,13 @@ use crate::{
     registry::{RegistryDeserialize, RegistrySerialize},
 };
 use alloc::vec::Vec;
-use core::{any::type_name, fmt, marker::PhantomData, mem::{drop, ManuallyDrop}, write};
+use core::{
+    any::type_name,
+    fmt,
+    marker::PhantomData,
+    mem::{drop, ManuallyDrop},
+    write,
+};
 use serde::{
     de::{self, DeserializeSeed, SeqAccess, Visitor},
     ser::SerializeTuple,

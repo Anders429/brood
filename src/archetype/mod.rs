@@ -200,7 +200,8 @@ where
                         .get(&TypeId::of::<C>())
                         .unwrap_unchecked(),
                 )
-                .0.cast::<C>(),
+                .0
+                .cast::<C>(),
             self.length,
         )
         .get_unchecked_mut(index) = component;
