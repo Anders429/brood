@@ -241,7 +241,7 @@ where
     where
         R_: Registry,
     {
-        (identifier_iter.next().unwrap_unchecked() as usize * size_of::<C>())
+        (usize::from(identifier_iter.next().unwrap_unchecked()) * size_of::<C>())
             + R::size_of_components_for_identifier(identifier_iter)
     }
 
