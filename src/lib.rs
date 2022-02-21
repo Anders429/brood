@@ -1,5 +1,7 @@
 #![no_std]
 #![cfg_attr(doc_cfg, feature(doc_cfg, decl_macro))]
+#![warn(clippy::pedantic)]
+#![allow(clippy::module_name_repetitions)]
 
 extern crate alloc;
 
