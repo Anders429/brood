@@ -25,11 +25,12 @@ use crate::{
     entity::Entity,
     query::{filter::Filter, result, view, view::Views},
     registry::Registry,
+    system::System,
 };
 #[cfg(feature = "parallel")]
 use crate::{
     query::view::ParViews,
-    system::{schedule::stage::Stages, Schedule},
+    system::{schedule::stage::Stages, ParSystem, Schedule},
 };
 use alloc::{vec, vec::Vec};
 use core::any::TypeId;
@@ -60,12 +61,12 @@ use hashbrown::HashMap;
 /// registry. Attempting to insert entities containing components not in the registry will result
 /// in a panic.
 ///
-/// Components of entities can be queried using the [`query()`] method. `Schedule`s of `System`s
-/// can also be run over the components stored in the `World` using the [`run()`] method.
+/// Components of entities can be queried using the [`query()`] method. [`System`]s can also be run
+/// over components of entities using the various `run` methods. 
 ///
 /// [`query()`]: crate::World::query()
 /// [`Registry`]: crate::registry::Registry
-/// [`run()`]: crate::World::run()
+/// [`System`]: crate::system::System
 pub struct World<R>
 where
     R: Registry,
@@ -322,13 +323,176 @@ where
         result::ParIter::new(self.archetypes.par_iter_mut(), &self.component_map)
     }
 
+    /// Run a [`System`] over the entities in this `World`.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{
+    ///     entity,
+    ///     query::{filter, result, views},
+    ///     registry,
+    ///     registry::Registry,
+    ///     system::System,
+    ///     World,
+    /// };
+    ///
+    /// // Define components.
+    /// struct Foo(usize);
+    /// struct Bar(usize);
+    ///
+    /// type MyRegistry = registry!(Foo, Bar);
+    ///
+    /// // Define system.
+    /// struct MySystem;
+    ///
+    /// impl<'a> System<'a> for MySystem {
+    ///     type Views = views!(&'a mut Foo, &'a Bar);
+    ///     type Filter = filter::None;
+    ///
+    ///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+    ///     where
+    ///         R: Registry + 'a,
+    ///     {
+    ///         for result!(foo, bar) in query_results {
+    ///             // Increment `Foo` by `Bar`.
+    ///             foo.0 += bar.0;
+    ///         }
+    ///     }
+    /// }
+    ///
+    /// let mut world = World::<MyRegistry>::new();
+    /// world.push(entity!(Foo(42), Bar(100)));
+    ///
+    /// world.run_system(&mut MySystem);
+    /// ```
+    ///
+    /// [`System`]: crate::system::System
+    pub fn run_system<'a, S>(&'a mut self, system: &mut S)
+    where
+        S: System<'a>,
+    {
+        system.run(self.query::<S::Views, S::Filter>());
+    }
+
+    /// Run a [`ParSystem`] over the entities in this `World`.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{
+    ///     entity,
+    ///     query::{filter, result, views},
+    ///     registry,
+    ///     registry::Registry,
+    ///     system::ParSystem,
+    ///     World,
+    /// };
+    /// use rayon::iter::ParallelIterator;
+    ///
+    /// // Define components.
+    /// struct Foo(usize);
+    /// struct Bar(usize);
+    ///
+    /// type MyRegistry = registry!(Foo, Bar);
+    ///
+    /// // Define system.
+    /// struct MySystem;
+    ///
+    /// impl<'a> ParSystem<'a> for MySystem {
+    ///     type Views = views!(&'a mut Foo, &'a Bar);
+    ///     type Filter = filter::None;
+    ///
+    ///     fn run<R>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, Self::Views>)
+    ///     where
+    ///         R: Registry + 'a,
+    ///     {
+    ///         query_results.for_each(|result!(foo, bar)| foo.0 += bar.0);
+    ///     }
+    /// }
+    ///
+    /// let mut world = World::<MyRegistry>::new();
+    /// world.push(entity!(Foo(42), Bar(100)));
+    ///
+    /// world.run_par_system(&mut MySystem);
+    /// ```
+    ///
+    /// [`ParSystem`]: crate::system::ParSystem
     #[cfg(feature = "parallel")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
-    pub fn run<'a, S>(&'a mut self, schedule: &'a mut Schedule<S>)
+    pub fn run_par_system<'a, S>(&'a mut self, par_system: &mut S)
+    where
+        S: ParSystem<'a>,
+    {
+        par_system.run(self.par_query::<S::Views, S::Filter>());
+    }
+
+    /// Run a [`Schedule`] over the entities in this `World`.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{
+    ///     entity,
+    ///     query::{filter, result, views},
+    ///     registry,
+    ///     registry::Registry,
+    ///     system::{Schedule, System},
+    ///     World,
+    /// };
+    ///
+    /// // Define components.
+    /// struct Foo(usize);
+    /// struct Bar(usize);
+    ///
+    /// type MyRegistry = registry!(Foo, Bar);
+    ///
+    /// // Define systems.
+    /// struct SystemA;
+    /// struct SystemB;
+    ///
+    /// impl<'a> System<'a> for SystemA {
+    ///     type Views = views!(&'a mut Foo);
+    ///     type Filter = filter::None;
+    ///
+    ///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+    ///     where
+    ///         R: Registry + 'a,
+    ///     {
+    ///         for result!(foo) in query_results {
+    ///             foo.0 += 1;
+    ///         }
+    ///     }
+    /// }
+    ///
+    /// impl<'a> System<'a> for SystemB {
+    ///     type Views = views!(&'a mut Bar);
+    ///     type Filter = filter::None;
+    ///
+    ///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+    ///     where
+    ///         R: Registry + 'a,
+    ///     {
+    ///         for result!(bar) in query_results {
+    ///             bar.0 += 1;
+    ///         }
+    ///     }
+    /// }
+    ///
+    /// // Define schedule.
+    /// let mut schedule = Schedule::builder().system(SystemA).system(SystemB).build();
+    ///
+    /// let mut world = World::<MyRegistry>::new();
+    /// world.push(entity!(Foo(42), Bar(100)));
+    ///
+    /// world.run_schedule(&mut schedule);
+    /// ```
+    ///
+    /// [`Schedule`]: crate::system::Schedule
+    #[cfg(feature = "parallel")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+    pub fn run_schedule<'a, S>(&'a mut self, schedule: &mut Schedule<S>)
     where
         S: Stages<'a>,
     {
-        schedule.run(self);
+        schedule.run(self)
     }
 
     /// Gets an [`Entry`] for the entity associated with an [`entity::Identifier`] for
