@@ -1,4 +1,5 @@
 use crate::{
+    archetypes::DeserializeArchetypes,
     entity::allocator::DeserializeAllocator,
     registry::{RegistryDeserialize, RegistrySerialize},
     World,
@@ -55,15 +56,16 @@ where
             where
                 V: SeqAccess<'de>,
             {
+                let mut len = 0;
                 let archetypes = seq
-                    .next_element()?
+                    .next_element_seed(DeserializeArchetypes::new(&mut len))?
                     .ok_or_else(|| de::Error::invalid_length(0, &self))?;
                 let entity_allocator = seq
                     .next_element_seed(DeserializeAllocator {
                         archetypes: &archetypes,
                     })?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                Ok(World::from_raw_parts(archetypes, entity_allocator))
+                Ok(World::from_raw_parts(archetypes, entity_allocator, len))
             }
         }
 

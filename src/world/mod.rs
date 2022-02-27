@@ -73,6 +73,7 @@ where
 {
     archetypes: Archetypes<R>,
     entity_allocator: entity::Allocator<R>,
+    len: usize,
 
     component_map: HashMap<TypeId, usize>,
 
@@ -83,13 +84,14 @@ impl<R> World<R>
 where
     R: Registry,
 {
-    fn from_raw_parts(archetypes: Archetypes<R>, entity_allocator: entity::Allocator<R>) -> Self {
+    fn from_raw_parts(archetypes: Archetypes<R>, entity_allocator: entity::Allocator<R>, len: usize) -> Self {
         let mut component_map = HashMap::new();
         R::create_component_map(&mut component_map, 0);
 
         Self {
             archetypes,
             entity_allocator,
+            len,
 
             component_map,
 
@@ -117,7 +119,7 @@ where
     /// [`Registry`]: crate::registry::Registry
     #[must_use]
     pub fn new() -> Self {
-        Self::from_raw_parts(Archetypes::new(), entity::Allocator::new())
+        Self::from_raw_parts(Archetypes::new(), entity::Allocator::new(), 0)
     }
 
     /// Insert an entity, returning an [`entity::Identifier`].
@@ -144,6 +146,8 @@ where
     where
         E: Entity,
     {
+        self.len += 1;
+
         let mut key = vec![0; (R::LEN + 7) / 8];
         unsafe {
             E::to_key(&mut key, &self.component_map);
@@ -181,6 +185,8 @@ where
     where
         E: Entities,
     {
+        self.len += entities.len();
+
         let mut key = vec![0; (R::LEN + 7) / 8];
         unsafe {
             E::to_key(&mut key, &self.component_map);
@@ -513,6 +519,7 @@ where
     /// world.remove(entity_identifier);
     /// assert!(!world.contains(entity_identifier));
     /// ```
+    #[must_use]
     pub fn contains(&self, entity_identifier: entity::Identifier) -> bool {
         self.entity_allocator.is_active(entity_identifier)
     }
@@ -541,6 +548,7 @@ where
     ///
     /// [`Entry`]: crate::world::Entry
     /// [`None`]: Option::None
+    #[must_use]
     pub fn entry(&mut self, entity_identifier: entity::Identifier) -> Option<Entry<R>> {
         self.entity_allocator
             .get(entity_identifier)
@@ -579,6 +587,8 @@ where
                 self.entity_allocator.free_unchecked(entity_identifier);
             }
         }
+
+        self.len -= 1;
     }
 
     /// Removes all entities.
@@ -603,5 +613,53 @@ where
         unsafe {
             self.archetypes.clear(&mut self.entity_allocator);
         }
+        self.len = 0;
+    }
+
+    /// Returns the number of entities in the world.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entities, registry, World};
+    ///
+    /// #[derive(Clone)]
+    /// struct Foo(usize);
+    /// #[derive(Clone)]
+    /// struct Bar(bool);
+    ///
+    /// type Registry = registry!(Foo, Bar);
+    ///
+    /// let mut world = World::<Registry>::new();
+    /// world.extend(entities!((Foo(42), Bar(false)); 100));
+    ///
+    /// assert_eq!(world.len(), 100);
+    /// ```
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    /// Returns `true` if the world contains no entities.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entity, registry, World};
+    ///
+    /// struct Foo(usize);
+    /// struct Bar(bool);
+    ///
+    /// type Registry = registry!(Foo, Bar);
+    ///
+    /// let mut world = World::<Registry>::new();
+    /// 
+    /// assert!(world.is_empty());
+    ///
+    /// world.insert(entity!(Foo(42), Bar(false)));
+    ///
+    /// assert!(!world.is_empty());
+    /// ```
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
