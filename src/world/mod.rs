@@ -492,7 +492,7 @@ where
     where
         S: Stages<'a>,
     {
-        schedule.run(self)
+        schedule.run(self);
     }
 
     /// Gets an [`Entry`] for the entity associated with an [`entity::Identifier`] for
