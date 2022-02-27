@@ -87,6 +87,15 @@ where
         }
     }
 
+    pub(crate) fn is_active(&self, identifier: entity::Identifier) -> bool {
+        if let Some(slot) = self.slots.get(identifier.index) {
+            if slot.is_active() && slot.generation == identifier.generation {
+                return true;
+            }
+        }
+        false
+    }
+
     pub(crate) unsafe fn free_unchecked(&mut self, identifier: entity::Identifier) {
         let slot = self.slots.get_unchecked_mut(identifier.index);
         slot.deactivate();
