@@ -19,7 +19,7 @@ use core::any::TypeId;
 /// type Registry = registry!(Foo, Bar);
 ///
 /// let mut world = World::<Registry>::new();
-/// let entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+/// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
 ///
 /// let mut entry = world.entry(entity_identifier).unwrap();
 /// ```
@@ -58,7 +58,7 @@ where
     /// type Registry = registry!(Foo, Bar, Baz);
     ///
     /// let mut world = World::<Registry>::new();
-    /// let entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+    /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
     /// let mut entry = world.entry(entity_identifier).unwrap();
     ///
     /// entry.add(Baz(1.5));
@@ -132,7 +132,7 @@ where
     /// type Registry = registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
-    /// let entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+    /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
     /// let mut entry = world.entry(entity_identifier).unwrap();
     ///
     /// entry.remove::<Foo>();
