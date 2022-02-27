@@ -337,6 +337,28 @@ where
         self.length - 1
     }
 
+    pub(crate) unsafe fn clear(&mut self, entity_allocator: &mut entity::Allocator<R>) {
+        // Clear each column.
+        R::clear_components(
+            &mut self.components,
+            self.length,
+            self.identifier_buffer.iter(),
+        );
+
+        // Free each entity.
+        let mut entity_identifiers = ManuallyDrop::new(Vec::from_raw_parts(
+            self.entity_identifiers.0,
+            self.length,
+            self.entity_identifiers.1,
+        ));
+        for entity_identifier in entity_identifiers.iter() {
+            entity_allocator.free_unchecked(*entity_identifier);
+        }
+        entity_identifiers.clear();
+
+        self.length = 0;
+    }
+
     pub(crate) unsafe fn identifier(&self) -> IdentifierRef<R> {
         self.identifier_buffer.as_ref()
     }

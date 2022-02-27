@@ -558,4 +558,28 @@ where
             }
         }
     }
+
+    /// Removes all entities.
+    ///
+    /// Keeps the allocated memory for reuse.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entity, registry, World};
+    ///
+    /// struct Foo(usize);
+    /// struct Bar(bool);
+    ///
+    /// type Registry = registry!(Foo, Bar);
+    ///
+    /// let mut world = World::<Registry>::new();
+    /// world.insert(entity!(Foo(42), Bar(true)));
+    ///
+    /// world.clear();
+    /// ```
+    pub fn clear(&mut self) {
+        unsafe {
+            self.archetypes.clear(&mut self.entity_allocator);
+        }
+    }
 }
