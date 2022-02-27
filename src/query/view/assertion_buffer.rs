@@ -5,6 +5,7 @@
 //! is not sound.
 //!
 //! [`Views`]: crate::query::view::Views
+//! [`World`]: crate::world::World
 
 use crate::component::Component;
 use core::any::{type_name, TypeId};
