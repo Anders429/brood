@@ -62,7 +62,7 @@ use hashbrown::HashMap;
 /// in a panic.
 ///
 /// Components of entities can be queried using the [`query()`] method. [`System`]s can also be run
-/// over components of entities using the various `run` methods. 
+/// over components of entities using the various `run` methods.
 ///
 /// [`query()`]: crate::World::query()
 /// [`Registry`]: crate::registry::Registry
