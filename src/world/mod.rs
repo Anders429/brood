@@ -495,6 +495,28 @@ where
         schedule.run(self);
     }
 
+    /// Returns `true` if the world contains an entity identified by `entity_identifier`.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{World, registry, entity};
+    ///
+    /// struct Foo(usize);
+    /// struct Bar(bool);
+    ///
+    /// type Registry = registry!(Foo, Bar);
+    ///
+    /// let mut world = World::<Registry>::new();
+    /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
+    ///
+    /// assert!(world.contains(entity_identifier));
+    /// world.remove(entity_identifier);
+    /// assert!(!world.contains(entity_identifier));
+    /// ```
+    pub fn contains(&self, entity_identifier: entity::Identifier) -> bool {
+        self.entity_allocator.is_active(entity_identifier)
+    }
+
     /// Gets an [`Entry`] for the entity associated with an [`entity::Identifier`] for
     /// component-level manipulation.
     ///
