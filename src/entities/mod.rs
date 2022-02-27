@@ -168,7 +168,10 @@ where
     /// [`Entities`]: crate::entities::Entities
     /// [`entities!]: crate::entities!
     pub unsafe fn new_unchecked(entities: E) -> Self {
-        Self { len: entities.component_len(), entities }
+        Self {
+            len: entities.component_len(),
+            entities,
+        }
     }
 
     pub(crate) fn len(&self) -> usize {

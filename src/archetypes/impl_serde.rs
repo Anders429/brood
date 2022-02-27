@@ -36,10 +36,16 @@ impl<'a, R> DeserializeArchetypes<'a, R> {
     }
 }
 
-impl<'a, 'de, R> DeserializeSeed<'de> for DeserializeArchetypes<'a, R> where R: RegistryDeserialize<'de> {
+impl<'a, 'de, R> DeserializeSeed<'de> for DeserializeArchetypes<'a, R>
+where
+    R: RegistryDeserialize<'de>,
+{
     type Value = Archetypes<R>;
 
-    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error> where D: Deserializer<'de> {
+    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
         struct ArchetypesVisitor<'a, 'de, R>
         where
             R: RegistryDeserialize<'de>,
