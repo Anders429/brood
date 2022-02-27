@@ -224,6 +224,13 @@ pub trait Storage {
     ) where
         R: Registry;
 
+    unsafe fn clear_components<R>(
+        components: &mut [(*mut u8, usize)],
+        length: usize,
+        identifier_iter: archetype::identifier::Iter<R>,
+    ) where
+        R: Registry;
+
     unsafe fn debug_identifier<R>(
         debug_list: &mut DebugList,
         identifier_iter: archetype::identifier::Iter<R>,
@@ -317,6 +324,15 @@ impl Storage for Null {
 
     unsafe fn try_free_components<R>(
         _components: &[(*mut u8, usize)],
+        _length: usize,
+        _identifier_iter: archetype::identifier::Iter<R>,
+    ) where
+        R: Registry,
+    {
+    }
+
+    unsafe fn clear_components<R>(
+        _components: &mut [(*mut u8, usize)],
         _length: usize,
         _identifier_iter: archetype::identifier::Iter<R>,
     ) where
@@ -734,6 +750,27 @@ where
             };
         }
         R::try_free_components(components, length, identifier_iter);
+    }
+
+    unsafe fn clear_components<R_>(
+        mut components: &mut [(*mut u8, usize)],
+        length: usize,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
+    ) where
+        R_: Registry,
+    {
+        if identifier_iter.next().unwrap_unchecked() {
+            let component_column = components.get_unchecked_mut(0);
+            let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
+                component_column.0.cast::<C>(),
+                length,
+                component_column.1,
+            ));
+            v.clear();
+            components = components.get_unchecked_mut(1..);
+        }
+
+        R::clear_components(components, length, identifier_iter);
     }
 
     unsafe fn debug_identifier<R_>(
