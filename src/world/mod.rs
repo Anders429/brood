@@ -84,7 +84,11 @@ impl<R> World<R>
 where
     R: Registry,
 {
-    fn from_raw_parts(archetypes: Archetypes<R>, entity_allocator: entity::Allocator<R>, len: usize) -> Self {
+    fn from_raw_parts(
+        archetypes: Archetypes<R>,
+        entity_allocator: entity::Allocator<R>,
+        len: usize,
+    ) -> Self {
         let mut component_map = HashMap::new();
         R::create_component_map(&mut component_map, 0);
 
@@ -505,7 +509,7 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{World, registry, entity};
+    /// use brood::{entity, registry, World};
     ///
     /// struct Foo(usize);
     /// struct Bar(bool);
@@ -651,7 +655,7 @@ where
     /// type Registry = registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
-    /// 
+    ///
     /// assert!(world.is_empty());
     ///
     /// world.insert(entity!(Foo(42), Bar(false)));
