@@ -54,7 +54,7 @@ use hashbrown::HashMap;
 /// let mut world = World::<registry!(Foo, Bar)>::new();
 ///
 /// // Insert a new entity. The returned identifier uniquely identifies the entity.
-/// let entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+/// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
 /// ```
 ///
 /// Note that a `World` can only contain entities made of components defined in the `World`'s
@@ -133,14 +133,14 @@ where
     ///
     /// let mut world = World::<Registry>::new();
     ///
-    /// let entity_identifier = world.push(entity!(Foo(42), Bar(false)));
+    /// let entity_identifier = world.insert(entity!(Foo(42), Bar(false)));
     /// ```
     ///
     /// # Panics
     /// Panics if the entity contains any components not included in the `World`'s [`Registry`].
     ///
     /// [`Registry`]: crate::registry::Registry
-    pub fn push<E>(&mut self, entity: E) -> entity::Identifier
+    pub fn insert<E>(&mut self, entity: E) -> entity::Identifier
     where
         E: Entity,
     {
@@ -215,7 +215,7 @@ where
     /// type Registry = registry!(Foo, Bar, Baz);
     ///
     /// let mut world = World::<Registry>::new();
-    /// let inserted_entity_identifier = world.push(entity!(Foo(42), Bar(true), Baz(100)));
+    /// let inserted_entity_identifier = world.insert(entity!(Foo(42), Bar(true), Baz(100)));
     ///
     /// // Note that the views provide implicit filters.
     /// for result!(foo, baz, entity_identifier) in
@@ -268,7 +268,7 @@ where
     /// type Registry = registry!(Foo, Bar, Baz);
     ///
     /// let mut world = World::<Registry>::new();
-    /// let inserted_entity_identifier = world.push(entity!(Foo(42), Bar(true), Baz(100)));
+    /// let inserted_entity_identifier = world.insert(entity!(Foo(42), Bar(true), Baz(100)));
     ///
     /// // Note that the views provide implicit filters.
     /// world
@@ -361,7 +361,7 @@ where
     /// }
     ///
     /// let mut world = World::<MyRegistry>::new();
-    /// world.push(entity!(Foo(42), Bar(100)));
+    /// world.insert(entity!(Foo(42), Bar(100)));
     ///
     /// world.run_system(&mut MySystem);
     /// ```
@@ -410,7 +410,7 @@ where
     /// }
     ///
     /// let mut world = World::<MyRegistry>::new();
-    /// world.push(entity!(Foo(42), Bar(100)));
+    /// world.insert(entity!(Foo(42), Bar(100)));
     ///
     /// world.run_par_system(&mut MySystem);
     /// ```
@@ -480,7 +480,7 @@ where
     /// let mut schedule = Schedule::builder().system(SystemA).system(SystemB).build();
     ///
     /// let mut world = World::<MyRegistry>::new();
-    /// world.push(entity!(Foo(42), Bar(100)));
+    /// world.insert(entity!(Foo(42), Bar(100)));
     ///
     /// world.run_schedule(&mut schedule);
     /// ```
@@ -510,7 +510,7 @@ where
     /// type Registry = registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
-    /// let entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+    /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
     ///
     /// let mut entry = world.entry(entity_identifier).unwrap();
     /// // Remove the `Bar` component.
@@ -539,7 +539,7 @@ where
     /// type Registry = registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
-    /// let entity_identifier = world.push(entity!(Foo(42), Bar(true)));
+    /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
     ///
     /// world.remove(entity_identifier);
     /// ```

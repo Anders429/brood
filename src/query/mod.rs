@@ -27,7 +27,7 @@
 //! type Registry = registry!(Foo, Bar, Baz);
 //!
 //! let mut world = World::<Registry>::new();
-//! world.push(entity!(Foo(42), Bar(true), Baz(1.5)));
+//! world.insert(entity!(Foo(42), Bar(true), Baz(1.5)));
 //!
 //! for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::Has<Baz>>() {
 //!     // Do something.
