@@ -7,6 +7,8 @@ mod iter;
 #[cfg(feature = "parallel")]
 mod par_iter;
 
+#[cfg(feature = "serde")]
+pub(crate) use impl_serde::DeserializeArchetypes;
 pub(crate) use iter::IterMut;
 #[cfg(feature = "parallel")]
 pub(crate) use par_iter::ParIterMut;

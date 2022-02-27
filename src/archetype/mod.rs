@@ -368,4 +368,10 @@ where
     pub(crate) fn entity_identifiers(&self) -> impl Iterator<Item = &entity::Identifier> {
         unsafe { slice::from_raw_parts(self.entity_identifiers.0, self.length) }.iter()
     }
+
+    #[cfg(feature = "serde")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
+    pub(crate) fn len(&self) -> usize {
+        self.length
+    }
 }
