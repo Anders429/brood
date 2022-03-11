@@ -30,6 +30,10 @@ where
     pub(super) fn deactivate(&mut self) {
         self.location = None;
     }
+
+    pub(super) fn is_active(&self) -> bool {
+        self.location.is_some()
+    }
 }
 
 impl<R> Clone for Slot<R>

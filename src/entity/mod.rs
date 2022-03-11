@@ -22,13 +22,13 @@
 //! let mut world = World::<Registry>::new();
 //!
 //! // Store an entity containing both `Foo` and `Bar`.
-//! world.push(entity!(Foo(42), Bar(false)));
+//! world.insert(entity!(Foo(42), Bar(false)));
 //!
 //! // Store an entity containing only `Bar`.
-//! world.push(entity!(Bar(true)));
+//! world.insert(entity!(Bar(true)));
 //!
 //! // Store an entity containing zero components.
-//! world.push(entity!());
+//! world.insert(entity!());
 //! ```
 //!
 //! [`Entity`]: crate::entity::Entity

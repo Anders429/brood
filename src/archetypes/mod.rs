@@ -7,11 +7,13 @@ mod iter;
 #[cfg(feature = "parallel")]
 mod par_iter;
 
+#[cfg(feature = "serde")]
+pub(crate) use impl_serde::DeserializeArchetypes;
 pub(crate) use iter::IterMut;
 #[cfg(feature = "parallel")]
 pub(crate) use par_iter::ParIterMut;
 
-use crate::{archetype, archetype::Archetype, registry::Registry};
+use crate::{archetype, archetype::Archetype, entity, registry::Registry};
 use core::hash::{BuildHasher, Hash, Hasher};
 use hashbrown::raw::RawTable;
 use iter::Iter;
@@ -121,6 +123,12 @@ where
 
     pub(crate) fn iter_mut(&mut self) -> IterMut<R> {
         IterMut::new(unsafe { self.raw_archetypes.iter() })
+    }
+
+    pub(crate) unsafe fn clear(&mut self, entity_allocator: &mut entity::Allocator<R>) {
+        for archetype in self.iter_mut() {
+            archetype.clear(entity_allocator);
+        }
     }
 }
 

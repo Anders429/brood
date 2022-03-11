@@ -21,7 +21,7 @@ mod impl_serde;
 /// let mut world = World::<Registry>::new();
 ///
 /// // An identifier is returned on insertion.
-/// let entity_identifier = world.push(entity!(Foo(42), Bar(false)));
+/// let entity_identifier = world.insert(entity!(Foo(42), Bar(false)));
 /// ```
 ///
 /// [`query`]: crate::world::World::query()
