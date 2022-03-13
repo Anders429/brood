@@ -34,7 +34,7 @@ use crate::{
 };
 use alloc::{vec, vec::Vec};
 use core::any::TypeId;
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 
 /// A container of entities.
 ///
@@ -89,6 +89,8 @@ where
         entity_allocator: entity::Allocator<R>,
         len: usize,
     ) -> Self {
+        R::assert_no_duplicates(&mut HashSet::with_capacity(R::LEN));
+
         let mut component_map = HashMap::new();
         R::create_component_map(&mut component_map, 0);
 
