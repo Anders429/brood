@@ -59,7 +59,7 @@ where
         length: usize,
     ) -> Self {
         let mut component_map = HashMap::new();
-        R::create_component_map_for_key(&mut component_map, 0, identifier_buffer.iter());
+        R::create_component_map_for_identifier(&mut component_map, 0, identifier_buffer.iter());
 
         Self {
             identifier_buffer,

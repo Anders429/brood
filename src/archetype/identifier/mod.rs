@@ -16,13 +16,46 @@ use core::{
     slice,
 };
 
+/// A unique identifier for an [`Archetype`] using a [`Registry`] `R`.
+///
+/// This is an allocated buffer of `(R::LEN + 7) / 8` bytes (enough bytes to have a bit for every
+/// possible component type within the `Registry`). For each `Archetype`, a single `Identifier`
+/// should be allocated, with [`IdentifierRef`]s being used to refer to that `Archetype`s
+/// identification elsewhere. Where `Identifier` is essentially an allocated buffer of fixed size,
+/// `IdentifierRef` is essentially a pointer to that allocated buffer.
+///
+/// In a way, this identifier is a run-time canonical type signature for an entity, where each bit
+/// represents a component being present in the entity.
+///
+/// Note that several aspects of this identifier system are marked as `unsafe` for a reason. Care
+/// must be taken with each of the methods involved to ensure they are used correctly.
+/// Specifically, make sure that lifetimes of `Identifier`s are longer than the `IdentifierRef`s or
+/// `Iter`s that are obtained from them, or you will end up accessing freed memory. Pay attention
+/// to the safety requirements.
+///
+/// [`Archetype`]: crate::archetype::Archetype
+/// [`IdentifierRef`]: crate::archetype::IdentifierRef
+/// [`Registry`]: crate::registry::Registry
 pub(crate) struct Identifier<R>
 where
     R: Registry,
 {
+    /// The [`Registry`] defining the set of valid values of this identifier.
+    ///
+    /// Each identifier must exist within a set defined by a `Registry`. This defines a space over
+    /// which each identifier can uniquely define a set of components. Each bit within the
+    /// identifier corresponds with a component in the registry.
+    ///
+    /// The length of the allocated buffer is defined at compile-time as `(R::LEN + 7) / 8`.
+    ///
+    /// [`Registry`]: crate::registry::Registry
     registry: PhantomData<R>,
 
+    /// Pointer to the allocated bytes.
+    ///
+    /// This allocation is owned by this identifier.
     pointer: *mut u8,
+    /// The capacity allotted to this allocation.
     capacity: usize,
 }
 
@@ -30,6 +63,10 @@ impl<R> Identifier<R>
 where
     R: Registry,
 {
+    /// Create a new identifier from an allocated buffer.
+    ///
+    /// # Safety
+    /// `bytes` must be of length `(R::LEN + 7) / 8`.
     pub(crate) unsafe fn new(bytes: Vec<u8>) -> Self {
         let mut bytes = ManuallyDrop::new(bytes);
         Self {
@@ -40,10 +77,22 @@ where
         }
     }
 
+    /// Returns a reference to the bytes defining this identifier.
+    ///
+    /// # Safety
+    /// The caller must ensure the `Identifier` outlives the returned slice.
     pub(crate) unsafe fn as_slice(&self) -> &[u8] {
-        slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8)
+        // SAFETY: `pointer` is invariantly guaranteed to point to an allocation of length
+        // `(R::LEN + 7) / 8`.
+        unsafe { slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8) }
     }
 
+    /// Returns a reference to this identifier.
+    ///
+    /// # Safety
+    /// The caller must ensure the `Identifier` outlives the returned [`IdentifierRef`].
+    ///
+    /// [`IdentifierRef`]: crate::archetype::IdentifierRef
     pub(crate) unsafe fn as_ref(&self) -> IdentifierRef<R> {
         IdentifierRef::<R> {
             registry: self.registry,
@@ -52,11 +101,29 @@ where
         }
     }
 
+    /// Returns an iterator over the bits of this identifier.
+    ///
+    /// The returned iterator is guaranteed to return exactly `(R::LEN + 7) / 8` values, one for
+    /// each bit corresponding to the components of the registry.
+    ///
+    /// # Safety
+    /// The caller must ensure the `Identifier` outlives the returned [`Iter`].
+    ///
+    /// [`Iter`]: crate::archetype::identifier::Iter
     pub(crate) unsafe fn iter(&self) -> Iter<R> {
         Iter::<R>::new(self.pointer)
     }
 
+    /// Returns the size of the components within the canonical entity represented by this
+    /// identifier.
+    ///
+    /// Every identifier essentially represents a canonical entity signature used by an archetype
+    /// so that the archetype knows how much space to allocate for the components it will store.
+    /// This method tells us exactly how large each entity stored in an archetype with this
+    /// identifier will be.
     pub(crate) fn size_of_components(&self) -> usize {
+        // SAFETY: `self.iter()` returns an `Iter<R>`, which is the same `R` that the associated
+        // method belongs to.
         unsafe { R::size_of_components_for_identifier(self.iter()) }
     }
 }
