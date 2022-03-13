@@ -41,8 +41,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::registry;
     use super::Assertions;
+    use crate::registry;
     use hashbrown::HashSet;
 
     struct A;
