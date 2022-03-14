@@ -27,7 +27,7 @@ pub trait Storage {
     /// `Registry` on which this method is being called.
     ///
     /// When called internally, the `identifier_iter` must have the same amount of bits left as
-    //  there are components remaining.
+    /// there are components remaining.
     ///
     /// [`TypeId`]: std::any::TypeId
     unsafe fn create_component_map_for_identifier<R>(
@@ -45,7 +45,7 @@ pub trait Storage {
     /// `Registry` on which this method is being called.
     ///
     /// When called internally, the `identifier_iter` must have the same amount of bits left as
-    //  there are components remaining.
+    /// there are components remaining.
     ///
     /// [`Vec`]: std::vec::Vec
     unsafe fn new_components_with_capacity<R>(
@@ -62,7 +62,7 @@ pub trait Storage {
     /// `Registry` on which this method is being called.
     ///
     /// When called internally, the `identifier_iter` must have the same amount of bits left as
-    //  there are components remaining.
+    /// there are components remaining.
     unsafe fn size_of_components_for_identifier<R>(
         identifier_iter: archetype::identifier::Iter<R>,
     ) -> usize
@@ -83,7 +83,7 @@ pub trait Storage {
     /// `Registry` on which this method is being called.
     ///
     /// When called internally, the `identifier_iter` must have the same amount of bits left as
-    //  there are components remaining.
+    /// there are components remaining.
     unsafe fn remove_component_row<R>(
         index: usize,
         components: &[(*mut u8, usize)],
@@ -118,7 +118,7 @@ pub trait Storage {
     /// `Registry` on which this method is being called.
     ///
     /// When called internally, the `identifier_iter` must have the same amount of bits left as
-    //  there are components remaining.
+    /// there are components remaining.
     unsafe fn pop_component_row<R>(
         index: usize,
         buffer: *mut u8,
@@ -156,11 +156,13 @@ pub trait Storage {
     /// internally, `component` must be properly initialized if the bit corresponding to `C` has
     /// not yet been read out of the `identifier_iter`.
     ///
+    /// The `Registry` `R` must not contain any duplicate component types.
+    ///
     /// When called externally, the `Registry` `R` provided to the method must by the same as the
     /// `Registry` on which this method is being called.
     ///
     /// When called internally, the `identifier_iter` must have the same amount of bits left as
-    //  there are components remaining.
+    /// there are components remaining.
     unsafe fn push_components_from_buffer_and_component<C, R>(
         buffer: *const u8,
         component: MaybeUninit<C>,
@@ -195,11 +197,13 @@ pub trait Storage {
     /// additional component of type `C` in its proper place in the ordering that is not identified
     /// in the `identifier_iter`.
     ///
+    /// The `Registry` `R` must not contain any duplicate component types.
+    ///
     /// When called externally, the `Registry` `R` provided to the method must by the same as the
     /// `Registry` on which this method is being called.
     ///
     /// When called internally, the `identifier_iter` must have the same amount of bits left as
-    //  there are components remaining.
+    /// there are components remaining.
     unsafe fn push_components_from_buffer_skipping_component<C, R>(
         buffer: *const u8,
         component: PhantomData<C>,
@@ -210,6 +214,24 @@ pub trait Storage {
         C: Component,
         R: Registry;
 
+    /// Free the allocated memory for each component column.
+    ///
+    /// This converts all component columns back into `Vec<C>` for each component `C`, and then
+    /// drops them, allowing the memory to be freed.
+    ///
+    /// # Safety
+    /// `components` must contain the same number of values as there are set bits in the
+    /// `identifier_iter`.
+    ///
+    /// Each `(*mut u8, usize)` in `components` must be the pointer and capacity respectively of a
+    /// `Vec<C>` of length `length`, where `C` is the component corresponding to the set bit in
+    /// `identifier_iter`.
+    ///
+    /// When called externally, the `Registry` `R` provided to the method must by the same as the
+    /// `Registry` on which this method is being called.
+    ///
+    /// When called internally, the `identifier_iter` must have the same amount of bits left as
+    /// there are components remaining.
     unsafe fn free_components<R>(
         components: &[(*mut u8, usize)],
         length: usize,
@@ -217,6 +239,28 @@ pub trait Storage {
     ) where
         R: Registry;
 
+    /// Attempt to free the allocated memory for each component column.
+    ///
+    /// By "attempt", this method frees the component columns until there are no more component
+    /// columns left in `components`. This is necessary for things like deserialization, where some
+    /// columns may have been created, but an invalid value was attempted to be deserialized and
+    /// now the whole collection must be deallocated before returning an error. Column length is
+    /// the only thing that is not expected to be correct here; all other requirements for
+    /// `free_components` are still expected to be upheld.
+    ///
+    /// # Safety
+    /// `components` must contain up to the same number of values as there are set bits in the
+    /// `identifier_iter`.
+    ///
+    /// Each `(*mut u8, usize)` in `components` must be the pointer and capacity respectively of a
+    /// `Vec<C>` of length `length`, where `C` is the component corresponding to the set bit in
+    /// `identifier_iter`.
+    ///
+    /// When called externally, the `Registry` `R` provided to the method must by the same as the
+    /// `Registry` on which this method is being called.
+    ///
+    /// When called internally, the `identifier_iter` must have the same amount of bits left as
+    /// there are components remaining.
     unsafe fn try_free_components<R>(
         components: &[(*mut u8, usize)],
         length: usize,
@@ -224,6 +268,24 @@ pub trait Storage {
     ) where
         R: Registry;
 
+    /// Clear all components from the component columns, saving the heap allocations to be reused.
+    ///
+    /// Note that this does not free the component columns. It simply removes all elements from the
+    /// columns.
+    ///
+    /// # Safety
+    /// `components` must contain the same number of values as there are set bits in the
+    /// `identifier_iter`.
+    ///
+    /// Each `(*mut u8, usize)` in `components` must be the pointer and capacity respectively of a
+    /// `Vec<C>` of length `length`, where `C` is the component corresponding to the set bit in
+    /// `identifier_iter`.
+    ///
+    /// When called externally, the `Registry` `R` provided to the method must by the same as the
+    /// `Registry` on which this method is being called.
+    ///
+    /// When called internally, the `identifier_iter` must have the same amount of bits left as
+    /// there are components remaining.
     unsafe fn clear_components<R>(
         components: &mut [(*mut u8, usize)],
         length: usize,
@@ -231,6 +293,20 @@ pub trait Storage {
     ) where
         R: Registry;
 
+    /// Populate a [`DebugList`] with string forms of the names of every component type identified
+    /// by `identifier_iter`.
+    ///
+    /// This is meant to be used for debugging purposes. The string names output by this method are
+    /// not stable.
+    ///
+    /// # Safety
+    /// When called externally, the `Registry` `R` provided to the method must by the same as the
+    /// `Registry` on which this method is being called.
+    ///
+    /// When called internally, the `identifier_iter` must have the same amount of bits left as
+    /// there are components remaining.
+    ///
+    /// [`DebugList`]: core::fmt::DebugList
     unsafe fn debug_identifier<R>(
         debug_list: &mut DebugList,
         identifier_iter: archetype::identifier::Iter<R>,
@@ -446,14 +522,14 @@ where
             );
             v.swap_remove(index);
 
-            components = 
+            components =
                 // SAFETY: `components` is guaranteed to have the same number of values as there
                 // set bits in `identifier_iter`. Since a bit must have been set to enter this
                 // block, there must be at least one component column.
                 unsafe { components.get_unchecked(1..) };
         }
         // SAFETY: At this point, one bit of `identifier_iter` has been consumed. There are two
-        // possibilities here: either the bit was set or it was not. 
+        // possibilities here: either the bit was set or it was not.
         //
         // If the bit was set, then the `components` slice will no longer include the first value,
         // which means the slice will still contain the same number of pointer and capacity tuples
@@ -515,14 +591,14 @@ where
                 // if there are no more components remaining. 
                 unsafe { buffer.add(size_of::<C>()) };
 
-            components = 
+            components =
                 // SAFETY: `components` is guaranteed to have the same number of values as there
                 // set bits in `identifier_iter`. Since a bit must have been set to enter this
                 // block, there must be at least one component column.
                 unsafe { components.get_unchecked(1..) };
         }
         // SAFETY: At this point, one bit of `identifier_iter` has been consumed. There are two
-        // possibilities here: either the bit was set or it was not. 
+        // possibilities here: either the bit was set or it was not.
         //
         // If the bit was set, then the `components` slice will no longer include the first value,
         // which means the slice will still contain the same number of pointer and capacity tuples
@@ -538,7 +614,7 @@ where
         // number of elements as there are set bits in `identifier_iter`, which still make valid
         // `Vec<C>`s for each `C` identified by the remaining set bits in `identifier_iter`. Also,
         // `buffer` will remain unchanged and still point to an allocation with enough space to
-        // write all remaining components identified. 
+        // write all remaining components identified.
         //
         // Furthermore, regardless of whether the bit was set or not, `R` is one component smaller
         // than `(C, R)`, and since `identifier_iter` has had one bit consumed, it still has the
@@ -564,7 +640,7 @@ where
                 // SAFETY: `components` is guaranteed to have the same number of values as there
                 // set bits in `identifier_iter`. Since a bit must have been set to enter this
                 // block, there must be at least one component column.
-                unsafe { components.get_unchecked(0) };
+                unsafe { components.get_unchecked_mut(0) };
 
             if TypeId::of::<C>() == TypeId::of::<C_>() {
                 let mut v = ManuallyDrop::new(
@@ -579,11 +655,10 @@ where
                     },
                 );
                 v.push(
-                    // SAFETY: Since each unique component type is guaranteed to only be set once
-                    // within `identifier_iter`, then we can guarantee this value has not been read
-                    // and overwritten previously and will not be read again after this point.
-                    // Therefore, `component` is guaranteed to be properly initialized and valid.
-                    unsafe { component.assume_init() }
+                    // SAFETY: Since each component within a registry must be unique, we can
+                    // guarantee that we will only read `component` one time, at which point it
+                    // be a valid properly initialized value.
+                    unsafe { component.assume_init() },
                 );
                 // Since the component won't be read again, we can set it to an uninitialized
                 // value.
@@ -608,9 +683,9 @@ where
                     // `identifier_iter` (except for the `component` parameter) in the order they
                     // are specified in the `Registry`. Therefore, the pointer must point to a
                     // valid, properly initialized value of type `C`.
-                    unsafe { buffer.cast::<C>().read_unaligned() }
+                    unsafe { buffer.cast::<C>().read_unaligned() },
                 );
-                buffer = 
+                buffer =
                     // SAFETY: `buffer` is guaranteed by the safety contract of the method to point
                     // to a packed buffer of components corresponding to all components identified
                     // by `identifier_iter` within the registry, except the component `component`.
@@ -622,15 +697,15 @@ where
                 *component_column = (v.as_mut_ptr().cast::<u8>(), v.capacity());
             }
 
-            components = 
+            components =
                 // SAFETY: `components` is guaranteed to have the same number of values as there
                 // set bits in `identifier_iter`. Since a bit must have been set to enter this
                 // block, there must be at least one component column.
-                unsafe { components.get_unchecked(1..) };
+                unsafe { components.get_unchecked_mut(1..) };
         }
 
         // SAFETY: At this point, one bit of `identifier_iter` has been consumed. There are two
-        // possibilities here: either the bit was set or it was not. 
+        // possibilities here: either the bit was set or it was not.
         //
         // If the bit was set, then the `components` slice will no longer include the first value,
         // which means the slice will still contain the same number of pointer and capacity tuples
@@ -647,13 +722,15 @@ where
         // `buffer` will remain unchanged and still point to an allocation of valid components
         // identified by `identier_iter`.
         //
-        // If `components` had not been read yet, it will still be a valid value. If it has been
+        // If `component` had not been read yet, it will still be a valid value. If it has been
         // read, it will no longer be valid but it will also no longer be read, since
         // `identifier_iter` will not identify the same unique component type twice.
         //
         // Furthermore, regardless of whether the bit was set or not, `R` is one component smaller
         // than `(C, R)`, and since `identifier_iter` has had one bit consumed, it still has the
         // same number of bits remaining as `R` has components remaining.
+        //
+        // Finally, since `(C, R)` contains no duplicate components, neither does `R`.
         unsafe {
             R::push_components_from_buffer_and_component(
                 buffer,
@@ -677,31 +754,100 @@ where
     {
         if TypeId::of::<C>() == TypeId::of::<C_>() {
             // Skip this component in the buffer.
-            buffer = buffer.add(size_of::<C>());
+            buffer =
+                // SAFETY: The bit buffer is guaranteed to have a value of type `C` at this point
+                // because the components within the bit buffer are guaranteed to be ordered in the
+                // same order as the registry.
+                unsafe { buffer.add(size_of::<C>()) };
             // Pop the next identifier bit. We don't need to look at it, since the component is
-            // being skipped anyway.
+            // being skipped anyway. We also know the bit was not set because of the safety
+            // contract on this method, which is why we know we don't need to pop any component
+            // pointer-capacity tuples from `components`.
             identifier_iter.next();
-        } else if identifier_iter.next().unwrap_unchecked() {
-            let component_column = components.get_unchecked_mut(0);
-            let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
-                component_column.0.cast::<C>(),
-                length,
-                component_column.1,
-            ));
-            v.push(buffer.cast::<C>().read_unaligned());
+        } else if
+        // SAFETY: `identifier_iter` is guaranteed by the safety contract of this method to
+        // return a value for every component within the registry.
+        unsafe { identifier_iter.next().unwrap_unchecked() } {
+            let component_column =
+                // SAFETY: `components` is guaranteed to have the same number of values as there
+                // set bits in `identifier_iter`. Since a bit must have been set to enter this
+                // block, there must be at least one component column.
+                unsafe { components.get_unchecked_mut(0) };
+            let mut v = ManuallyDrop::new(
+                // SAFETY: The pointer, capacity, and length are guaranteed by the safety
+                // contract of this method to define a valid `Vec<C>`.
+                unsafe {
+                    Vec::<C>::from_raw_parts(
+                        component_column.0.cast::<C>(),
+                        length,
+                        component_column.1,
+                    )
+                },
+            );
+            v.push(
+                // SAFETY: `buffer` is guaranteed by the safety contract of the method to be
+                // valid for reads and to point to all components identified by
+                // `identifier_iter` (except for the `component` parameter) in the order they
+                // are specified in the `Registry`. Therefore, the pointer must point to a
+                // valid, properly initialized value of type `C`.
+                unsafe { buffer.cast::<C>().read_unaligned() },
+            );
+            buffer =
+                // SAFETY: `buffer` is guaranteed by the safety contract of the method to point
+                // to a packed buffer of components corresponding to all components identified
+                // by `identifier_iter` within the registry, except the component `component`.
+                // Therefore, offsetting the buffer by `size_of::<C>()` will point it to the
+                // next component within the same allocation, or it will point it to one byte
+                // past the end of the allocation if no more components are in the buffer.
+                unsafe { buffer.add(size_of::<C>()) };
+
             *component_column = (v.as_mut_ptr().cast::<u8>(), v.capacity());
 
-            components = components.get_unchecked_mut(1..);
-            buffer = buffer.add(size_of::<C>());
+            components =
+                // SAFETY: `components` is guaranteed to have the same number of values as there
+                // set bits in `identifier_iter`. Since a bit must have been set to enter this
+                // block, there must be at least one component column.
+                unsafe { components.get_unchecked_mut(1..) };
         }
 
-        R::push_components_from_buffer_skipping_component(
-            buffer,
-            component,
-            components,
-            length,
-            identifier_iter,
-        );
+        // SAFETY: At this point, one bit of `identifier_iter` has been consumed. There are two
+        // possibilities here: either the bit was set or it was not.
+        //
+        // If the bit was set, then the `components` slice will no longer include the first value,
+        // which means the slice will still contain the same number of pointer and capacity tuples
+        // as there are set bits in `identifier_iter`. Additionally, since the first value was
+        // removed from the slice, which corresponded to the component identified by the consumed
+        // bit, all remaining component values will still correspond to valid `Vec<C>`s identified
+        // by the remaining set bits in `identifier_iter`. Also, `buffer` is still guaranteed to
+        // hold the remaining components identified, save for the `component` parameter, whether or
+        // not a value was actually read from `buffer`.
+        //
+        // If the bit was not set, then `components` is unaltered, and there are still the same
+        // number of elements as there are set bits in `identifier_iter`, which still make valid
+        // `Vec<C>`s for each `C` identified by the remaining set bits in `identifier_iter`. Also,
+        // `buffer` will remain unchanged and still point to an allocation of valid components
+        // identified by `identier_iter`.
+        //
+        // If the bit was not set but the component was of type `C_`, then the bit buffer will have
+        // been offset by `size_of::<C_>()`. This fills the safety contract of the next call, as it
+        // guarantees the rest of the components in the buffer will be components specified in the
+        // identifier, which will match the registry since there are no duplicate components in the
+        // registry.
+        //
+        // Furthermore, regardless of whether the bit was set or not, `R` is one component smaller
+        // than `(C, R)`, and since `identifier_iter` has had one bit consumed, it still has the
+        // same number of bits remaining as `R` has components remaining.
+        //
+        // Finally, since `(C, R)` contains no duplicate components, neither does `R`.
+        unsafe {
+            R::push_components_from_buffer_skipping_component(
+                buffer,
+                component,
+                components,
+                length,
+                identifier_iter,
+            )
+        };
     }
 
     unsafe fn free_components<R_>(
@@ -711,16 +857,50 @@ where
     ) where
         R_: Registry,
     {
-        if identifier_iter.next().unwrap_unchecked() {
-            let component_column = components.get_unchecked(0);
-            drop(Vec::<C>::from_raw_parts(
-                component_column.0.cast::<C>(),
-                length,
-                component_column.1,
-            ));
-            components = components.get_unchecked(1..);
+        if
+        // SAFETY: `identifier_iter` is guaranteed by the safety contract of this method to
+        // return a value for every component within the registry.
+        unsafe { identifier_iter.next().unwrap_unchecked() } {
+            let component_column =
+                // SAFETY: `components` is guaranteed to have the same number of values as there
+                // set bits in `identifier_iter`. Since a bit must have been set to enter this
+                // block, there must be at least one component column.
+                unsafe { components.get_unchecked(0) };
+            drop(
+                // SAFETY: The pointer, capacity, and length are guaranteed by the safety
+                // contract of this method to define a valid `Vec<C>`.
+                unsafe {
+                    Vec::<C>::from_raw_parts(
+                        component_column.0.cast::<C>(),
+                        length,
+                        component_column.1,
+                    )
+                },
+            );
+            components =
+                // SAFETY: `components` is guaranteed to have the same number of values as there
+                // set bits in `identifier_iter`. Since a bit must have been set to enter this
+                // block, there must be at least one component column.
+                unsafe { components.get_unchecked(1..) };
         }
-        R::free_components(components, length, identifier_iter);
+        // SAFETY: At this point, one bit of `identifier_iter` has been consumed. There are two
+        // possibilities here: either the bit was set or it was not.
+        //
+        // If the bit was set, then the `components` slice will no longer include the first value,
+        // which means the slice will still contain the same number of pointer and capacity tuples
+        // as there are set bits in `identifier_iter`. Additionally, since the first value was
+        // removed from the slice, which corresponded to the component identified by the consumed
+        // bit, all remaining component values will still correspond to valid `Vec<C>`s identified
+        // by the remaining set bits in `identifier_iter`.
+        //
+        // If the bit was not set, then `components` is unaltered, and there are still the same
+        // number of elements as there are set bits in `identifier_iter`, which still make valid
+        // `Vec<C>`s for each `C` identified by the remaining set bits in `identifier_iter`.
+        //
+        // Furthermore, regardless of whether the bit was set or not, `R` is one component smaller
+        // than `(C, R)`, and since `identifier_iter` has had one bit consumed, it still has the
+        // same number of bits remaining as `R` has components remaining.
+        unsafe { R::free_components(components, length, identifier_iter) };
     }
 
     unsafe fn try_free_components<R_>(
@@ -730,26 +910,52 @@ where
     ) where
         R_: Registry,
     {
-        if identifier_iter.next().unwrap_unchecked() {
+        if
+        // SAFETY: `identifier_iter` is guaranteed by the safety contract of this method to
+        // return a value for every component within the registry.
+        unsafe { identifier_iter.next().unwrap_unchecked() } {
             let component_column = match components.get(0) {
                 Some(component_column) => component_column,
                 None => {
                     return;
                 }
             };
-            drop(Vec::<C>::from_raw_parts(
-                component_column.0.cast::<C>(),
-                length,
-                component_column.1,
-            ));
-            components = match components.get(1..) {
-                Some(components) => components,
-                None => {
-                    return;
-                }
-            };
+            drop(
+                // SAFETY: The pointer, capacity, and length are guaranteed by the safety
+                // contract of this method to define a valid `Vec<C>`.
+                unsafe {
+                    Vec::<C>::from_raw_parts(
+                        component_column.0.cast::<C>(),
+                        length,
+                        component_column.1,
+                    )
+                },
+            );
+            components =
+                // SAFETY: Since we didn't return on the `get(0)` call above, we know `components`
+                // has at least one element.
+                unsafe {
+                    components.get_unchecked(1..)
+                };
         }
-        R::try_free_components(components, length, identifier_iter);
+        // SAFETY: At this point, one bit of `identifier_iter` has been consumed. There are two
+        // possibilities here: either the bit was set or it was not.
+        //
+        // If the bit was set, then the `components` slice will no longer include the first value,
+        // which means the slice will still contain up to the number of pointer and capacity tuples
+        // as there are set bits in `identifier_iter`. Additionally, since the first value was
+        // removed from the slice, which corresponded to the component identified by the consumed
+        // bit, all remaining component values will still correspond to valid `Vec<C>`s identified
+        // by the remaining set bits in `identifier_iter`.
+        //
+        // If the bit was not set, then `components` is unaltered, and there are still up to the
+        // same number of elements as there are set bits in `identifier_iter`, which still make
+        // valid `Vec<C>`s for each `C` identified by the remaining set bits in `identifier_iter`.
+        //
+        // Furthermore, regardless of whether the bit was set or not, `R` is one component smaller
+        // than `(C, R)`, and since `identifier_iter` has had one bit consumed, it still has the
+        // same number of bits remaining as `R` has components remaining.
+        unsafe { R::try_free_components(components, length, identifier_iter) };
     }
 
     unsafe fn clear_components<R_>(
@@ -759,18 +965,54 @@ where
     ) where
         R_: Registry,
     {
-        if identifier_iter.next().unwrap_unchecked() {
-            let component_column = components.get_unchecked_mut(0);
-            let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
-                component_column.0.cast::<C>(),
-                length,
-                component_column.1,
-            ));
+        if
+        // SAFETY: `identifier_iter` is guaranteed by the safety contract of this method to
+        // return a value for every component within the registry.
+        unsafe { identifier_iter.next().unwrap_unchecked() } {
+            let component_column =
+                // SAFETY: `components` is guaranteed to have the same number of values as there
+                // set bits in `identifier_iter`. Since a bit must have been set to enter this
+                // block, there must be at least one component column.
+                unsafe { components.get_unchecked_mut(0) };
+            let mut v = ManuallyDrop::new(
+                // SAFETY: The pointer, capacity, and length are guaranteed by the safety
+                // contract of this method to define a valid `Vec<C>`.
+                unsafe {
+                    Vec::<C>::from_raw_parts(
+                        component_column.0.cast::<C>(),
+                        length,
+                        component_column.1,
+                    )
+                },
+            );
             v.clear();
-            components = components.get_unchecked_mut(1..);
+            components =
+                // SAFETY: `components` is guaranteed to have the same number of values as there
+                // set bits in `identifier_iter`. Since a bit must have been set to enter this
+                // block, there must be at least one component column.
+                unsafe { components.get_unchecked_mut(1..) };
         }
 
-        R::clear_components(components, length, identifier_iter);
+        // SAFETY: At this point, one bit of `identifier_iter` has been consumed. There are two
+        // possibilities here: either the bit was set or it was not.
+        //
+        // If the bit was set, then the `components` slice will no longer include the first value,
+        // which means the slice will still contain up to the number of pointer and capacity tuples
+        // as there are set bits in `identifier_iter`. Additionally, since the first value was
+        // removed from the slice, which corresponded to the component identified by the consumed
+        // bit, all remaining component values will still correspond to valid `Vec<C>`s identified
+        // by the remaining set bits in `identifier_iter`.
+        //
+        // If the bit was not set, then `components` is unaltered, and there are still up to the
+        // same number of elements as there are set bits in `identifier_iter`, which still make
+        // valid `Vec<C>`s for each `C` identified by the remaining set bits in `identifier_iter`.
+        //
+        // Furthermore, regardless of whether the bit was set or not, `R` is one component smaller
+        // than `(C, R)`, and since `identifier_iter` has had one bit consumed, it still has the
+        // same number of bits remaining as `R` has components remaining.
+        unsafe {
+            R::clear_components(components, length, identifier_iter)
+        };
     }
 
     unsafe fn debug_identifier<R_>(
@@ -779,10 +1021,18 @@ where
     ) where
         R_: Registry,
     {
-        if identifier_iter.next().unwrap_unchecked() {
+        if
+        // SAFETY: `identifier_iter` is guaranteed by the safety contract of this method to
+        // return a value for every component within the registry.
+        unsafe { identifier_iter.next().unwrap_unchecked() } {
             debug_list.entry(&type_name::<C>());
         }
 
-        R::debug_identifier(debug_list, identifier_iter);
+        // SAFETY: One bit of `identifier_iter` has been consumed, and since `R` is one component
+        // smaller than `(C, R)`, `identifier_iter` has the same number of bits remaining as `R`
+        // has components remaining.
+        unsafe {
+            R::debug_identifier(debug_list, identifier_iter)
+        };
     }
 }
