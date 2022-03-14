@@ -37,7 +37,7 @@ use rayon::iter::{
 /// type Registry = registry!(Foo, Bar);
 ///
 /// let mut world = World::<Registry>::new();
-/// world.push(entity!(Foo(42), Bar(true)));
+/// world.insert(entity!(Foo(42), Bar(true)));
 ///
 /// world
 ///     .par_query::<views!(&mut Foo, &Bar), filter::None>()

@@ -6,7 +6,9 @@ where
     R: RegistryPartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.archetypes == other.archetypes && self.entity_allocator == other.entity_allocator
+        self.len == other.len
+            && self.archetypes == other.archetypes
+            && self.entity_allocator == other.entity_allocator
     }
 }
 

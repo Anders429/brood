@@ -32,7 +32,7 @@ use hashbrown::HashMap;
 /// type Registry = registry!(Foo, Bar);
 ///
 /// let mut world = World::<Registry>::new();
-/// world.push(entity!(Foo(42), Bar(true)));
+/// world.insert(entity!(Foo(42), Bar(true)));
 ///
 /// for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None>() {
 ///     if bar.0 {
