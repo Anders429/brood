@@ -113,9 +113,9 @@ jobs:
     - uses: actions-rs/cargo@v1
       with:
         command: doc
-        args: --no-deps --cfg doc_cfg
+        args: --no-deps --all-features
       env:
-        RUSTDOCFLAGS: -D warnings
+        RUSTDOCFLAGS: --cfg doc_cfg -D warnings
 
   private_doc:
     runs-on: ubuntu-latest
@@ -128,9 +128,9 @@ jobs:
     - uses: actions-rs/cargo@v1
       with:
         command: doc
-        args: --no-deps --cfg doc_cfg --document-private-items
+        args: --no-deps --all-features --document-private-items
       env:
-        RUSTDOCFLAGS: -D warnings
+        RUSTDOCFLAGS: --cfg doc_cfg -D warnings
 
   msrv:
     runs-on: ubuntu-latest
