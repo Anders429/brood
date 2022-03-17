@@ -124,6 +124,8 @@ where
     pub(crate) fn size_of_components(&self) -> usize {
         // SAFETY: `self.iter()` returns an `Iter<R>`, which is the same `R` that the associated
         // method belongs to.
+        //
+        // Additionally, the iterator returned by `self.iter()` will not outlive `self`.
         unsafe { R::size_of_components_for_identifier(self.iter()) }
     }
 }
@@ -133,6 +135,8 @@ where
     R: Registry,
 {
     fn eq(&self, other: &Self) -> bool {
+        // SAFETY: Both `self` and `other` outlive these slices, as the slices are dropped at the
+        // end of this method.
         unsafe { self.as_slice() == other.as_slice() }
     }
 }
@@ -142,7 +146,12 @@ where
     R: Registry,
 {
     fn drop(&mut self) {
-        drop(unsafe { Vec::from_raw_parts(self.pointer, (R::LEN + 7) / 8, self.capacity) });
+        drop(
+            // SAFETY: `self.pointer` points to an allocated buffer of length `(R::LEN + 7)`. This
+            // is an invariant upheld by the `Identifier` struct. Additionally, it is guaranteed to
+            // have a capacity of `self.capacity`.
+            unsafe { Vec::from_raw_parts(self.pointer, (R::LEN + 7) / 8, self.capacity) },
+        );
     }
 }
 
@@ -153,6 +162,10 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut debug_list = f.debug_list();
 
+        // SAFETY: `self.iter()` returns an `Iter<R>`, which is the same `R` that the associated
+        // method belongs to.
+        //
+        // Additionally, the iterator returned by `self.iter()` will not outlive `self`.
         unsafe {
             R::debug_identifier(&mut debug_list, self.iter());
         }
