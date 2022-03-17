@@ -142,15 +142,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: wget https://sourceware.org/pub/valgrind/valgrind-3.18.1.tar.bz2
-    - run: tar xvf valgrind-3.18.1.tar.bz2
-    - run: ./configure
-      working-directory: ./valgrind-3.18.1
-    - run: make
-      working-directory: ./valgrind-3.18.1
-    - run: sudo make install
-      working-directory: ./valgrind-3.18.1
-    - run: sudo apt-get install libc6-dbg
+    - run: sudo apt-get update
+    - run: sudo apt-get install valgrind
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: nightly
