@@ -102,6 +102,36 @@ jobs:
         command: hack
         args: clippy --feature-powerset --optional-deps -- --deny warnings
 
+  doc:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+    - uses: actions-rs/cargo@v1
+      with:
+        command: doc
+        args: --no-deps --all-features
+      env:
+        RUSTDOCFLAGS: --cfg doc_cfg -D warnings
+
+  private_doc:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+    - uses: actions-rs/cargo@v1
+      with:
+        command: doc
+        args: --no-deps --all-features --document-private-items
+      env:
+        RUSTDOCFLAGS: --cfg doc_cfg -D warnings
+
   msrv:
     runs-on: ubuntu-latest
     steps:

@@ -37,6 +37,8 @@ impl AssertionBuffer {
     /// Create a new empty buffer.
     ///
     /// It is recommended to use [`with_capacity`] if possible, as it will save allocations.
+    ///
+    /// [`with_capacity`]: AssertionBuffer::with_capacity()
     #[cfg(feature = "parallel")]
     pub(crate) fn new() -> Self {
         Self::with_capacity(0)
