@@ -1,11 +1,10 @@
 //! This module defines and implements assertions on a [`Registry`].
 //!
 //! All assertions on invariants that must be upheld by a `Registry` should be included within the
-//! `Assertions` trait defined here. This trait acts as an extension to the [`registry::Seal`]
+//! `Assertions` trait defined here. This trait acts as an extension to the `registry::Seal`
 //! trait, implementing it on all registries.
 //!
 //! [`Registry`]: crate::registry::Registry
-//! [`registry::Seal`]: crate::registry::seal::Seal;
 
 use crate::{component::Component, registry::Null};
 use core::any::TypeId;
