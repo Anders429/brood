@@ -30,7 +30,7 @@ use hashbrown::HashMap;
 pub trait Storage {
     /// Populate a map with component [`TypeId`]s and their associated index within the registry.
     ///
-    /// [`TypeId`]: std::any::TypeId
+    /// [`TypeId`]: core::any::TypeId
     fn create_component_map(component_map: &mut HashMap<TypeId, usize>, index: usize);
 
     /// Populate a map with component [`TypeId`]s and their associated index within the components
@@ -43,7 +43,7 @@ pub trait Storage {
     /// When called internally, the `identifier_iter` must have the same amount of bits left as
     /// there are components remaining.
     ///
-    /// [`TypeId`]: std::any::TypeId
+    /// [`TypeId`]: core::any::TypeId
     unsafe fn create_component_map_for_identifier<R>(
         component_map: &mut HashMap<TypeId, usize>,
         index: usize,
@@ -61,7 +61,7 @@ pub trait Storage {
     /// When called internally, the `identifier_iter` must have the same amount of bits left as
     /// there are components remaining.
     ///
-    /// [`Vec`]: std::vec::Vec
+    /// [`Vec`]: alloc::vec::Vec
     unsafe fn new_components_with_capacity<R>(
         components: &mut Vec<(*mut u8, usize)>,
         capacity: usize,
@@ -1055,7 +1055,8 @@ mod tests {
     use claim::{assert_none, assert_some_eq};
     use core::{
         any::TypeId,
-        mem::{size_of, ManuallyDrop},
+        marker::PhantomData,
+        mem::{size_of, ManuallyDrop, MaybeUninit},
     };
     use hashbrown::HashMap;
 
@@ -1551,7 +1552,7 @@ mod tests {
         assert_eq!(popped_c, C);
     }
 
-#[test]
+    #[test]
     fn pop_component_row_some_components() {
         #[derive(Debug, Eq, PartialEq)]
         struct A(usize);
@@ -1571,7 +1572,15 @@ mod tests {
         let buffer_size = unsafe { Registry::size_of_components_for_identifier(identifier.iter()) };
         let mut buffer = Vec::with_capacity(buffer_size);
         unsafe { buffer.set_len(buffer_size) };
-        unsafe { Registry::pop_component_row(0, buffer.as_mut_ptr(), &mut components, 3, identifier.iter()) };
+        unsafe {
+            Registry::pop_component_row(
+                0,
+                buffer.as_mut_ptr(),
+                &mut components,
+                3,
+                identifier.iter(),
+            )
+        };
 
         let new_a_column = unsafe {
             Vec::from_raw_parts(
@@ -1610,7 +1619,15 @@ mod tests {
         let buffer_size = unsafe { Registry::size_of_components_for_identifier(identifier.iter()) };
         let mut buffer = Vec::with_capacity(buffer_size);
         unsafe { buffer.set_len(buffer_size) };
-        unsafe { Registry::pop_component_row(0, buffer.as_mut_ptr(), &mut components, 1, identifier.iter()) };
+        unsafe {
+            Registry::pop_component_row(
+                0,
+                buffer.as_mut_ptr(),
+                &mut components,
+                1,
+                identifier.iter(),
+            )
+        };
 
         assert!(components.is_empty());
         assert!(buffer.is_empty());
@@ -1636,6 +1653,316 @@ mod tests {
         let buffer_size = unsafe { Registry::size_of_components_for_identifier(identifier.iter()) };
         let mut buffer = Vec::with_capacity(buffer_size);
         unsafe { buffer.set_len(buffer_size) };
-        unsafe { Registry::pop_component_row(3, buffer.as_mut_ptr(), &mut components, 3, identifier.iter()) };
+        unsafe {
+            Registry::pop_component_row(
+                3,
+                buffer.as_mut_ptr(),
+                &mut components,
+                3,
+                identifier.iter(),
+            )
+        };
+    }
+
+    #[test]
+    fn push_components_from_buffer_and_component() {
+        #[derive(Debug, PartialEq)]
+        struct A(usize);
+        #[derive(Debug, PartialEq)]
+        struct B(bool);
+        #[derive(Debug, PartialEq)]
+        struct C(f32);
+        type Registry = registry!(A, B, C);
+        let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
+        let mut a_column = ManuallyDrop::new(vec![A(0), A(1), A(2)]);
+        let mut b_column = ManuallyDrop::new(vec![B(false), B(true), B(true)]);
+        let mut c_column = ManuallyDrop::new(vec![C(1.0), C(1.1), C(1.2)]);
+        let mut components = vec![
+            (a_column.as_mut_ptr().cast::<u8>(), a_column.capacity()),
+            (b_column.as_mut_ptr().cast::<u8>(), b_column.capacity()),
+            (c_column.as_mut_ptr().cast::<u8>(), c_column.capacity()),
+        ];
+
+        // Initialize input buffer.
+        let input_identifier = unsafe { Identifier::<Registry>::new(vec![5]) };
+        let buffer_size =
+            unsafe { Registry::size_of_components_for_identifier(input_identifier.iter()) };
+        let mut buffer = Vec::<u8>::with_capacity(buffer_size);
+        unsafe { buffer.set_len(buffer_size) };
+        let buffer_ptr = buffer.as_mut_ptr();
+        unsafe { buffer_ptr.cast::<A>().write_unaligned(A(3)) };
+        unsafe {
+            buffer_ptr
+                .add(size_of::<A>())
+                .cast::<C>()
+                .write_unaligned(C(1.3))
+        };
+
+        unsafe {
+            Registry::push_components_from_buffer_and_component(
+                buffer_ptr,
+                MaybeUninit::new(B(false)),
+                &mut components,
+                3,
+                identifier.iter(),
+            )
+        };
+
+        let new_a_column = unsafe {
+            Vec::from_raw_parts(
+                components.get(0).unwrap().0.cast::<A>(),
+                4,
+                components.get(0).unwrap().1,
+            )
+        };
+        let new_b_column = unsafe {
+            Vec::from_raw_parts(
+                components.get(1).unwrap().0.cast::<B>(),
+                4,
+                components.get(1).unwrap().1,
+            )
+        };
+        let new_c_column = unsafe {
+            Vec::from_raw_parts(
+                components.get(2).unwrap().0.cast::<C>(),
+                4,
+                components.get(2).unwrap().1,
+            )
+        };
+        assert_eq!(new_a_column, vec![A(0), A(1), A(2), A(3)]);
+        assert_eq!(new_b_column, vec![B(false), B(true), B(true), B(false)]);
+        assert_eq!(new_c_column, vec![C(1.0), C(1.1), C(1.2), C(1.3)]);
+    }
+
+    #[test]
+    fn push_components_from_buffer_skipping_component() {
+        #[derive(Debug, PartialEq)]
+        struct A(usize);
+        #[derive(Debug, PartialEq)]
+        struct B(bool);
+        #[derive(Debug, PartialEq)]
+        struct C(f32);
+        type Registry = registry!(A, B, C);
+        let identifier = unsafe { Identifier::<Registry>::new(vec![5]) };
+        let mut a_column = ManuallyDrop::new(vec![A(0), A(1), A(2)]);
+        let mut c_column = ManuallyDrop::new(vec![C(1.0), C(1.1), C(1.2)]);
+        let mut components = vec![
+            (a_column.as_mut_ptr().cast::<u8>(), a_column.capacity()),
+            (c_column.as_mut_ptr().cast::<u8>(), c_column.capacity()),
+        ];
+
+        // Initialize input buffer.
+        let input_identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
+        let buffer_size =
+            unsafe { Registry::size_of_components_for_identifier(input_identifier.iter()) };
+        let mut buffer = Vec::<u8>::with_capacity(buffer_size);
+        unsafe { buffer.set_len(buffer_size) };
+        let buffer_ptr = buffer.as_mut_ptr();
+        unsafe { buffer_ptr.cast::<A>().write_unaligned(A(3)) };
+        unsafe {
+            buffer_ptr
+                .add(size_of::<A>())
+                .cast::<B>()
+                .write_unaligned(B(false))
+        };
+        unsafe {
+            buffer_ptr
+                .add(size_of::<A>())
+                .add(size_of::<B>())
+                .cast::<C>()
+                .write_unaligned(C(1.3))
+        };
+
+        unsafe {
+            Registry::push_components_from_buffer_skipping_component(
+                buffer_ptr,
+                PhantomData::<B>,
+                &mut components,
+                3,
+                identifier.iter(),
+            )
+        };
+
+        let new_a_column = unsafe {
+            Vec::from_raw_parts(
+                components.get(0).unwrap().0.cast::<A>(),
+                4,
+                components.get(0).unwrap().1,
+            )
+        };
+        let new_c_column = unsafe {
+            Vec::from_raw_parts(
+                components.get(1).unwrap().0.cast::<C>(),
+                4,
+                components.get(1).unwrap().1,
+            )
+        };
+        assert_eq!(new_a_column, vec![A(0), A(1), A(2), A(3)]);
+        assert_eq!(new_c_column, vec![C(1.0), C(1.1), C(1.2), C(1.3)]);
+    }
+
+    #[test]
+    fn free_components_empty_registry() {
+        type Registry = registry!();
+        let identifier = unsafe { Identifier::<Registry>::new(Vec::new()) };
+        let mut components = Vec::new();
+
+        unsafe { Registry::free_components(&mut components, 0, identifier.iter()) };
+    }
+
+    #[test]
+    fn free_components() {
+        static mut DROP_COUNT: usize = 0;
+        struct A;
+        impl Drop for A {
+            fn drop(&mut self) {
+                unsafe { DROP_COUNT += 1 };
+            }
+        }
+        type Registry = registry!(A);
+        let identifier = unsafe { Identifier::<Registry>::new(vec![1]) };
+        let mut a_column = ManuallyDrop::new(vec![A]);
+        let mut components = vec![(a_column.as_mut_ptr().cast::<u8>(), a_column.capacity())];
+
+        unsafe { Registry::free_components(&mut components, 1, identifier.iter()) };
+
+        assert_eq!(unsafe { DROP_COUNT }, 1);
+    }
+
+    #[test]
+    fn try_free_components_empty_registry() {
+        type Registry = registry!();
+        let identifier = unsafe { Identifier::<Registry>::new(Vec::new()) };
+        let mut components = Vec::new();
+
+        unsafe { Registry::try_free_components(&mut components, 0, identifier.iter()) };
+    }
+
+    #[test]
+    fn try_free_components() {
+        static mut DROP_COUNT: usize = 0;
+        struct A;
+        impl Drop for A {
+            fn drop(&mut self) {
+                unsafe { DROP_COUNT += 1 };
+            }
+        }
+        type Registry = registry!(A);
+        let identifier = unsafe { Identifier::<Registry>::new(vec![1]) };
+        let mut a_column = ManuallyDrop::new(vec![A]);
+        let mut components = vec![(a_column.as_mut_ptr().cast::<u8>(), a_column.capacity())];
+
+        unsafe { Registry::try_free_components(&mut components, 1, identifier.iter()) };
+
+        assert_eq!(unsafe { DROP_COUNT }, 1);
+    }
+
+    #[test]
+    fn try_free_components_incomplete() {
+        static mut DROP_COUNT: usize = 0;
+        struct A;
+        impl Drop for A {
+            fn drop(&mut self) {
+                unsafe { DROP_COUNT += 1 };
+            }
+        }
+        struct B;
+        type Registry = registry!(A, B);
+        let identifier = unsafe { Identifier::<Registry>::new(vec![3]) };
+        let mut a_column = ManuallyDrop::new(vec![A]);
+        let mut components = vec![(a_column.as_mut_ptr().cast::<u8>(), a_column.capacity())];
+
+        unsafe { Registry::try_free_components(&mut components, 1, identifier.iter()) };
+
+        assert_eq!(unsafe { DROP_COUNT }, 1);
+    }
+
+    #[test]
+    fn clear_components_empty_registry() {
+        type Registry = registry!();
+        let identifier = unsafe { Identifier::<Registry>::new(Vec::new()) };
+        let mut components = Vec::new();
+
+        unsafe { Registry::clear_components(&mut components, 0, identifier.iter()) };
+
+        assert!(components.is_empty());
+    }
+
+    #[test]
+    fn clear_components_all() {
+        struct A(usize);
+        struct B(bool);
+        struct C;
+        type Registry = registry!(A, B, C);
+        let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
+        let mut a_column = ManuallyDrop::new(vec![A(0), A(1), A(2)]);
+        let mut b_column = ManuallyDrop::new(vec![B(false), B(true), B(true)]);
+        let mut c_column = ManuallyDrop::new(vec![C, C, C]);
+        let mut components = vec![
+            (a_column.as_mut_ptr().cast::<u8>(), a_column.capacity()),
+            (b_column.as_mut_ptr().cast::<u8>(), b_column.capacity()),
+            (c_column.as_mut_ptr().cast::<u8>(), c_column.capacity()),
+        ];
+
+        unsafe { Registry::clear_components(&mut components, 3, identifier.iter()) };
+
+        let new_a_column = unsafe {
+            Vec::from_raw_parts(
+                components.get(0).unwrap().0.cast::<A>(),
+                0,
+                components.get(0).unwrap().1,
+            )
+        };
+        let new_b_column = unsafe {
+            Vec::from_raw_parts(
+                components.get(1).unwrap().0.cast::<B>(),
+                0,
+                components.get(1).unwrap().1,
+            )
+        };
+        let new_c_column = unsafe {
+            Vec::from_raw_parts(
+                components.get(2).unwrap().0.cast::<C>(),
+                0,
+                components.get(2).unwrap().1,
+            )
+        };
+        assert!(new_a_column.is_empty());
+        assert!(new_b_column.is_empty());
+        assert!(new_c_column.is_empty());
+    }
+
+    #[test]
+    fn clear_components_some() {
+        struct A(usize);
+        struct B(bool);
+        struct C;
+        type Registry = registry!(A, B, C);
+        let identifier = unsafe { Identifier::<Registry>::new(vec![5]) };
+        let mut a_column = ManuallyDrop::new(vec![A(0), A(1), A(2)]);
+        let mut c_column = ManuallyDrop::new(vec![C, C, C]);
+        let mut components = vec![
+            (a_column.as_mut_ptr().cast::<u8>(), a_column.capacity()),
+            (c_column.as_mut_ptr().cast::<u8>(), c_column.capacity()),
+        ];
+
+        unsafe { Registry::clear_components(&mut components, 3, identifier.iter()) };
+
+        let new_a_column = unsafe {
+            Vec::from_raw_parts(
+                components.get(0).unwrap().0.cast::<A>(),
+                0,
+                components.get(0).unwrap().1,
+            )
+        };
+        let new_c_column = unsafe {
+            Vec::from_raw_parts(
+                components.get(1).unwrap().0.cast::<C>(),
+                0,
+                components.get(1).unwrap().1,
+            )
+        };
+        assert!(new_a_column.is_empty());
+        assert!(new_c_column.is_empty());
     }
 }
