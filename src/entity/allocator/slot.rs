@@ -13,15 +13,23 @@ impl<R> Slot<R>
 where
     R: Registry,
 {
-    // TODO: Should this really be considered unsafe?
-    pub(super) unsafe fn new(location: Location<R>) -> Self {
+    pub(super) fn new(location: Location<R>) -> Self {
         Self {
             generation: 0,
             location: Some(location),
         }
     }
 
-    // TODO: Should this really be considered unsafe?
+    /// Activate this slot without checking whether it is already activated.
+    ///
+    /// If the current slot is already active, this will lead to invalidation of
+    /// `entity::Identifier`s prematurely and make it impossible to remove entities from the
+    /// `World`. Additionally, it would leave invalid identifiers within archetype tables, causing
+    /// some improper assumptions. Therefore, this method is considered `unsafe` and must be called
+    /// with care.
+    ///
+    /// # Safety
+    /// A `Slot` this method is called on must not already be active.
     pub(super) unsafe fn activate_unchecked(&mut self, location: Location<R>) {
         self.generation = self.generation.wrapping_add(1);
         self.location = Some(location);
