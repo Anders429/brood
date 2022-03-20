@@ -100,11 +100,23 @@ where
             if ManuallyDrop::new(
                 // SAFETY: The pointer, capacity, and length are guaranteed by the safety contract
                 // of this method to define a valid `Vec<C>`.
-                unsafe { Vec::from_raw_parts(component_column_a.0.cast::<C>(), length, component_column_a.1) },
+                unsafe {
+                    Vec::from_raw_parts(
+                        component_column_a.0.cast::<C>(),
+                        length,
+                        component_column_a.1,
+                    )
+                },
             ) != ManuallyDrop::new(
                 // SAFETY: The pointer, capacity, and length are guaranteed by the safety contract
                 // of this method to define a valid `Vec<C>`.
-                unsafe { Vec::from_raw_parts(component_column_b.0.cast::<C>(), length, component_column_b.1) },
+                unsafe {
+                    Vec::from_raw_parts(
+                        component_column_b.0.cast::<C>(),
+                        length,
+                        component_column_b.1,
+                    )
+                },
             ) {
                 return false;
             }
@@ -191,7 +203,9 @@ mod tests {
             (c_column_b.as_mut_ptr().cast::<u8>(), c_column_b.capacity()),
         ];
 
-        assert!(unsafe {Registry::component_eq(&components_a, &components_b, 3, identifier.iter())});
+        assert!(unsafe {
+            Registry::component_eq(&components_a, &components_b, 3, identifier.iter())
+        });
     }
 
     #[test]
@@ -221,6 +235,8 @@ mod tests {
             (c_column_b.as_mut_ptr().cast::<u8>(), c_column_b.capacity()),
         ];
 
-        assert!(!unsafe {Registry::component_eq(&components_a, &components_b, 3, identifier.iter())});
+        assert!(!unsafe {
+            Registry::component_eq(&components_a, &components_b, 3, identifier.iter())
+        });
     }
 }

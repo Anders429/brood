@@ -34,10 +34,14 @@ where
         }
     }
 
-    pub(crate) unsafe fn allocate(&mut self, location: Location<R>) -> entity::Identifier {
+    pub(crate) fn allocate(&mut self, location: Location<R>) -> entity::Identifier {
         let (index, generation) = if let Some(index) = self.free.pop_front() {
-            let slot = self.slots.get_unchecked_mut(index);
-            slot.activate_unchecked(location);
+            let slot =
+                // SAFETY: `self.free` is guaranteed to contain valid indices within the bounds of
+                // `self.slots`.
+                unsafe {self.slots.get_unchecked_mut(index)};
+            // SAFETY: `self.free` is guaranteed to contain indices for slots that are not active.
+            unsafe { slot.activate_unchecked(location) };
             (index, slot.generation)
         } else {
             let index = self.slots.len();
@@ -50,7 +54,7 @@ where
     }
 
     #[inline]
-    pub(crate) unsafe fn allocate_batch(
+    pub(crate) fn allocate_batch(
         &mut self,
         mut locations: Locations<R>,
     ) -> Vec<entity::Identifier> {
@@ -61,8 +65,13 @@ where
             if locations.is_empty() {
                 break;
             }
-            let slot = self.slots.get_unchecked_mut(index);
-            slot.activate_unchecked(locations.next().unwrap_unchecked());
+            let slot =
+                // SAFETY: indices within `self.free` are guaranteed to be within the bounds of
+                // `self.slots`.
+                unsafe { self.slots.get_unchecked_mut(index) };
+            // SAFETY: `self.free` is guaranteed to contain indices for slots that are not active.
+            // Also, `locations` is already checked above to be nonempty.
+            unsafe { slot.activate_unchecked(locations.next().unwrap_unchecked()) };
             identifiers.push(entity::Identifier::new(index, slot.generation));
         }
 
@@ -96,31 +105,62 @@ where
         false
     }
 
+    /// Free the entity allocation identified by `identifier`, skipping checks for whether the
+    /// allocation exists.
+    ///
+    /// # Safety
+    /// `identifier` must be for a valid, currently allocated entity.
     pub(crate) unsafe fn free_unchecked(&mut self, identifier: entity::Identifier) {
-        let slot = self.slots.get_unchecked_mut(identifier.index);
+        let slot =
+            // SAFETY: `identifier` is guaranteed by the safety contract of this method to identify
+            // a valid entity. Therefore, its `index` will correspond to a valid value within
+            // `self.slots`.
+            unsafe {self.slots.get_unchecked_mut(identifier.index)};
         slot.deactivate();
         self.free.push_back(identifier.index);
     }
 
+    /// Update the location of the entity identified by `identifier`, skipping checks for whether
+    /// the allocation exists.
+    ///
+    /// # Safety
+    /// `identifier` must be for a valid, currently allocated entity.
     pub(crate) unsafe fn modify_location_unchecked(
         &mut self,
         identifier: entity::Identifier,
         location: Location<R>,
     ) {
-        self.slots.get_unchecked_mut(identifier.index).location = Some(location);
+        // SAFETY: `identifier` is guaranteed by the safety contract of this method to identify a
+        // valid entity. Therefore, its `index` will correspond to a valid value within
+        // `self.slots`.
+        unsafe { self.slots.get_unchecked_mut(identifier.index) }.location = Some(location);
     }
 
+    /// Update the location's index of the entity identified by `identifier`, skipping checks for
+    /// whether the allocation exists.
+    ///
+    /// This should be used when an entity's location within an archetype table has changed.
+    /// Calling this method ensures the allocator's mapping of where entities currently are stays
+    /// up to date.
+    ///
+    /// # Safety
+    /// `identifier` must be for a valid, currently allocated entity.
     pub(crate) unsafe fn modify_location_index_unchecked(
         &mut self,
         identifier: entity::Identifier,
         index: usize,
     ) {
-        self.slots
-            .get_unchecked_mut(identifier.index)
-            .location
-            .as_mut()
-            .unwrap_unchecked()
-            .index = index;
+        // SAFETY: `identifier` is guaranteed by the safety contract of this method to identify a
+        // valid active entity. Therefore, its `index` will correspond to a valid active value
+        // within `self.slots`.
+        unsafe {
+            self.slots
+                .get_unchecked_mut(identifier.index)
+                .location
+                .as_mut()
+                .unwrap_unchecked()
+        }
+        .index = index;
     }
 }
 
