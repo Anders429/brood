@@ -154,11 +154,11 @@ where
     {
         self.len += 1;
 
-        let mut key = vec![0; (R::LEN + 7) / 8];
+        let mut identifier = vec![0; (R::LEN + 7) / 8];
         unsafe {
-            E::to_key(&mut key, &self.component_map);
+            E::to_identifier(&mut identifier, &self.component_map);
         }
-        let identifier_buffer = unsafe { archetype::Identifier::new(key) };
+        let identifier_buffer = unsafe { archetype::Identifier::new(identifier) };
 
         unsafe {
             self.archetypes
@@ -193,11 +193,11 @@ where
     {
         self.len += entities.len();
 
-        let mut key = vec![0; (R::LEN + 7) / 8];
+        let mut identifier = vec![0; (R::LEN + 7) / 8];
         unsafe {
-            E::to_key(&mut key, &self.component_map);
+            E::to_identifier(&mut identifier, &self.component_map);
         }
-        let identifier_buffer = unsafe { archetype::Identifier::new(key) };
+        let identifier_buffer = unsafe { archetype::Identifier::new(identifier) };
 
         unsafe {
             self.archetypes
