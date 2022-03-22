@@ -11,7 +11,7 @@ pub trait Storage {
         length: usize,
     );
 
-    unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>);
+    unsafe fn to_identifier(identifier: &mut [u8], component_map: &HashMap<TypeId, usize>);
 }
 
 impl Storage for Null {
@@ -23,7 +23,7 @@ impl Storage for Null {
     ) {
     }
 
-    unsafe fn to_key(_key: &mut [u8], _component_map: &HashMap<TypeId, usize>) {}
+    unsafe fn to_identifier(_identifier: &mut [u8], _component_map: &HashMap<TypeId, usize>) {}
 }
 
 impl<C, E> Storage for (Vec<C>, E)
@@ -54,13 +54,13 @@ where
         E::extend_components(self.1, component_map, components, length);
     }
 
-    unsafe fn to_key(key: &mut [u8], component_map: &HashMap<TypeId, usize>) {
+    unsafe fn to_identifier(identifier: &mut [u8], component_map: &HashMap<TypeId, usize>) {
         let component_index = component_map.get(&TypeId::of::<C>()).unwrap();
         let index = component_index / 8;
         let bit = component_index % 8;
 
-        *key.get_unchecked_mut(index) |= 1 << bit;
+        *identifier.get_unchecked_mut(index) |= 1 << bit;
 
-        E::to_key(key, component_map);
+        E::to_identifier(identifier, component_map);
     }
 }
