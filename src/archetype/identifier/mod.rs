@@ -111,7 +111,9 @@ where
     ///
     /// [`Iter`]: crate::archetype::identifier::Iter
     pub(crate) unsafe fn iter(&self) -> Iter<R> {
-        Iter::<R>::new(self.pointer)
+        // SAFETY: `self.pointer` will be valid as long as the returned `Iter` exists, assuming the
+        // caller ensures the `Identifier` outlives it.
+        unsafe { Iter::<R>::new(self.pointer) }
     }
 
     /// Returns the size of the components within the canonical entity represented by this
@@ -174,12 +176,39 @@ where
     }
 }
 
+/// A reference to an [`Identifier`].
+///
+/// A struct for this referencial relationship is defined to allow for a self-referential
+/// relationship within a `World`. This works because `Identifier`s are owned and stored within the
+/// [`Archetypes`] container and are never moved or dropped.
+///
+/// This allows preserving space as registry size increases, as many `IdentifierRef`s will be
+/// stored within the [`entity::Allocator`].
+///
+/// [`Archetypes`]: crate::archetypes::Archetypes
+/// [`entity::Allocator`]: crate::entity::allocator::Allocator
+/// [`Identifier`]: crate::archetype::identifier::Identifier
 pub(crate) struct IdentifierRef<R>
 where
     R: Registry,
 {
+    /// The [`Registry`] defining the set of valid values of this identifier.
+    ///
+    /// Each identifier must exist within a set defined by a `Registry`. This defines a space over
+    /// which each identifier can uniquely define a set of components. Each bit within the
+    /// identifier corresponds with a component in the registry.
+    ///
+    /// The length of the allocated buffer is defined at compile-time as `(R::LEN + 7) / 8`.
+    ///
+    /// [`Registry`]: crate::registry::Registry
     registry: PhantomData<R>,
 
+    /// Pointer to the allocated bytes.
+    ///
+    /// This allocation is not owned by this struct. It is up to the user of the sruct to ensure it
+    /// does not outlive the [`Identifier`] it references.s
+    ///
+    /// [`Identifier`]: crate::archetype::identifier::Identifier
     pointer: *const u8,
 }
 
@@ -187,20 +216,48 @@ impl<R> IdentifierRef<R>
 where
     R: Registry,
 {
+    /// Returns a reference to the bytes defining this identifier.
+    ///
+    /// # Safety
+    /// The caller must ensure the referenced `Identifier` outlives the returned slice.
     pub(crate) unsafe fn as_slice(&self) -> &[u8] {
-        slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8)
+        // SAFETY: `pointer` is invariantly guaranteed to point to an allocation of length
+        // `(R::LEN + 7) / 8`.
+        unsafe { slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8) }
     }
 
-    pub(crate) unsafe fn iter(self) -> Iter<R> {
-        Iter::<R>::new(self.pointer)
+    /// Returns an iterator over the bits of this identifier.
+    ///
+    /// The returned iterator is guaranteed to return exactly `(R::LEN + 7) / 8` values, one for
+    /// each bit corresponding to the components of the registry.
+    ///
+    /// # Safety
+    /// The caller must ensure the referenced `Identifier` outlives the returned [`Iter`].
+    ///
+    /// [`Iter`]: crate::archetype::identifier::Iter
+    pub(crate) unsafe fn iter(&self) -> Iter<R> {
+        // SAFETY: `self.pointer` will be valid as long as the returned `Iter` exists, assuming the
+        // caller ensures the `Identifier` outlives it.
+        unsafe { Iter::<R>::new(self.pointer) }
     }
 
+    /// Returns a copy of the bytes defining this identifier.
     pub(crate) fn as_vec(self) -> Vec<u8> {
+        // SAFETY: The reference created here will always live longer than the referenced
+        // `Identifier`, since it only lasts for the scope of this function.
         unsafe { self.as_slice() }.to_vec()
     }
 
+    /// Gets the bit at the specified index without performing bounds checks.
+    ///
+    /// # Safety
+    /// `index` must be less than `R::LEN`.
     pub(crate) unsafe fn get_unchecked(self, index: usize) -> bool {
-        (self.as_slice().get_unchecked(index / 8) >> (index % 8) & 1) != 0
+        (
+            // SAFETY: `index` is guaranteed to be less than R::LEN, so therefore index / 8 will be
+            // within the bounds of `self.as_slice()`.
+            unsafe {self.as_slice().get_unchecked(index / 8)} >> (index % 8) & 1
+        ) != 0
     }
 }
 
@@ -227,6 +284,8 @@ where
     where
         H: Hasher,
     {
+        // SAFETY: The slice created here will be outlived by the referenced `Identifier`, as the 
+        // slice will only live for the scope of this function.
         unsafe { self.as_slice() }.hash(state);
     }
 }
@@ -236,6 +295,8 @@ where
     R: Registry,
 {
     fn eq(&self, other: &Self) -> bool {
+        // SAFETY: The slices created here will be outlived by the referenced `Identifier`, as the
+        // slices will only live for the scope of this function.
         unsafe { self.as_slice() == other.as_slice() }
     }
 }
@@ -249,6 +310,8 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut debug_list = f.debug_list();
 
+        // SAFETY: The registry `R` upon which this method is called is the same as the registry
+        // `R` over which `self.iter()` is generic.
         unsafe {
             R::debug_identifier(&mut debug_list, self.iter());
         }
