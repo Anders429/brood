@@ -36,13 +36,15 @@ where
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
-        slice::from_raw_parts::<'a, C>(
-            columns
-                .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
-                .0
-                .cast::<C>(),
-            length,
-        )
+        unsafe {
+            slice::from_raw_parts::<'a, C>(
+                columns
+                    .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
+                    .0
+                    .cast::<C>(),
+                length,
+            )
+        }
         .iter()
     }
 
@@ -63,13 +65,15 @@ where
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
-        slice::from_raw_parts_mut::<'a, C>(
-            columns
-                .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
-                .0
-                .cast::<C>(),
-            length,
-        )
+        unsafe {
+            slice::from_raw_parts_mut::<'a, C>(
+                columns
+                    .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
+                    .0
+                    .cast::<C>(),
+                length,
+            )
+        }
         .iter_mut()
     }
 
@@ -100,9 +104,11 @@ where
     ) -> Self::Result {
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
-                slice::from_raw_parts(columns.get_unchecked(*index).0.cast::<C>(), length)
-                    .iter()
-                    .map(wrap_some),
+                unsafe {
+                    slice::from_raw_parts(columns.get_unchecked(*index).0.cast::<C>(), length)
+                }
+                .iter()
+                .map(wrap_some),
             ),
             None => Either::Left(iter::repeat(None).take(length)),
         }
@@ -134,9 +140,11 @@ where
 
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
-                slice::from_raw_parts_mut(columns.get_unchecked(*index).0.cast::<C>(), length)
-                    .iter_mut()
-                    .map(wrap_some),
+                unsafe {
+                    slice::from_raw_parts_mut(columns.get_unchecked(*index).0.cast::<C>(), length)
+                }
+                .iter_mut()
+                .map(wrap_some),
             ),
             None => Either::Left(iter::repeat_with(none as fn() -> Option<&'a mut C>).take(length)),
         }
@@ -156,7 +164,7 @@ impl<'a> ViewSeal<'a> for entity::Identifier {
         length: usize,
         _component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
-        slice::from_raw_parts_mut::<'a, Self>(entity_identifiers.0, length)
+        unsafe { slice::from_raw_parts_mut::<'a, Self>(entity_identifiers.0, length) }
             .iter()
             .copied()
     }
@@ -205,12 +213,14 @@ where
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results {
-        V::view(columns, entity_identifiers, length, component_map).zip(W::view(
-            columns,
-            entity_identifiers,
-            length,
-            component_map,
-        ))
+        unsafe {
+            V::view(columns, entity_identifiers, length, component_map).zip(W::view(
+                columns,
+                entity_identifiers,
+                length,
+                component_map,
+            ))
+        }
     }
 
     fn assert_claims(buffer: &mut AssertionBuffer) {

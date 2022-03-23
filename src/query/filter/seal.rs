@@ -26,7 +26,7 @@ where
 {
     unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
         match component_map.get(&TypeId::of::<C>()) {
-            Some(index) => key.get_unchecked(index / 8) & (1 << (index % 8)) != 0,
+            Some(index) => unsafe { key.get_unchecked(index / 8) & (1 << (index % 8)) != 0 },
             Option::None => false,
         }
     }
@@ -37,7 +37,7 @@ where
     F: Filter,
 {
     unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
-        !F::filter(key, component_map)
+        unsafe { !F::filter(key, component_map) }
     }
 }
 
@@ -47,7 +47,7 @@ where
     F2: Filter,
 {
     unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
-        F1::filter(key, component_map) && F2::filter(key, component_map)
+        unsafe { F1::filter(key, component_map) && F2::filter(key, component_map) }
     }
 }
 
@@ -57,7 +57,7 @@ where
     F2: Filter,
 {
     unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
-        F1::filter(key, component_map) || F2::filter(key, component_map)
+        unsafe { F1::filter(key, component_map) || F2::filter(key, component_map) }
     }
 }
 
@@ -66,7 +66,7 @@ where
     C: Component,
 {
     unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
-        Has::<C>::filter(key, component_map)
+        unsafe { Has::<C>::filter(key, component_map) }
     }
 }
 
@@ -75,7 +75,7 @@ where
     C: Component,
 {
     unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
-        Has::<C>::filter(key, component_map)
+        unsafe { Has::<C>::filter(key, component_map) }
     }
 }
 
@@ -115,6 +115,6 @@ where
     W: Views<'a>,
 {
     unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
-        And::<V, W>::filter(key, component_map)
+        unsafe { And::<V, W>::filter(key, component_map) }
     }
 }
