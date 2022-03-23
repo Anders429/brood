@@ -33,6 +33,9 @@ pub trait Storage {
     /// `identifier` must be a zeroed-out allocation of enough bytes to have bits up to the highest
     /// bit index value stored in `component_map`.
     ///
+    /// `component_map` may only contain `usize` values up to the number of components in the
+    /// registry.
+    ///
     /// # Panics
     /// This method will panic if this entity contains a component that does not have an entry in
     /// the given `component_map`.
@@ -96,6 +99,9 @@ where
             *identifier.get_unchecked_mut(index) |= 1 << bit;
         }
 
-        E::to_identifier(identifier, component_map);
+        // SAFETY: `identifier` is guaranteed by the safety contract of this method to be large
+        // enough to store bits up to the number of components. `component_map` will also still
+        // contain `usize` values not larger than the number of components in the full registry.
+        unsafe { E::to_identifier(identifier, component_map) };
     }
 }
