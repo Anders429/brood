@@ -55,7 +55,7 @@ where
         S: Serializer,
     {
         let mut tuple = serializer.serialize_tuple(
-            unsafe { self.0.identifier_buffer.iter() }
+            unsafe { self.0.identifier.iter() }
                 .filter(|b| *b)
                 .count()
                 + 1,
@@ -72,7 +72,7 @@ where
                 &self.0.components,
                 self.0.length,
                 &mut tuple,
-                self.0.identifier_buffer.iter(),
+                self.0.identifier.iter(),
             )?;
         }
         tuple.end()
@@ -92,7 +92,7 @@ where
         S: Serializer,
     {
         let mut tuple = serializer.serialize_tuple(3)?;
-        tuple.serialize_element(&self.0.identifier_buffer)?;
+        tuple.serialize_element(&self.0.identifier)?;
         tuple.serialize_element(&self.0.length)?;
         tuple.serialize_element(&SerializeColumns(self.0))?;
         tuple.end()
@@ -116,7 +116,7 @@ where
         S: Serializer,
     {
         let mut tuple = serializer.serialize_tuple(
-            unsafe { self.archetype.identifier_buffer.iter() }
+            unsafe { self.archetype.identifier.iter() }
                 .filter(|b| *b)
                 .count()
                 + 1,
@@ -137,7 +137,7 @@ where
                 self.archetype.length,
                 self.index,
                 &mut tuple,
-                self.archetype.identifier_buffer.iter(),
+                self.archetype.identifier.iter(),
             )?;
         }
 
@@ -181,7 +181,7 @@ where
         S: Serializer,
     {
         let mut tuple = serializer.serialize_tuple(3)?;
-        tuple.serialize_element(&self.0.identifier_buffer)?;
+        tuple.serialize_element(&self.0.identifier)?;
         tuple.serialize_element(&self.0.length)?;
         tuple.serialize_element(&SerializeRows(self.0))?;
         tuple.end()
