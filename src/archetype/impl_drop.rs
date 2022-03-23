@@ -9,7 +9,7 @@ where
     #[inline]
     fn drop(&mut self) {
         unsafe {
-            R::free_components(&self.components, self.length, self.identifier_buffer.iter());
+            R::free_components(&self.components, self.length, self.identifier.iter());
         }
         drop(unsafe {
             Vec::from_raw_parts(

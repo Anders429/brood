@@ -39,7 +39,7 @@ pub(crate) struct Archetype<R>
 where
     R: Registry,
 {
-    identifier_buffer: Identifier<R>,
+    identifier: Identifier<R>,
 
     entity_identifiers: (*mut entity::Identifier, usize),
     components: Vec<(*mut u8, usize)>,
@@ -53,18 +53,18 @@ where
     R: Registry,
 {
     pub(crate) unsafe fn from_raw_parts(
-        identifier_buffer: Identifier<R>,
+        identifier: Identifier<R>,
         entity_identifiers: (*mut entity::Identifier, usize),
         components: Vec<(*mut u8, usize)>,
         length: usize,
     ) -> Self {
         let mut component_map = HashMap::new();
         unsafe {
-            R::create_component_map_for_identifier(&mut component_map, 0, identifier_buffer.iter())
+            R::create_component_map_for_identifier(&mut component_map, 0, identifier.iter())
         };
 
         Self {
-            identifier_buffer,
+            identifier,
 
             entity_identifiers,
             components,
@@ -74,10 +74,10 @@ where
         }
     }
 
-    pub(crate) unsafe fn new(identifier_buffer: Identifier<R>) -> Self {
+    pub(crate) unsafe fn new(identifier: Identifier<R>) -> Self {
         let mut entity_identifiers = ManuallyDrop::new(Vec::new());
 
-        let entity_len = unsafe { identifier_buffer.iter() }.filter(|b| *b).count();
+        let entity_len = unsafe { identifier.iter() }.filter(|b| *b).count();
         let mut components = Vec::with_capacity(entity_len);
         for _ in 0..entity_len {
             let mut v = ManuallyDrop::new(Vec::new());
@@ -86,7 +86,7 @@ where
 
         unsafe {
             Self::from_raw_parts(
-                identifier_buffer,
+                identifier,
                 (
                     entity_identifiers.as_mut_ptr(),
                     entity_identifiers.capacity(),
@@ -108,7 +108,7 @@ where
         unsafe { entity.push_components(&self.component_map, &mut self.components, self.length) };
 
         let entity_identifier = entity_allocator.allocate(Location {
-            identifier: unsafe { self.identifier_buffer.as_ref() },
+            identifier: unsafe { self.identifier.as_ref() },
             index: self.length,
         });
 
@@ -150,7 +150,7 @@ where
 
         let entity_identifiers = entity_allocator.allocate_batch(Locations::new(
             self.length..(self.length + component_len),
-            unsafe { self.identifier_buffer.as_ref() },
+            unsafe { self.identifier.as_ref() },
         ));
 
         let mut entity_identifiers_v = ManuallyDrop::new(unsafe {
@@ -232,7 +232,7 @@ where
                 index,
                 &self.components,
                 self.length,
-                self.identifier_buffer.iter(),
+                self.identifier.iter(),
             )
         };
 
@@ -262,7 +262,7 @@ where
         index: usize,
         entity_allocator: &mut entity::Allocator<R>,
     ) -> (entity::Identifier, Vec<u8>) {
-        let size_of_components = self.identifier_buffer.size_of_components();
+        let size_of_components = self.identifier.size_of_components();
         let mut bytes = Vec::with_capacity(size_of_components);
         unsafe {
             R::pop_component_row(
@@ -270,7 +270,7 @@ where
                 bytes.as_mut_ptr(),
                 &self.components,
                 self.length,
-                self.identifier_buffer.iter(),
+                self.identifier.iter(),
             )
         };
         unsafe { bytes.set_len(size_of_components) };
@@ -313,7 +313,7 @@ where
                 MaybeUninit::new(component),
                 &mut self.components,
                 self.length,
-                self.identifier_buffer.iter(),
+                self.identifier.iter(),
             )
         };
 
@@ -349,7 +349,7 @@ where
                 PhantomData::<C>,
                 &mut self.components,
                 self.length,
-                self.identifier_buffer.iter(),
+                self.identifier.iter(),
             )
         };
 
@@ -377,7 +377,7 @@ where
             R::clear_components(
                 &mut self.components,
                 self.length,
-                self.identifier_buffer.iter(),
+                self.identifier.iter(),
             )
         };
 
@@ -398,7 +398,7 @@ where
     }
 
     pub(crate) unsafe fn identifier(&self) -> IdentifierRef<R> {
-        unsafe { self.identifier_buffer.as_ref() }
+        unsafe { self.identifier.as_ref() }
     }
 
     #[cfg(feature = "serde")]
