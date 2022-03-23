@@ -76,20 +76,16 @@ where
         R_: Registry,
         S: SerializeTuple,
     {
-        if identifier_iter.next().unwrap_unchecked() {
-            let component_column = components.get_unchecked(0);
-            tuple.serialize_element(&SerializeColumn(&ManuallyDrop::new(
-                Vec::<C>::from_raw_parts(
-                    component_column.0.cast::<C>(),
-                    length,
-                    component_column.1,
-                ),
-            )))?;
+        if unsafe { identifier_iter.next().unwrap_unchecked() } {
+            let component_column = unsafe { components.get_unchecked(0) };
+            tuple.serialize_element(&SerializeColumn(&ManuallyDrop::new(unsafe {
+                Vec::<C>::from_raw_parts(component_column.0.cast::<C>(), length, component_column.1)
+            })))?;
 
-            components = components.get_unchecked(1..);
+            components = unsafe { components.get_unchecked(1..) };
         }
 
-        R::serialize_components_by_column(components, length, tuple, identifier_iter)
+        unsafe { R::serialize_components_by_column(components, length, tuple, identifier_iter) }
     }
 
     unsafe fn serialize_components_by_row<R_, S>(
@@ -103,21 +99,21 @@ where
         R_: Registry,
         S: SerializeTuple,
     {
-        if identifier_iter.next().unwrap_unchecked() {
-            let component_column = components.get_unchecked(0);
-            tuple.serialize_element(
+        if unsafe { identifier_iter.next().unwrap_unchecked() } {
+            let component_column = unsafe { components.get_unchecked(0) };
+            tuple.serialize_element(unsafe {
                 ManuallyDrop::new(Vec::<C>::from_raw_parts(
                     component_column.0.cast::<C>(),
                     length,
                     component_column.1,
                 ))
-                .get_unchecked(index),
-            )?;
+                .get_unchecked(index)
+            })?;
 
-            components = components.get_unchecked(1..);
+            components = unsafe { components.get_unchecked(1..) };
         }
 
-        R::serialize_components_by_row(components, length, index, tuple, identifier_iter)
+        unsafe { R::serialize_components_by_row(components, length, index, tuple, identifier_iter) }
     }
 }
 
@@ -187,7 +183,7 @@ where
         R_: Registry,
         V: SeqAccess<'de>,
     {
-        if identifier_iter.next().unwrap_unchecked() {
+        if unsafe { identifier_iter.next().unwrap_unchecked() } {
             // TODO: Better error messages?
             let component_column = seq
                 .next_element_seed(DeserializeColumn::<C>::new(length))?
@@ -197,7 +193,7 @@ where
             components.push((component_column.0.cast::<u8>(), component_column.1));
         }
 
-        R::deserialize_components_by_column(components, length, seq, identifier_iter)
+        unsafe { R::deserialize_components_by_column(components, length, seq, identifier_iter) }
     }
 
     unsafe fn deserialize_components_by_row<R_, V>(
@@ -210,13 +206,11 @@ where
         R_: Registry,
         V: SeqAccess<'de>,
     {
-        if identifier_iter.next().unwrap_unchecked() {
-            let component_column = components.get_unchecked_mut(0);
-            let mut v = ManuallyDrop::new(Vec::<C>::from_raw_parts(
-                component_column.0.cast::<C>(),
-                0,
-                component_column.1,
-            ));
+        if unsafe { identifier_iter.next().unwrap_unchecked() } {
+            let component_column = unsafe { components.get_unchecked_mut(0) };
+            let mut v = ManuallyDrop::new(unsafe {
+                Vec::<C>::from_raw_parts(component_column.0.cast::<C>(), 0, component_column.1)
+            });
 
             v.push(seq.next_element()?.ok_or_else(|| {
                 // TODO: the length returned here is incorrect.
@@ -225,9 +219,9 @@ where
             component_column.0 = v.as_mut_ptr().cast::<u8>();
             component_column.1 = v.capacity();
 
-            components = components.get_unchecked_mut(1..);
+            components = unsafe { components.get_unchecked_mut(1..) };
         }
 
-        R::deserialize_components_by_row(components, length, seq, identifier_iter)
+        unsafe { R::deserialize_components_by_row(components, length, seq, identifier_iter) }
     }
 }
