@@ -43,13 +43,15 @@ where
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::ParResult {
-        core::slice::from_raw_parts::<'a, C>(
-            columns
-                .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
-                .0
-                .cast::<C>(),
-            length,
-        )
+        unsafe {
+            core::slice::from_raw_parts::<'a, C>(
+                columns
+                    .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
+                    .0
+                    .cast::<C>(),
+                length,
+            )
+        }
         .par_iter()
     }
 }
@@ -66,13 +68,15 @@ where
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::ParResult {
-        core::slice::from_raw_parts_mut::<'a, C>(
-            columns
-                .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
-                .0
-                .cast::<C>(),
-            length,
-        )
+        unsafe {
+            core::slice::from_raw_parts_mut::<'a, C>(
+                columns
+                    .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
+                    .0
+                    .cast::<C>(),
+                length,
+            )
+        }
         .par_iter_mut()
     }
 }
@@ -99,9 +103,11 @@ where
     ) -> Self::ParResult {
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
-                core::slice::from_raw_parts(columns.get_unchecked(*index).0.cast::<C>(), length)
-                    .par_iter()
-                    .map(wrap_some),
+                unsafe {
+                    core::slice::from_raw_parts(columns.get_unchecked(*index).0.cast::<C>(), length)
+                }
+                .par_iter()
+                .map(wrap_some),
             ),
             None => Either::Left(iter::repeat(None).take(length)),
         }
@@ -125,10 +131,12 @@ where
     ) -> Self::ParResult {
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
-                core::slice::from_raw_parts_mut(
-                    columns.get_unchecked(*index).0.cast::<C>(),
-                    length,
-                )
+                unsafe {
+                    core::slice::from_raw_parts_mut(
+                        columns.get_unchecked(*index).0.cast::<C>(),
+                        length,
+                    )
+                }
                 .par_iter_mut()
                 .map(wrap_some),
             ),
@@ -146,7 +154,7 @@ impl<'a> ParViewSeal<'a> for entity::Identifier {
         length: usize,
         _component_map: &HashMap<TypeId, usize>,
     ) -> Self::ParResult {
-        core::slice::from_raw_parts_mut::<'a, Self>(entity_identifiers.0, length)
+        unsafe { core::slice::from_raw_parts_mut::<'a, Self>(entity_identifiers.0, length) }
             .par_iter()
             .cloned()
     }
@@ -189,11 +197,13 @@ where
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::ParResults {
-        V::par_view(columns, entity_identifiers, length, component_map).zip(W::par_view(
-            columns,
-            entity_identifiers,
-            length,
-            component_map,
-        ))
+        unsafe {
+            V::par_view(columns, entity_identifiers, length, component_map).zip(W::par_view(
+                columns,
+                entity_identifiers,
+                length,
+                component_map,
+            ))
+        }
     }
 }
