@@ -81,7 +81,11 @@ where
                 // `component_column` extracted is guaranteed by the safety contract to correspond to
                 // the column for component `C`.
                 unsafe {
-                    Vec::<C>::from_raw_parts(component_column.0.cast::<C>(), length, component_column.1)
+                    Vec::<C>::from_raw_parts(
+                        component_column.0.cast::<C>(),
+                        length,
+                        component_column.1,
+                    )
                 },
             );
             v.extend(self.0);

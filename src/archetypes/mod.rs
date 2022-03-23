@@ -94,12 +94,14 @@ where
         &mut self,
         identifier: archetype::IdentifierRef<R>,
     ) -> &mut Archetype<R> {
-        self.raw_archetypes
-            .get_mut(
-                Self::make_hash(identifier, &self.hash_builder),
-                Self::equivalent_identifier(identifier),
-            )
-            .unwrap_unchecked()
+        unsafe {
+            self.raw_archetypes
+                .get_mut(
+                    Self::make_hash(identifier, &self.hash_builder),
+                    Self::equivalent_identifier(identifier),
+                )
+                .unwrap_unchecked()
+        }
     }
 
     #[cfg(feature = "serde")]
@@ -127,7 +129,7 @@ where
 
     pub(crate) unsafe fn clear(&mut self, entity_allocator: &mut entity::Allocator<R>) {
         for archetype in self.iter_mut() {
-            archetype.clear(entity_allocator);
+            unsafe { archetype.clear(entity_allocator) };
         }
     }
 }

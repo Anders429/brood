@@ -256,7 +256,7 @@ where
         (
             // SAFETY: `index` is guaranteed to be less than R::LEN, so therefore index / 8 will be
             // within the bounds of `self.as_slice()`.
-            unsafe {self.as_slice().get_unchecked(index / 8)} >> (index % 8) & 1
+            unsafe { self.as_slice().get_unchecked(index / 8) } >> (index % 8) & 1
         ) != 0
     }
 }
@@ -284,7 +284,7 @@ where
     where
         H: Hasher,
     {
-        // SAFETY: The slice created here will be outlived by the referenced `Identifier`, as the 
+        // SAFETY: The slice created here will be outlived by the referenced `Identifier`, as the
         // slice will only live for the scope of this function.
         unsafe { self.as_slice() }.hash(state);
     }

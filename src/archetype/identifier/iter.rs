@@ -23,7 +23,7 @@ where
 
             pointer,
 
-            current: if R::LEN > 0 { *pointer } else { 0 },
+            current: if R::LEN > 0 { unsafe { *pointer } } else { 0 },
             position: 0,
         }
     }
