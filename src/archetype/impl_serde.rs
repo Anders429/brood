@@ -54,12 +54,8 @@ where
     where
         S: Serializer,
     {
-        let mut tuple = serializer.serialize_tuple(
-            unsafe { self.0.identifier.iter() }
-                .filter(|b| *b)
-                .count()
-                + 1,
-        )?;
+        let mut tuple = serializer
+            .serialize_tuple(unsafe { self.0.identifier.iter() }.filter(|b| *b).count() + 1)?;
         tuple.serialize_element(&SerializeColumn(&ManuallyDrop::new(unsafe {
             Vec::from_raw_parts(
                 self.0.entity_identifiers.0,
