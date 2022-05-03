@@ -25,6 +25,7 @@ where
         for index in &self.0.free {
             seq.serialize_element(&entity::Identifier {
                 index: *index,
+                // SAFETY: `index` is invariantly guaranteed to be a valid index into `slots`.
                 generation: unsafe { self.0.slots.get_unchecked(*index) }.generation,
             })?;
         }
@@ -227,6 +228,10 @@ where
                         *slot = Some(Slot {
                             generation: entity_identifier.generation,
                             location: Some(Location {
+                                // SAFETY: This `IdentifierRef` is guaranteed to be outlived by the
+                                // `Identifier` it references, since the `Identifier` is contained
+                                // in an `Archetype` that lives as long as its containing `World`,
+                                // meaning it will at least live as long as this `Location`.
                                 identifier: unsafe { archetype.identifier() },
                                 index: i,
                             }),
@@ -246,7 +251,9 @@ where
         Ok(Self {
             slots: slots
                 .into_iter()
-                .map(|slot| unsafe { slot.unwrap_unchecked() })
+                .map(|slot|
+                    // SAFETY: We just checked above that each `slot` is not `None`.
+                    unsafe { slot.unwrap_unchecked() })
                 .collect(),
             free: free
                 .into_iter()

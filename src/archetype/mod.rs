@@ -59,9 +59,7 @@ where
         length: usize,
     ) -> Self {
         let mut component_map = HashMap::new();
-        unsafe {
-            R::create_component_map_for_identifier(&mut component_map, 0, identifier.iter())
-        };
+        unsafe { R::create_component_map_for_identifier(&mut component_map, 0, identifier.iter()) };
 
         Self {
             identifier,
@@ -228,12 +226,7 @@ where
         entity_allocator: &mut entity::Allocator<R>,
     ) {
         unsafe {
-            R::remove_component_row(
-                index,
-                &self.components,
-                self.length,
-                self.identifier.iter(),
-            )
+            R::remove_component_row(index, &self.components, self.length, self.identifier.iter())
         };
 
         let mut entity_identifiers = ManuallyDrop::new(unsafe {
@@ -373,13 +366,7 @@ where
 
     pub(crate) unsafe fn clear(&mut self, entity_allocator: &mut entity::Allocator<R>) {
         // Clear each column.
-        unsafe {
-            R::clear_components(
-                &mut self.components,
-                self.length,
-                self.identifier.iter(),
-            )
-        };
+        unsafe { R::clear_components(&mut self.components, self.length, self.identifier.iter()) };
 
         // Free each entity.
         let mut entity_identifiers = ManuallyDrop::new(unsafe {
