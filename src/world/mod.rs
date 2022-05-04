@@ -155,9 +155,13 @@ where
         self.len += 1;
 
         let mut identifier = vec![0; (R::LEN + 7) / 8];
+        // SAFETY: `identifier` is a zeroed-out allocation of `R::LEN` bits. `self.component_map`
+        // only contains `usize` values up to the number of components in the registry `R`.
         unsafe {
             E::to_identifier(&mut identifier, &self.component_map);
         }
+        // SAFETY: `identifier` is a properly-initialized buffer of `(R::LEN + 7) / 8` bytes whose
+        // bits correspond to each component in the registry `R`.
         let identifier_buffer = unsafe { archetype::Identifier::new(identifier) };
 
         unsafe {
@@ -194,9 +198,13 @@ where
         self.len += entities.len();
 
         let mut identifier = vec![0; (R::LEN + 7) / 8];
+        // SAFETY: `identifier` is a zeroed-out allocation of `R::LEN` bits. `self.component_map`
+        // only contains `usize` values up to the number of components in the registry `R`.
         unsafe {
             E::to_identifier(&mut identifier, &self.component_map);
         }
+        // SAFETY: `identifier` is a properly-initialized buffer of `(R::LEN + 7) / 8` bytes whose
+        // bits correspond to each component in the registry `R`.
         let identifier_buffer = unsafe { archetype::Identifier::new(identifier) };
 
         unsafe {
@@ -314,6 +322,10 @@ where
     }
 
     /// Performs a query, skipping checks on views.
+    ///
+    /// # Safety
+    /// The [`Views`] `V` must follow Rust's borrowing rules, meaning that a component that is
+    /// mutably borrowed is only borrowed once.
     #[cfg(feature = "parallel")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
     pub(crate) unsafe fn query_unchecked<'a, V, F>(&'a mut self) -> result::Iter<'a, R, F, V>
@@ -325,6 +337,10 @@ where
     }
 
     /// Performs a parallel query, skipping checks on views.
+    ///
+    /// # Safety
+    /// The [`ParViews`] `V` must follow Rust's borrowing rules, meaning that a component that is
+    /// mutably borrowed is only borrowed once.
     #[cfg(feature = "parallel")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
     pub(crate) unsafe fn par_query_unchecked<'a, V, F>(&'a mut self) -> result::ParIter<'a, R, F, V>
