@@ -221,7 +221,7 @@ where
     fn consume(self, archetype: &'a mut Archetype<R>) -> Self {
         if unsafe { And::<V, F>::filter(archetype.identifier().as_slice(), self.component_map) } {
             let consumer = self.base.split_off_left();
-            let result = archetype.par_view::<V>().drive_unindexed(consumer);
+            let result = unsafe { archetype.par_view::<V>() }.drive_unindexed(consumer);
 
             let previous = match self.previous {
                 None => Some(result),

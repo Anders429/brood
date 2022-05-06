@@ -14,6 +14,16 @@ use hashbrown::HashMap;
 pub trait ViewSeal<'a>: Claim {
     type Result: Iterator;
 
+    /// # Safety
+    /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
+    /// for components `C`. Each of those components `C` must have an entry in `component_map`,
+    /// paired with the correct index corresponding to that component's entry in `columns`.
+    ///
+    /// `entity_identifiers` must contain the raw parts for a valid `Vec<entity::Identifier` of
+    /// size `length`.
+    ///
+    /// `component_map` must contain an entry for every component `C` that is viewed by this
+    /// `View`.
     unsafe fn view(
         columns: &[(*mut u8, usize)],
         entity_identifiers: (*mut entity::Identifier, usize),

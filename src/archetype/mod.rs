@@ -218,10 +218,21 @@ where
         entity_identifiers
     }
 
-    pub(crate) fn view<'a, V>(&mut self) -> V::Results
+    /// # Safety
+    /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
+    pub(crate) unsafe fn view<'a, V>(&mut self) -> V::Results
     where
         V: Views<'a>,
     {
+        // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`,
+        // where each `C` is a component for which the entry in `component_map` corresponds to the
+        // correct index.
+        //
+        // `self.entity_identifiers` also contains the raw parts for a valid
+        // `Vec<entity::Identifier>` of size `self.length`.
+        //
+        // Since each component viewed by `V` is also identified by this archetype's `Identifier`,
+        // `self.component` will contain an entry for every viewed component.
         unsafe {
             V::view(
                 &self.components,
@@ -232,12 +243,23 @@ where
         }
     }
 
+    /// # Safety
+    /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
     #[cfg(feature = "parallel")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
-    pub(crate) fn par_view<'a, V>(&mut self) -> V::ParResults
+    pub(crate) unsafe fn par_view<'a, V>(&mut self) -> V::ParResults
     where
         V: ParViews<'a>,
     {
+        // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`,
+        // where each `C` is a component for which the entry in `component_map` corresponds to the
+        // correct index.
+        //
+        // `self.entity_identifiers` also contains the raw parts for a valid
+        // `Vec<entity::Identifier>` of size `self.length`.
+        //
+        // Since each component viewed by `V` is also identified by this archetype's `Identifier`,
+        // `self.component` will contain an entry for every viewed component.
         unsafe {
             V::par_view(
                 &self.components,
