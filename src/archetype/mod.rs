@@ -143,8 +143,8 @@ where
                 &self.component_map,
                 &mut self.components,
                 self.length,
-            )
-        };
+            );
+        }
 
         let entity_identifiers = entity_allocator.allocate_batch(Locations::new(
             self.length..(self.length + component_len),
@@ -216,8 +216,8 @@ where
                     .cast::<C>(),
                 self.length,
             )
-            .get_unchecked_mut(index) = component
-        };
+            .get_unchecked_mut(index) = component;
+        }
     }
 
     pub(crate) unsafe fn remove_row_unchecked(
@@ -242,8 +242,8 @@ where
                 entity_allocator.modify_location_index_unchecked(
                     *entity_identifiers.last().unwrap_unchecked(),
                     index,
-                )
-            };
+                );
+            }
         }
         entity_identifiers.swap_remove(index);
 
@@ -264,8 +264,8 @@ where
                 &self.components,
                 self.length,
                 self.identifier.iter(),
-            )
-        };
+            );
+        }
         unsafe { bytes.set_len(size_of_components) };
 
         let mut entity_identifiers = ManuallyDrop::new(unsafe {
@@ -281,8 +281,8 @@ where
                 entity_allocator.modify_location_index_unchecked(
                     *entity_identifiers.last().unwrap_unchecked(),
                     index,
-                )
-            };
+                );
+            }
         }
         let entity_identifier = entity_identifiers.swap_remove(index);
 
@@ -307,8 +307,8 @@ where
                 &mut self.components,
                 self.length,
                 self.identifier.iter(),
-            )
-        };
+            );
+        }
 
         let mut entity_identifiers = ManuallyDrop::new(unsafe {
             Vec::from_raw_parts(
@@ -343,8 +343,8 @@ where
                 &mut self.components,
                 self.length,
                 self.identifier.iter(),
-            )
-        };
+            );
+        }
 
         let mut entity_identifiers = ManuallyDrop::new(unsafe {
             Vec::from_raw_parts(
