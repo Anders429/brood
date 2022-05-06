@@ -37,10 +37,11 @@ where
         C: UnindexedConsumer<Self::Item>,
     {
         self.raw_iter
-            .map(|archetype_bucket|
+            .map(|archetype_bucket| {
                 // SAFETY: The reference to the archetype stored in this bucket is guaranteed to be
                 // unique.
-                unsafe { archetype_bucket.as_mut() })
+                unsafe { archetype_bucket.as_mut() }
+            })
             .drive_unindexed(consumer)
     }
 }
