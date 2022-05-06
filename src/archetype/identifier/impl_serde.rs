@@ -70,9 +70,7 @@ where
                 // always be within the bounds of `buffer.`
                 let byte = unsafe { buffer.get_unchecked((R::LEN + 7) / 8 - 1) };
                 let bit = R::LEN % 8;
-                if bit != 0
-                    && byte & (255 << bit) != 0
-                {
+                if bit != 0 && byte & (255 << bit) != 0 {
                     return Err(de::Error::invalid_value(
                         Unexpected::Unsigned(u64::from(*byte)),
                         &self,

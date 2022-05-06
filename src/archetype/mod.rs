@@ -384,7 +384,11 @@ where
         self.length = 0;
     }
 
+    /// # Safety
+    /// The `Archetype` must outlive the returned `IdentifierRef`.
     pub(crate) unsafe fn identifier(&self) -> IdentifierRef<R> {
+        // SAFETY: The safety contract of this method guarantees the returned `IdentifierRef` will
+        // outlive `self.identifier`.
         unsafe { self.identifier.as_ref() }
     }
 

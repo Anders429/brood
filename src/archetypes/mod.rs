@@ -55,13 +55,21 @@ where
     }
 
     fn make_hasher(hash_builder: &ahash::RandomState) -> impl Fn(&Archetype<R>) -> u64 + '_ {
-        move |archetype| Self::make_hash(unsafe { archetype.identifier() }, hash_builder)
+        move |archetype| {
+            Self::make_hash(
+                // SAFETY: The `IdentifierRef` obtained here does not live longer than the `archetype`.
+                unsafe { archetype.identifier() },
+                hash_builder,
+            )
+        }
     }
 
     fn equivalent_identifier(
         identifier: archetype::IdentifierRef<R>,
     ) -> impl Fn(&Archetype<R>) -> bool {
-        move |archetype: &Archetype<R>| unsafe { archetype.identifier() } == identifier
+        move |archetype: &Archetype<R>|
+            // SAFETY: The `IdentifierRef` obtained here does not live longer than the `archetype`.
+            unsafe { archetype.identifier() } == identifier
     }
 
     pub(crate) fn get(&self, identifier: archetype::IdentifierRef<R>) -> Option<&Archetype<R>> {
@@ -75,13 +83,24 @@ where
         &mut self,
         identifier_buffer: archetype::Identifier<R>,
     ) -> &mut Archetype<R> {
-        let hash = Self::make_hash(unsafe { identifier_buffer.as_ref() }, &self.hash_builder);
+        let hash = Self::make_hash(
+            // SAFETY: The `IdentifierRef` obtained here does not live longer than the
+            // `identifier_buffer`.
+            unsafe { identifier_buffer.as_ref() },
+            &self.hash_builder,
+        );
 
         match self.raw_archetypes.find(
             hash,
-            Self::equivalent_identifier(unsafe { identifier_buffer.as_ref() }),
+            Self::equivalent_identifier(
+                // SAFETY: The `IdentifierRef` obtained here does not live longer than the
+                // `identifier_buffer`.
+                unsafe { identifier_buffer.as_ref() },
+            ),
         ) {
-            Some(archetype_bucket) => unsafe { archetype_bucket.as_mut() },
+            Some(archetype_bucket) =>
+            // SAFETY: This reference to the archetype contained in this bucket is unique.
+            unsafe { archetype_bucket.as_mut() },
             None => self.raw_archetypes.insert_entry(
                 hash,
                 Archetype::new(identifier_buffer),
@@ -90,10 +109,14 @@ where
         }
     }
 
+    /// # Safety
+    /// An archetype must be stored with the given `identifier`.
     pub(crate) unsafe fn get_unchecked_mut(
         &mut self,
         identifier: archetype::IdentifierRef<R>,
     ) -> &mut Archetype<R> {
+        // SAFETY: The safety contract of this method guarantees that `get_mut()` will return a
+        // `Some` value.
         unsafe {
             self.raw_archetypes
                 .get_mut(
@@ -106,10 +129,18 @@ where
 
     #[cfg(feature = "serde")]
     pub(crate) fn insert(&mut self, archetype: Archetype<R>) -> bool {
-        let hash = Self::make_hash(unsafe { archetype.identifier() }, &self.hash_builder);
+        let hash = Self::make_hash(
+            // SAFETY: The `IdentifierRef` obtained here does not live longer than the `archetype`.
+            unsafe { archetype.identifier() },
+            &self.hash_builder,
+        );
         if let Some(_existing_archetype) = self.raw_archetypes.get(
             hash,
-            Self::equivalent_identifier(unsafe { archetype.identifier() }),
+            Self::equivalent_identifier(
+                // SAFETY: The `IdentifierRef` obtained here does not live longer than the
+                // `archetype`.
+                unsafe { archetype.identifier() },
+            ),
         ) {
             false
         } else {
@@ -120,15 +151,25 @@ where
     }
 
     pub(crate) fn iter(&self) -> Iter<R> {
-        Iter::new(unsafe { self.raw_archetypes.iter() })
+        Iter::new(
+            // SAFETY: The `Iter` containing this `RawIter` is guaranteed to not outlive `self`.
+            unsafe { self.raw_archetypes.iter() },
+        )
     }
 
     pub(crate) fn iter_mut(&mut self) -> IterMut<R> {
-        IterMut::new(unsafe { self.raw_archetypes.iter() })
+        IterMut::new(
+            // SAFETY: The `IterMut` containing this `RawIter` is guaranteed to not outlive `self`.
+            unsafe { self.raw_archetypes.iter() },
+        )
     }
 
+    /// # Safety
+    /// `entity_allocator` must contain entries for each of the entities stored in the archetypes.
     pub(crate) unsafe fn clear(&mut self, entity_allocator: &mut entity::Allocator<R>) {
         for archetype in self.iter_mut() {
+            // SAFETY: The `entity_allocator` is guaranteed to have an entry for each entity stored
+            // in `archetype`.
             unsafe { archetype.clear(entity_allocator) };
         }
     }
