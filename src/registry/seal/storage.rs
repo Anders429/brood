@@ -752,8 +752,8 @@ where
                 components,
                 length,
                 identifier_iter,
-            )
-        };
+            );
+        }
     }
 
     unsafe fn push_components_from_buffer_skipping_component<C_, R_>(
@@ -860,8 +860,8 @@ where
                 components,
                 length,
                 identifier_iter,
-            )
-        };
+            );
+        }
     }
 
     unsafe fn free_components<R_>(
