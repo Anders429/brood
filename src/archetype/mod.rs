@@ -52,6 +52,12 @@ impl<R> Archetype<R>
 where
     R: Registry,
 {
+    /// # Safety
+    /// `entity_identifiers` must contain the raw parts for a valid `Vec<entity::Identifier>` of
+    /// size `length`.
+    ///
+    /// `components` must contain the raw parts for valid `Vec<C>`s of size `length` for each
+    /// component `C` in the registry `R`.
     pub(crate) unsafe fn from_raw_parts(
         identifier: Identifier<R>,
         entity_identifiers: (*mut entity::Identifier, usize),
@@ -59,6 +65,8 @@ where
         length: usize,
     ) -> Self {
         let mut component_map = HashMap::new();
+        // SAFETY: `identifier.iter()` is generic over the same registry `R` that this associated
+        // function is being called on.
         unsafe { R::create_component_map_for_identifier(&mut component_map, 0, identifier.iter()) };
 
         Self {
@@ -75,13 +83,19 @@ where
     pub(crate) fn new(identifier: Identifier<R>) -> Self {
         let mut entity_identifiers = ManuallyDrop::new(Vec::new());
 
-        let entity_len = unsafe { identifier.iter() }.filter(|b| *b).count();
+        let entity_len =
+            // SAFETY: The iterator returned here is outlived by `identifier`.
+            unsafe { identifier.iter() }.filter(|b| *b).count();
         let mut components = Vec::with_capacity(entity_len);
         for _ in 0..entity_len {
             let mut v = ManuallyDrop::new(Vec::new());
             components.push((v.as_mut_ptr(), v.capacity()));
         }
 
+        // SAFETY: `entity_identifiers` is an empty `Vec`, which matches the provided `length` of
+        // 0. There are also exactly the same number of elements in `components` as there are 
+        // components in the registry `R`, and each of those elements are the valid raw parts for a
+        // `Vec<C>` of length 0. 
         unsafe {
             Self::from_raw_parts(
                 identifier,
