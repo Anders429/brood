@@ -270,10 +270,23 @@ where
         }
     }
 
+    /// # Safety
+    /// `C` must be a component type that is contained within this archetype, meaning the
+    /// archetype's `Identifier` must have the `C` bit set.
+    ///
+    /// `index` must be a valid index within this archetype (meaning it must be less than
+    /// `self.length`).
     pub(crate) unsafe fn set_component_unchecked<C>(&mut self, index: usize, component: C)
     where
         C: Component,
     {
+        // SAFETY: `self.component_map` is guaranteed to have an entry for `TypeId::of::<C>()` by
+        // the safety contract of this method. Additionally, `self.components` is guaranteed to
+        // have an entry for the index returned from `self.component_map`, and furthermore that
+        // entry is guaranteed to be the valid raw parts for a `Vec<C>` of length `self.length`.
+        //
+        // The slice view over the component column for `C` is also guaranteed by the safety
+        // contract of this method to have an entry for the given `index`.
         unsafe {
             *slice::from_raw_parts_mut(
                 self.components
