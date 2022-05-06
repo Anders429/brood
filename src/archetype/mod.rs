@@ -304,24 +304,40 @@ where
         }
     }
 
+    /// # Safety
+    /// `entity_allocator` must contain entries for the entities stored in the archetype. This
+    /// archetype must also be nonempty.
     pub(crate) unsafe fn remove_row_unchecked(
         &mut self,
         index: usize,
         entity_allocator: &mut entity::Allocator<R>,
     ) {
+        // SAFETY: `self.components` contains the same number of bits as are set in
+        // `self.identifier`. Also, each entry is `self.components` is guaranteed to contain the
+        // raw parts for a valid `Vec<C>` for each `C` identified by `self.identifier`. Finally,
+        // `self.identifier` is generic over the same registry `R` as this method is being called
+        // on.
         unsafe {
             R::remove_component_row(index, &self.components, self.length, self.identifier.iter())
         };
 
-        let mut entity_identifiers = ManuallyDrop::new(unsafe {
-            Vec::from_raw_parts(
-                self.entity_identifiers.0,
-                self.length,
-                self.entity_identifiers.1,
-            )
-        });
+        let mut entity_identifiers = ManuallyDrop::new(
+            // SAFETY: `self.entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec` of size `self.length`.
+            unsafe {
+                Vec::from_raw_parts(
+                    self.entity_identifiers.0,
+                    self.length,
+                    self.entity_identifiers.1,
+                )
+            },
+        );
         // Update swapped index if this isn't the last row.
         if index < self.length - 1 {
+            // SAFETY: `entity_allocator` contains an entry for the entity identifiers stored in
+            // `entity_identifiers`.
+            //
+            // Additionally, `entity_identifiers` is guaranteed to be nonempty.
             unsafe {
                 entity_allocator.modify_location_index_unchecked(
                     *entity_identifiers.last().unwrap_unchecked(),
