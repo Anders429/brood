@@ -93,9 +93,9 @@ where
         }
 
         // SAFETY: `entity_identifiers` is an empty `Vec`, which matches the provided `length` of
-        // 0. There are also exactly the same number of elements in `components` as there are 
+        // 0. There are also exactly the same number of elements in `components` as there are
         // components in the registry `R`, and each of those elements are the valid raw parts for a
-        // `Vec<C>` of length 0. 
+        // `Vec<C>` of length 0.
         unsafe {
             Self::from_raw_parts(
                 identifier,
@@ -109,6 +109,11 @@ where
         }
     }
 
+    /// # Safety
+    /// `entity` must be made up of only components that are identified by this `Archetype`'s
+    /// `Identifier`. These can, however, be in any order.
+    ///
+    /// The `entity_allocator`, together with its contained `Location`s, must not outlive `self`.
     pub(crate) unsafe fn push<E>(
         &mut self,
         entity: E,
@@ -117,20 +122,33 @@ where
     where
         E: Entity,
     {
+        // SAFETY: `self.component_map` contains an entry for every component identified by the
+        // archetype's `Identifier`. Therefore, it also contains an entry for every component `C`
+        // contained in the entity `E`.
+        //
+        // Also, `self.components`, together with `self.length`, define valid `Vec<C>`s for each
+        // component.
         unsafe { entity.push_components(&self.component_map, &mut self.components, self.length) };
 
         let entity_identifier = entity_allocator.allocate(Location {
-            identifier: unsafe { self.identifier.as_ref() },
+            identifier:
+                // SAFETY: `entity_allocator` is guaranteed to not outlive `self`. Therefore, the
+                // `Location` being stored in it will also not outlive `self`. 
+                unsafe { self.identifier.as_ref() },
             index: self.length,
         });
 
-        let mut entity_identifiers = ManuallyDrop::new(unsafe {
-            Vec::from_raw_parts(
-                self.entity_identifiers.0,
-                self.length,
-                self.entity_identifiers.1,
-            )
-        });
+        let mut entity_identifiers = ManuallyDrop::new(
+            // SAFETY: `self.entity_identifiers` is guaranteed to contain the raw parts that,
+            // together with `self.length`, create a valid `Vec`.
+            unsafe {
+                Vec::from_raw_parts(
+                    self.entity_identifiers.0,
+                    self.length,
+                    self.entity_identifiers.1,
+                )
+            },
+        );
         entity_identifiers.push(entity_identifier);
         self.entity_identifiers = (
             entity_identifiers.as_mut_ptr(),
@@ -142,6 +160,11 @@ where
         entity_identifier
     }
 
+    /// # Safety
+    /// `entities` must be made up of only components that are identified by this `Archetype`'s
+    /// `Identifier`. These can, however, be in any order.
+    ///
+    /// The `entity_allocator`, together with its contained `Location`s, must not outlive `self`.
     pub(crate) unsafe fn extend<E>(
         &mut self,
         entities: entities::Batch<E>,
@@ -152,6 +175,12 @@ where
     {
         let component_len = entities.entities.component_len();
 
+        // SAFETY: `self.component_map` contains an entry for every component identified by the
+        // archetype's `Identifier`. Therefore, it also contains an entry for every component `C`
+        // contained in `entities`.
+        //
+        // Also, `self.components`, together with `self.length`, define valid `Vec<C>`s for each
+        // component.
         unsafe {
             entities.entities.extend_components(
                 &self.component_map,
@@ -162,16 +191,22 @@ where
 
         let entity_identifiers = entity_allocator.allocate_batch(Locations::new(
             self.length..(self.length + component_len),
+            // SAFETY: `entity_allocator` is guaranteed to not outlive `self`. Therefore, the
+            // `Location`s being stored in it will also not outlive `self`.
             unsafe { self.identifier.as_ref() },
         ));
 
-        let mut entity_identifiers_v = ManuallyDrop::new(unsafe {
-            Vec::from_raw_parts(
-                self.entity_identifiers.0,
-                self.length,
-                self.entity_identifiers.1,
-            )
-        });
+        let mut entity_identifiers_v = ManuallyDrop::new(
+            // SAFETY: `self.entity_identifiers` is guaranteed to contain the raw parts that,
+            // together with `self.length`, create a valid `Vec`.
+            unsafe {
+                Vec::from_raw_parts(
+                    self.entity_identifiers.0,
+                    self.length,
+                    self.entity_identifiers.1,
+                )
+            },
+        );
         entity_identifiers_v.extend(entity_identifiers.iter());
         self.entity_identifiers = (
             entity_identifiers_v.as_mut_ptr(),
