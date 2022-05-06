@@ -67,9 +67,13 @@ where
     fn equivalent_identifier(
         identifier: archetype::IdentifierRef<R>,
     ) -> impl Fn(&Archetype<R>) -> bool {
-        move |archetype: &Archetype<R>|
-            // SAFETY: The `IdentifierRef` obtained here does not live longer than the `archetype`.
-            unsafe { archetype.identifier() } == identifier
+        move |archetype: &Archetype<R>| {
+            (
+                // SAFETY: The `IdentifierRef` obtained here does not live longer than the
+                // `archetype`.
+                unsafe { archetype.identifier() }
+            ) == identifier
+        }
     }
 
     pub(crate) fn get(&self, identifier: archetype::IdentifierRef<R>) -> Option<&Archetype<R>> {
