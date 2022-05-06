@@ -7,10 +7,14 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_map()
-            .entries(
-                self.iter()
-                    .map(|archetype| (unsafe { archetype.identifier() }, archetype)),
-            )
+            .entries(self.iter().map(|archetype| {
+                (
+                    // SAFETY: The `IdentifierRef` obtained here does not live longer than the
+                    // `archetype`.
+                    unsafe { archetype.identifier() },
+                    archetype,
+                )
+            }))
             .finish()
     }
 }
