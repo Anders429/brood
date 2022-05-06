@@ -84,7 +84,7 @@ where
             Some(archetype_bucket) => unsafe { archetype_bucket.as_mut() },
             None => self.raw_archetypes.insert_entry(
                 hash,
-                unsafe { Archetype::new(identifier_buffer) },
+                Archetype::new(identifier_buffer),
                 Self::make_hasher(&self.hash_builder),
             ),
         }

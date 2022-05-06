@@ -72,7 +72,7 @@ where
         }
     }
 
-    pub(crate) unsafe fn new(identifier: Identifier<R>) -> Self {
+    pub(crate) fn new(identifier: Identifier<R>) -> Self {
         let mut entity_identifiers = ManuallyDrop::new(Vec::new());
 
         let entity_len = unsafe { identifier.iter() }.filter(|b| *b).count();
