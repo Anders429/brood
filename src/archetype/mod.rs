@@ -305,8 +305,8 @@ where
     }
 
     /// # Safety
-    /// `entity_allocator` must contain entries for the entities stored in the archetype. This
-    /// archetype must also be nonempty.
+    /// `entity_allocator` must contain entries for the entities stored in the archetype. The
+    /// `index` must be a valid index to a row in this archetype.
     pub(crate) unsafe fn remove_row_unchecked(
         &mut self,
         index: usize,
@@ -337,7 +337,8 @@ where
             // SAFETY: `entity_allocator` contains an entry for the entity identifiers stored in
             // `entity_identifiers`.
             //
-            // Additionally, `entity_identifiers` is guaranteed to be nonempty.
+            // Additionally, `entity_identifiers` is guaranteed to be nonempty, because the index
+            // is not for the last row.
             unsafe {
                 entity_allocator.modify_location_index_unchecked(
                     *entity_identifiers.last().unwrap_unchecked(),
