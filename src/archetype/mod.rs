@@ -538,19 +538,34 @@ where
         self.length - 1
     }
 
+    /// # Safety
+    /// `entity_allocator` must contain entries for the entities stored in the archetype. The
+    /// `index` must be a valid index to a row in this archetype.
     pub(crate) unsafe fn clear(&mut self, entity_allocator: &mut entity::Allocator<R>) {
         // Clear each column.
+        // SAFETY: `self.components` has the same number of values as there are set bits in
+        // `self.identifier`. Also, each element in `self.components` defines a `Vec<C>` of size
+        // `self.length` for each `C` identified by `self.identifier`.
+        //
+        // The `R` over which `self.identifier` is generic is the same `R` on which this function
+        // is being called.
         unsafe { R::clear_components(&mut self.components, self.length, self.identifier.iter()) };
 
         // Free each entity.
-        let mut entity_identifiers = ManuallyDrop::new(unsafe {
-            Vec::from_raw_parts(
-                self.entity_identifiers.0,
-                self.length,
-                self.entity_identifiers.1,
-            )
-        });
+        let mut entity_identifiers = ManuallyDrop::new(
+            // SAFETY: `self.entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec` of size `self.length`.
+            unsafe {
+                Vec::from_raw_parts(
+                    self.entity_identifiers.0,
+                    self.length,
+                    self.entity_identifiers.1,
+                )
+            },
+        );
         for entity_identifier in entity_identifiers.iter() {
+            // SAFETY: `entity_allocator` is guaranteed by the safety contract of this method to
+            // contain `entity_identifier`.
             unsafe { entity_allocator.free_unchecked(*entity_identifier) };
         }
         entity_identifiers.clear();
