@@ -351,6 +351,9 @@ where
         self.length -= 1;
     }
 
+    /// # Safety
+    /// `entity_allocator` must contain entries for the entities stored in the archetype. The
+    /// `index` must be a valid index to a row in this archetype.
     pub(crate) unsafe fn pop_row_unchecked(
         &mut self,
         index: usize,
@@ -358,6 +361,15 @@ where
     ) -> (entity::Identifier, Vec<u8>) {
         let size_of_components = self.identifier.size_of_components();
         let mut bytes = Vec::with_capacity(size_of_components);
+        // SAFETY: `self.components` has the same number of values as there are set bits in
+        // `self.identifier`. Also, each element in `self.components` defines a `Vec<C>` of size
+        // `self.length` for each `C` identified by `self.identifier`.
+        //
+        // `bytes` is valid for writes and points to an allocated buffer that is large enough to
+        // hold all components identified by `self.identiifer`.
+        //
+        // Finally, `self.identifier` is generic over the same `R` upon which this function is
+        // being called.
         unsafe {
             R::pop_component_row(
                 index,
@@ -367,17 +379,30 @@ where
                 self.identifier.iter(),
             );
         }
+        // SAFETY: After the previous call to `R::pop_component_row()`, `bytes` will have its
+        // entire allocation populated with the components, stored as raw bytes. Therefore, these
+        // bytes have been properly initialized. Additionally, the capacity was previously already
+        // set to `size_of_components`.
         unsafe { bytes.set_len(size_of_components) };
 
-        let mut entity_identifiers = ManuallyDrop::new(unsafe {
-            Vec::from_raw_parts(
-                self.entity_identifiers.0,
-                self.length,
-                self.entity_identifiers.1,
-            )
-        });
+        let mut entity_identifiers = ManuallyDrop::new(
+            // SAFETY: `self.entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec` of size `self.length`.
+            unsafe {
+                Vec::from_raw_parts(
+                    self.entity_identifiers.0,
+                    self.length,
+                    self.entity_identifiers.1,
+                )
+            },
+        );
         // Update swapped index if this isn't the last row.
         if index < self.length - 1 {
+            // SAFETY: `entity_allocator` contains an entry for the entity identifiers stored in
+            // `entity_identifiers`.
+            //
+            // Additionally, `entity_identifiers` is guaranteed to be nonempty, because the index
+            // is not for the last row.
             unsafe {
                 entity_allocator.modify_location_index_unchecked(
                     *entity_identifiers.last().unwrap_unchecked(),
