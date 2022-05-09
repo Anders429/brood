@@ -421,7 +421,7 @@ where
     /// `buffer` must be valid for reads and be an allocated buffer of packed, properly initialized
     /// components corresponding to the components identified by this archetype's `identifier`
     /// field.
-    /// 
+    ///
     /// The registry `R` over which this archetype is generic must contain no duplicate components.
     pub(crate) unsafe fn push_from_buffer_and_component<C>(
         &mut self,
@@ -446,7 +446,7 @@ where
         // method.
         //
         // The `R` over which `self.identifier` is generic is the same `R` on which this function
-        // is being called. 
+        // is being called.
         unsafe {
             R::push_components_from_buffer_and_component(
                 buffer,
@@ -479,6 +479,12 @@ where
         self.length - 1
     }
 
+    /// # Safety
+    /// `buffer` must be valid for reads and be an allocated buffer of packed, properly initialized
+    /// components corresponding to the components identified by this archetype's `identifier`
+    /// field, skipping the component `C`.
+    ///
+    /// The registry `R` over which this archetype is generic must contain no duplicate components.
     pub(crate) unsafe fn push_from_buffer_skipping_component<C>(
         &mut self,
         entity_identifier: entity::Identifier,
@@ -487,6 +493,19 @@ where
     where
         C: Component,
     {
+        // SAFETY: `self.components` has the same number of values as there are set bits in
+        // `self.identifier`. Also, each element in `self.components` defines a `Vec<C>` of size
+        // `self.length` for each `C` identified by `self.identifier`.
+        //
+        // `buffer` is valid for reads and is an allocated buffer of packed properly initialized
+        // components corresponding to the components identified by `self.identifier`, skipping
+        // the component `C`, as is guaranteed by the safety contract of this method.
+        //
+        // `R` contains no duplicate components, as is guaranteed by the safety contract of this
+        // method.
+        //
+        // The `R` over which `self.identifier` is generic is the same `R` on which this function
+        // is being called.
         unsafe {
             R::push_components_from_buffer_skipping_component(
                 buffer,
@@ -497,13 +516,17 @@ where
             );
         }
 
-        let mut entity_identifiers = ManuallyDrop::new(unsafe {
-            Vec::from_raw_parts(
-                self.entity_identifiers.0,
-                self.length,
-                self.entity_identifiers.1,
-            )
-        });
+        let mut entity_identifiers = ManuallyDrop::new(
+            // SAFETY: `self.entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec` of size `self.length`.
+            unsafe {
+                Vec::from_raw_parts(
+                    self.entity_identifiers.0,
+                    self.length,
+                    self.entity_identifiers.1,
+                )
+            },
+        );
         entity_identifiers.push(entity_identifier);
         self.entity_identifiers = (
             entity_identifiers.as_mut_ptr(),
