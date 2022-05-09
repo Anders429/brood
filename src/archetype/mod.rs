@@ -318,8 +318,8 @@ where
         // `self.identifier` is generic over the same registry `R` as this method is being called
         // on.
         unsafe {
-            R::remove_component_row(index, &self.components, self.length, self.identifier.iter())
-        };
+            R::remove_component_row(index, &self.components, self.length, self.identifier.iter());
+        }
 
         let mut entity_identifiers = ManuallyDrop::new(
             // SAFETY: `self.entity_identifiers` is guaranteed to contain the raw parts for a valid
