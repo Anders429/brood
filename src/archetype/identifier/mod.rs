@@ -235,7 +235,7 @@ where
     /// The caller must ensure the referenced `Identifier` outlives the returned [`Iter`].
     ///
     /// [`Iter`]: crate::archetype::identifier::Iter
-    pub(crate) unsafe fn iter(&self) -> Iter<R> {
+    pub(crate) unsafe fn iter(self) -> Iter<R> {
         // SAFETY: `self.pointer` will be valid as long as the returned `Iter` exists, assuming the
         // caller ensures the `Identifier` outlives it.
         unsafe { Iter::<R>::new(self.pointer) }
