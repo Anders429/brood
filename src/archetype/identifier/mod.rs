@@ -188,7 +188,7 @@ where
 /// [`Archetypes`]: crate::archetypes::Archetypes
 /// [`entity::Allocator`]: crate::entity::allocator::Allocator
 /// [`Identifier`]: crate::archetype::identifier::Identifier
-pub(crate) struct IdentifierRef<R>
+pub struct IdentifierRef<R>
 where
     R: Registry,
 {
