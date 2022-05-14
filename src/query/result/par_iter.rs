@@ -219,7 +219,7 @@ where
     type Result = C::Result;
 
     fn consume(self, archetype: &'a mut Archetype<R>) -> Self {
-        if unsafe { And::<V, F>::filter(archetype.identifier().as_slice(), self.component_map) } {
+        if unsafe { And::<V, F>::filter(archetype.identifier(), self.component_map) } {
             let consumer = self.base.split_off_left();
             let result = unsafe { archetype.par_view::<V>() }.drive_unindexed(consumer);
 
