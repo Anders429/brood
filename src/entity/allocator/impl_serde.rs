@@ -251,9 +251,10 @@ where
         Ok(Self {
             slots: slots
                 .into_iter()
-                .map(|slot|
+                .map(|slot| {
                     // SAFETY: We just checked above that each `slot` is not `None`.
-                    unsafe { slot.unwrap_unchecked() })
+                    unsafe { slot.unwrap_unchecked() }
+                })
                 .collect(),
             free: free
                 .into_iter()
