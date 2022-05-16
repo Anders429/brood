@@ -164,6 +164,11 @@ where
         // bits correspond to each component in the registry `R`.
         let identifier_buffer = unsafe { archetype::Identifier::new(identifier) };
 
+        // SAFETY: Since the archetype was obtained using the `identifier_buffer` created from the
+        // entity `E`, then the entity is guaranteed to be made up of componpents identified by the
+        // archetype's identifier.
+        //
+        // `self.entity_allocator` is guaranteed to live as long as the archetype.
         unsafe {
             self.archetypes
                 .get_mut_or_insert_new(identifier_buffer)
@@ -207,6 +212,11 @@ where
         // bits correspond to each component in the registry `R`.
         let identifier_buffer = unsafe { archetype::Identifier::new(identifier) };
 
+        // SAFETY: Since the archetype was obtained using the `identifier_buffer` created from the
+        // entities `E`, then the entities are guaranteed to be made up of componpents identified
+        // by the archetype's identifier.
+        //
+        // `self.entity_allocator` is guaranteed to live as long as the archetype.
         unsafe {
             self.archetypes
                 .get_mut_or_insert_new(identifier_buffer)
@@ -599,12 +609,17 @@ where
         // Get location of entity.
         if let Some(location) = self.entity_allocator.get(entity_identifier) {
             // Remove row from Archetype.
+            // SAFETY: `self.entity_allocator` contains entries for the entities stored in this
+            // world's archetypes. Also, `location.index` is invariantly guaranteed to be a valid
+            // index in the archetype.
             unsafe {
                 self.archetypes
                     .get_unchecked_mut(location.identifier)
                     .remove_row_unchecked(location.index, &mut self.entity_allocator);
             }
             // Free slot in entity allocator.
+            // SAFETY: It was verified above that `self.entity_allocator` contains a valid slot for
+            // `entity_identifier`.
             unsafe {
                 self.entity_allocator.free_unchecked(entity_identifier);
             }
@@ -632,6 +647,8 @@ where
     /// world.clear();
     /// ```
     pub fn clear(&mut self) {
+        // SAFETY: `self.entity_allocator` contains entries for the entities stored in this world's
+        // archetypes.
         unsafe {
             self.archetypes.clear(&mut self.entity_allocator);
         }
