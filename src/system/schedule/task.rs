@@ -37,15 +37,13 @@ where
         }
     }
 
-    pub(crate) fn flush<R>(&mut self, world: SendableWorld<R>)
+    pub(crate) fn flush<R>(&mut self, world: &mut World<R>)
     where
         R: Registry,
     {
-        let mut_world = unsafe { &mut *(world.0 as *const World<R> as *mut World<R>) };
-
         match self {
-            Task::Seq(system) => system.world_post_processing(mut_world),
-            Task::Par(system) => system.world_post_processing(mut_world),
+            Task::Seq(system) => system.world_post_processing(world),
+            Task::Par(system) => system.world_post_processing(world),
         }
     }
 }
