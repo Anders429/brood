@@ -482,7 +482,7 @@ where
     /// # Safety
     /// `buffer` must be valid for reads and be an allocated buffer of packed, properly initialized
     /// components corresponding to the components identified by this archetype's `identifier`
-    /// field, skipping the component `C`.
+    /// field, also including the component `C`.
     ///
     /// The registry `R` over which this archetype is generic must contain no duplicate components.
     pub(crate) unsafe fn push_from_buffer_skipping_component<C>(
@@ -498,8 +498,8 @@ where
         // `self.length` for each `C` identified by `self.identifier`.
         //
         // `buffer` is valid for reads and is an allocated buffer of packed properly initialized
-        // components corresponding to the components identified by `self.identifier`, skipping
-        // the component `C`, as is guaranteed by the safety contract of this method.
+        // components corresponding to the components identified by `self.identifier`, also
+        // including the component `C`, as is guaranteed by the safety contract of this method.
         //
         // `R` contains no duplicate components, as is guaranteed by the safety contract of this
         // method.
