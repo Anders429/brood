@@ -32,7 +32,9 @@ pub trait ParViewSeal<'a>: View<'a> {
     /// size `length`.
     ///
     /// `component_map` must contain an entry for every component `C` that is viewed by this
-    /// `ParView`.
+    /// `ParView`, and that entry must contain the index for the column of type `C` in `columns`.
+    /// Note that it is not required for optionally viewed components to be contained in the
+    /// `component_map`.
     unsafe fn par_view(
         columns: &[(*mut u8, usize)],
         entity_identifiers: (*mut entity::Identifier, usize),
@@ -53,6 +55,10 @@ where
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::ParResult {
+        // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of size
+        // `length`. Since `component_map` contains an entry for the given component `C`'s entry in
+        // `columns`, then the column obtained here can be interpreted as a slice of type `C` of
+        // size `length`.
         unsafe {
             core::slice::from_raw_parts::<'a, C>(
                 columns
@@ -78,6 +84,10 @@ where
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::ParResult {
+        // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of size
+        // `length`. Since `component_map` contains an entry for the given component `C`'s entry in
+        // `columns`, then the column obtained here can be interpreted as a slice of type `C` of
+        // size `length`.
         unsafe {
             core::slice::from_raw_parts_mut::<'a, C>(
                 columns
@@ -113,6 +123,10 @@ where
     ) -> Self::ParResult {
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
+                // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of
+                // size `length`. Since `component_map` contains an entry for the given component
+                // `C`'s entry in `columns`, then the column obtained here can be interpreted as a
+                // slice of type `C` of size `length`.
                 unsafe {
                     core::slice::from_raw_parts(columns.get_unchecked(*index).0.cast::<C>(), length)
                 }
@@ -141,6 +155,10 @@ where
     ) -> Self::ParResult {
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
+                // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of
+                // size `length`. Since `component_map` contains an entry for the given component
+                // `C`'s entry in `columns`, then the column obtained here can be interpreted as a
+                // slice of type `C` of size `length`.
                 unsafe {
                     core::slice::from_raw_parts_mut(
                         columns.get_unchecked(*index).0.cast::<C>(),
@@ -164,6 +182,8 @@ impl<'a> ParViewSeal<'a> for entity::Identifier {
         length: usize,
         _component_map: &HashMap<TypeId, usize>,
     ) -> Self::ParResult {
+        // SAFETY: `entity_identifiers` is guaranteed to contain the raw parts for a valid
+        // `Vec<entity::Identifier>` of size `length`.
         unsafe { core::slice::from_raw_parts_mut::<'a, Self>(entity_identifiers.0, length) }
             .par_iter()
             .cloned()
@@ -173,6 +193,18 @@ impl<'a> ParViewSeal<'a> for entity::Identifier {
 pub trait ParViewsSeal<'a>: Views<'a> {
     type ParResults: IndexedParallelIterator;
 
+    /// # Safety
+    /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
+    /// for components `C`. Each of those components `C` must have an entry in `component_map`,
+    /// paired with the correct index corresponding to that component's entry in `columns`.
+    ///
+    /// `entity_identifiers` must contain the raw parts for a valid `Vec<entity::Identifier` of
+    /// size `length`.
+    ///
+    /// `component_map` must contain an entry for every component `C` that is viewed by this
+    /// `ParViews`, and that entry must contain the index for the column of type `C` in `columns`.
+    /// Note that it is not required for optionally viewed components to be contained in the
+    /// `component_map`.
     unsafe fn par_view(
         columns: &[(*mut u8, usize)],
         entity_identifiers: (*mut entity::Identifier, usize),
@@ -207,6 +239,8 @@ where
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::ParResults {
+        // SAFETY: The safety guarantees of this method are the exact what are required by the
+        // safety guarantees of both `V::par_view()` and `W::par_view()`.
         unsafe {
             V::par_view(columns, entity_identifiers, length, component_map).zip(W::par_view(
                 columns,
