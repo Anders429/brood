@@ -539,8 +539,7 @@ where
     }
 
     /// # Safety
-    /// `entity_allocator` must contain entries for the entities stored in the archetype. The
-    /// `index` must be a valid index to a row in this archetype.
+    /// `entity_allocator` must contain entries for the entities stored in the archetype.
     pub(crate) unsafe fn clear(&mut self, entity_allocator: &mut entity::Allocator<R>) {
         // Clear each column.
         // SAFETY: `self.components` has the same number of values as there are set bits in
