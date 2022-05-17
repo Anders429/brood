@@ -195,7 +195,7 @@ where
                 unsafe { components.get_unchecked(1..) };
         }
 
-        // // SAFETY: At this point, one bit of `identifier_iter` has been consumed. There are two
+        // SAFETY: At this point, one bit of `identifier_iter` has been consumed. There are two
         // possibilities here: either the bit was set or it was not.
         //
         // If the bit was set, then the `components` slice will no longer include the first value,
@@ -237,6 +237,19 @@ pub trait RegistryDeserialize<'de>: Registry + 'de {
         R: Registry,
         V: SeqAccess<'de>;
 
+    /// # Safety
+    /// `components` must contain the same number of values as there are set bits in the
+    /// `identifier_iter`.
+    ///
+    /// Each `(*mut u8, usize)` in `components` must be the pointer and capacity respectively of a
+    /// `Vec<C>` of length `0`, where `C` is the component corresponding to the set bit in
+    /// `identifier_iter`.
+    ///
+    /// When called externally, the `Registry` `R` provided to the method must by the same as the
+    /// `Registry` on which this method is being called.
+    ///
+    /// When called internally, the `identifier_iter` must have the same amount of bits left as
+    /// there are components remaining.
     unsafe fn deserialize_components_by_row<R, V>(
         components: &mut [(*mut u8, usize)],
         length: usize,
@@ -319,11 +332,22 @@ where
         R_: Registry,
         V: SeqAccess<'de>,
     {
-        if unsafe { identifier_iter.next().unwrap_unchecked() } {
-            let component_column = unsafe { components.get_unchecked_mut(0) };
-            let mut v = ManuallyDrop::new(unsafe {
-                Vec::<C>::from_raw_parts(component_column.0.cast::<C>(), 0, component_column.1)
-            });
+        if
+        // SAFETY: `identifier_iter` is guaranteed by the safety contract of this method to
+        // return a value for every component within the registry.
+        unsafe { identifier_iter.next().unwrap_unchecked() } {
+            let component_column =
+                // SAFETY: `components` is guaranteed to have the same number of values as there
+                // set bits in `identifier_iter`. Since a bit must have been set to enter this
+                // block, there must be at least one component column.
+                unsafe { components.get_unchecked_mut(0) };
+            let mut v = ManuallyDrop::new(
+                // SAFETY: The pointer and capacity are guaranteed by the safety contract of this
+                // method to define a valid `Vec<C>` of length `0`.
+                unsafe {
+                    Vec::<C>::from_raw_parts(component_column.0.cast::<C>(), 0, component_column.1)
+                },
+            );
 
             v.push(seq.next_element()?.ok_or_else(|| {
                 // TODO: the length returned here is incorrect.
@@ -332,9 +356,30 @@ where
             component_column.0 = v.as_mut_ptr().cast::<u8>();
             component_column.1 = v.capacity();
 
-            components = unsafe { components.get_unchecked_mut(1..) };
+            components =
+                // SAFETY: `components` is guaranteed to have the same number of values as there
+                // set bits in `identifier_iter`. Since a bit must have been set to enter this
+                // block, there must be at least one component column.
+                unsafe { components.get_unchecked_mut(1..) };
         }
 
+        // SAFETY: At this point, one bit of `identifier_iter` has been consumed. There are two
+        // possibilities here: either the bit was set or it was not.
+        //
+        // If the bit was set, then the `components` slice will no longer include the first value,
+        // which means the slice will still contain the same number of pointer and capacity tuples
+        // as there are set bits in `identifier_iter`. Additionally, since the first value was
+        // removed from the slice, which corresponded to the component identified by the consumed
+        // bit, all remaining component values will still correspond to valid `Vec<C>`s identified
+        // by the remaining set bits in `identifier_iter`.
+        //
+        // If the bit was not set, then `components` is unaltered, and there are still the same
+        // number of elements as there are set bits in `identifier_iter`, which still make valid
+        // `Vec<C>`s for each `C` identified by the remaining set bits in `identifier_iter`.
+        //
+        // Furthermore, regardless of whether the bit was set or not, `R` is one component smaller
+        // than `(C, R)`, and since `identifier_iter` has had one bit consumed, it still has the
+        // same number of bits remaining as `R` has components remaining.
         unsafe { R::deserialize_components_by_row(components, length, seq, identifier_iter) }
     }
 }
