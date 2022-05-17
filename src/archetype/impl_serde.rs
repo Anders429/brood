@@ -54,15 +54,24 @@ where
     where
         S: Serializer,
     {
-        let mut tuple = serializer
-            .serialize_tuple(unsafe { self.0.identifier.iter() }.filter(|b| *b).count() + 1)?;
-        tuple.serialize_element(&SerializeColumn(&ManuallyDrop::new(unsafe {
-            Vec::from_raw_parts(
-                self.0.entity_identifiers.0,
-                self.0.length,
-                self.0.entity_identifiers.1,
-            )
-        })))?;
+        let mut tuple = serializer.serialize_tuple(
+            // SAFETY: The identifier here will outlive the derived `Iter`.
+            unsafe { self.0.identifier.iter() }.filter(|b| *b).count() + 1,
+        )?;
+        tuple.serialize_element(&SerializeColumn(&ManuallyDrop::new(
+            // SAFETY: `entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec<entity::Identifier>` of length `length`.
+            unsafe {
+                Vec::from_raw_parts(
+                    self.0.entity_identifiers.0,
+                    self.0.length,
+                    self.0.entity_identifiers.1,
+                )
+            },
+        )))?;
+        // SAFETY: `self.0.components` contains the raw parts for `Vec<C>`s of size `length` for
+        // each component `C` identified by the `identifier`. Also, the `R` upon which the
+        // identifier is generic is the same `R` upon which this function is called.
         unsafe {
             R::serialize_components_by_column(
                 &self.0.components,
@@ -112,21 +121,31 @@ where
         S: Serializer,
     {
         let mut tuple = serializer.serialize_tuple(
+            // SAFETY: The identifier here will outlive the derived `Iter`.
             unsafe { self.archetype.identifier.iter() }
                 .filter(|b| *b)
                 .count()
                 + 1,
         )?;
 
-        tuple.serialize_element(unsafe {
-            ManuallyDrop::new(Vec::from_raw_parts(
-                self.archetype.entity_identifiers.0,
-                self.archetype.length,
-                self.archetype.entity_identifiers.1,
-            ))
-            .get_unchecked(self.index)
-        })?;
+        tuple.serialize_element(
+            // SAFETY: `entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec<entity::Identifier>` of length `length`.
+            unsafe {
+                ManuallyDrop::new(Vec::from_raw_parts(
+                    self.archetype.entity_identifiers.0,
+                    self.archetype.length,
+                    self.archetype.entity_identifiers.1,
+                ))
+                .get_unchecked(self.index)
+            },
+        )?;
 
+        // SAFETY: `self.0.components` contains the raw parts for `Vec<C>`s of size `length` for
+        // each component `C` identified by the `identifier`. Also, the `R` upon which the
+        // identifier is generic is the same `R` upon which this function is called. Finally,
+        // `self.index` is invariantly guaranteed to be a valid index into the archetype (meaning
+        // it is less than its length).
         unsafe {
             R::serialize_components_by_row(
                 &self.archetype.components,
