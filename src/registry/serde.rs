@@ -221,6 +221,12 @@ where
 
 #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
 pub trait RegistryDeserialize<'de>: Registry + 'de {
+    /// # Safety
+    /// When called externally, the `Registry` `R` provided to the method must by the same as the
+    /// `Registry` on which this method is being called.
+    ///
+    /// When called internally, the `identifier_iter` must have the same amount of bits left as
+    /// there are components remaining.
     unsafe fn deserialize_components_by_column<R, V>(
         components: &mut Vec<(*mut u8, usize)>,
         length: usize,
@@ -285,7 +291,10 @@ where
         R_: Registry,
         V: SeqAccess<'de>,
     {
-        if unsafe { identifier_iter.next().unwrap_unchecked() } {
+        if
+        // SAFETY: `identifier_iter` is guaranteed by the safety contract of this method to
+        // return a value for every component within the registry.
+        unsafe { identifier_iter.next().unwrap_unchecked() } {
             // TODO: Better error messages?
             let component_column = seq
                 .next_element_seed(DeserializeColumn::<C>::new(length))?
@@ -295,6 +304,8 @@ where
             components.push((component_column.0.cast::<u8>(), component_column.1));
         }
 
+        // SAFETY: Since one bit was consumed from `identifier_iter`, it still has the same number
+        // of bits remaining as there are components remaining.
         unsafe { R::deserialize_components_by_column(components, length, seq, identifier_iter) }
     }
 
