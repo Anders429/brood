@@ -57,7 +57,7 @@ where
     /// size `length`.
     ///
     /// `components` must contain the raw parts for valid `Vec<C>`s of size `length` for each
-    /// component `C` in the registry `R`.
+    /// component `C` identified by `identifier`.
     pub(crate) unsafe fn from_raw_parts(
         identifier: Identifier<R>,
         entity_identifiers: (*mut entity::Identifier, usize),
