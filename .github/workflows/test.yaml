@@ -180,6 +180,7 @@ jobs:
       with:
         toolchain: nightly
         override: true
+        components: rust-src
     - uses: actions-rs/install@v0.1
       with:
         crate: cargo-valgrind
@@ -201,7 +202,7 @@ jobs:
       with:
         toolchain: nightly
         override: true
-        components: llvm-tools-preview
+        components: llvm-tools-preview, rust-src
     - uses: actions-rs/install@v0.1
       with:
         crate: cargo-llvm-cov
