@@ -242,7 +242,7 @@ pub trait RegistryDeserialize<'de>: Registry + 'de {
     /// `identifier_iter`.
     ///
     /// Each `(*mut u8, usize)` in `components` must be the pointer and capacity respectively of a
-    /// `Vec<C>` of length `0`, where `C` is the component corresponding to the set bit in
+    /// `Vec<C>` of size `length`, where `C` is the component corresponding to the set bit in
     /// `identifier_iter`.
     ///
     /// When called externally, the `Registry` `R` provided to the method must by the same as the
@@ -343,9 +343,13 @@ where
                 unsafe { components.get_unchecked_mut(0) };
             let mut v = ManuallyDrop::new(
                 // SAFETY: The pointer and capacity are guaranteed by the safety contract of this
-                // method to define a valid `Vec<C>` of length `0`.
+                // method to define a valid `Vec<C>` of length `length`.
                 unsafe {
-                    Vec::<C>::from_raw_parts(component_column.0.cast::<C>(), 0, component_column.1)
+                    Vec::<C>::from_raw_parts(
+                        component_column.0.cast::<C>(),
+                        length,
+                        component_column.1,
+                    )
                 },
             );
 
