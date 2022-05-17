@@ -136,7 +136,7 @@ where
     /// ```
     ///
     /// [`Entities`]: crate::entities::Entities
-    /// [`entities!]: crate::entities!
+    /// [`entities!`]: crate::entities!
     ///
     /// # Panics
     /// Panics if the columns are not all the same length.
@@ -167,7 +167,7 @@ where
     /// let batch = unsafe { Batch::new_unchecked((vec![42; 10], (vec![true; 10], entities::Null))) };
     /// ```
     /// [`Entities`]: crate::entities::Entities
-    /// [`entities!]: crate::entities!
+    /// [`entities!`]: crate::entities!
     pub unsafe fn new_unchecked(entities: E) -> Self {
         Self {
             len: entities.component_len(),
