@@ -24,6 +24,7 @@ jobs:
       with:
         toolchain: ${{ matrix.rust }}
         override: true
+        components: rust-src
     - uses: actions-rs/install@v0.1
       with:
         crate: cargo-hack
