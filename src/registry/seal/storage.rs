@@ -1246,9 +1246,7 @@ mod tests {
         assert_eq!(components.get(2).unwrap().1, CAPACITY);
 
         // Free components to avoid leaking memory.
-        unsafe {
-            Registry::free_components(&mut components, 0, identifier.iter())
-        }
+        unsafe { Registry::free_components(&mut components, 0, identifier.iter()) }
     }
 
     #[test]
@@ -1269,9 +1267,7 @@ mod tests {
         assert_eq!(components.get(1).unwrap().1, CAPACITY);
 
         // Free components to avoid leaking memory.
-        unsafe {
-            Registry::free_components(&mut components, 0, identifier.iter())
-        }
+        unsafe { Registry::free_components(&mut components, 0, identifier.iter()) }
     }
 
     #[test]
