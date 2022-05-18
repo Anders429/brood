@@ -1244,6 +1244,11 @@ mod tests {
         assert_eq!(components.get(0).unwrap().1, CAPACITY);
         assert_eq!(components.get(1).unwrap().1, CAPACITY);
         assert_eq!(components.get(2).unwrap().1, CAPACITY);
+
+        // Free components to avoid leaking memory.
+        unsafe {
+            Registry::free_components(&mut components, 0, identifier.iter())
+        }
     }
 
     #[test]
@@ -1262,6 +1267,11 @@ mod tests {
 
         assert_eq!(components.get(0).unwrap().1, CAPACITY);
         assert_eq!(components.get(1).unwrap().1, CAPACITY);
+
+        // Free components to avoid leaking memory.
+        unsafe {
+            Registry::free_components(&mut components, 0, identifier.iter())
+        }
     }
 
     #[test]
