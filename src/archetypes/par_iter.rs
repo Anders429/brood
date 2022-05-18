@@ -37,7 +37,11 @@ where
         C: UnindexedConsumer<Self::Item>,
     {
         self.raw_iter
-            .map(|archetype_bucket| unsafe { archetype_bucket.as_mut() })
+            .map(|archetype_bucket| {
+                // SAFETY: The reference to the archetype stored in this bucket is guaranteed to be
+                // unique.
+                unsafe { archetype_bucket.as_mut() }
+            })
             .drive_unindexed(consumer)
     }
 }
@@ -48,6 +52,10 @@ where
 {
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
     pub(crate) fn par_iter_mut(&mut self) -> ParIterMut<R> {
-        ParIterMut::new(unsafe { self.raw_archetypes.par_iter() })
+        ParIterMut::new(
+            // SAFETY: The `ParIterMut` containing this `RawIter` is guaranteed to not outlive
+            // `self`.
+            unsafe { self.raw_archetypes.par_iter() },
+        )
     }
 }

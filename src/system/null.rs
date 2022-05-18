@@ -25,6 +25,7 @@ impl<'a> System<'a> for Null {
     where
         R: Registry + 'a,
     {
+        // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }
     }
 
@@ -32,6 +33,7 @@ impl<'a> System<'a> for Null {
     where
         R: Registry,
     {
+        // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }
     }
 }
@@ -45,6 +47,7 @@ impl<'a> ParSystem<'a> for Null {
     where
         R: Registry + 'a,
     {
+        // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }
     }
 
@@ -52,6 +55,7 @@ impl<'a> ParSystem<'a> for Null {
     where
         R: Registry,
     {
+        // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }
     }
 }

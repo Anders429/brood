@@ -7,6 +7,7 @@ use crate::{
         },
         ParSystem, System,
     },
+    world::World,
 };
 
 pub trait Seal<'a>: Send {
@@ -143,11 +144,19 @@ where
     {
         match &mut self.0 {
             Stage::Start(task) => {
-                task.flush(world);
+                task.flush(
+                    // SAFETY: This is guaranteed to be the only reference to this `World<R>`,
+                    // meaning this cast to a mutable reference is sound.
+                    unsafe { &mut *(world.0 as *const World<R> as *mut World<R>) },
+                );
             }
             Stage::Continue(task) => {
                 self.1.flush(world);
-                task.flush(world);
+                task.flush(
+                    // SAFETY: This is guaranteed to be the only reference to this `World<R>`,
+                    // meaning this cast to a mutable reference is sound.
+                    unsafe { &mut *(world.0 as *const World<R> as *mut World<R>) },
+                );
             }
             Stage::Flush => {}
         }

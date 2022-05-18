@@ -55,24 +55,29 @@ where
         S: Serializer,
     {
         let mut tuple = serializer.serialize_tuple(
-            unsafe { self.0.identifier_buffer.iter() }
-                .filter(|b| *b)
-                .count()
-                + 1,
+            // SAFETY: The identifier here will outlive the derived `Iter`.
+            unsafe { self.0.identifier.iter() }.filter(|b| *b).count() + 1,
         )?;
-        tuple.serialize_element(&SerializeColumn(&ManuallyDrop::new(unsafe {
-            Vec::from_raw_parts(
-                self.0.entity_identifiers.0,
-                self.0.length,
-                self.0.entity_identifiers.1,
-            )
-        })))?;
+        tuple.serialize_element(&SerializeColumn(&ManuallyDrop::new(
+            // SAFETY: `entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec<entity::Identifier>` of length `length`.
+            unsafe {
+                Vec::from_raw_parts(
+                    self.0.entity_identifiers.0,
+                    self.0.length,
+                    self.0.entity_identifiers.1,
+                )
+            },
+        )))?;
+        // SAFETY: `self.0.components` contains the raw parts for `Vec<C>`s of size `length` for
+        // each component `C` identified by the `identifier`. Also, the `R` upon which the
+        // identifier is generic is the same `R` upon which this function is called.
         unsafe {
             R::serialize_components_by_column(
                 &self.0.components,
                 self.0.length,
                 &mut tuple,
-                self.0.identifier_buffer.iter(),
+                self.0.identifier.iter(),
             )?;
         }
         tuple.end()
@@ -92,7 +97,7 @@ where
         S: Serializer,
     {
         let mut tuple = serializer.serialize_tuple(3)?;
-        tuple.serialize_element(&self.0.identifier_buffer)?;
+        tuple.serialize_element(&self.0.identifier)?;
         tuple.serialize_element(&self.0.length)?;
         tuple.serialize_element(&SerializeColumns(self.0))?;
         tuple.end()
@@ -116,28 +121,38 @@ where
         S: Serializer,
     {
         let mut tuple = serializer.serialize_tuple(
-            unsafe { self.archetype.identifier_buffer.iter() }
+            // SAFETY: The identifier here will outlive the derived `Iter`.
+            unsafe { self.archetype.identifier.iter() }
                 .filter(|b| *b)
                 .count()
                 + 1,
         )?;
 
-        tuple.serialize_element(unsafe {
-            ManuallyDrop::new(Vec::from_raw_parts(
-                self.archetype.entity_identifiers.0,
-                self.archetype.length,
-                self.archetype.entity_identifiers.1,
-            ))
-            .get_unchecked(self.index)
-        })?;
+        tuple.serialize_element(
+            // SAFETY: `entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec<entity::Identifier>` of length `length`.
+            unsafe {
+                ManuallyDrop::new(Vec::from_raw_parts(
+                    self.archetype.entity_identifiers.0,
+                    self.archetype.length,
+                    self.archetype.entity_identifiers.1,
+                ))
+                .get_unchecked(self.index)
+            },
+        )?;
 
+        // SAFETY: `self.0.components` contains the raw parts for `Vec<C>`s of size `length` for
+        // each component `C` identified by the `identifier`. Also, the `R` upon which the
+        // identifier is generic is the same `R` upon which this function is called. Finally,
+        // `self.index` is invariantly guaranteed to be a valid index into the archetype (meaning
+        // it is less than its length).
         unsafe {
             R::serialize_components_by_row(
                 &self.archetype.components,
                 self.archetype.length,
                 self.index,
                 &mut tuple,
-                self.archetype.identifier_buffer.iter(),
+                self.archetype.identifier.iter(),
             )?;
         }
 
@@ -181,7 +196,7 @@ where
         S: Serializer,
     {
         let mut tuple = serializer.serialize_tuple(3)?;
-        tuple.serialize_element(&self.0.identifier_buffer)?;
+        tuple.serialize_element(&self.0.identifier)?;
         tuple.serialize_element(&self.0.length)?;
         tuple.serialize_element(&SerializeRows(self.0))?;
         tuple.end()
@@ -221,6 +236,10 @@ impl<'a, 'de, R> DeserializeRow<'a, 'de, R>
 where
     R: RegistryDeserialize<'de>,
 {
+    /// # Safety
+    /// `entity_identifiers` must be the valid raw parts for a `Vec<entity::Identifier>` of size
+    /// `length`. Each element in `components` must be the valid raw parts for a `Vec<C>` of size
+    /// `length` for each component `C` identified by `identifier`.
     unsafe fn new(
         identifier: archetype::IdentifierRef<R>,
         entity_identifiers: &'a mut (*mut entity::Identifier, usize),
@@ -268,13 +287,17 @@ where
             where
                 A: SeqAccess<'de>,
             {
-                let mut entity_identifiers = ManuallyDrop::new(unsafe {
-                    Vec::from_raw_parts(
-                        self.0.entity_identifiers.0,
-                        self.0.length,
-                        self.0.entity_identifiers.1,
-                    )
-                });
+                let mut entity_identifiers = ManuallyDrop::new(
+                    // SAFETY: `entity_identifiers` contains the valid raw parts for a
+                    // `Vec<entity::Identifier> of size `length`.
+                    unsafe {
+                        Vec::from_raw_parts(
+                            self.0.entity_identifiers.0,
+                            self.0.length,
+                            self.0.entity_identifiers.1,
+                        )
+                    },
+                );
                 entity_identifiers
                     .push(seq.next_element()?.ok_or_else(|| {
                         de::Error::invalid_length(0, &"number of components + 1")
@@ -284,6 +307,10 @@ where
                     entity_identifiers.capacity(),
                 );
 
+                // SAFETY: Each element of `self.0.components` contains the raw parts for a valid
+                // `Vec<C>` of size `self.0.length` for each component `C` identified by the
+                // identifier. The registry `R` over which `self.0.identifier` is generic is the
+                // same `R` on which this function is called.
                 unsafe {
                     R::deserialize_components_by_row(
                         self.0.components,
@@ -298,6 +325,7 @@ where
         }
 
         deserializer.deserialize_tuple(
+            // SAFETY: The identifier here will outlive the derived `Iter`.
             unsafe { self.identifier.iter() }.filter(|b| *b).count() + 1,
             DeserializeRowVisitor(self),
         )
@@ -353,8 +381,12 @@ where
                     entity_identifiers_vec.capacity(),
                 );
 
-                let components_len = unsafe { self.0.identifier.iter() }.filter(|b| *b).count();
+                let components_len =
+                    // SAFETY: The identifier here will outlive the derived `Iter`.
+                    unsafe { self.0.identifier.iter() }.filter(|b| *b).count();
                 let mut components = Vec::with_capacity(components_len);
+                // SAFETY: The registry `R` over which `self.0.identifier` is generic is the same
+                // `R` on which this function is called.
                 unsafe {
                     R::new_components_with_capacity(
                         &mut components,
@@ -365,38 +397,62 @@ where
                 let mut vec_length = 0;
 
                 for i in 0..self.0.length {
-                    let result = seq.next_element_seed(unsafe {
-                        DeserializeRow::new(
-                            self.0.identifier.as_ref(),
-                            &mut entity_identifiers,
-                            &mut components,
-                            vec_length,
-                        )
-                    });
-                    if let Err(error) = result {
-                        drop(unsafe {
-                            Vec::from_raw_parts(
-                                entity_identifiers.0,
+                    let result = seq.next_element_seed(
+                        // SAFETY: `entity_identifiers` and `components` both contain the raw parts
+                        // for valid `Vec`s of length `vec_length`.
+                        unsafe {
+                            DeserializeRow::new(
+                                self.0.identifier.as_ref(),
+                                &mut entity_identifiers,
+                                &mut components,
                                 vec_length,
-                                entity_identifiers.1,
                             )
-                        });
+                        },
+                    );
+                    if let Err(error) = result {
+                        drop(
+                            // SAFETY: `entity_identifiers` contains the raw parts for a valid
+                            // `Vec<entity::Identifier>` of size `vec_length`.
+                            unsafe {
+                                Vec::from_raw_parts(
+                                    entity_identifiers.0,
+                                    vec_length,
+                                    entity_identifiers.1,
+                                )
+                            },
+                        );
+                        // SAFETY: `components` contains the raw parts for valid `Vec<C>`s of
+                        // length `vec_length` for each component identified by the identifier. The
+                        // registry `R` over which `self.0.identifier` is generic is the same `R`
+                        // on which this function is called.
                         unsafe {
                             R::free_components(&components, vec_length, self.0.identifier.iter());
                         }
 
                         return Err(error);
                     }
-                    if let Some(()) = unsafe { result.unwrap_unchecked() } {
+                    if let Some(()) =
+                        // SAFETY: If the `result` was an `Err` variant, the function would have
+                        // returned in the previous `if` block.
+                        unsafe { result.unwrap_unchecked() }
+                    {
                         vec_length += 1;
                     } else {
-                        drop(unsafe {
-                            Vec::from_raw_parts(
-                                entity_identifiers.0,
-                                vec_length,
-                                entity_identifiers.1,
-                            )
-                        });
+                        drop(
+                            // SAFETY: `entity_identifiers` contains the raw parts for a valid
+                            // `Vec<entity::Identifier>` of size `vec_length`.
+                            unsafe {
+                                Vec::from_raw_parts(
+                                    entity_identifiers.0,
+                                    vec_length,
+                                    entity_identifiers.1,
+                                )
+                            },
+                        );
+                        // SAFETY: `components` contains the raw parts for valid `Vec<C>`s of
+                        // length `vec_length` for each component identified by the identifier. The
+                        // registry `R` over which `self.0.identifier` is generic is the same `R`
+                        // on which this function is called.
                         unsafe {
                             R::free_components(&components, vec_length, self.0.identifier.iter());
                         }
@@ -405,14 +461,19 @@ where
                     }
                 }
 
-                Ok(unsafe {
-                    Archetype::from_raw_parts(
-                        self.0.identifier,
-                        entity_identifiers,
-                        components,
-                        self.0.length,
-                    )
-                })
+                Ok(
+                    // SAFETY: `entity_identifiers` and `components` both contain the raw parts for
+                    // valid `Vec`s of length `self.0.length` for the entity identifiers and
+                    // components identified by `self.0.identifier`.
+                    unsafe {
+                        Archetype::from_raw_parts(
+                            self.0.identifier,
+                            entity_identifiers,
+                            components,
+                            self.0.length,
+                        )
+                    },
+                )
             }
         }
 
@@ -539,9 +600,14 @@ where
                     .next_element_seed(DeserializeColumn::new(self.0.length))?
                     .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
-                let mut components =
-                    Vec::with_capacity(unsafe { self.0.identifier.iter() }.filter(|b| *b).count());
-                let result = unsafe {
+                let mut components = Vec::with_capacity(
+                    // SAFETY: The identifier here will outlive the derived `Iter`.
+                    unsafe { self.0.identifier.iter() }.filter(|b| *b).count(),
+                );
+                let result =
+                    // SAFETY: The `R` over which `self.0.identifier` is generic is the same `R` on
+                    // which this function is being called. 
+                    unsafe {
                     R::deserialize_components_by_column(
                         &mut components,
                         self.0.length,
@@ -551,13 +617,23 @@ where
                 };
                 if let Err(error) = result {
                     // Free columns, since they are invalid and must be dropped.
-                    drop(unsafe {
-                        Vec::from_raw_parts(
-                            entity_identifiers.0,
-                            self.0.length,
-                            entity_identifiers.1,
-                        )
-                    });
+                    drop(
+                        // SAFETY: `entity_identifiers` are the raw parts for a valid
+                        // `Vec<entity::Identifier>` of length `self.0.length`.
+                        unsafe {
+                            Vec::from_raw_parts(
+                                entity_identifiers.0,
+                                self.0.length,
+                                entity_identifiers.1,
+                            )
+                        },
+                    );
+                    // SAFETY: All elements in `components` are raw parts for valid `Vec<C>`s for
+                    // each component `C` identified by `self.0.identifier` (although there may not
+                    // necessarily be the same number of elements as there are components, which is
+                    // allowed in the safety contract). The registry `R` over which
+                    // `self.0.identifier` is generic is the same `R` on which this function is
+                    // called.
                     unsafe {
                         R::try_free_components(
                             &components,
@@ -569,18 +645,24 @@ where
                     return Err(error);
                 }
 
-                Ok(unsafe {
-                    Archetype::from_raw_parts(
-                        self.0.identifier,
-                        entity_identifiers,
-                        components,
-                        self.0.length,
-                    )
-                })
+                Ok(
+                    // SAFETY: `entity_identifiers` and `components` both contain the raw parts for
+                    // valid `Vec`s of length `self.0.length` for the entity identifiers and
+                    // components identified by `self.0.identifier`.
+                    unsafe {
+                        Archetype::from_raw_parts(
+                            self.0.identifier,
+                            entity_identifiers,
+                            components,
+                            self.0.length,
+                        )
+                    },
+                )
             }
         }
 
         deserializer.deserialize_tuple(
+            // SAFETY: The identifier here will outlive the derived `Iter`.
             unsafe { self.identifier.iter() }.filter(|b| *b).count() + 1,
             DeserializeColumnsVisitor(self),
         )

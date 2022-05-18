@@ -14,6 +14,18 @@ use hashbrown::HashMap;
 pub trait ViewSeal<'a>: Claim {
     type Result: Iterator;
 
+    /// # Safety
+    /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
+    /// for components `C`. Each of those components `C` must have an entry in `component_map`,
+    /// paired with the correct index corresponding to that component's entry in `columns`.
+    ///
+    /// `entity_identifiers` must contain the raw parts for a valid `Vec<entity::Identifier` of
+    /// size `length`.
+    ///
+    /// `component_map` must contain an entry for every component `C` that is viewed by this
+    /// `View`, and that entry must contain the index for the column of type `C` in `columns`. Note
+    /// that it is not required for optionally viewed components to be contained in the
+    /// `component_map`.
     unsafe fn view(
         columns: &[(*mut u8, usize)],
         entity_identifiers: (*mut entity::Identifier, usize),
@@ -36,13 +48,19 @@ where
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
-        slice::from_raw_parts::<'a, C>(
-            columns
-                .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
-                .0
-                .cast::<C>(),
-            length,
-        )
+        // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of size
+        // `length`. Since `component_map` contains an entry for the given component `C`'s entry in
+        // `columns`, then the column obtained here can be interpreted as a slice of type `C` of
+        // size `length`.
+        unsafe {
+            slice::from_raw_parts::<'a, C>(
+                columns
+                    .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
+                    .0
+                    .cast::<C>(),
+                length,
+            )
+        }
         .iter()
     }
 
@@ -63,13 +81,19 @@ where
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
-        slice::from_raw_parts_mut::<'a, C>(
-            columns
-                .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
-                .0
-                .cast::<C>(),
-            length,
-        )
+        // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of size
+        // `length`. Since `component_map` contains an entry for the given component `C`'s entry in
+        // `columns`, then the column obtained here can be interpreted as a slice of type `C` of
+        // size `length`.
+        unsafe {
+            slice::from_raw_parts_mut::<'a, C>(
+                columns
+                    .get_unchecked(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
+                    .0
+                    .cast::<C>(),
+                length,
+            )
+        }
         .iter_mut()
     }
 
@@ -100,9 +124,15 @@ where
     ) -> Self::Result {
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
-                slice::from_raw_parts(columns.get_unchecked(*index).0.cast::<C>(), length)
-                    .iter()
-                    .map(wrap_some),
+                // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of
+                // size `length`. Since `component_map` contains an entry for the given component
+                // `C`'s entry in `columns`, then the column obtained here can be interpreted as a
+                // slice of type `C` of size `length`.
+                unsafe {
+                    slice::from_raw_parts(columns.get_unchecked(*index).0.cast::<C>(), length)
+                }
+                .iter()
+                .map(wrap_some),
             ),
             None => Either::Left(iter::repeat(None).take(length)),
         }
@@ -134,9 +164,15 @@ where
 
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
-                slice::from_raw_parts_mut(columns.get_unchecked(*index).0.cast::<C>(), length)
-                    .iter_mut()
-                    .map(wrap_some),
+                // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of
+                // size `length`. Since `component_map` contains an entry for the given component
+                // `C`'s entry in `columns`, then the column obtained here can be interpreted as a
+                // slice of type `C` of size `length`.
+                unsafe {
+                    slice::from_raw_parts_mut(columns.get_unchecked(*index).0.cast::<C>(), length)
+                }
+                .iter_mut()
+                .map(wrap_some),
             ),
             None => Either::Left(iter::repeat_with(none as fn() -> Option<&'a mut C>).take(length)),
         }
@@ -156,7 +192,9 @@ impl<'a> ViewSeal<'a> for entity::Identifier {
         length: usize,
         _component_map: &HashMap<TypeId, usize>,
     ) -> Self::Result {
-        slice::from_raw_parts_mut::<'a, Self>(entity_identifiers.0, length)
+        // SAFETY: `entity_identifiers` is guaranteed to contain the raw parts for a valid
+        // `Vec<entity::Identifier>` of size `length`.
+        unsafe { slice::from_raw_parts_mut::<'a, Self>(entity_identifiers.0, length) }
             .iter()
             .copied()
     }
@@ -167,6 +205,18 @@ impl<'a> ViewSeal<'a> for entity::Identifier {
 pub trait ViewsSeal<'a>: Claim {
     type Results: Iterator;
 
+    /// # Safety
+    /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
+    /// for components `C`. Each of those components `C` must have an entry in `component_map`,
+    /// paired with the correct index corresponding to that component's entry in `columns`.
+    ///
+    /// `entity_identifiers` must contain the raw parts for a valid `Vec<entity::Identifier` of
+    /// size `length`.
+    ///
+    /// `component_map` must contain an entry for every component `C` that is viewed by this
+    /// `Views`, and that entry must contain the index for the column of type `C` in `columns`. Note
+    /// that it is not required for optionally viewed components to be contained in the
+    /// `component_map`.
     unsafe fn view(
         columns: &[(*mut u8, usize)],
         entity_identifiers: (*mut entity::Identifier, usize),
@@ -205,12 +255,16 @@ where
         length: usize,
         component_map: &HashMap<TypeId, usize>,
     ) -> Self::Results {
-        V::view(columns, entity_identifiers, length, component_map).zip(W::view(
-            columns,
-            entity_identifiers,
-            length,
-            component_map,
-        ))
+        // SAFETY: The safety guarantees of this method are the exact what are required by the
+        // safety guarantees of both `V::view()` and `W::view()`.
+        unsafe {
+            V::view(columns, entity_identifiers, length, component_map).zip(W::view(
+                columns,
+                entity_identifiers,
+                length,
+                component_map,
+            ))
+        }
     }
 
     fn assert_claims(buffer: &mut AssertionBuffer) {

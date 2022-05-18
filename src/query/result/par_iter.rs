@@ -219,9 +219,15 @@ where
     type Result = C::Result;
 
     fn consume(self, archetype: &'a mut Archetype<R>) -> Self {
-        if unsafe { And::<V, F>::filter(archetype.identifier().as_slice(), self.component_map) } {
+        if
+        // SAFETY: `self.component_map` contains an entry for each `TypeId<C>` per component `C` in
+        // the registry `R`.
+        unsafe { And::<V, F>::filter(archetype.identifier(), self.component_map) } {
             let consumer = self.base.split_off_left();
-            let result = archetype.par_view::<V>().drive_unindexed(consumer);
+            let result =
+                // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`
+                // since the `filter` function in the if-statement returned `true`.
+                unsafe { archetype.par_view::<V>() }.drive_unindexed(consumer);
 
             let previous = match self.previous {
                 None => Some(result),

@@ -136,12 +136,13 @@ where
     /// ```
     ///
     /// [`Entities`]: crate::entities::Entities
-    /// [`entities!]: crate::entities!
+    /// [`entities!`]: crate::entities!
     ///
     /// # Panics
     /// Panics if the columns are not all the same length.
     pub fn new(entities: E) -> Self {
         assert!(entities.check_len());
+        // SAFETY: We just guaranteed the lengths of all columns are equal.
         unsafe { Self::new_unchecked(entities) }
     }
 
@@ -166,7 +167,7 @@ where
     /// let batch = unsafe { Batch::new_unchecked((vec![42; 10], (vec![true; 10], entities::Null))) };
     /// ```
     /// [`Entities`]: crate::entities::Entities
-    /// [`entities!]: crate::entities!
+    /// [`entities!`]: crate::entities!
     pub unsafe fn new_unchecked(entities: E) -> Self {
         Self {
             len: entities.component_len(),
@@ -232,6 +233,7 @@ where
 #[macro_export]
 macro_rules! entities {
     (($component:expr $(,$components:expr)* $(,)?); $n:expr) => {
+        // SAFETY: Each `Vec` created here will be of length `$n`.
         unsafe {
             $crate::entities::Batch::new_unchecked(
                 ($crate::reexports::vec![$component; $n], $crate::entities!(@cloned ($($components),*); $n))
@@ -239,6 +241,8 @@ macro_rules! entities {
         }
     };
     ($(($($components:expr),*)),+ $(,)?) => {
+        // SAFETY: During transposition, each column is guaranteed to have an equal number of
+        // components.
         unsafe {
             $crate::entities::Batch::new_unchecked(
                 $crate::entities!(@transpose [] $(($($components),*)),+)
@@ -246,11 +250,13 @@ macro_rules! entities {
         }
     };
     ((); $n:expr) => {
+        // SAFETY: There are no columns to check.
         unsafe {
             $crate::entities::Batch::new_unchecked($crate::entities::Null)
         }
     };
     () => {
+        // SAFETY: There are no columns to check.
         unsafe {
             $crate::entities::Batch::new_unchecked($crate::entities::Null)
         }
