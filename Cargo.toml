@@ -2,7 +2,7 @@
 name = "brood"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.58.0"
+rust-version = "1.60.0"
 
 [package.metadata.docs.rs]
 # To build locally:
