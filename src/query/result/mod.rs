@@ -44,11 +44,11 @@
 //! [`World`]: crate::world::World
 
 mod iter;
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 mod par_iter;
 
 pub use iter::Iter;
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 pub use par_iter::ParIter;
 
 use crate::{doc, hlist::define_null};

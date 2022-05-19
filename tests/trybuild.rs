@@ -18,6 +18,6 @@ trybuild_test!(entities);
 trybuild_test!(entity);
 trybuild_test!(registry);
 trybuild_test!(result);
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 trybuild_test!(stages);
 trybuild_test!(views);

@@ -4,13 +4,13 @@ mod impl_eq;
 #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
 mod impl_serde;
 mod iter;
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 mod par_iter;
 
 #[cfg(feature = "serde")]
 pub(crate) use impl_serde::DeserializeArchetypes;
 pub(crate) use iter::IterMut;
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 pub(crate) use par_iter::ParIterMut;
 
 use crate::{archetype, archetype::Archetype, entity, registry::Registry};
