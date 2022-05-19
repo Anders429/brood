@@ -49,7 +49,7 @@ use crate::{
 /// [`run`]: crate::system::ParSystem::run()
 /// [`System`]: crate::system::System
 /// [`World`]: crate::world::World
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub trait ParSystem<'a> {
     type Filter: Filter;
     type Views: ParViews<'a>;

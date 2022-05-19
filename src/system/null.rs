@@ -1,4 +1,4 @@
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 use crate::system::ParSystem;
 use crate::{
     query::{filter, result, view},
@@ -38,7 +38,7 @@ impl<'a> System<'a> for Null {
     }
 }
 
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 impl<'a> ParSystem<'a> for Null {
     type Filter = filter::None;
     type Views = view::Null;
