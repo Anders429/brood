@@ -45,12 +45,12 @@
 //! [`World`]: crate::world::World.
 
 mod assertion_buffer;
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 mod par;
 
 pub(crate) mod seal;
 
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 pub use par::{ParView, ParViews};
 
 pub(crate) use assertion_buffer::AssertionBuffer;

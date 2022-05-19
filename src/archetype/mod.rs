@@ -12,7 +12,7 @@ pub(crate) use identifier::{Identifier, IdentifierRef};
 #[cfg(feature = "serde")]
 pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
 
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 use crate::query::view::ParViews;
 use crate::{
     component::Component,
@@ -245,8 +245,8 @@ where
 
     /// # Safety
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
-    #[cfg(feature = "parallel")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub(crate) unsafe fn par_view<'a, V>(&mut self) -> V::ParResults
     where
         V: ParViews<'a>,
