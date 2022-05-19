@@ -24,5 +24,4 @@ serde_test = "1.0.133"
 trybuild = "1.0.61"
 
 [features]
-# TODO: Rename this to "rayon" when namespaced dependencies are stabilized in 1.60.0.
-parallel = ["rayon", "hashbrown/rayon"]
+rayon = ["dep:rayon", "hashbrown/rayon"]
