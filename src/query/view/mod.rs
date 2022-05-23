@@ -184,7 +184,7 @@ doc::non_root_macro! {
     /// [`World`]: crate::world::World
     macro_rules! views {
         ($view:ty $(,$views:ty)* $(,)?) => (
-            ($view, $crate::views!($($views,)*))
+            ($view, $crate::query::views!($($views,)*))
         );
         () => (
             $crate::query::view::Null

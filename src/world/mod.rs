@@ -669,3 +669,36 @@ where
         self.len() == 0
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        entity,
+        query::{filter, result, views},
+        registry, World,
+    };
+    use claim::assert_some_eq;
+
+    #[test]
+    fn insert() {
+        #[derive(Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let mut world = World::<Registry>::new();
+
+        let _entity_identifier = world.insert(entity!(Foo(42), Bar(false)));
+
+        let mut foo = None;
+        let mut bar = None;
+        for result!(foo_result, bar_result) in world.query::<views!(&Foo, &Bar), filter::None>() {
+            assert!(foo.is_none());
+            assert!(bar.is_none());
+            foo = Some(foo_result);
+            bar = Some(bar_result);
+        }
+        assert_some_eq!(foo, &Foo(42));
+        assert_some_eq!(bar, &Bar(false));
+    }
+}
