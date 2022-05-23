@@ -706,8 +706,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        entities,
-        entity,
+        entities, entity,
         query::{filter, result, views},
         registry, World,
     };
