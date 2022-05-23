@@ -706,10 +706,12 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
+        entities,
         entity,
         query::{filter, result, views},
         registry, World,
     };
+    use alloc::{vec, vec::Vec};
     use claim::assert_some_eq;
 
     #[test]
@@ -733,5 +735,26 @@ mod tests {
         }
         assert_some_eq!(foo, &Foo(42));
         assert_some_eq!(bar, &Bar(false));
+    }
+
+    #[test]
+    fn extend() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Clone, Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let mut world = World::<Registry>::new();
+
+        let _entity_identifiers = world.extend(entities!((Foo(42), Bar(false)); 2));
+
+        let mut foos = Vec::new();
+        let mut bars = Vec::new();
+        for result!(foo, bar) in world.query::<views!(&Foo, &Bar), filter::None>() {
+            foos.push(foo);
+            bars.push(bar);
+        }
+        assert_eq!(foos, vec![&Foo(42); 2]);
+        assert_eq!(bars, vec![&Bar(false); 2]);
     }
 }
