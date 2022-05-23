@@ -14,7 +14,11 @@ where
 
         self.iter().all(|archetype| {
             other
-                .get(unsafe { archetype.identifier() })
+                .get(
+                    // SAFETY: The `IdentifierRef` obtained here does not live longer than the
+                    // `archetype`.
+                    unsafe { archetype.identifier() },
+                )
                 .map_or(false, |other_archetype| archetype == other_archetype)
         })
     }

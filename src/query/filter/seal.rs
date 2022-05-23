@@ -1,4 +1,5 @@
 use crate::{
+    archetype,
     component::Component,
     entity,
     query::{
@@ -6,16 +7,33 @@ use crate::{
         view,
         view::{View, Views},
     },
+    registry::Registry,
 };
 use core::any::TypeId;
 use hashbrown::HashMap;
 
 pub trait Seal {
-    unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool;
+    /// # Safety
+    /// `component_map` must contain an entry for the `TypeId<C>` of each component `C` in the
+    /// registry `R` corresponding to the index of that component in the archetype identifier.
+    ///
+    /// Note that the component(s) being viewed do not necessarily need to be in the registry `R`.
+    unsafe fn filter<R>(
+        identifier: archetype::IdentifierRef<R>,
+        component_map: &HashMap<TypeId, usize>,
+    ) -> bool
+    where
+        R: Registry;
 }
 
 impl Seal for None {
-    unsafe fn filter(_key: &[u8], _component_map: &HashMap<TypeId, usize>) -> bool {
+    unsafe fn filter<R>(
+        _identifier: archetype::IdentifierRef<R>,
+        _component_map: &HashMap<TypeId, usize>,
+    ) -> bool
+    where
+        R: Registry,
+    {
         true
     }
 }
@@ -24,9 +42,17 @@ impl<C> Seal for Has<C>
 where
     C: Component,
 {
-    unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
+    unsafe fn filter<R>(
+        identifier: archetype::IdentifierRef<R>,
+        component_map: &HashMap<TypeId, usize>,
+    ) -> bool
+    where
+        R: Registry,
+    {
         match component_map.get(&TypeId::of::<C>()) {
-            Some(index) => key.get_unchecked(index / 8) & (1 << (index % 8)) != 0,
+            Some(&index) =>
+            // SAFETY: `index` is guaranteed to correspond to a valid component in `identifier`.
+            unsafe { identifier.get_unchecked(index) },
             Option::None => false,
         }
     }
@@ -36,8 +62,16 @@ impl<F> Seal for Not<F>
 where
     F: Filter,
 {
-    unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
-        !F::filter(key, component_map)
+    unsafe fn filter<R>(
+        identifier: archetype::IdentifierRef<R>,
+        component_map: &HashMap<TypeId, usize>,
+    ) -> bool
+    where
+        R: Registry,
+    {
+        // SAFETY: The safety guarantees for this call are already upheld by the safety contract
+        // of this method.
+        unsafe { !F::filter(identifier, component_map) }
     }
 }
 
@@ -46,8 +80,16 @@ where
     F1: Filter,
     F2: Filter,
 {
-    unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
-        F1::filter(key, component_map) && F2::filter(key, component_map)
+    unsafe fn filter<R>(
+        identifier: archetype::IdentifierRef<R>,
+        component_map: &HashMap<TypeId, usize>,
+    ) -> bool
+    where
+        R: Registry,
+    {
+        // SAFETY: The safety guarantees for these calls are already upheld by the safety contract
+        // of this method.
+        unsafe { F1::filter(identifier, component_map) && F2::filter(identifier, component_map) }
     }
 }
 
@@ -56,8 +98,16 @@ where
     F1: Filter,
     F2: Filter,
 {
-    unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
-        F1::filter(key, component_map) || F2::filter(key, component_map)
+    unsafe fn filter<R>(
+        identifier: archetype::IdentifierRef<R>,
+        component_map: &HashMap<TypeId, usize>,
+    ) -> bool
+    where
+        R: Registry,
+    {
+        // SAFETY: The safety guarantees for these calls are already upheld by the safety contract
+        // of this method.
+        unsafe { F1::filter(identifier, component_map) || F2::filter(identifier, component_map) }
     }
 }
 
@@ -65,8 +115,16 @@ impl<C> Seal for &C
 where
     C: Component,
 {
-    unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
-        Has::<C>::filter(key, component_map)
+    unsafe fn filter<R>(
+        identifier: archetype::IdentifierRef<R>,
+        component_map: &HashMap<TypeId, usize>,
+    ) -> bool
+    where
+        R: Registry,
+    {
+        // SAFETY: The safety guarantees for this call are already upheld by the safety contract
+        // of this method.
+        unsafe { Has::<C>::filter(identifier, component_map) }
     }
 }
 
@@ -74,8 +132,16 @@ impl<C> Seal for &mut C
 where
     C: Component,
 {
-    unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
-        Has::<C>::filter(key, component_map)
+    unsafe fn filter<R>(
+        identifier: archetype::IdentifierRef<R>,
+        component_map: &HashMap<TypeId, usize>,
+    ) -> bool
+    where
+        R: Registry,
+    {
+        // SAFETY: The safety guarantees for this call are already upheld by the safety contract
+        // of this method.
+        unsafe { Has::<C>::filter(identifier, component_map) }
     }
 }
 
@@ -83,7 +149,13 @@ impl<C> Seal for Option<&C>
 where
     C: Component,
 {
-    unsafe fn filter(_key: &[u8], _component_map: &HashMap<TypeId, usize>) -> bool {
+    unsafe fn filter<R>(
+        _identifier: archetype::IdentifierRef<R>,
+        _component_map: &HashMap<TypeId, usize>,
+    ) -> bool
+    where
+        R: Registry,
+    {
         true
     }
 }
@@ -92,19 +164,37 @@ impl<C> Seal for Option<&mut C>
 where
     C: Component,
 {
-    unsafe fn filter(_key: &[u8], _component_map: &HashMap<TypeId, usize>) -> bool {
+    unsafe fn filter<R>(
+        _identifier: archetype::IdentifierRef<R>,
+        _component_map: &HashMap<TypeId, usize>,
+    ) -> bool
+    where
+        R: Registry,
+    {
         true
     }
 }
 
 impl Seal for entity::Identifier {
-    unsafe fn filter(_key: &[u8], _component_map: &HashMap<TypeId, usize>) -> bool {
+    unsafe fn filter<R>(
+        _identifier: archetype::IdentifierRef<R>,
+        _component_map: &HashMap<TypeId, usize>,
+    ) -> bool
+    where
+        R: Registry,
+    {
         true
     }
 }
 
 impl Seal for view::Null {
-    unsafe fn filter(_key: &[u8], _component_map: &HashMap<TypeId, usize>) -> bool {
+    unsafe fn filter<R>(
+        _identifier: archetype::IdentifierRef<R>,
+        _component_map: &HashMap<TypeId, usize>,
+    ) -> bool
+    where
+        R: Registry,
+    {
         true
     }
 }
@@ -114,7 +204,15 @@ where
     V: View<'a>,
     W: Views<'a>,
 {
-    unsafe fn filter(key: &[u8], component_map: &HashMap<TypeId, usize>) -> bool {
-        And::<V, W>::filter(key, component_map)
+    unsafe fn filter<R>(
+        identifier: archetype::IdentifierRef<R>,
+        component_map: &HashMap<TypeId, usize>,
+    ) -> bool
+    where
+        R: Registry,
+    {
+        // SAFETY: The safety guarantees for this call are already upheld by the safety contract
+        // of this method.
+        unsafe { And::<V, W>::filter(identifier, component_map) }
     }
 }

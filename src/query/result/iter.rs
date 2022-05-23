@@ -100,10 +100,17 @@ where
                     return result;
                 }
             }
-            let archetype = self.archetypes_iter.find(|archetype| unsafe {
-                And::<V, F>::filter(archetype.identifier().as_slice(), self.component_map)
+            let archetype = self.archetypes_iter.find(|archetype| {
+                // SAFETY: `self.component_map` contains an entry for each `TypeId<C>` per
+                // component `C` in the registry `R`.
+                unsafe { And::<V, F>::filter(archetype.identifier(), self.component_map) }
             })?;
-            self.current_results_iter = Some(archetype.view::<V>());
+            self.current_results_iter = Some(
+                // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`,
+                // since the archetype was not removed by the `find()` method above which filters
+                // out archetypes that do not contain the viewed components.
+                unsafe { archetype.view::<V>() },
+            );
         }
     }
 
@@ -129,9 +136,13 @@ where
         }
 
         self.archetypes_iter.fold(init, |acc, archetype| {
-            if unsafe { And::<V, F>::filter(archetype.identifier().as_slice(), self.component_map) }
-            {
-                archetype.view::<V>().fold(acc, &mut fold)
+            if
+            // SAFETY: `self.component_map` contains an entry for each `TypeId<C>` per component
+            // `C` in the registry `R`.
+            unsafe { And::<V, F>::filter(archetype.identifier(), self.component_map) } {
+                // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`
+                // since the `filter` function in the if-statement returned `true`.
+                unsafe { archetype.view::<V>() }.fold(acc, &mut fold)
             } else {
                 acc
             }

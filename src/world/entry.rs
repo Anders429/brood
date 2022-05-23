@@ -71,8 +71,17 @@ where
         C: Component,
     {
         let component_index = *self.world.component_map.get(&TypeId::of::<C>()).unwrap();
-        if unsafe { self.location.identifier.get_unchecked(component_index) } {
+        if
+        // SAFETY: The `component_index` obtained from `self.world.component_map` is guaranteed to
+        // be a valid index into `self.location.identifier`.
+        unsafe { self.location.identifier.get_unchecked(component_index) } {
             // The component already exists within this entity. Replace it.
+            // SAFETY: An archetype with this identifier is guaranteed to exist, since there is an
+            // allocated location for it in the entity allocator.
+            //
+            // `C` is verified by the above if-statement to be contained within the identified
+            // archetype. Also, `self.location.index` is invariantly guaranteed to be a valid index
+            // within the archetype.
             unsafe {
                 self.world
                     .archetypes
@@ -81,7 +90,15 @@ where
             }
         } else {
             // The component needs to be added to the entity.
-            let (entity_identifier, current_component_bytes) = unsafe {
+            let (entity_identifier, current_component_bytes) =
+                // SAFETY: An archetype with this identifier is guaranteed to exist, since there is an
+                // allocated location for it in the entity allocator.
+                //
+                // `self.world.entity_allocator` contains entries for entities stored in
+                // `self.world.archetypes`. As such, `self.location.index` is guaranteed to be a
+                // valid index to a row within this archetype, since they share the same archetype
+                // identifier.
+                unsafe {
                 self.world
                     .archetypes
                     .get_unchecked_mut(self.location.identifier)
@@ -90,9 +107,13 @@ where
             // Create new identifier buffer.
             let mut raw_identifier_buffer = self.location.identifier.as_vec();
             // Set the component's bit.
+            // SAFETY: `component_index` is guaranteed to be a valid index to a bit in
+            // `raw_identifier_buffer`.
             *unsafe { raw_identifier_buffer.get_unchecked_mut(component_index / 8) } |=
                 1 << (component_index % 8);
             let identifier_buffer =
+                // SAFETY: Since `raw_identifier_buffer` was obtained from a valid identifier, it
+                // is of the proper length (which is `(R::LEN + 7) / 8`).
                 unsafe { archetype::Identifier::<R>::new(raw_identifier_buffer) };
 
             // Insert to the corresponding archetype using the bytes and the new component.
@@ -100,7 +121,15 @@ where
                 .world
                 .archetypes
                 .get_mut_or_insert_new(identifier_buffer);
-            let index = unsafe {
+            let index =
+                // SAFETY: `current_component_bytes` is guaranteed to be an allcoated buffer of
+                // packed, properly initialized components that were contained in the old
+                // archetype's row, corresponding to the components identified by the archetype's
+                // identifier.
+                //
+                // Also, the registry `R` is invariantly guaranteed by the invariants in `World` to
+                // not contain any duplicates.
+                unsafe {
                 archetype.push_from_buffer_and_component(
                     entity_identifier,
                     current_component_bytes.as_ptr(),
@@ -109,6 +138,8 @@ where
             };
 
             // Update the location.
+            // SAFETY: `entity_identifier` is guaranteed at creation of this `Entry` to be
+            // contained in `self.world.entity_allocator`.
             unsafe {
                 self.world.entity_allocator.modify_location_unchecked(
                     entity_identifier,
@@ -145,9 +176,20 @@ where
         C: Component,
     {
         let component_index = *self.world.component_map.get(&TypeId::of::<C>()).unwrap();
-        if unsafe { self.location.identifier.get_unchecked(component_index) } {
+        if
+        // SAFETY: The `component_index` obtained from `self.world.component_map` is guaranteed to
+        // be a valid index into `self.location.identifier`.
+        unsafe { self.location.identifier.get_unchecked(component_index) } {
             // The component exists and needs to be removed.
-            let (entity_identifier, current_component_bytes) = unsafe {
+            let (entity_identifier, current_component_bytes) =
+                // SAFETY: An archetype with this identifier is guaranteed to exist, since there is an
+                // allocated location for it in the entity allocator.
+                //
+                // `self.world.entity_allocator` contains entries for entities stored in
+                // `self.world.archetypes`. As such, `self.location.index` is guaranteed to be a
+                // valid index to a row within this archetype, since they share the same archetype
+                // identifier.
+                unsafe {
                 self.world
                     .archetypes
                     .get_unchecked_mut(self.location.identifier)
@@ -156,9 +198,13 @@ where
             // Create new identifier buffer.
             let mut raw_identifier_buffer = self.location.identifier.as_vec();
             // Unset the component's bit.
+            // SAFETY: `component_index` is guaranteed to be a valid index to a bit in
+            // `raw_identifier_buffer`.
             *unsafe { raw_identifier_buffer.get_unchecked_mut(component_index / 8) } ^=
                 1 << (component_index % 8);
             let identifier_buffer =
+                // SAFETY: Since `raw_identifier_buffer` was obtained from a valid identifier, it
+                // is of the proper length (which is `(R::LEN + 7) / 8`).
                 unsafe { archetype::Identifier::<R>::new(raw_identifier_buffer) };
 
             // Insert to the corresponding archetype using the bytes, skipping the removed
@@ -167,7 +213,15 @@ where
                 .world
                 .archetypes
                 .get_mut_or_insert_new(identifier_buffer);
-            let index = unsafe {
+            let index =
+                // SAFETY: `current_component_bytes` is guaranteed to be an allcoated buffer of
+                // packed, properly initialized components that were contained in the old
+                // archetype's row, corresponding to the components identified by the archetype's
+                // identifier. This includes the component `C` which is being removed.
+                //
+                // Also, the registry `R` is invariantly guaranteed by the invariants in `World` to
+                // not contain any duplicates.
+                unsafe {
                 archetype.push_from_buffer_skipping_component::<C>(
                     entity_identifier,
                     current_component_bytes.as_ptr(),
@@ -175,6 +229,8 @@ where
             };
 
             // Update the location.
+            // SAFETY: `entity_identifier` is guaranteed at creation of this `Entry` to be
+            // contained in `self.world.entity_allocator`.
             unsafe {
                 self.world.entity_allocator.modify_location_unchecked(
                     entity_identifier,

@@ -18,6 +18,7 @@ where
     {
         let mut tuple = serializer.serialize_tuple((R::LEN + 7) / 8)?;
 
+        // SAFETY: The slice returned here is guaranteed to be outlived by `self`.
         for byte in unsafe { self.as_slice() } {
             tuple.serialize_element(byte)?;
         }
@@ -65,11 +66,11 @@ where
                 }
 
                 // Check that trailing bits are not set.
+                // SAFETY: `buffer` is guaranteed to have `(R::LEN + 7) / 8` elements, so this will
+                // always be within the bounds of `buffer.`
                 let byte = unsafe { buffer.get_unchecked((R::LEN + 7) / 8 - 1) };
                 let bit = R::LEN % 8;
-                if bit != 0
-                    && unsafe { buffer.get_unchecked((R::LEN + 7) / 8 - 1) } & (255 << bit) != 0
-                {
+                if bit != 0 && byte & (255 << bit) != 0 {
                     return Err(de::Error::invalid_value(
                         Unexpected::Unsigned(u64::from(*byte)),
                         &self,

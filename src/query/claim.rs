@@ -50,7 +50,7 @@ impl Claim for view::Null {
     fn claim(_mutable_claims: &mut HashSet<TypeId>, _immutable_claims: &mut HashSet<TypeId>) {}
 }
 
-impl<'a, V, W> Claim for (V, W)
+impl<V, W> Claim for (V, W)
 where
     V: Claim,
     W: Claim,

@@ -21,7 +21,7 @@ serde = {version = "1.0.133", default-features = false, features = ["alloc"], op
 claim = "0.5.0"
 rustversion = "1.0.6"
 serde_test = "1.0.133"
-trybuild = "1.0.56"
+trybuild = "1.0.61"
 
 [features]
 # TODO: Rename this to "rayon" when namespaced dependencies are stabilized in 1.60.0.
