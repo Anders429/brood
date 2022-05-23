@@ -757,4 +757,33 @@ mod tests {
         assert_eq!(foos, vec![&Foo(42); 2]);
         assert_eq!(bars, vec![&Bar(false); 2]);
     }
+
+    #[test]
+    fn contains() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Clone, Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(Foo(42), Bar(false)));
+
+        assert!(world.contains(entity_identifier));
+    }
+
+    #[test]
+    fn not_contains() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Clone, Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(Foo(42), Bar(false)));
+        world.remove(entity_identifier);
+
+        assert!(!world.contains(entity_identifier));
+    }
 }
