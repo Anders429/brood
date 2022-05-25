@@ -785,4 +785,100 @@ mod tests {
 
         assert!(!world.contains(entity_identifier));
     }
+
+    #[test]
+    fn len_new() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Clone, Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let world = World::<Registry>::new();
+
+        assert_eq!(world.len(), 0);
+    }
+
+    #[test]
+    fn len_insert() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Clone, Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(Foo(42), Bar(false)));
+
+        assert_eq!(world.len(), 1);
+    }
+
+    #[test]
+    fn len_extend() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Clone, Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let mut world = World::<Registry>::new();
+
+        world.extend(entities!((Foo(42), Bar(false)); 10));
+
+        assert_eq!(world.len(), 10);
+    }
+
+    #[test]
+    fn len_remove() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Clone, Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(Foo(42), Bar(false)));
+        world.remove(entity_identifier);
+
+        assert_eq!(world.len(), 0);
+    }
+
+    #[test]
+    fn len_clear() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Clone, Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let mut world = World::<Registry>::new();
+
+        world.extend(entities!((Foo(42), Bar(false)); 10));
+        world.clear();
+
+        assert_eq!(world.len(), 0);
+    }
+
+    #[test]
+    fn is_empty() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Clone, Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let world = World::<Registry>::new();
+
+        assert!(world.is_empty());
+    }
+
+    #[test]
+    fn is_not_empty() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Clone, Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(Foo(42), Bar(false)));
+
+        assert!(!world.is_empty());
+    }
 }
