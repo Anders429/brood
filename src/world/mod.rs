@@ -623,9 +623,9 @@ where
             unsafe {
                 self.entity_allocator.free_unchecked(entity_identifier);
             }
-        }
 
-        self.len -= 1;
+            self.len -= 1;
+        }
     }
 
     /// Removes all entities.
@@ -784,6 +784,71 @@ mod tests {
         world.remove(entity_identifier);
 
         assert!(!world.contains(entity_identifier));
+    }
+
+    #[test]
+    fn remove() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Clone, Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(Foo(42), Bar(false)));
+        world.remove(entity_identifier);
+
+        assert!(!world.contains(entity_identifier));
+        assert_eq!(world.len(), 0);
+    }
+
+    #[test]
+    fn remove_not_present() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Clone, Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(Foo(42), Bar(false)));
+        world.remove(entity_identifier);
+        world.remove(entity_identifier);
+
+        assert!(!world.contains(entity_identifier));
+        assert_eq!(world.len(), 0);
+    }
+
+    #[test]
+    fn clear() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Clone, Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let mut world = World::<Registry>::new();
+
+        let entity_identifiers = world.extend(entities!((Foo(42), Bar(false)); 10));
+        world.clear();
+
+        for entity_identifier in entity_identifiers {
+            assert!(!world.contains(entity_identifier));
+        }
+        assert_eq!(world.len(), 0);
+    }
+
+    #[test]
+    fn clear_empty() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Foo(u32);
+        #[derive(Clone, Debug, PartialEq)]
+        struct Bar(bool);
+        type Registry = registry!(Foo, Bar);
+        let mut world = World::<Registry>::new();
+
+        world.clear();
+
+        assert_eq!(world.len(), 0);
     }
 
     #[test]
