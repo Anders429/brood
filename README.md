@@ -1,5 +1,12 @@
 # brood
 
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Anders429/brood/CI)](https://github.com/Anders429/brood/actions)
+[![codecov.io](https://img.shields.io/codecov/c/gh/Anders429/brood)](https://codecov.io/gh/Anders429/brood)
+[![crates.io](https://img.shields.io/crates/v/brood)](https://crates.io/crates/brood)
+[![docs.rs](https://docs.rs/brood/badge.svg)](https://docs.rs/brood)
+[![MSRV](https://img.shields.io/badge/rustc-1.58.0+-yellow.svg)](#minimum-supported-rust-version)
+[![License](https://img.shields.io/crates/l/brood)](#license)
+
 ## Minimum Supported Rust Version
 This crate is guaranteed to compile on stable `rustc 1.58.0` and up.
 
