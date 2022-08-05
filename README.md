@@ -7,6 +7,8 @@
 [![MSRV](https://img.shields.io/badge/rustc-1.58.0+-yellow.svg)](#minimum-supported-rust-version)
 [![License](https://img.shields.io/crates/l/brood)](#license)
 
+A fast and flexible [entity component system](https://en.wikipedia.org/wiki/Entity_component_system) library.
+
 ## Minimum Supported Rust Version
 This crate is guaranteed to compile on stable `rustc 1.58.0` and up.
 
