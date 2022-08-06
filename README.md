@@ -9,6 +9,13 @@
 
 A fast and flexible [entity component system](https://en.wikipedia.org/wiki/Entity_component_system) library.
 
+## Key Features
+- Entities made up of an arbitrary number of components.
+- Built-in support for [`serde`](https://crates.io/crates/serde), providing pain-free serialization and deserialization of `World` containers.
+- Inner- and outer-parallelism using [`rayon`](https://crates.io/crates/rayon).
+- Minimal boilerplate.
+- `no_std` compatible.
+
 ## Minimum Supported Rust Version
 This crate is guaranteed to compile on stable `rustc 1.58.0` and up.
 
