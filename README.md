@@ -9,6 +9,8 @@
 
 A fast and flexible [entity component system](https://en.wikipedia.org/wiki/Entity_component_system) library.
 
+`brood` is built from the ground-up with the main goals of being ergonomic to use while also being as fast as, if not faster than, other popular entity component system (commonly abbreviated as ECS) libraries. `brood` is built with heterogeneous lists to allow for sets of arbitrary numbers of components, meaning there are no limitations on the size of your entities or the scope of your system views. All features you would expect from a standard ECS library are present, including interoperation with the [`serde`](https://crates.io/crates/serde) and [`rayon`](https://crates.io/crates/rayon) libraries for serialization and parallel processing respectively.
+
 ## Key Features
 - Entities made up of an arbitrary number of components.
 - Built-in support for [`serde`](https://crates.io/crates/serde), providing pain-free serialization and deserialization of `World` containers.
