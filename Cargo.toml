@@ -9,6 +9,7 @@ readme = "README.md"
 repository = "https://github.com/Anders429/brood"
 description = "A fast and flexible entity component system library."
 categories = ["data-structures", "game-development", "no-std"]
+keywords = ["ecs", "entity", "component", "system", "gamedev"]
 
 [package.metadata.docs.rs]
 # To build locally:
