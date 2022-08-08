@@ -102,6 +102,52 @@ This system will operate on every entity that contains both the `Position` and `
 There are lots of options for more complicated `System`s, including optional components, custom filters, and post-processing logic. See the documentation for more information.
 
 ### Serialization/Deserialization
+`brood` provides first-class support for serialization and deserialization using [`serde`](https://crates.io/crates/serde). A `World` is (de)serializable as long as every component in the `World`'s `Registry` is (de)serializable.
+
+For example, a `World` can be serialized to [`bincode`](https://crates.io/crates/bincode) (and deserialized from the same) as follows:
+
+``` rust
+use brood::{entity, registry, World};
+
+#[derive(Deserialize, Serialize)]
+struct Position {
+    x: f32,
+    y: f32,
+}
+
+#[derive(Deserialize, Serialize)]
+struct Velocity {
+    x: f32,
+    y: f32,
+}
+
+type Registry = registry!(Position, Velocity);
+
+let mut world = World::<Registry>::new();
+
+// Insert several entities made of different components.
+world.insert(entity!(Position {
+    x: 1.0,
+    y: 1.1,    
+});
+world.insert(entity!(Velocity {
+    x: 0.0,
+    y: 5.0,
+});
+world.insert(entity!(Position {
+    x: 4.2,
+    y: 0.1,
+}, Velocity {
+    x: 1.1,
+    y: 0.4,
+});
+
+let encoded = bincode::serialize(&world).unwrap();
+
+let decoded_world = bincode::deserialize(&encoded).unwrap();
+```
+
+Note that there are two modes for serialization, depending on whether the serializer and deserializer is [human readable](https://docs.rs/serde/latest/serde/trait.Serializer.html#method.is_human_readable). Human readable serialization will serialize entities row-wise, which is slower but easier to read by a human. Non-human readable serialization will serialize entities column-wise, which is much faster but much more difficult to read manually.
 
 ### Parallel Processing
 
