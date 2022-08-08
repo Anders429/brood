@@ -72,6 +72,34 @@ world.insert(entity!(position, velocity));
 Note that entities stored in `world` above can be made up of any subset of the `Registry`'s components, and can be provided in any order.
 
 ### Operating on Entities
+To operate on the entities stored in a `World`, a `System` must be used. `System`s are defined to operate on any entities containing a specified set of components, reading and modifying those components. An example system could be defined and run as follows:
+
+``` rust
+use brood::{query::{filter, result, views}, registry::Registry, system::System};
+
+struct UpdatePosition;
+
+impl<'a> System<'a> for UpdatePosition {
+    type Filter: filter::None;
+    type Views: views!(&'a mut Position, &'a Velocity);
+
+    fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+    where
+        R: Registry + 'a,
+    {
+        for result!(position, velocity) in query_results {
+            position.x += velocity.x;
+            position.y += velocity.y;
+        }
+    }
+}
+
+world.run_system(UpdatePosition);
+```
+
+This system will operate on every entity that contains both the `Position` and `Velocity` components (regardless of what other components they may contain), updating the `Position` component in-place using the value contained in the `Velocity` component.
+
+There are lots of options for more complicated `System`s, including optional components, custom filters, and post-processing logic. See the documentation for more information.
 
 ### Serialization/Deserialization
 
