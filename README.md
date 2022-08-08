@@ -102,7 +102,7 @@ This system will operate on every entity that contains both the `Position` and `
 There are lots of options for more complicated `System`s, including optional components, custom filters, and post-processing logic. See the documentation for more information.
 
 ### Serialization/Deserialization
-`brood` provides first-class support for serialization and deserialization using [`serde`](https://crates.io/crates/serde). A `World` is (de)serializable as long as every component in the `World`'s `Registry` is (de)serializable.
+`brood` provides first-class support for serialization and deserialization using [`serde`](https://crates.io/crates/serde). By enabling the `serde` crate feature, `World` containers and their contained entities can be serialized and deserialized using `serde` `Serializer`s and `Deserializer`s. Note that a `World` is (de)serializable as long as every component in the `World`'s `Registry` is (de)serializable.
 
 For example, a `World` can be serialized to [`bincode`](https://crates.io/crates/bincode) (and deserialized from the same) as follows:
 
