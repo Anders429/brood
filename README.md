@@ -94,7 +94,7 @@ impl<'a> System<'a> for UpdatePosition {
     }
 }
 
-world.run_system(UpdatePosition);
+world.run_system(&mut UpdatePosition);
 ```
 
 This system will operate on every entity that contains both the `Position` and `Velocity` components (regardless of what other components they may contain), updating the `Position` component in-place using the value contained in the `Velocity` component.
@@ -150,10 +150,135 @@ let decoded_world = bincode::deserialize(&encoded).unwrap();
 Note that there are two modes for serialization, depending on whether the serializer and deserializer is [human readable](https://docs.rs/serde/latest/serde/trait.Serializer.html#method.is_human_readable). Human readable serialization will serialize entities row-wise, which is slower but easier to read by a human. Non-human readable serialization will serialize entities column-wise, which is much faster but much more difficult to read manually.
 
 ### Parallel Processing
+`brood` supports parallel processing through [`rayon`](https://crates.io/crates/rayon). By enabling the `rayon` crate feature, operations on a `World` can be parallelized.
 
 #### Operating on Entities in Parallel
+To parallelize system operations on entities (commonly referred to as inner-parallelism), a `ParSystem` can be used instead of a standard `System`. This will allow the `ParSystem`'s operations to be spread across multiple CPUs. For example, a `ParSystem` can be defined as follows:
+
+``` rust
+use brood::{entity, registry, World, system::ParSystem};
+
+struct Position {
+    x: f32,
+    y: f32,
+}
+
+struct Velocity {
+    x: f32,
+    y: f32,
+}
+
+type Registry = registry!(Position, Velocity);
+
+let mut world = World::<Registry>::new();
+
+// Store an entity inside the newly created World.
+let position = Position {
+    x: 3.5,
+    y: 6.2,
+};
+let velocity = Velocity {
+    x: 1.0,
+    y: 2.5,
+};
+world.insert(entity!(position, velocity));
+
+struct UpdatePosition;
+
+impl<'a> ParSystem<'a> for UpdatePosition {
+    type Filter: filter::None;
+    type Views: views!(&'a mut Position, &'a Velocity);
+
+    fn run<R>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, Self::Views>)
+    where
+        R: Registry + 'a,
+    {
+        query_results.for_each(|result!(position, velocity)| {
+            position.x += velocity.x;
+            position.y += velocity.y;
+        });
+    }
+}
+
+world.run_par_system(&mut UpdatePosition);
+```
+
+Defining `ParSystem`s is very similar to defining `System`s. See the documentation for more definition options.
 
 #### Running Systems in Parallel
+Multiple `System`s and `ParSystem`s can be run in parallel as well by defining a `Schedule`. A `Schedule` will automatically divide `System`s into stages which can each be run all at the same time. These stages are designed to ensure they do not violate Rust's borrowing and mutability rules and are completely safe to use.
+
+Define and run a `Schedule` that contains multiple `System`s as follows:
+
+``` rust
+use brood::{entity, registry, World, system::{Schedule, System}};
+
+struct Position {
+    x: f32,
+    y: f32,
+}
+
+struct Velocity {
+    x: f32,
+    y: f32,
+}
+
+struct IsMoving(bool);
+
+type Registry = registry!(Position, Velocity, IsMoving);
+
+let mut world = World::<Registry>::new();
+
+// Store an entity inside the newly created World.
+let position = Position {
+    x: 3.5,
+    y: 6.2,
+};
+let velocity = Velocity {
+    x: 1.0,
+    y: 2.5,
+};
+world.insert(entity!(position, velocity, IsMoving(false)));
+
+struct UpdatePosition;
+
+impl<'a> System<'a> for UpdatePosition {
+    type Filter: filter::None;
+    type Views: views!(&'a mut Position, &'a Velocity);
+
+    fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+    where
+        R: Registry + 'a,
+    {
+        for result!(position, velocity) in query_results {
+            position.x += velocity.x;
+            position.y += velocity.y;
+        }
+    }
+}
+
+struct UpdateIsMoving;
+
+impl<'a> System<'a> for UpdateIsMoving {
+    type Filter: filter::None;
+    type Views: views!(&'a Velocity, &'a mut IsMoving);
+
+    fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+    where
+        R: Registry + 'a,
+    {
+        for result!(velocity, is_moving) in query_results {
+            is_moving.0 = velocity.x != 0.0 || velocity.y != 0.0;
+        }
+    }
+}
+
+let mut schedule = Schedule::builder().system(UpdatePosition).system(UpdateIsMoving).build();
+
+world.run_schedule(&mut schedule);
+```
+
+Note that stages are determined by the `Views` of each `System`. `System`s whose `Views` do not contain conflicting mutable borrows of components are grouped together into a single stage.
 
 ## Minimum Supported Rust Version
 This crate is guaranteed to compile on stable `rustc 1.58.0` and up.
