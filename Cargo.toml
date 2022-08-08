@@ -1,8 +1,15 @@
 [package]
 name = "brood"
 version = "0.1.0"
+authors = ["Anders Evensen"]
 edition = "2021"
 rust-version = "1.58.0"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/Anders429/brood"
+description = "A fast and flexible entity component system library."
+categories = ["data-structures", "game-development", "no-std"]
+keywords = ["ecs", "entity", "component", "system", "gamedev"]
 
 [package.metadata.docs.rs]
 # To build locally:
