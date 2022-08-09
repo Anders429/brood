@@ -171,6 +171,7 @@ where
     {
         self.stages.run(
             // SAFETY: The pointer provided here is unique, being created from a mutable reference.
-            unsafe {SendableWorld::new(world)});
+            unsafe { SendableWorld::new(world) },
+        );
     }
 }
