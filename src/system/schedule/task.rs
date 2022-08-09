@@ -22,15 +22,17 @@ where
             Task::Seq(system) => {
                 // Query world using system.
                 // SAFETY: The `Views` checks were already done when constructing the `Schedule`.
-                let result = unsafe { (*world.0).query_unchecked::<S::Views, S::Filter>() };
+                // Also, the access to the world's components follows Rust's borrowing rules.
+                let result = unsafe { (*world.get()).query_unchecked::<S::Views, S::Filter>() };
                 // Run system using the query result.
                 system.run(result);
             }
             Task::Par(system) => {
                 // Query world using system.
                 // SAFETY: The `ParViews` checks were already done when constructing the
-                // `Schedule`.
-                let result = unsafe { (*world.0).par_query_unchecked::<P::Views, P::Filter>() };
+                // `Schedule`. Also, the access to the world's components follows Rust's borrowing
+                // rules.
+                let result = unsafe { (*world.get()).par_query_unchecked::<P::Views, P::Filter>() };
                 // Run system using the query result.
                 system.run(result);
             }
