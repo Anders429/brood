@@ -91,6 +91,8 @@ where
     }
 }
 
+// SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
+// exclusive.
 unsafe impl<'a, R, F, V> Send for ParIter<'a, R, F, V>
 where
     R: Registry,
@@ -99,6 +101,8 @@ where
 {
 }
 
+// SAFETY: This type is safe to share between threads, as its mutable views are guaranteed to be
+// exclusive.
 unsafe impl<'a, R, F, V> Sync for ParIter<'a, R, F, V>
 where
     R: Registry,
@@ -144,8 +148,12 @@ impl<'a, C, F, V> ResultsConsumer<'a, C, F, V> {
     }
 }
 
+// SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
+// exclusive.
 unsafe impl<C, F, V> Send for ResultsConsumer<'_, C, F, V> {}
 
+// SAFETY: This type is safe to share between threads, as its mutable views are guaranteed to be
+// exclusive.
 unsafe impl<C, F, V> Sync for ResultsConsumer<'_, C, F, V> {}
 
 impl<'a, C, R, F, V> Consumer<&'a mut Archetype<R>> for ResultsConsumer<'a, C, F, V>

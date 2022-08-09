@@ -158,6 +158,8 @@ where
 {
 }
 
+// SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
+// exclusive.
 unsafe impl<'a, R, F, V> Send for Iter<'a, R, F, V>
 where
     R: Registry + 'a,
