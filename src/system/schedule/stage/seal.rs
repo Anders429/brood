@@ -147,7 +147,7 @@ where
                 task.flush(
                     // SAFETY: This is guaranteed to be the only reference to this `World<R>`,
                     // meaning this cast to a mutable reference is sound.
-                    unsafe { &mut *(world.0 as *const World<R> as *mut World<R>) },
+                    unsafe { &mut *(world.get() as *const World<R> as *mut World<R>) },
                 );
             }
             Stage::Continue(task) => {
@@ -155,7 +155,7 @@ where
                 task.flush(
                     // SAFETY: This is guaranteed to be the only reference to this `World<R>`,
                     // meaning this cast to a mutable reference is sound.
-                    unsafe { &mut *(world.0 as *const World<R> as *mut World<R>) },
+                    unsafe { &mut *(world.get() as *const World<R> as *mut World<R>) },
                 );
             }
             Stage::Flush => {}
