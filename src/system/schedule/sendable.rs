@@ -4,7 +4,10 @@ pub struct SendableWorld<R>(*mut World<R>)
 where
     R: Registry;
 
-impl<R> SendableWorld<R> where R: Registry {
+impl<R> SendableWorld<R>
+where
+    R: Registry,
+{
     /// # Safety
     /// The `world` pointer passed here must be exclusively.
     pub(crate) unsafe fn new(world: *mut World<R>) -> Self {
