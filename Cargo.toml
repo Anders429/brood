@@ -3,7 +3,7 @@ name = "brood"
 version = "0.1.0"
 authors = ["Anders Evensen"]
 edition = "2021"
-rust-version = "1.58.0"
+rust-version = "1.60.0"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/Anders429/brood"
@@ -28,8 +28,7 @@ serde = {version = "1.0.133", default-features = false, features = ["alloc"], op
 claim = "0.5.0"
 rustversion = "1.0.6"
 serde_test = "1.0.133"
-# trybuild = "1.0.61"
-trybuild = {path = "../trybuild"}
+trybuild = "1.0.61"
 
 [features]
 rayon = ["dep:rayon", "hashbrown/rayon"]

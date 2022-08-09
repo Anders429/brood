@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.58.0
+          - 1.60.0
           - stable
           - beta
           - nightly
@@ -38,10 +38,11 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.58.0
+          - 1.60.0
           - stable
           - beta
           - nightly
+      fail-fast: false
     steps:
     - uses: actions/checkout@v2
     - uses: actions-rs/toolchain@v1
