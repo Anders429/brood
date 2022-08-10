@@ -55,7 +55,7 @@ use rayon::iter::{
 /// [`ParViews`]: crate::query::view::ParViews
 /// [`result!`]: crate::query::result!
 /// [`World`]: crate::world::World
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub struct ParIter<'a, R, F, V>
 where
     R: Registry,

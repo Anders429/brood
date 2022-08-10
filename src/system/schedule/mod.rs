@@ -137,7 +137,7 @@ use stage::Stages;
 /// [`schedule::Builder`]: crate::system::schedule::Builder
 /// [`Stages`]: crate::system::schedule::stage::Stages
 /// [`System`]: crate::system::System
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub struct Schedule<S> {
     stages: S,
 }
