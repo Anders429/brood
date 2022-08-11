@@ -22,12 +22,12 @@ ahash = {version = "0.8.0", default-features = false, features = ["runtime-rng"]
 either = {version = "1.7.0", default-features = false}
 hashbrown = {version = "0.12.3", features = ["raw"]}
 rayon = {version = "1.5.3", optional = true}
-serde = {version = "1.0.133", default-features = false, features = ["alloc"], optional = true}
+serde = {version = "1.0.143", default-features = false, features = ["alloc"], optional = true}
 
 [dev-dependencies]
 claim = "0.5.0"
 rustversion = "1.0.6"
-serde_test = "1.0.133"
+serde_test = "1.0.143"
 # Temporarily use this fork until https://github.com/dtolnay/trybuild/issues/171 is resolved.
 trybuild = {git = "https://github.com/Anders429/trybuild"}
 
