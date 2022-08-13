@@ -59,7 +59,7 @@ pub trait Filter: Seal {}
 /// ```
 ///
 /// [`Views`]: crate::query::view::Views
-pub struct None;
+pub enum None {}
 
 impl Filter for None {}
 
