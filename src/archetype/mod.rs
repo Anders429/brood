@@ -45,7 +45,7 @@ where
     components: Vec<(*mut u8, usize)>,
     length: usize,
 
-    component_map: HashMap<TypeId, usize>,
+    component_map: HashMap<TypeId, usize, ahash::RandomState>,
 }
 
 impl<R> Archetype<R>
@@ -64,7 +64,7 @@ where
         components: Vec<(*mut u8, usize)>,
         length: usize,
     ) -> Self {
-        let mut component_map = HashMap::new();
+        let mut component_map = HashMap::with_hasher(ahash::RandomState::new());
         // SAFETY: `identifier.iter()` is generic over the same registry `R` that this associated
         // function is being called on.
         unsafe { R::create_component_map_for_identifier(&mut component_map, 0, identifier.iter()) };

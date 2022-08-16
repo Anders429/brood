@@ -19,7 +19,7 @@ pub trait Storage {
     /// which `component_map` has an entry whose index references it.
     unsafe fn push_components(
         self,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
         components: &mut [(*mut u8, usize)],
         length: usize,
     );
@@ -39,19 +39,19 @@ pub trait Storage {
     /// # Panics
     /// This method will panic if this entity contains a component that does not have an entry in
     /// the given `component_map`.
-    unsafe fn to_identifier(identifier: &mut [u8], component_map: &HashMap<TypeId, usize>);
+    unsafe fn to_identifier(identifier: &mut [u8], component_map: &HashMap<TypeId, usize, ahash::RandomState>);
 }
 
 impl Storage for Null {
     unsafe fn push_components(
         self,
-        _component_map: &HashMap<TypeId, usize>,
+        _component_map: &HashMap<TypeId, usize, ahash::RandomState>,
         _components: &mut [(*mut u8, usize)],
         _length: usize,
     ) {
     }
 
-    unsafe fn to_identifier(_identifier: &mut [u8], _component_map: &HashMap<TypeId, usize>) {}
+    unsafe fn to_identifier(_identifier: &mut [u8], _component_map: &HashMap<TypeId, usize, ahash::RandomState>) {}
 }
 
 impl<C, E> Storage for (C, E)
@@ -61,7 +61,7 @@ where
 {
     unsafe fn push_components(
         self,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
         components: &mut [(*mut u8, usize)],
         length: usize,
     ) {
@@ -88,7 +88,7 @@ where
         unsafe { E::push_components(self.1, component_map, components, length) };
     }
 
-    unsafe fn to_identifier(identifier: &mut [u8], component_map: &HashMap<TypeId, usize>) {
+    unsafe fn to_identifier(identifier: &mut [u8], component_map: &HashMap<TypeId, usize, ahash::RandomState>) {
         let component_index = component_map.get(&TypeId::of::<C>()).unwrap();
         let index = component_index / 8;
         let bit = component_index % 8;

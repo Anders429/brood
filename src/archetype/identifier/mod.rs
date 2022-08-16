@@ -473,7 +473,7 @@ mod tests {
         let identifier_a = unsafe { buffer.as_ref() };
         let identifier_b = unsafe { buffer.as_ref() };
 
-        let mut hashset = HashSet::new();
+        let mut hashset = HashSet::with_hasher(ahash::RandomState::new());
         hashset.insert(identifier_a);
         assert!(hashset.contains(&identifier_b));
     }

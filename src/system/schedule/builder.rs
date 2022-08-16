@@ -137,10 +137,10 @@ where
     pub fn build(self) -> Schedule<T::Stages> {
         Schedule {
             stages: self.raw_tasks.into_stages(
-                &mut HashSet::new(),
-                &mut HashSet::new(),
-                &mut HashSet::new(),
-                &mut HashSet::new(),
+                &mut HashSet::with_hasher(ahash::RandomState::new()),
+                &mut HashSet::with_hasher(ahash::RandomState::new()),
+                &mut HashSet::with_hasher(ahash::RandomState::new()),
+                &mut HashSet::with_hasher(ahash::RandomState::new()),
                 &mut view::AssertionBuffer::new(),
             ),
         }
