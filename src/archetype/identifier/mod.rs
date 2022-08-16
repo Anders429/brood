@@ -325,6 +325,7 @@ mod tests {
     use crate::{archetype::Identifier, registry};
     use alloc::{vec, vec::Vec};
     use core::ptr;
+    use fnv::FnvBuildHasher;
     use hashbrown::HashSet;
 
     macro_rules! create_components {
@@ -473,7 +474,7 @@ mod tests {
         let identifier_a = unsafe { buffer.as_ref() };
         let identifier_b = unsafe { buffer.as_ref() };
 
-        let mut hashset = HashSet::with_hasher(ahash::RandomState::new());
+        let mut hashset = HashSet::with_hasher(FnvBuildHasher::default());
         hashset.insert(identifier_a);
         assert!(hashset.contains(&identifier_b));
     }

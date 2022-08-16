@@ -15,6 +15,7 @@ pub(crate) use par_iter::ParIterMut;
 
 use crate::{archetype, archetype::Archetype, entity, registry::Registry};
 use core::hash::{BuildHasher, Hash, Hasher};
+use fnv::FnvBuildHasher;
 use hashbrown::raw::RawTable;
 use iter::Iter;
 
@@ -23,7 +24,7 @@ where
     R: Registry,
 {
     raw_archetypes: RawTable<Archetype<R>>,
-    hash_builder: ahash::RandomState,
+    hash_builder: FnvBuildHasher,
 }
 
 impl<R> Archetypes<R>
@@ -33,7 +34,7 @@ where
     pub(crate) fn new() -> Self {
         Self {
             raw_archetypes: RawTable::new(),
-            hash_builder: ahash::RandomState::new(),
+            hash_builder: FnvBuildHasher::default(),
         }
     }
 
@@ -41,20 +42,17 @@ where
     pub(crate) fn with_capacity(capacity: usize) -> Self {
         Self {
             raw_archetypes: RawTable::with_capacity(capacity),
-            hash_builder: ahash::RandomState::new(),
+            hash_builder: FnvBuildHasher::default(),
         }
     }
 
-    fn make_hash(
-        identifier: archetype::IdentifierRef<R>,
-        hash_builder: &ahash::RandomState,
-    ) -> u64 {
+    fn make_hash(identifier: archetype::IdentifierRef<R>, hash_builder: &FnvBuildHasher) -> u64 {
         let mut state = hash_builder.build_hasher();
         identifier.hash(&mut state);
         state.finish()
     }
 
-    fn make_hasher(hash_builder: &ahash::RandomState) -> impl Fn(&Archetype<R>) -> u64 + '_ {
+    fn make_hasher(hash_builder: &FnvBuildHasher) -> impl Fn(&Archetype<R>) -> u64 + '_ {
         move |archetype| {
             Self::make_hash(
                 // SAFETY: The `IdentifierRef` obtained here does not live longer than the `archetype`.

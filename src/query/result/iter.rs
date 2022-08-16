@@ -7,6 +7,7 @@ use crate::{
     registry::Registry,
 };
 use core::{any::TypeId, iter::FusedIterator, marker::PhantomData};
+use fnv::FnvBuildHasher;
 use hashbrown::HashMap;
 
 /// An [`Iterator`] over the results of a query.
@@ -57,7 +58,7 @@ where
 
     current_results_iter: Option<V::Results>,
 
-    component_map: &'a HashMap<TypeId, usize, ahash::RandomState>,
+    component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>,
 
     filter: PhantomData<F>,
 }
@@ -70,7 +71,7 @@ where
 {
     pub(crate) fn new(
         archetypes_iter: archetypes::IterMut<'a, R>,
-        component_map: &'a HashMap<TypeId, usize, ahash::RandomState>,
+        component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> Self {
         Self {
             archetypes_iter,
