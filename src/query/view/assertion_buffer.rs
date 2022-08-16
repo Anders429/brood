@@ -9,6 +9,7 @@
 
 use crate::component::Component;
 use core::any::{type_name, TypeId};
+use fnv::FnvBuildHasher;
 use hashbrown::HashSet;
 
 /// A buffer for performing assertions on [`Views`].
@@ -28,9 +29,9 @@ use hashbrown::HashSet;
 /// [`Views`]: crate::query::view::Views
 pub struct AssertionBuffer {
     /// Components that are viewed mutably.
-    mutable_claims: HashSet<TypeId, ahash::RandomState>,
+    mutable_claims: HashSet<TypeId, FnvBuildHasher>,
     /// Components that are viewed immutably.
-    immutable_claims: HashSet<TypeId, ahash::RandomState>,
+    immutable_claims: HashSet<TypeId, FnvBuildHasher>,
 }
 
 impl AssertionBuffer {
@@ -55,10 +56,10 @@ impl AssertionBuffer {
     /// [`World`]: crate::world::World
     pub(crate) fn with_capacity(capacity: usize) -> Self {
         Self {
-            mutable_claims: HashSet::with_capacity_and_hasher(capacity, ahash::RandomState::new()),
+            mutable_claims: HashSet::with_capacity_and_hasher(capacity, FnvBuildHasher::default()),
             immutable_claims: HashSet::with_capacity_and_hasher(
                 capacity,
-                ahash::RandomState::new(),
+                FnvBuildHasher::default(),
             ),
         }
     }

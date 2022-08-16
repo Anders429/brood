@@ -10,6 +10,7 @@ use crate::{
     },
 };
 use core::any::TypeId;
+use fnv::FnvBuildHasher;
 use hashbrown::HashSet;
 
 pub trait Seal<'a> {
@@ -17,10 +18,10 @@ pub trait Seal<'a> {
 
     fn into_stages(
         self,
-        mutable_claims: &mut HashSet<TypeId, ahash::RandomState>,
-        immutable_claims: &mut HashSet<TypeId, ahash::RandomState>,
-        mutable_buffer: &mut HashSet<TypeId, ahash::RandomState>,
-        immutable_buffer: &mut HashSet<TypeId, ahash::RandomState>,
+        mutable_claims: &mut HashSet<TypeId, FnvBuildHasher>,
+        immutable_claims: &mut HashSet<TypeId, FnvBuildHasher>,
+        mutable_buffer: &mut HashSet<TypeId, FnvBuildHasher>,
+        immutable_buffer: &mut HashSet<TypeId, FnvBuildHasher>,
         view_assertion_buffer: &mut view::AssertionBuffer,
     ) -> Self::Stages;
 }
@@ -30,10 +31,10 @@ impl<'a> Seal<'a> for Null {
 
     fn into_stages(
         self,
-        _mutable_claims: &mut HashSet<TypeId, ahash::RandomState>,
-        _immutable_claims: &mut HashSet<TypeId, ahash::RandomState>,
-        _mutable_buffer: &mut HashSet<TypeId, ahash::RandomState>,
-        _immutable_buffer: &mut HashSet<TypeId, ahash::RandomState>,
+        _mutable_claims: &mut HashSet<TypeId, FnvBuildHasher>,
+        _immutable_claims: &mut HashSet<TypeId, FnvBuildHasher>,
+        _mutable_buffer: &mut HashSet<TypeId, FnvBuildHasher>,
+        _immutable_buffer: &mut HashSet<TypeId, FnvBuildHasher>,
         _view_assertion_buffer: &mut view::AssertionBuffer,
     ) -> Self::Stages {
         stage::Null
@@ -50,10 +51,10 @@ where
 
     fn into_stages(
         self,
-        mutable_claims: &mut HashSet<TypeId, ahash::RandomState>,
-        immutable_claims: &mut HashSet<TypeId, ahash::RandomState>,
-        mutable_buffer: &mut HashSet<TypeId, ahash::RandomState>,
-        immutable_buffer: &mut HashSet<TypeId, ahash::RandomState>,
+        mutable_claims: &mut HashSet<TypeId, FnvBuildHasher>,
+        immutable_claims: &mut HashSet<TypeId, FnvBuildHasher>,
+        mutable_buffer: &mut HashSet<TypeId, FnvBuildHasher>,
+        immutable_buffer: &mut HashSet<TypeId, FnvBuildHasher>,
         view_assertion_buffer: &mut view::AssertionBuffer,
     ) -> Self::Stages {
         let prev_stages = self.1.into_stages(
@@ -68,8 +69,8 @@ where
             RawTask::Task(task) => {
                 // Helper function to check whether the intersection betwen two sets is nonempty.
                 fn intersects(
-                    a: &HashSet<TypeId, ahash::RandomState>,
-                    b: &HashSet<TypeId, ahash::RandomState>,
+                    a: &HashSet<TypeId, FnvBuildHasher>,
+                    b: &HashSet<TypeId, FnvBuildHasher>,
                 ) -> bool {
                     a.intersection(b).next().is_some()
                 }

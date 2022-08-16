@@ -33,6 +33,7 @@ use core::{
     mem::{ManuallyDrop, MaybeUninit},
     slice,
 };
+use fnv::FnvBuildHasher;
 use hashbrown::HashMap;
 
 pub(crate) struct Archetype<R>
@@ -45,7 +46,7 @@ where
     components: Vec<(*mut u8, usize)>,
     length: usize,
 
-    component_map: HashMap<TypeId, usize, ahash::RandomState>,
+    component_map: HashMap<TypeId, usize, FnvBuildHasher>,
 }
 
 impl<R> Archetype<R>
@@ -64,7 +65,7 @@ where
         components: Vec<(*mut u8, usize)>,
         length: usize,
     ) -> Self {
-        let mut component_map = HashMap::with_hasher(ahash::RandomState::new());
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
         // SAFETY: `identifier.iter()` is generic over the same registry `R` that this associated
         // function is being called on.
         unsafe { R::create_component_map_for_identifier(&mut component_map, 0, identifier.iter()) };

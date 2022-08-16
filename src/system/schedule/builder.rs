@@ -11,6 +11,7 @@ use crate::{
         ParSystem, System,
     },
 };
+use fnv::FnvBuildHasher;
 use hashbrown::HashSet;
 
 /// A [`Schedule`] builder.
@@ -137,10 +138,10 @@ where
     pub fn build(self) -> Schedule<T::Stages> {
         Schedule {
             stages: self.raw_tasks.into_stages(
-                &mut HashSet::with_hasher(ahash::RandomState::new()),
-                &mut HashSet::with_hasher(ahash::RandomState::new()),
-                &mut HashSet::with_hasher(ahash::RandomState::new()),
-                &mut HashSet::with_hasher(ahash::RandomState::new()),
+                &mut HashSet::with_hasher(FnvBuildHasher::default()),
+                &mut HashSet::with_hasher(FnvBuildHasher::default()),
+                &mut HashSet::with_hasher(FnvBuildHasher::default()),
+                &mut HashSet::with_hasher(FnvBuildHasher::default()),
                 &mut view::AssertionBuffer::new(),
             ),
         }

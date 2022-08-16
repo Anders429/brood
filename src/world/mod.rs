@@ -34,6 +34,7 @@ use crate::{
 };
 use alloc::{vec, vec::Vec};
 use core::any::TypeId;
+use fnv::FnvBuildHasher;
 use hashbrown::{HashMap, HashSet};
 
 /// A container of entities.
@@ -75,7 +76,7 @@ where
     entity_allocator: entity::Allocator<R>,
     len: usize,
 
-    component_map: HashMap<TypeId, usize, ahash::RandomState>,
+    component_map: HashMap<TypeId, usize, FnvBuildHasher>,
 
     view_assertion_buffer: view::AssertionBuffer,
 }
@@ -91,10 +92,10 @@ where
     ) -> Self {
         R::assert_no_duplicates(&mut HashSet::with_capacity_and_hasher(
             R::LEN,
-            ahash::RandomState::new(),
+            FnvBuildHasher::default(),
         ));
 
-        let mut component_map = HashMap::with_hasher(ahash::RandomState::new());
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
         R::create_component_map(&mut component_map, 0);
 
         Self {

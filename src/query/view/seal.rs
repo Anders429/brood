@@ -9,6 +9,7 @@ use crate::{
 };
 use core::{any::TypeId, iter, slice};
 use either::Either;
+use fnv::FnvBuildHasher;
 use hashbrown::HashMap;
 
 pub trait ViewSeal<'a>: Claim {
@@ -30,7 +31,7 @@ pub trait ViewSeal<'a>: Claim {
         columns: &[(*mut u8, usize)],
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> Self::Result;
 
     fn assert_claim(buffer: &mut AssertionBuffer);
@@ -46,7 +47,7 @@ where
         columns: &[(*mut u8, usize)],
         _entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> Self::Result {
         // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of size
         // `length`. Since `component_map` contains an entry for the given component `C`'s entry in
@@ -79,7 +80,7 @@ where
         columns: &[(*mut u8, usize)],
         _entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> Self::Result {
         // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of size
         // `length`. Since `component_map` contains an entry for the given component `C`'s entry in
@@ -120,7 +121,7 @@ where
         columns: &[(*mut u8, usize)],
         _entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> Self::Result {
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
@@ -156,7 +157,7 @@ where
         columns: &[(*mut u8, usize)],
         _entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> Self::Result {
         fn none<'a, C>() -> Option<&'a mut C> {
             None
@@ -190,7 +191,7 @@ impl<'a> ViewSeal<'a> for entity::Identifier {
         _columns: &[(*mut u8, usize)],
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        _component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        _component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> Self::Result {
         // SAFETY: `entity_identifiers` is guaranteed to contain the raw parts for a valid
         // `Vec<entity::Identifier>` of size `length`.
@@ -221,7 +222,7 @@ pub trait ViewsSeal<'a>: Claim {
         columns: &[(*mut u8, usize)],
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> Self::Results;
 
     fn assert_claims(buffer: &mut AssertionBuffer);
@@ -234,7 +235,7 @@ impl<'a> ViewsSeal<'a> for Null {
         _columns: &[(*mut u8, usize)],
         _entity_identifiers: (*mut entity::Identifier, usize),
         _length: usize,
-        _component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        _component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> Self::Results {
         iter::repeat(result::Null)
     }
@@ -253,7 +254,7 @@ where
         columns: &[(*mut u8, usize)],
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> Self::Results {
         // SAFETY: The safety guarantees of this method are the exact what are required by the
         // safety guarantees of both `V::view()` and `W::view()`.
