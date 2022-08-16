@@ -17,10 +17,10 @@ pub trait Seal<'a> {
 
     fn into_stages(
         self,
-        mutable_claims: &mut HashSet<TypeId>,
-        immutable_claims: &mut HashSet<TypeId>,
-        mutable_buffer: &mut HashSet<TypeId>,
-        immutable_buffer: &mut HashSet<TypeId>,
+        mutable_claims: &mut HashSet<TypeId, ahash::RandomState>,
+        immutable_claims: &mut HashSet<TypeId, ahash::RandomState>,
+        mutable_buffer: &mut HashSet<TypeId, ahash::RandomState>,
+        immutable_buffer: &mut HashSet<TypeId, ahash::RandomState>,
         view_assertion_buffer: &mut view::AssertionBuffer,
     ) -> Self::Stages;
 }
@@ -30,10 +30,10 @@ impl<'a> Seal<'a> for Null {
 
     fn into_stages(
         self,
-        _mutable_claims: &mut HashSet<TypeId>,
-        _immutable_claims: &mut HashSet<TypeId>,
-        _mutable_buffer: &mut HashSet<TypeId>,
-        _immutable_buffer: &mut HashSet<TypeId>,
+        _mutable_claims: &mut HashSet<TypeId, ahash::RandomState>,
+        _immutable_claims: &mut HashSet<TypeId, ahash::RandomState>,
+        _mutable_buffer: &mut HashSet<TypeId, ahash::RandomState>,
+        _immutable_buffer: &mut HashSet<TypeId, ahash::RandomState>,
         _view_assertion_buffer: &mut view::AssertionBuffer,
     ) -> Self::Stages {
         stage::Null
@@ -50,10 +50,10 @@ where
 
     fn into_stages(
         self,
-        mutable_claims: &mut HashSet<TypeId>,
-        immutable_claims: &mut HashSet<TypeId>,
-        mutable_buffer: &mut HashSet<TypeId>,
-        immutable_buffer: &mut HashSet<TypeId>,
+        mutable_claims: &mut HashSet<TypeId, ahash::RandomState>,
+        immutable_claims: &mut HashSet<TypeId, ahash::RandomState>,
+        mutable_buffer: &mut HashSet<TypeId, ahash::RandomState>,
+        immutable_buffer: &mut HashSet<TypeId, ahash::RandomState>,
         view_assertion_buffer: &mut view::AssertionBuffer,
     ) -> Self::Stages {
         let prev_stages = self.1.into_stages(
@@ -67,7 +67,10 @@ where
         match self.0 {
             RawTask::Task(task) => {
                 // Helper function to check whether the intersection betwen two sets is nonempty.
-                fn intersects(a: &HashSet<TypeId>, b: &HashSet<TypeId>) -> bool {
+                fn intersects(
+                    a: &HashSet<TypeId, ahash::RandomState>,
+                    b: &HashSet<TypeId, ahash::RandomState>,
+                ) -> bool {
                     a.intersection(b).next().is_some()
                 }
 

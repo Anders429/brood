@@ -39,7 +39,7 @@ pub trait ParViewSeal<'a>: View<'a> {
         columns: &[(*mut u8, usize)],
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> Self::ParResult;
 }
 
@@ -53,7 +53,7 @@ where
         columns: &[(*mut u8, usize)],
         _entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> Self::ParResult {
         // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of size
         // `length`. Since `component_map` contains an entry for the given component `C`'s entry in
@@ -82,7 +82,7 @@ where
         columns: &[(*mut u8, usize)],
         _entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> Self::ParResult {
         // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of size
         // `length`. Since `component_map` contains an entry for the given component `C`'s entry in
@@ -119,7 +119,7 @@ where
         columns: &[(*mut u8, usize)],
         _entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> Self::ParResult {
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
@@ -151,7 +151,7 @@ where
         columns: &[(*mut u8, usize)],
         _entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> Self::ParResult {
         match component_map.get(&TypeId::of::<C>()) {
             Some(index) => Either::Right(
@@ -180,7 +180,7 @@ impl<'a> ParViewSeal<'a> for entity::Identifier {
         _columns: &[(*mut u8, usize)],
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        _component_map: &HashMap<TypeId, usize>,
+        _component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> Self::ParResult {
         // SAFETY: `entity_identifiers` is guaranteed to contain the raw parts for a valid
         // `Vec<entity::Identifier>` of size `length`.
@@ -209,7 +209,7 @@ pub trait ParViewsSeal<'a>: Views<'a> {
         columns: &[(*mut u8, usize)],
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> Self::ParResults;
 }
 
@@ -220,7 +220,7 @@ impl<'a> ParViewsSeal<'a> for Null {
         _columns: &[(*mut u8, usize)],
         _entity_identifiers: (*mut entity::Identifier, usize),
         _length: usize,
-        _component_map: &HashMap<TypeId, usize>,
+        _component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> Self::ParResults {
         iter::repeatn(result::Null, usize::MAX)
     }
@@ -237,7 +237,7 @@ where
         columns: &[(*mut u8, usize)],
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> Self::ParResults {
         // SAFETY: The safety guarantees of this method are the exact what are required by the
         // safety guarantees of both `V::par_view()` and `W::par_view()`.

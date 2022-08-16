@@ -28,9 +28,9 @@ use hashbrown::HashSet;
 /// [`Views`]: crate::query::view::Views
 pub struct AssertionBuffer {
     /// Components that are viewed mutably.
-    mutable_claims: HashSet<TypeId>,
+    mutable_claims: HashSet<TypeId, ahash::RandomState>,
     /// Components that are viewed immutably.
-    immutable_claims: HashSet<TypeId>,
+    immutable_claims: HashSet<TypeId, ahash::RandomState>,
 }
 
 impl AssertionBuffer {
@@ -55,8 +55,11 @@ impl AssertionBuffer {
     /// [`World`]: crate::world::World
     pub(crate) fn with_capacity(capacity: usize) -> Self {
         Self {
-            mutable_claims: HashSet::with_capacity(capacity),
-            immutable_claims: HashSet::with_capacity(capacity),
+            mutable_claims: HashSet::with_capacity_and_hasher(capacity, ahash::RandomState::new()),
+            immutable_claims: HashSet::with_capacity_and_hasher(
+                capacity,
+                ahash::RandomState::new(),
+            ),
         }
     }
 

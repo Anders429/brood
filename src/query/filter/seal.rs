@@ -20,7 +20,7 @@ pub trait Seal {
     /// Note that the component(s) being viewed do not necessarily need to be in the registry `R`.
     unsafe fn filter<R>(
         identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> bool
     where
         R: Registry;
@@ -29,7 +29,7 @@ pub trait Seal {
 impl Seal for None {
     unsafe fn filter<R>(
         _identifier: archetype::IdentifierRef<R>,
-        _component_map: &HashMap<TypeId, usize>,
+        _component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> bool
     where
         R: Registry,
@@ -44,7 +44,7 @@ where
 {
     unsafe fn filter<R>(
         identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> bool
     where
         R: Registry,
@@ -64,7 +64,7 @@ where
 {
     unsafe fn filter<R>(
         identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> bool
     where
         R: Registry,
@@ -82,7 +82,7 @@ where
 {
     unsafe fn filter<R>(
         identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> bool
     where
         R: Registry,
@@ -100,7 +100,7 @@ where
 {
     unsafe fn filter<R>(
         identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> bool
     where
         R: Registry,
@@ -117,7 +117,7 @@ where
 {
     unsafe fn filter<R>(
         identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> bool
     where
         R: Registry,
@@ -134,7 +134,7 @@ where
 {
     unsafe fn filter<R>(
         identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> bool
     where
         R: Registry,
@@ -151,7 +151,7 @@ where
 {
     unsafe fn filter<R>(
         _identifier: archetype::IdentifierRef<R>,
-        _component_map: &HashMap<TypeId, usize>,
+        _component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> bool
     where
         R: Registry,
@@ -166,7 +166,7 @@ where
 {
     unsafe fn filter<R>(
         _identifier: archetype::IdentifierRef<R>,
-        _component_map: &HashMap<TypeId, usize>,
+        _component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> bool
     where
         R: Registry,
@@ -178,7 +178,7 @@ where
 impl Seal for entity::Identifier {
     unsafe fn filter<R>(
         _identifier: archetype::IdentifierRef<R>,
-        _component_map: &HashMap<TypeId, usize>,
+        _component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> bool
     where
         R: Registry,
@@ -190,7 +190,7 @@ impl Seal for entity::Identifier {
 impl Seal for view::Null {
     unsafe fn filter<R>(
         _identifier: archetype::IdentifierRef<R>,
-        _component_map: &HashMap<TypeId, usize>,
+        _component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> bool
     where
         R: Registry,
@@ -206,7 +206,7 @@ where
 {
     unsafe fn filter<R>(
         identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize>,
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
     ) -> bool
     where
         R: Registry,
