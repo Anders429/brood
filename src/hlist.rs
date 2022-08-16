@@ -54,7 +54,22 @@ macro_rules! define_null {
     };
 }
 
+macro_rules! define_null_uninstantiable {
+    () => {
+        /// Represents the end of a heterogeneous list.
+        ///
+        /// This enum is used when defining heterogeneous lists. Normally, it will be provided
+        /// by a macro and the user will not have to interact directly with it. `Null` is placed at
+        /// the inner-most level of the nested tuples that make up a heterogeneous list to denote
+        /// the end of the list.
+        ///
+        /// Since this is an empty enum, it is not able to be instantiated.
+        pub enum Null {}
+    };
+}
+
 pub(crate) use define_null;
+pub(crate) use define_null_uninstantiable;
 
 #[cfg(test)]
 mod tests {

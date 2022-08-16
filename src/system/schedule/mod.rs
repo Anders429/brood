@@ -137,7 +137,7 @@ use stage::Stages;
 /// [`schedule::Builder`]: crate::system::schedule::Builder
 /// [`Stages`]: crate::system::schedule::stage::Stages
 /// [`System`]: crate::system::System
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub struct Schedule<S> {
     stages: S,
 }
@@ -169,6 +169,9 @@ where
     where
         R: Registry,
     {
-        self.stages.run(SendableWorld(world));
+        self.stages.run(
+            // SAFETY: The pointer provided here is unique, being created from a mutable reference.
+            unsafe { SendableWorld::new(world) },
+        );
     }
 }

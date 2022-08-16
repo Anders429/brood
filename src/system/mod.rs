@@ -42,18 +42,18 @@
 //! [`System`]: crate::system::System
 //! [`World`]: crate::world::World
 
-#[cfg(feature = "parallel")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+#[cfg(feature = "rayon")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub mod schedule;
 
 mod null;
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 mod par;
 
 pub use null::Null;
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 pub use par::ParSystem;
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 #[doc(inline)]
 pub use schedule::Schedule;
 

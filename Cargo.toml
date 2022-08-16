@@ -1,8 +1,15 @@
 [package]
 name = "brood"
 version = "0.1.0"
+authors = ["Anders Evensen"]
 edition = "2021"
-rust-version = "1.58.0"
+rust-version = "1.60.0"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/Anders429/brood"
+description = "A fast and flexible entity component system library."
+categories = ["data-structures", "game-development", "no-std"]
+keywords = ["ecs", "entity", "component", "system", "gamedev"]
 
 [package.metadata.docs.rs]
 # To build locally:
@@ -11,18 +18,18 @@ all-features = true
 rustdoc-args = ["--cfg", "doc_cfg"]
 
 [dependencies]
-ahash = {version = "0.7.6", default-features = false}
-either = {version = "1.6.1", default-features = false}
-hashbrown = {version = "0.12.0", features = ["raw"]}
-rayon = {version = "1.5.1", optional = true}
-serde = {version = "1.0.133", default-features = false, features = ["alloc"], optional = true}
+either = {version = "1.7.0", default-features = false}
+fnv = {version = "1.0.7", default-features = false}
+hashbrown = {version = "0.12.3", default-features = false, features = ["inline-more", "raw"]}
+rayon = {version = "1.5.3", optional = true}
+serde = {version = "1.0.143", default-features = false, features = ["alloc"], optional = true}
 
 [dev-dependencies]
 claim = "0.5.0"
-rustversion = "1.0.6"
-serde_test = "1.0.133"
-trybuild = "1.0.61"
+rustversion = "1.0.9"
+serde_test = "1.0.143"
+# Temporarily use this fork until https://github.com/dtolnay/trybuild/issues/171 is resolved.
+trybuild = {git = "https://github.com/Anders429/trybuild"}
 
 [features]
-# TODO: Rename this to "rayon" when namespaced dependencies are stabilized in 1.60.0.
-parallel = ["rayon", "hashbrown/rayon"]
+rayon = ["dep:rayon", "hashbrown/rayon"]

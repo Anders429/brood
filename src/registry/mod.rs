@@ -39,10 +39,10 @@ pub(crate) use eq::{RegistryEq, RegistryPartialEq};
 pub(crate) use send::RegistrySend;
 pub(crate) use sync::RegistrySync;
 
-use crate::{component::Component, hlist::define_null};
+use crate::{component::Component, hlist::define_null_uninstantiable};
 use seal::Seal;
 
-define_null!();
+define_null_uninstantiable!();
 
 /// A heterogeneous list of [`Component`]s.
 ///

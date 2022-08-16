@@ -9,6 +9,7 @@
 
 use crate::component::Component;
 use core::any::{type_name, TypeId};
+use fnv::FnvBuildHasher;
 use hashbrown::HashSet;
 
 /// A buffer for performing assertions on [`Views`].
@@ -28,9 +29,9 @@ use hashbrown::HashSet;
 /// [`Views`]: crate::query::view::Views
 pub struct AssertionBuffer {
     /// Components that are viewed mutably.
-    mutable_claims: HashSet<TypeId>,
+    mutable_claims: HashSet<TypeId, FnvBuildHasher>,
     /// Components that are viewed immutably.
-    immutable_claims: HashSet<TypeId>,
+    immutable_claims: HashSet<TypeId, FnvBuildHasher>,
 }
 
 impl AssertionBuffer {
@@ -39,7 +40,7 @@ impl AssertionBuffer {
     /// It is recommended to use [`with_capacity`] if possible, as it will save allocations.
     ///
     /// [`with_capacity`]: AssertionBuffer::with_capacity()
-    #[cfg(feature = "parallel")]
+    #[cfg(feature = "rayon")]
     pub(crate) fn new() -> Self {
         Self::with_capacity(0)
     }
@@ -55,8 +56,11 @@ impl AssertionBuffer {
     /// [`World`]: crate::world::World
     pub(crate) fn with_capacity(capacity: usize) -> Self {
         Self {
-            mutable_claims: HashSet::with_capacity(capacity),
-            immutable_claims: HashSet::with_capacity(capacity),
+            mutable_claims: HashSet::with_capacity_and_hasher(capacity, FnvBuildHasher::default()),
+            immutable_claims: HashSet::with_capacity_and_hasher(
+                capacity,
+                FnvBuildHasher::default(),
+            ),
         }
     }
 
@@ -118,7 +122,7 @@ mod tests {
     struct A;
     struct B;
 
-    #[cfg(feature = "parallel")]
+    #[cfg(feature = "rayon")]
     #[test]
     fn new() {
         let buffer = AssertionBuffer::new();

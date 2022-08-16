@@ -25,13 +25,17 @@ use core::{
     mem::{drop, size_of, ManuallyDrop, MaybeUninit},
     ptr,
 };
+use fnv::FnvBuildHasher;
 use hashbrown::HashMap;
 
 pub trait Storage {
     /// Populate a map with component [`TypeId`]s and their associated index within the registry.
     ///
     /// [`TypeId`]: core::any::TypeId
-    fn create_component_map(component_map: &mut HashMap<TypeId, usize>, index: usize);
+    fn create_component_map(
+        component_map: &mut HashMap<TypeId, usize, FnvBuildHasher>,
+        index: usize,
+    );
 
     /// Populate a map with component [`TypeId`]s and their associated index within the components
     /// identified by the identifier in the order defined by the registry.
@@ -45,7 +49,7 @@ pub trait Storage {
     ///
     /// [`TypeId`]: core::any::TypeId
     unsafe fn create_component_map_for_identifier<R>(
-        component_map: &mut HashMap<TypeId, usize>,
+        component_map: &mut HashMap<TypeId, usize, FnvBuildHasher>,
         index: usize,
         identifier_iter: archetype::identifier::Iter<R>,
     ) where
@@ -329,10 +333,14 @@ pub trait Storage {
 }
 
 impl Storage for Null {
-    fn create_component_map(_component_map: &mut HashMap<TypeId, usize>, _index: usize) {}
+    fn create_component_map(
+        _component_map: &mut HashMap<TypeId, usize, FnvBuildHasher>,
+        _index: usize,
+    ) {
+    }
 
     unsafe fn create_component_map_for_identifier<R>(
-        _component_map: &mut HashMap<TypeId, usize>,
+        _component_map: &mut HashMap<TypeId, usize, FnvBuildHasher>,
         _index: usize,
         _identifier_iter: archetype::identifier::Iter<R>,
     ) where
@@ -444,13 +452,16 @@ where
     C: Component,
     R: Storage,
 {
-    fn create_component_map(component_map: &mut HashMap<TypeId, usize>, index: usize) {
+    fn create_component_map(
+        component_map: &mut HashMap<TypeId, usize, FnvBuildHasher>,
+        index: usize,
+    ) {
         component_map.insert(TypeId::of::<C>(), index);
         R::create_component_map(component_map, index + 1);
     }
 
     unsafe fn create_component_map_for_identifier<R_>(
-        component_map: &mut HashMap<TypeId, usize>,
+        component_map: &mut HashMap<TypeId, usize, FnvBuildHasher>,
         mut index: usize,
         mut identifier_iter: archetype::identifier::Iter<R_>,
     ) where
@@ -1058,13 +1069,14 @@ mod tests {
         marker::PhantomData,
         mem::{size_of, ManuallyDrop, MaybeUninit},
     };
+    use fnv::FnvBuildHasher;
     use hashbrown::HashMap;
 
     #[test]
     fn create_component_map_for_empty_registry() {
         type Registry = registry!();
 
-        let mut component_map = HashMap::new();
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
         Registry::create_component_map(&mut component_map, 0);
 
         assert!(component_map.is_empty());
@@ -1077,7 +1089,7 @@ mod tests {
         struct C;
         type Registry = registry!(A, B, C);
 
-        let mut component_map = HashMap::new();
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
         Registry::create_component_map(&mut component_map, 0);
 
         assert_some_eq!(component_map.get(&TypeId::of::<A>()), &0);
@@ -1092,7 +1104,7 @@ mod tests {
         struct C;
         type Registry = registry!(A, B, C);
 
-        let mut component_map = HashMap::new();
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
         Registry::create_component_map(&mut component_map, 42);
 
         assert_some_eq!(component_map.get(&TypeId::of::<A>()), &42);
@@ -1108,7 +1120,7 @@ mod tests {
         struct C;
         type Registry = registry!(A, B, C);
 
-        let mut component_map = HashMap::new();
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
         Registry::create_component_map(&mut component_map, usize::MAX);
     }
 
@@ -1117,7 +1129,7 @@ mod tests {
         type Registry = registry!();
         let identifier = unsafe { Identifier::<Registry>::new(Vec::new()) };
 
-        let mut component_map = HashMap::new();
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
         unsafe {
             Registry::create_component_map_for_identifier(&mut component_map, 0, identifier.iter())
         };
@@ -1133,7 +1145,7 @@ mod tests {
         type Registry = registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
 
-        let mut component_map = HashMap::new();
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
         unsafe {
             Registry::create_component_map_for_identifier(&mut component_map, 0, identifier.iter())
         };
@@ -1151,7 +1163,7 @@ mod tests {
         type Registry = registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![3]) };
 
-        let mut component_map = HashMap::new();
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
         unsafe {
             Registry::create_component_map_for_identifier(&mut component_map, 0, identifier.iter())
         };
@@ -1169,7 +1181,7 @@ mod tests {
         type Registry = registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![0]) };
 
-        let mut component_map = HashMap::new();
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
         unsafe {
             Registry::create_component_map_for_identifier(&mut component_map, 0, identifier.iter())
         };
@@ -1187,7 +1199,7 @@ mod tests {
         type Registry = registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![5]) };
 
-        let mut component_map = HashMap::new();
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
         unsafe {
             Registry::create_component_map_for_identifier(&mut component_map, 42, identifier.iter())
         };
@@ -1206,7 +1218,7 @@ mod tests {
         type Registry = registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![5]) };
 
-        let mut component_map = HashMap::new();
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
         unsafe {
             Registry::create_component_map_for_identifier(
                 &mut component_map,

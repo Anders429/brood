@@ -8,6 +8,7 @@ use crate::{
     registry::Registry,
 };
 use core::{any::TypeId, marker::PhantomData};
+use fnv::FnvBuildHasher;
 use hashbrown::HashMap;
 use rayon::iter::{
     plumbing::{Consumer, Folder, Reducer, UnindexedConsumer},
@@ -55,7 +56,7 @@ use rayon::iter::{
 /// [`ParViews`]: crate::query::view::ParViews
 /// [`result!`]: crate::query::result!
 /// [`World`]: crate::world::World
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub struct ParIter<'a, R, F, V>
 where
     R: Registry,
@@ -64,7 +65,7 @@ where
 {
     archetypes_iter: archetypes::ParIterMut<'a, R>,
 
-    component_map: &'a HashMap<TypeId, usize>,
+    component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>,
 
     filter: PhantomData<F>,
     views: PhantomData<V>,
@@ -78,7 +79,7 @@ where
 {
     pub(crate) fn new(
         archetypes_iter: archetypes::ParIterMut<'a, R>,
-        component_map: &'a HashMap<TypeId, usize>,
+        component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> Self {
         Self {
             archetypes_iter,
@@ -91,6 +92,8 @@ where
     }
 }
 
+// SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
+// exclusive.
 unsafe impl<'a, R, F, V> Send for ParIter<'a, R, F, V>
 where
     R: Registry,
@@ -99,6 +102,8 @@ where
 {
 }
 
+// SAFETY: This type is safe to share between threads, as its mutable views are guaranteed to be
+// exclusive.
 unsafe impl<'a, R, F, V> Sync for ParIter<'a, R, F, V>
 where
     R: Registry,
@@ -126,14 +131,14 @@ where
 
 struct ResultsConsumer<'a, C, F, V> {
     base: C,
-    component_map: &'a HashMap<TypeId, usize>,
+    component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>,
 
     filter: PhantomData<F>,
     views: PhantomData<V>,
 }
 
 impl<'a, C, F, V> ResultsConsumer<'a, C, F, V> {
-    fn new(base: C, component_map: &'a HashMap<TypeId, usize>) -> Self {
+    fn new(base: C, component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>) -> Self {
         Self {
             base,
             component_map,
@@ -144,8 +149,12 @@ impl<'a, C, F, V> ResultsConsumer<'a, C, F, V> {
     }
 }
 
+// SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
+// exclusive.
 unsafe impl<C, F, V> Send for ResultsConsumer<'_, C, F, V> {}
 
+// SAFETY: This type is safe to share between threads, as its mutable views are guaranteed to be
+// exclusive.
 unsafe impl<C, F, V> Sync for ResultsConsumer<'_, C, F, V> {}
 
 impl<'a, C, R, F, V> Consumer<&'a mut Archetype<R>> for ResultsConsumer<'a, C, F, V>
@@ -202,7 +211,7 @@ where
 
 struct ResultsFolder<'a, C, P, F, V> {
     base: C,
-    component_map: &'a HashMap<TypeId, usize>,
+    component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>,
     previous: Option<P>,
 
     filter: PhantomData<F>,

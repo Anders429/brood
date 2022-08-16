@@ -45,17 +45,19 @@
 //! [`World`]: crate::world::World.
 
 mod assertion_buffer;
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 mod par;
 
 pub(crate) mod seal;
 
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 pub use par::{ParView, ParViews};
 
 pub(crate) use assertion_buffer::AssertionBuffer;
 
-use crate::{component::Component, doc, entity, hlist::define_null, query::filter::Filter};
+use crate::{
+    component::Component, doc, entity, hlist::define_null_uninstantiable, query::filter::Filter,
+};
 use seal::{ViewSeal, ViewsSeal};
 
 /// A view over a single aspect of an entity.
@@ -114,7 +116,7 @@ impl<'a, C> View<'a> for Option<&mut C> where C: Component {}
 
 impl<'a> View<'a> for entity::Identifier {}
 
-define_null!();
+define_null_uninstantiable!();
 
 /// A heterogeneous list of [`View`]s.
 ///

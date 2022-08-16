@@ -7,6 +7,7 @@ use crate::{
     registry::Registry,
 };
 use core::{any::TypeId, iter::FusedIterator, marker::PhantomData};
+use fnv::FnvBuildHasher;
 use hashbrown::HashMap;
 
 /// An [`Iterator`] over the results of a query.
@@ -57,7 +58,7 @@ where
 
     current_results_iter: Option<V::Results>,
 
-    component_map: &'a HashMap<TypeId, usize>,
+    component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>,
 
     filter: PhantomData<F>,
 }
@@ -70,7 +71,7 @@ where
 {
     pub(crate) fn new(
         archetypes_iter: archetypes::IterMut<'a, R>,
-        component_map: &'a HashMap<TypeId, usize>,
+        component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> Self {
         Self {
             archetypes_iter,
@@ -158,6 +159,8 @@ where
 {
 }
 
+// SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
+// exclusive.
 unsafe impl<'a, R, F, V> Send for Iter<'a, R, F, V>
 where
     R: Registry + 'a,

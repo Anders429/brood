@@ -27,13 +27,14 @@ use crate::{
     registry::Registry,
     system::System,
 };
-#[cfg(feature = "parallel")]
+#[cfg(feature = "rayon")]
 use crate::{
     query::view::ParViews,
     system::{schedule::stage::Stages, ParSystem, Schedule},
 };
 use alloc::{vec, vec::Vec};
 use core::any::TypeId;
+use fnv::FnvBuildHasher;
 use hashbrown::{HashMap, HashSet};
 
 /// A container of entities.
@@ -75,7 +76,7 @@ where
     entity_allocator: entity::Allocator<R>,
     len: usize,
 
-    component_map: HashMap<TypeId, usize>,
+    component_map: HashMap<TypeId, usize, FnvBuildHasher>,
 
     view_assertion_buffer: view::AssertionBuffer,
 }
@@ -89,9 +90,12 @@ where
         entity_allocator: entity::Allocator<R>,
         len: usize,
     ) -> Self {
-        R::assert_no_duplicates(&mut HashSet::with_capacity(R::LEN));
+        R::assert_no_duplicates(&mut HashSet::with_capacity_and_hasher(
+            R::LEN,
+            FnvBuildHasher::default(),
+        ));
 
-        let mut component_map = HashMap::new();
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
         R::create_component_map(&mut component_map, 0);
 
         Self {
@@ -318,8 +322,8 @@ where
     /// [`ParViews`]: crate::query::view::ParViews
     /// [`query`]: crate::query
     /// [`query()`]: World::query()
-    #[cfg(feature = "parallel")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub fn par_query<'a, V, F>(&'a mut self) -> result::ParIter<'a, R, F, V>
     where
         V: ParViews<'a>,
@@ -336,8 +340,8 @@ where
     /// # Safety
     /// The [`Views`] `V` must follow Rust's borrowing rules, meaning that a component that is
     /// mutably borrowed is only borrowed once.
-    #[cfg(feature = "parallel")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub(crate) unsafe fn query_unchecked<'a, V, F>(&'a mut self) -> result::Iter<'a, R, F, V>
     where
         V: Views<'a>,
@@ -351,8 +355,8 @@ where
     /// # Safety
     /// The [`ParViews`] `V` must follow Rust's borrowing rules, meaning that a component that is
     /// mutably borrowed is only borrowed once.
-    #[cfg(feature = "parallel")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub(crate) unsafe fn par_query_unchecked<'a, V, F>(&'a mut self) -> result::ParIter<'a, R, F, V>
     where
         V: ParViews<'a>,
@@ -454,8 +458,8 @@ where
     /// ```
     ///
     /// [`ParSystem`]: crate::system::ParSystem
-    #[cfg(feature = "parallel")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub fn run_par_system<'a, S>(&'a mut self, par_system: &mut S)
     where
         S: ParSystem<'a>,
@@ -524,8 +528,8 @@ where
     /// ```
     ///
     /// [`Schedule`]: crate::system::Schedule
-    #[cfg(feature = "parallel")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub fn run_schedule<'a, S>(&'a mut self, schedule: &mut Schedule<S>)
     where
         S: Stages<'a>,
