@@ -67,7 +67,10 @@ where
         match self.0 {
             RawTask::Task(task) => {
                 // Helper function to check whether the intersection betwen two sets is nonempty.
-                fn intersects(a: &HashSet<TypeId, ahash::RandomState>, b: &HashSet<TypeId, ahash::RandomState>) -> bool {
+                fn intersects(
+                    a: &HashSet<TypeId, ahash::RandomState>,
+                    b: &HashSet<TypeId, ahash::RandomState>,
+                ) -> bool {
                     a.intersection(b).next().is_some()
                 }
 

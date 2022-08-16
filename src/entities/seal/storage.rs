@@ -39,7 +39,10 @@ pub trait Storage {
     /// # Panics
     /// This method will panic if the entities contain a component that does not have an entry in
     /// the given `component_map`.
-    unsafe fn to_identifier(identifier: &mut [u8], component_map: &HashMap<TypeId, usize, ahash::RandomState>);
+    unsafe fn to_identifier(
+        identifier: &mut [u8],
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+    );
 }
 
 impl Storage for Null {
@@ -51,7 +54,11 @@ impl Storage for Null {
     ) {
     }
 
-    unsafe fn to_identifier(_identifier: &mut [u8], _component_map: &HashMap<TypeId, usize, ahash::RandomState>) {}
+    unsafe fn to_identifier(
+        _identifier: &mut [u8],
+        _component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+    ) {
+    }
 }
 
 impl<C, E> Storage for (Vec<C>, E)
@@ -97,7 +104,10 @@ where
         unsafe { E::extend_components(self.1, component_map, components, length) };
     }
 
-    unsafe fn to_identifier(identifier: &mut [u8], component_map: &HashMap<TypeId, usize, ahash::RandomState>) {
+    unsafe fn to_identifier(
+        identifier: &mut [u8],
+        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+    ) {
         let component_index = component_map.get(&TypeId::of::<C>()).unwrap();
         let index = component_index / 8;
         let bit = component_index % 8;
