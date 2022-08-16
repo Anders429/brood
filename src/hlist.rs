@@ -67,36 +67,21 @@ mod tests {
     #[cfg(feature = "serde")]
     #[test]
     fn serialize_deserialize() {
-        assert_tokens(
-            &Null,
-            &[
-                Token::UnitStruct {
-                    name: "Null",
-                },
-            ],
-        );
+        assert_tokens(&Null, &[Token::UnitStruct { name: "Null" }]);
     }
 
     #[cfg(feature = "serde")]
     #[test]
     fn deserialize_from_unit() {
-        assert_de_tokens(
-            &Null,
-            &[
-                Token::Unit,
-            ],
-        );
+        assert_de_tokens(&Null, &[Token::Unit]);
     }
 
     #[cfg(feature = "serde")]
     #[test]
     fn deserialize_from_invalid_type() {
         assert_de_tokens_error::<Null>(
-            &[
-                Token::U32(42),
-            ],
-            "invalid type: integer `42`, expected struct Null"
+            &[Token::U32(42)],
+            "invalid type: integer `42`, expected struct Null",
         );
     }
 }
-

@@ -2,11 +2,11 @@ use crate::{entity::allocator::Location, registry::Registry};
 use core::{fmt, fmt::Debug};
 
 /// An entry for a possibly allocated entity.
-/// 
+///
 /// If this slot has a stored location, then an entity is allocated at that location. If the
 /// location is `None`, then the slot is free and can be used to store a new entity. When the slot
 /// has a stored location, it is called "active".
-/// 
+///
 /// Slots are reused. To differentiate between different allocations that have shared the same
 /// slot, a unique generation is used. Therefore, a unique entity is determined both by its slot
 /// index and its slot's generation.
@@ -17,7 +17,7 @@ where
     /// The currently stored entity's generation.
     pub(crate) generation: u64,
     /// The location of the entity, if one is currently allocated.
-    /// 
+    ///
     /// A `None` value indicates no entity is allocated in this slot.
     pub(crate) location: Option<Location<R>>,
 }
