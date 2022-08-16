@@ -1,6 +1,7 @@
 use crate::{component::Component, entity::Null};
 use alloc::vec::Vec;
 use core::{any::TypeId, mem::ManuallyDrop};
+use fnv::FnvBuildHasher;
 use hashbrown::HashMap;
 
 pub trait Storage {
@@ -19,7 +20,7 @@ pub trait Storage {
     /// which `component_map` has an entry whose index references it.
     unsafe fn push_components(
         self,
-        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
         components: &mut [(*mut u8, usize)],
         length: usize,
     );
@@ -41,14 +42,14 @@ pub trait Storage {
     /// the given `component_map`.
     unsafe fn to_identifier(
         identifier: &mut [u8],
-        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     );
 }
 
 impl Storage for Null {
     unsafe fn push_components(
         self,
-        _component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        _component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
         _components: &mut [(*mut u8, usize)],
         _length: usize,
     ) {
@@ -56,7 +57,7 @@ impl Storage for Null {
 
     unsafe fn to_identifier(
         _identifier: &mut [u8],
-        _component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        _component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     ) {
     }
 }
@@ -68,7 +69,7 @@ where
 {
     unsafe fn push_components(
         self,
-        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
         components: &mut [(*mut u8, usize)],
         length: usize,
     ) {
@@ -97,7 +98,7 @@ where
 
     unsafe fn to_identifier(
         identifier: &mut [u8],
-        component_map: &HashMap<TypeId, usize, ahash::RandomState>,
+        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     ) {
         let component_index = component_map.get(&TypeId::of::<C>()).unwrap();
         let index = component_index / 8;
