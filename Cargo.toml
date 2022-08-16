@@ -20,7 +20,7 @@ rustdoc-args = ["--cfg", "doc_cfg"]
 [dependencies]
 ahash = {version = "0.8.0", default-features = false, features = ["compile-time-rng"]}
 either = {version = "1.7.0", default-features = false}
-hashbrown = {version = "0.12.3", features = ["raw"]}
+hashbrown = {version = "0.12.3", default-features = false, features = ["inline-more", "raw"]}
 rayon = {version = "1.5.3", optional = true}
 serde = {version = "1.0.143", default-features = false, features = ["alloc"], optional = true}
 

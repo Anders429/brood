@@ -57,7 +57,7 @@ where
 
     current_results_iter: Option<V::Results>,
 
-    component_map: &'a HashMap<TypeId, usize>,
+    component_map: &'a HashMap<TypeId, usize, ahash::RandomState>,
 
     filter: PhantomData<F>,
 }
@@ -70,7 +70,7 @@ where
 {
     pub(crate) fn new(
         archetypes_iter: archetypes::IterMut<'a, R>,
-        component_map: &'a HashMap<TypeId, usize>,
+        component_map: &'a HashMap<TypeId, usize, ahash::RandomState>,
     ) -> Self {
         Self {
             archetypes_iter,

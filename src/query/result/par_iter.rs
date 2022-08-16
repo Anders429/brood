@@ -64,7 +64,7 @@ where
 {
     archetypes_iter: archetypes::ParIterMut<'a, R>,
 
-    component_map: &'a HashMap<TypeId, usize>,
+    component_map: &'a HashMap<TypeId, usize, ahash::RandomState>,
 
     filter: PhantomData<F>,
     views: PhantomData<V>,
@@ -78,7 +78,7 @@ where
 {
     pub(crate) fn new(
         archetypes_iter: archetypes::ParIterMut<'a, R>,
-        component_map: &'a HashMap<TypeId, usize>,
+        component_map: &'a HashMap<TypeId, usize, ahash::RandomState>,
     ) -> Self {
         Self {
             archetypes_iter,
@@ -130,14 +130,14 @@ where
 
 struct ResultsConsumer<'a, C, F, V> {
     base: C,
-    component_map: &'a HashMap<TypeId, usize>,
+    component_map: &'a HashMap<TypeId, usize, ahash::RandomState>,
 
     filter: PhantomData<F>,
     views: PhantomData<V>,
 }
 
 impl<'a, C, F, V> ResultsConsumer<'a, C, F, V> {
-    fn new(base: C, component_map: &'a HashMap<TypeId, usize>) -> Self {
+    fn new(base: C, component_map: &'a HashMap<TypeId, usize, ahash::RandomState>) -> Self {
         Self {
             base,
             component_map,
@@ -210,7 +210,7 @@ where
 
 struct ResultsFolder<'a, C, P, F, V> {
     base: C,
-    component_map: &'a HashMap<TypeId, usize>,
+    component_map: &'a HashMap<TypeId, usize, ahash::RandomState>,
     previous: Option<P>,
 
     filter: PhantomData<F>,
