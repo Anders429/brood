@@ -89,7 +89,10 @@ where
         entity_allocator: entity::Allocator<R>,
         len: usize,
     ) -> Self {
-        R::assert_no_duplicates(&mut HashSet::with_capacity_and_hasher(R::LEN, ahash::RandomState::new()));
+        R::assert_no_duplicates(&mut HashSet::with_capacity_and_hasher(
+            R::LEN,
+            ahash::RandomState::new(),
+        ));
 
         let mut component_map = HashMap::with_hasher(ahash::RandomState::new());
         R::create_component_map(&mut component_map, 0);

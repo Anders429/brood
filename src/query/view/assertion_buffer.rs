@@ -56,7 +56,10 @@ impl AssertionBuffer {
     pub(crate) fn with_capacity(capacity: usize) -> Self {
         Self {
             mutable_claims: HashSet::with_capacity_and_hasher(capacity, ahash::RandomState::new()),
-            immutable_claims: HashSet::with_capacity_and_hasher(capacity, ahash::RandomState::new()),
+            immutable_claims: HashSet::with_capacity_and_hasher(
+                capacity,
+                ahash::RandomState::new(),
+            ),
         }
     }
 

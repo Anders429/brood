@@ -31,7 +31,10 @@ pub trait Storage {
     /// Populate a map with component [`TypeId`]s and their associated index within the registry.
     ///
     /// [`TypeId`]: core::any::TypeId
-    fn create_component_map(component_map: &mut HashMap<TypeId, usize, ahash::RandomState>, index: usize);
+    fn create_component_map(
+        component_map: &mut HashMap<TypeId, usize, ahash::RandomState>,
+        index: usize,
+    );
 
     /// Populate a map with component [`TypeId`]s and their associated index within the components
     /// identified by the identifier in the order defined by the registry.
@@ -329,7 +332,11 @@ pub trait Storage {
 }
 
 impl Storage for Null {
-    fn create_component_map(_component_map: &mut HashMap<TypeId, usize, ahash::RandomState>, _index: usize) {}
+    fn create_component_map(
+        _component_map: &mut HashMap<TypeId, usize, ahash::RandomState>,
+        _index: usize,
+    ) {
+    }
 
     unsafe fn create_component_map_for_identifier<R>(
         _component_map: &mut HashMap<TypeId, usize, ahash::RandomState>,
@@ -444,7 +451,10 @@ where
     C: Component,
     R: Storage,
 {
-    fn create_component_map(component_map: &mut HashMap<TypeId, usize, ahash::RandomState>, index: usize) {
+    fn create_component_map(
+        component_map: &mut HashMap<TypeId, usize, ahash::RandomState>,
+        index: usize,
+    ) {
         component_map.insert(TypeId::of::<C>(), index);
         R::create_component_map(component_map, index + 1);
     }
