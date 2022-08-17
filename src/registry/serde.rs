@@ -4,9 +4,9 @@ use crate::{
     component::Component,
     registry::{Null, Registry},
 };
-use ::serde::{de, de::SeqAccess, ser::SerializeTuple, Deserialize, Serialize};
-use alloc::{format, vec::Vec};
+use alloc::{format, string::String, vec::Vec};
 use core::{any::type_name, mem::ManuallyDrop};
+use serde::{de, de::SeqAccess, ser::SerializeTuple, Deserialize, Serialize};
 
 #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
 pub trait RegistrySerialize: Registry {
@@ -232,9 +232,11 @@ pub trait RegistryDeserialize<'de>: Registry + 'de {
         length: usize,
         seq: &mut V,
         identifier_iter: archetype::identifier::Iter<R>,
+        current_index: usize,
+        identifier: archetype::IdentifierRef<R>,
     ) -> Result<(), V::Error>
     where
-        R: Registry,
+        R: RegistryDeserialize<'de>,
         V: SeqAccess<'de>;
 
     /// # Safety
@@ -255,10 +257,24 @@ pub trait RegistryDeserialize<'de>: Registry + 'de {
         length: usize,
         seq: &mut V,
         identifier_iter: archetype::identifier::Iter<R>,
+        current_index: usize,
+        identifier: archetype::IdentifierRef<R>,
     ) -> Result<(), V::Error>
     where
-        R: Registry,
+        R: RegistryDeserialize<'de>,
         V: SeqAccess<'de>;
+
+    /// # Safety
+    /// When called externally, the `Registry` `R` provided to the method must by the same as the
+    /// `Registry` on which this method is being called.
+    ///
+    /// When called internally, the `identifier_iter` must have the same amount of bits left as
+    /// there are components remaining.
+    unsafe fn expected_row_component_names<R>(
+        names: &mut String,
+        identifier_iter: archetype::identifier::Iter<R>,
+    ) where
+        R: Registry;
 }
 
 impl<'de> RegistryDeserialize<'de> for Null {
@@ -267,9 +283,11 @@ impl<'de> RegistryDeserialize<'de> for Null {
         _length: usize,
         _seq: &mut V,
         _identifier_iter: archetype::identifier::Iter<R>,
+        _current_index: usize,
+        _identifier: archetype::IdentifierRef<R>,
     ) -> Result<(), V::Error>
     where
-        R: Registry,
+        R: RegistryDeserialize<'de>,
         V: SeqAccess<'de>,
     {
         Ok(())
@@ -280,12 +298,22 @@ impl<'de> RegistryDeserialize<'de> for Null {
         _length: usize,
         _seq: &mut V,
         _identifier_iter: archetype::identifier::Iter<R>,
+        _current_index: usize,
+        _identifier: archetype::IdentifierRef<R>,
     ) -> Result<(), V::Error>
     where
-        R: Registry,
+        R: RegistryDeserialize<'de>,
         V: SeqAccess<'de>,
     {
         Ok(())
+    }
+
+    unsafe fn expected_row_component_names<R>(
+        _names: &mut String,
+        _identifier_iter: archetype::identifier::Iter<R>,
+    ) where
+        R: Registry,
+    {
     }
 }
 
@@ -299,9 +327,11 @@ where
         length: usize,
         seq: &mut V,
         mut identifier_iter: archetype::identifier::Iter<R_>,
+        current_index: usize,
+        identifier: archetype::IdentifierRef<R_>,
     ) -> Result<(), V::Error>
     where
-        R_: Registry,
+        R_: RegistryDeserialize<'de>,
         V: SeqAccess<'de>,
     {
         if
@@ -312,14 +342,35 @@ where
             let component_column = seq
                 .next_element_seed(DeserializeColumn::<C>::new(length))?
                 .ok_or_else(|| {
-                    de::Error::custom(format!("expected a column of type `{}`", type_name::<C>()))
+                    de::Error::invalid_length(
+                        current_index + 1,
+                        &format!("columns for each of (entity::Identifier{})", {
+                            let mut names = String::new();
+                            // SAFETY: The identifier iter passed here contains the same amount of
+                            // bits as there are components in `R_`.
+                            unsafe {
+                                R_::expected_row_component_names(&mut names, identifier.iter());
+                            }
+                            names
+                        })
+                        .as_str(),
+                    )
                 })?;
             components.push((component_column.0.cast::<u8>(), component_column.1));
         }
 
         // SAFETY: Since one bit was consumed from `identifier_iter`, it still has the same number
         // of bits remaining as there are components remaining.
-        unsafe { R::deserialize_components_by_column(components, length, seq, identifier_iter) }
+        unsafe {
+            R::deserialize_components_by_column(
+                components,
+                length,
+                seq,
+                identifier_iter,
+                current_index + 1,
+                identifier,
+            )
+        }
     }
 
     unsafe fn deserialize_components_by_row<R_, V>(
@@ -327,9 +378,11 @@ where
         length: usize,
         seq: &mut V,
         mut identifier_iter: archetype::identifier::Iter<R_>,
+        current_index: usize,
+        identifier: archetype::IdentifierRef<R_>,
     ) -> Result<(), V::Error>
     where
-        R_: Registry,
+        R_: RegistryDeserialize<'de>,
         V: SeqAccess<'de>,
     {
         if
@@ -355,7 +408,17 @@ where
 
             v.push(seq.next_element()?.ok_or_else(|| {
                 // TODO: the length returned here is incorrect.
-                de::Error::invalid_length(0, &"`length` components for each column")
+                de::Error::invalid_length(
+                    current_index + 1,
+                    &format!("(entity::Identifier{})", {
+                        let mut names = String::new();
+                        // SAFETY: The identifier iter passed here contains the same amount of bits
+                        // as there are components in `R_`.
+                        unsafe { R_::expected_row_component_names(&mut names, identifier.iter()) };
+                        names
+                    })
+                    .as_str(),
+                )
             })?);
             component_column.0 = v.as_mut_ptr().cast::<u8>();
             component_column.1 = v.capacity();
@@ -384,6 +447,73 @@ where
         // Furthermore, regardless of whether the bit was set or not, `R` is one component smaller
         // than `(C, R)`, and since `identifier_iter` has had one bit consumed, it still has the
         // same number of bits remaining as `R` has components remaining.
-        unsafe { R::deserialize_components_by_row(components, length, seq, identifier_iter) }
+        unsafe {
+            R::deserialize_components_by_row(
+                components,
+                length,
+                seq,
+                identifier_iter,
+                current_index + 1,
+                identifier,
+            )
+        }
+    }
+
+    unsafe fn expected_row_component_names<R_>(
+        names: &mut String,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
+    ) where
+        R_: Registry,
+    {
+        if
+        // SAFETY: `identifier_iter` is guaranteed by the safety contract of this method to
+        // return a value for every component within the registry.
+        unsafe { identifier_iter.next().unwrap_unchecked() } {
+            names.push_str(", ");
+            names.push_str(type_name::<C>());
+        }
+
+        // SAFETY: Since one bit was consumed in `identifier_iter`, there are the same number of
+        // bits remaining as there are components in `R`.
+        unsafe { R::expected_row_component_names(names, identifier_iter) }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::registry;
+    use alloc::vec;
+    use serde_derive::Deserialize;
+
+    #[derive(Deserialize)]
+    struct A;
+    #[derive(Deserialize)]
+    struct B;
+    #[derive(Deserialize)]
+    struct C;
+    type Registry = registry!(A, B, C);
+
+    #[test]
+    fn expected_row_component_names_empty() {
+        let identifier = unsafe { archetype::Identifier::<Registry>::new(vec![0]) };
+
+        let mut result = String::new();
+        unsafe { Registry::expected_row_component_names(&mut result, identifier.iter()) };
+
+        assert_eq!(result, "");
+    }
+
+    #[test]
+    fn expected_row_component_names_some() {
+        let identifier = unsafe { archetype::Identifier::<Registry>::new(vec![5]) };
+
+        let mut result = String::new();
+        unsafe { Registry::expected_row_component_names(&mut result, identifier.iter()) };
+
+        assert_eq!(
+            result,
+            format!(", {}, {}", type_name::<A>(), type_name::<C>())
+        );
     }
 }
