@@ -189,7 +189,7 @@ mod tests {
         let mut a_column_a = vec![A(0), A(1), A(2)];
         let mut b_column_a = vec![B(false), B(true), B(true)];
         let mut c_column_a = vec![C, C, C];
-        let mut components_a = vec![
+        let components_a = vec![
             (a_column_a.as_mut_ptr().cast::<u8>(), a_column_a.capacity()),
             (b_column_a.as_mut_ptr().cast::<u8>(), b_column_a.capacity()),
             (c_column_a.as_mut_ptr().cast::<u8>(), c_column_a.capacity()),
@@ -197,7 +197,7 @@ mod tests {
         let mut a_column_b = vec![A(0), A(1), A(2)];
         let mut b_column_b = vec![B(false), B(true), B(true)];
         let mut c_column_b = vec![C, C, C];
-        let mut components_b = vec![
+        let components_b = vec![
             (a_column_b.as_mut_ptr().cast::<u8>(), a_column_b.capacity()),
             (b_column_b.as_mut_ptr().cast::<u8>(), b_column_b.capacity()),
             (c_column_b.as_mut_ptr().cast::<u8>(), c_column_b.capacity()),
@@ -221,7 +221,7 @@ mod tests {
         let mut a_column_a = vec![A(0), A(1), A(2)];
         let mut b_column_a = vec![B(false), B(true), B(true)];
         let mut c_column_a = vec![C, C, C];
-        let mut components_a = vec![
+        let components_a = vec![
             (a_column_a.as_mut_ptr().cast::<u8>(), a_column_a.capacity()),
             (b_column_a.as_mut_ptr().cast::<u8>(), b_column_a.capacity()),
             (c_column_a.as_mut_ptr().cast::<u8>(), c_column_a.capacity()),
@@ -229,7 +229,7 @@ mod tests {
         let mut a_column_b = vec![A(0), A(1), A(2)];
         let mut b_column_b = vec![B(false), B(false), B(true)];
         let mut c_column_b = vec![C, C, C];
-        let mut components_b = vec![
+        let components_b = vec![
             (a_column_b.as_mut_ptr().cast::<u8>(), a_column_b.capacity()),
             (b_column_b.as_mut_ptr().cast::<u8>(), b_column_b.capacity()),
             (c_column_b.as_mut_ptr().cast::<u8>(), c_column_b.capacity()),
