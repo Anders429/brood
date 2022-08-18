@@ -130,7 +130,7 @@ where
     }
 
     #[cfg(feature = "serde")]
-    pub(crate) fn insert(&mut self, archetype: Archetype<R>) -> bool {
+    pub(crate) fn insert(&mut self, archetype: Archetype<R>) -> Result<(), Archetype<R>> {
         let hash = Self::make_hash(
             // SAFETY: The `IdentifierRef` obtained here does not live longer than the `archetype`.
             unsafe { archetype.identifier() },
@@ -144,11 +144,11 @@ where
                 unsafe { archetype.identifier() },
             ),
         ) {
-            false
+            Err(archetype)
         } else {
             self.raw_archetypes
                 .insert(hash, archetype, Self::make_hasher(&self.hash_builder));
-            true
+            Ok(())
         }
     }
 

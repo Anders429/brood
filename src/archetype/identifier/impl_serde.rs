@@ -104,7 +104,7 @@ mod tests {
     use super::*;
     use crate::registry;
     use alloc::vec;
-    use serde_test::{assert_de_tokens, assert_de_tokens_error, assert_tokens, Token};
+    use serde_test::{assert_de_tokens_error, assert_tokens, Token};
 
     macro_rules! create_components {
         ($( $variants:ident ),*) => {
