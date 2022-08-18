@@ -76,7 +76,7 @@ where
                         return Err(de::Error::custom(format_args!(
                             "non-unique `Identifier` {:?}, expected {}",
                             // SAFETY: This identifier will not outlive the archetype.
-                            unsafe {archetype.identifier()},
+                            unsafe { archetype.identifier() },
                             (&self as &dyn Expected)
                         )));
                     }
