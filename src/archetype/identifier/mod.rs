@@ -120,7 +120,6 @@ where
     ///
     /// This is not a cheap operation. It is O(N), looping over the bits individually and counting
     /// them.
-    #[cfg(feature = "serde")]
     #[must_use]
     pub(crate) fn count(&self) -> usize {
         // SAFETY: The identifier here will outlive the derived `Iter`.
