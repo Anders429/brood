@@ -89,11 +89,7 @@ where
         // SAFETY: The registry `R` over which `identifier` is generic is the same
         // `R` on which this function is called.
         unsafe {
-            R::new_components_with_capacity(
-                &mut components,
-                0,
-                identifier.iter(),
-            );
+            R::new_components_with_capacity(&mut components, 0, identifier.iter());
         }
 
         // SAFETY: `entity_identifiers` is an empty `Vec`, which matches the provided `length` of
