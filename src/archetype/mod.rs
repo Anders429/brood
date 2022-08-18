@@ -84,13 +84,16 @@ where
     pub(crate) fn new(identifier: Identifier<R>) -> Self {
         let mut entity_identifiers = ManuallyDrop::new(Vec::new());
 
-        let entity_len =
-            // SAFETY: The iterator returned here is outlived by `identifier`.
-            unsafe { identifier.iter() }.filter(|b| *b).count();
-        let mut components = Vec::with_capacity(entity_len);
-        for _ in 0..entity_len {
-            let mut v = ManuallyDrop::new(Vec::new());
-            components.push((v.as_mut_ptr(), v.capacity()));
+        let components_len = identifier.count();
+        let mut components = Vec::with_capacity(components_len);
+        // SAFETY: The registry `R` over which `identifier` is generic is the same
+        // `R` on which this function is called.
+        unsafe {
+            R::new_components_with_capacity(
+                &mut components,
+                0,
+                identifier.iter(),
+            );
         }
 
         // SAFETY: `entity_identifiers` is an empty `Vec`, which matches the provided `length` of
