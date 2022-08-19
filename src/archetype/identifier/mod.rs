@@ -116,6 +116,16 @@ where
         unsafe { Iter::<R>::new(self.pointer) }
     }
 
+    /// Returns the number of components identified by this identifier.
+    ///
+    /// This is not a cheap operation. It is O(N), looping over the bits individually and counting
+    /// them.
+    #[must_use]
+    pub(crate) fn count(&self) -> usize {
+        // SAFETY: The identifier here will outlive the derived `Iter`.
+        unsafe { self.iter() }.filter(|b| *b).count()
+    }
+
     /// Returns the size of the components within the canonical entity represented by this
     /// identifier.
     ///
@@ -239,6 +249,17 @@ where
         // SAFETY: `self.pointer` will be valid as long as the returned `Iter` exists, assuming the
         // caller ensures the `Identifier` outlives it.
         unsafe { Iter::<R>::new(self.pointer) }
+    }
+
+    /// Returns the number of components identified by this identifier.
+    ///
+    /// This is not a cheap operation. It is O(N), looping over the bits individually and counting
+    /// them.
+    #[cfg(feature = "serde")]
+    #[must_use]
+    pub(crate) fn count(self) -> usize {
+        // SAFETY: The identifier here will outlive the derived `Iter`.
+        unsafe { self.iter() }.filter(|b| *b).count()
     }
 
     /// Returns a copy of the bytes defining this identifier.
@@ -379,6 +400,14 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "serde")]
+    #[test]
+    fn buffer_count() {
+        let buffer = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+
+        assert_eq!(buffer.count(), 4);
+    }
+
     #[test]
     fn buffer_size_of_components() {
         let buffer = unsafe { Identifier::<registry!(bool, u64, f32)>::new(vec![7]) };
@@ -415,6 +444,15 @@ mod tests {
                 false, false,
             ]
         );
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn identifier_count() {
+        let buffer = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+        let identifier = unsafe { buffer.as_ref() };
+
+        assert_eq!(identifier.count(), 4);
     }
 
     #[test]

@@ -1,7 +1,11 @@
 use crate::{
-    archetype, component::Component, entity::allocator::Location, registry::Registry, world::World,
+    archetype,
+    component::Component,
+    entity::allocator::Location,
+    registry::{Registry, RegistryDebug},
+    world::World,
 };
-use core::any::TypeId;
+use core::{any::TypeId, fmt, fmt::Debug};
 
 /// A view into a single entity in a [`World`].
 ///
@@ -247,4 +251,16 @@ where
     // {
     //     todo!()
     // }
+}
+
+impl<'a, R> Debug for Entry<'a, R>
+where
+    R: RegistryDebug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Entry")
+            .field("world", self.world)
+            .field("location", &self.location)
+            .finish()
+    }
 }

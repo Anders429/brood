@@ -70,3 +70,33 @@ macro_rules! define_null_uninstantiable {
 
 pub(crate) use define_null;
 pub(crate) use define_null_uninstantiable;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[cfg(feature = "serde")]
+    use serde_test::{assert_de_tokens, assert_de_tokens_error, assert_tokens, Token};
+
+    define_null!();
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn serialize_deserialize() {
+        assert_tokens(&Null, &[Token::UnitStruct { name: "Null" }]);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn deserialize_from_unit() {
+        assert_de_tokens(&Null, &[Token::Unit]);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn deserialize_from_invalid_type() {
+        assert_de_tokens_error::<Null>(
+            &[Token::U32(42)],
+            "invalid type: integer `42`, expected struct Null",
+        );
+    }
+}

@@ -1,5 +1,5 @@
 use crate::{archetype::Identifier, registry::Registry};
-use alloc::vec::Vec;
+use alloc::{format, vec::Vec};
 use core::{fmt, marker::PhantomData, mem::ManuallyDrop};
 use serde::{
     de,
@@ -66,15 +66,17 @@ where
                 }
 
                 // Check that trailing bits are not set.
-                // SAFETY: `buffer` is guaranteed to have `(R::LEN + 7) / 8` elements, so this will
-                // always be within the bounds of `buffer.`
-                let byte = unsafe { buffer.get_unchecked((R::LEN + 7) / 8 - 1) };
-                let bit = R::LEN % 8;
-                if bit != 0 && byte & (255 << bit) != 0 {
-                    return Err(de::Error::invalid_value(
-                        Unexpected::Unsigned(u64::from(*byte)),
-                        &self,
-                    ));
+                if R::LEN != 0 {
+                    // SAFETY: `buffer` is guaranteed to have `(R::LEN + 7) / 8` elements, so this will
+                    // always be within the bounds of `buffer.`
+                    let byte = unsafe { buffer.get_unchecked((R::LEN + 7) / 8 - 1) };
+                    let bit = R::LEN % 8;
+                    if bit != 0 && byte & (255 << bit) != 0 {
+                        return Err(de::Error::invalid_value(
+                            Unexpected::Other(&format!("byte array {:?}", &buffer)),
+                            &self,
+                        ));
+                    }
                 }
 
                 let mut buffer = ManuallyDrop::new(buffer);
@@ -94,5 +96,81 @@ where
                 registry: PhantomData,
             },
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::registry;
+    use alloc::vec;
+    use serde_test::{assert_de_tokens_error, assert_tokens, Token};
+
+    macro_rules! create_components {
+        ($( $variants:ident ),*) => {
+            $(
+                struct $variants(f32);
+            )*
+        };
+    }
+
+    create_components!(
+        A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z
+    );
+
+    type Registry =
+        registry!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
+
+    #[test]
+    fn serialize_deserialize() {
+        let identifier = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
+
+        assert_tokens(
+            &identifier,
+            &[
+                Token::Tuple { len: 4 },
+                Token::U8(1),
+                Token::U8(2),
+                Token::U8(3),
+                Token::U8(0),
+                Token::TupleEnd,
+            ],
+        );
+    }
+
+    #[test]
+    fn serialize_deserialize_empty() {
+        let identifier = unsafe { Identifier::<registry!()>::new(vec![]) };
+
+        assert_tokens(&identifier, &[Token::Tuple { len: 0 }, Token::TupleEnd]);
+    }
+
+    #[test]
+    fn deserialize_from_too_many_bits() {
+        assert_de_tokens_error::<Identifier<Registry>>(
+            &[
+                Token::Tuple { len: 4 },
+                Token::U8(1),
+                Token::U8(2),
+                Token::U8(3),
+                Token::U8(255),
+                Token::TupleEnd,
+            ],
+            "invalid value: byte array [1, 2, 3, 255], expected 26 bits corresponding to components, with prefixed 0s padded on the last byte to round up to 4 bytes"
+        );
+    }
+
+    #[test]
+    fn deserialize_from_too_few_bytes() {
+        assert_de_tokens_error::<Identifier<Registry>>(
+            &[
+                Token::Tuple { len: 3 },
+                Token::U8(1),
+                Token::U8(2),
+                Token::U8(3),
+                Token::TupleEnd,
+            ],
+            "invalid length 3, expected 26 bits corresponding to components, with prefixed 0s padded on the last byte to round up to 4 bytes"
+        );
     }
 }

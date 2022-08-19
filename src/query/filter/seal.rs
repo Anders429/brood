@@ -217,3 +217,231 @@ where
         unsafe { And::<V, W>::filter(identifier, component_map) }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{query::views, registry};
+    use alloc::vec;
+
+    struct A;
+    struct B;
+
+    type Registry = registry!(A, B);
+
+    #[test]
+    fn filter_none() {
+        assert!(unsafe {
+            None::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &HashMap::with_hasher(FnvBuildHasher::default()),
+            )
+        });
+    }
+
+    #[test]
+    fn filter_has_true() {
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
+        component_map.insert(TypeId::of::<A>(), 0);
+
+        assert!(unsafe {
+            Has::<A>::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &component_map,
+            )
+        });
+    }
+
+    #[test]
+    fn filter_has_false() {
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
+        component_map.insert(TypeId::of::<A>(), 0);
+
+        assert!(!unsafe {
+            Has::<B>::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &component_map,
+            )
+        });
+    }
+
+    #[test]
+    fn not() {
+        assert!(!unsafe {
+            Not::<None>::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &HashMap::with_hasher(FnvBuildHasher::default()),
+            )
+        });
+    }
+
+    #[test]
+    fn and() {
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
+        component_map.insert(TypeId::of::<A>(), 0);
+
+        assert!(unsafe {
+            And::<None, Has<A>>::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &component_map,
+            )
+        });
+    }
+
+    #[test]
+    fn or() {
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
+        component_map.insert(TypeId::of::<A>(), 0);
+
+        assert!(unsafe {
+            Or::<Has<B>, Has<A>>::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &component_map,
+            )
+        });
+    }
+
+    #[test]
+    fn ref_true() {
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
+        component_map.insert(TypeId::of::<A>(), 0);
+
+        assert!(unsafe {
+            <&A>::filter::<Registry>(archetype::Identifier::new(vec![1]).as_ref(), &component_map)
+        });
+    }
+
+    #[test]
+    fn ref_false() {
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
+        component_map.insert(TypeId::of::<A>(), 0);
+
+        assert!(!unsafe {
+            <&B>::filter::<Registry>(archetype::Identifier::new(vec![1]).as_ref(), &component_map)
+        });
+    }
+
+    #[test]
+    fn mut_ref_true() {
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
+        component_map.insert(TypeId::of::<A>(), 0);
+
+        assert!(unsafe {
+            <&mut A>::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &component_map,
+            )
+        });
+    }
+
+    #[test]
+    fn mut_ref_false() {
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
+        component_map.insert(TypeId::of::<A>(), 0);
+
+        assert!(!unsafe {
+            <&mut B>::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &component_map,
+            )
+        });
+    }
+
+    #[test]
+    fn option_contains() {
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
+        component_map.insert(TypeId::of::<A>(), 0);
+
+        assert!(unsafe {
+            <Option<&A> as Seal>::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &component_map,
+            )
+        });
+    }
+
+    #[test]
+    fn option_not_contains() {
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
+        component_map.insert(TypeId::of::<A>(), 0);
+
+        assert!(unsafe {
+            <Option<&B> as Seal>::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &component_map,
+            )
+        });
+    }
+
+    #[test]
+    fn option_mut_contains() {
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
+        component_map.insert(TypeId::of::<A>(), 0);
+
+        assert!(unsafe {
+            <Option<&mut A> as Seal>::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &component_map,
+            )
+        });
+    }
+
+    #[test]
+    fn option_mut_not_contains() {
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
+        component_map.insert(TypeId::of::<A>(), 0);
+
+        assert!(unsafe {
+            <Option<&mut B> as Seal>::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &component_map,
+            )
+        });
+    }
+
+    #[test]
+    fn entity_identifier() {
+        assert!(unsafe {
+            entity::Identifier::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &HashMap::with_hasher(FnvBuildHasher::default()),
+            )
+        });
+    }
+
+    #[test]
+    fn view_null() {
+        assert!(unsafe {
+            view::Null::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &HashMap::with_hasher(FnvBuildHasher::default()),
+            )
+        });
+    }
+
+    #[test]
+    fn views_true() {
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
+        component_map.insert(TypeId::of::<A>(), 0);
+
+        assert!(unsafe {
+            <views!(&mut A)>::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &component_map,
+            )
+        });
+    }
+
+    #[test]
+    fn views_false() {
+        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
+        component_map.insert(TypeId::of::<A>(), 0);
+
+        assert!(!unsafe {
+            <views!(&mut A, &B)>::filter::<Registry>(
+                archetype::Identifier::new(vec![1]).as_ref(),
+                &component_map,
+            )
+        });
+    }
+}
