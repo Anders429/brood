@@ -104,6 +104,7 @@ where
 ///
 /// [`Entities`]: crate::entities::Entities
 /// [`entities!`]: crate::entities!
+#[derive(Debug, Eq, PartialEq)]
 pub struct Batch<E>
 where
     E: Entities,
@@ -282,4 +283,35 @@ macro_rules! entities {
     (@as_vec ()) => {
         $crate::entities::Null
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloc::vec;
+
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+    struct A(u64);
+
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+    struct B(char);
+
+    #[test]
+    fn entities() {
+        assert_eq!(
+            entities!((A(42), B('f')); 100),
+            Batch::new((vec![A(42); 100], (vec![B('f'); 100], Null)))
+        );
+    }
+
+    #[test]
+    fn entities_len() {
+        assert_eq!(entities!((A(42), B('f')); 100).len(), 100);
+    }
+
+    #[test]
+    #[should_panic]
+    fn batch_new_unequal_lengths() {
+        Batch::new((vec![A(42); 100], (vec![B('f'); 99], Null)));
+    }
 }
