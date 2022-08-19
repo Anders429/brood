@@ -436,13 +436,15 @@ mod tests {
                 unsafe {
                     let entity_identifier = archetype.push(entity!(A, B), &mut allocator); // index 0.
                     archetype.remove_row_unchecked(entity_identifier.index, &mut allocator); // remove index 0.
+                    allocator.free_unchecked(entity_identifier);
                     archetype.push(entity!(A, B), &mut allocator); // index 0.
                     archetype.push(entity!(A, B), &mut allocator); // index 1.
                     let entity_identifier = archetype.push(entity!(A, B), &mut allocator); // index 2.
                     archetype.remove_row_unchecked(entity_identifier.index, &mut allocator); // remove index 2.
+                    allocator.free_unchecked(entity_identifier);
                     let entity_identifier = archetype.push(entity!(A, B), &mut allocator); // index 2.
-                    archetype.remove_row_unchecked(entity_identifier.index, &mut allocator);
-                    // remove index 2.
+                    archetype.remove_row_unchecked(entity_identifier.index, &mut allocator); // remove index 2.
+                    allocator.free_unchecked(entity_identifier);
                 }
                 assert_ok!(archetypes.insert(archetype));
 
@@ -517,13 +519,15 @@ mod tests {
                 unsafe {
                     let entity_identifier = archetype.push(entity!(A, B), &mut allocator); // index 0.
                     archetype.remove_row_unchecked(entity_identifier.index, &mut allocator); // remove index 0.
+                    allocator.free_unchecked(entity_identifier);
                     archetype.push(entity!(A, B), &mut allocator); // index 0.
                     archetype.push(entity!(A, B), &mut allocator); // index 1.
                     let entity_identifier = archetype.push(entity!(A, B), &mut allocator); // index 2.
                     archetype.remove_row_unchecked(entity_identifier.index, &mut allocator); // remove index 2.
+                    allocator.free_unchecked(entity_identifier);
                     let entity_identifier = archetype.push(entity!(A, B), &mut allocator); // index 2.
-                    archetype.remove_row_unchecked(entity_identifier.index, &mut allocator);
-                    // remove index 2.
+                    archetype.remove_row_unchecked(entity_identifier.index, &mut allocator); // remove index 2.
+                    allocator.free_unchecked(entity_identifier);
                 }
                 assert_ok!(archetypes.insert(archetype));
 
