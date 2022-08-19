@@ -1089,4 +1089,260 @@ mod tests {
         result.sort();
         assert_eq!(result, vec![1, 2]);
     }
+
+    #[test]
+    fn system_refs() {
+        struct TestSystem;
+
+        impl<'a> System<'a> for TestSystem {
+            type Views = views!(&'a A);
+            type Filter = filter::None;
+
+            fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+            where
+                R: crate::registry::Registry + 'a,
+            {
+                let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
+                result.sort();
+                assert_eq!(result, vec![1, 2]);
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.run_system(&mut TestSystem);
+    }
+
+    #[test]
+    fn system_mut_refs() {
+        struct TestSystem;
+
+        impl<'a> System<'a> for TestSystem {
+            type Views = views!(&'a mut B);
+            type Filter = filter::None;
+
+            fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+            where
+                R: crate::registry::Registry + 'a,
+            {
+                let mut result = query_results.map(|result!(b)| b.0).collect::<Vec<_>>();
+                result.sort();
+                assert_eq!(result, vec!['a', 'b']);
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.run_system(&mut TestSystem);
+    }
+
+    #[test]
+    fn system_option_refs() {
+        struct TestSystem;
+
+        impl<'a> System<'a> for TestSystem {
+            type Views = views!(Option<&'a A>);
+            type Filter = filter::None;
+
+            fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+            where
+                R: crate::registry::Registry + 'a,
+            {
+                let mut result = query_results
+                    .map(|result!(a)| a.map(|a| a.0))
+                    .collect::<Vec<_>>();
+                result.sort();
+                assert_eq!(result, vec![None, None, Some(1), Some(2)]);
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.run_system(&mut TestSystem);
+    }
+
+    #[test]
+    fn system_option_mut_refs() {
+        struct TestSystem;
+
+        impl<'a> System<'a> for TestSystem {
+            type Views = views!(Option<&'a mut B>);
+            type Filter = filter::None;
+
+            fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+            where
+                R: crate::registry::Registry + 'a,
+            {
+                let mut result = query_results
+                    .map(|result!(b)| b.map(|b| b.0))
+                    .collect::<Vec<_>>();
+                result.sort();
+                assert_eq!(result, vec![None, None, Some('a'), Some('b')]);
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.run_system(&mut TestSystem);
+    }
+
+    #[test]
+    fn system_entity_identifier() {
+        struct TestSystem {
+            entity_identifier: entity::Identifier,
+        }
+
+        impl<'a> System<'a> for TestSystem {
+            type Views = views!(entity::Identifier);
+            type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
+
+            fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+            where
+                R: crate::registry::Registry + 'a,
+            {
+                let result = query_results
+                    .map(|result!(entity_identifier)| entity_identifier)
+                    .collect::<Vec<_>>();
+                assert_eq!(result, vec![self.entity_identifier]);
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.run_system(&mut TestSystem { entity_identifier });
+    }
+
+    #[test]
+    fn system_has_filter() {
+        struct TestSystem;
+
+        impl<'a> System<'a> for TestSystem {
+            type Views = views!(&'a A);
+            type Filter = filter::Has<B>;
+
+            fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+            where
+                R: crate::registry::Registry + 'a,
+            {
+                let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
+                assert_eq!(result, vec![1]);
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.run_system(&mut TestSystem);
+    }
+
+    #[test]
+    fn system_not_filter() {
+        struct TestSystem;
+
+        impl<'a> System<'a> for TestSystem {
+            type Views = views!(&'a A);
+            type Filter = filter::Not<filter::Has<B>>;
+
+            fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+            where
+                R: crate::registry::Registry + 'a,
+            {
+                let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
+                assert_eq!(result, vec![2]);
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.run_system(&mut TestSystem);
+    }
+
+    #[test]
+    fn system_and_filter() {
+        struct TestSystem;
+
+        impl<'a> System<'a> for TestSystem {
+            type Views = views!(&'a A);
+            type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
+
+            fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+            where
+                R: crate::registry::Registry + 'a,
+            {
+                let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
+                assert_eq!(result, vec![1]);
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.run_system(&mut TestSystem);
+    }
+
+    #[test]
+    fn system_or_filter() {
+        struct TestSystem;
+
+        impl<'a> System<'a> for TestSystem {
+            type Views = views!(&'a A);
+            type Filter = filter::Or<filter::Has<A>, filter::Has<B>>;
+
+            fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+            where
+                R: crate::registry::Registry + 'a,
+            {
+                let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
+                result.sort();
+                assert_eq!(result, vec![1, 2]);
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.run_system(&mut TestSystem);
+    }
 }
