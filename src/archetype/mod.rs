@@ -333,13 +333,6 @@ where
             },
         );
 
-        // Free the entity allocation.
-        // SAFETY: `entity_allocator` is guaranteed to contain an entry for the entity identifier
-        // stored at `index` by the safety contract of this method.
-        unsafe {
-            entity_allocator.free_unchecked(*entity_identifiers.get_unchecked(index));
-        }
-
         // Update swapped index if this isn't the last row.
         if index < self.length - 1 {
             // SAFETY: `entity_allocator` contains an entry for the entity identifiers stored in
