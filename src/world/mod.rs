@@ -1610,4 +1610,51 @@ mod tests {
 
         world.run_par_system(&mut TestSystem);
     }
+    
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn schedule() {
+        struct TestSystem;
+
+        impl<'a> System<'a> for TestSystem {
+            type Views = views!(&'a A);
+            type Filter = filter::None;
+
+            fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+            where
+                R: crate::registry::Registry + 'a,
+            {
+                let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
+                result.sort();
+                assert_eq!(result, vec![1, 2]);
+            }
+        }
+
+        struct TestParSystem;
+
+        impl<'a> ParSystem<'a> for TestParSystem {
+            type Views = views!(&'a mut B);
+            type Filter = filter::None;
+
+            fn run<R>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, Self::Views>)
+            where
+                R: crate::registry::Registry + 'a,
+            {
+                let mut result = query_results.map(|result!(b)| b.0).collect::<Vec<_>>();
+                result.sort();
+                assert_eq!(result, vec!['a', 'b']);
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let mut schedule = Schedule::builder().system(TestSystem).par_system(TestParSystem).build();
+
+        world.run_schedule(&mut schedule);
+    }
 }
