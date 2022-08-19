@@ -627,9 +627,9 @@ where
             unsafe {
                 self.entity_allocator.free_unchecked(entity_identifier);
             }
-        }
 
-        self.len -= 1;
+            self.len -= 1;
+        }
     }
 
     /// Removes all entities.
@@ -1740,5 +1740,87 @@ mod tests {
         world.remove(entity_identifier);
 
         assert_none!(world.entry(entity_identifier));
+    }
+
+    #[test]
+    fn remove() {
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.remove(entity_identifier);
+
+        let mut result = world
+            .query::<views!(&A), filter::None>()
+            .map(|result!(a)| a.0)
+            .collect::<Vec<_>>();
+        result.sort();
+        assert_eq!(result, vec![2]);
+        assert_eq!(world.len(), 3);
+    }
+
+    #[test]
+    fn remove_already_removed() {
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.remove(entity_identifier);
+        assert_eq!(world.len(), 3);
+        world.remove(entity_identifier);
+
+        assert_eq!(world.len(), 3);
+    }
+
+    #[test]
+    fn clear() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.clear();
+
+        let mut result = world
+            .query::<views!(&A), filter::None>()
+            .map(|result!(a)| a.0)
+            .collect::<Vec<_>>();
+        result.sort();
+        assert_eq!(result, Vec::new());
+        assert_eq!(world.len(), 0);
+    }
+
+    #[test]
+    fn len() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        assert_eq!(world.len(), 4);
+    }
+
+    #[test]
+    fn is_empty() {
+        let mut world = World::<Registry>::new();
+
+        assert!(world.is_empty());
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        assert!(!world.is_empty());
     }
 }
