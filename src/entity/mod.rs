@@ -111,3 +111,19 @@ macro_rules! entity {
         $crate::entity::Null
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+    struct A(u64);
+
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+    struct B(char);
+
+    #[test]
+    fn entity() {
+        assert_eq!(entity!(B('f'), A(42)), (B('f'), (A(42), Null)));
+    }
+}
