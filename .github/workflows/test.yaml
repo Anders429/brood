@@ -222,7 +222,7 @@ jobs:
     - uses: actions-rs/cargo@v1
       with:
         command: hack
-        args: valgrind test --feature-powerset --optional-deps
+        args: valgrind test --feature-powerset --optional-deps --exclude-features rayon
       env:
         RUSTFLAGS: --cfg skip_trybuild
 
