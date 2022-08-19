@@ -332,6 +332,12 @@ where
                 )
             },
         );
+
+        // Free the entity allocation.
+        unsafe {
+            entity_allocator.free_unchecked(*entity_identifiers.get_unchecked(index));
+        }
+
         // Update swapped index if this isn't the last row.
         if index < self.length - 1 {
             // SAFETY: `entity_allocator` contains an entry for the entity identifiers stored in
