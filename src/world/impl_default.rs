@@ -8,3 +8,16 @@ where
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::registry;
+
+    type Registry = registry!();
+
+    #[test]
+    fn default() {
+        assert_eq!(World::<Registry>::default(), World::<Registry>::new());
+    }
+}
