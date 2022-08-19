@@ -1660,4 +1660,30 @@ mod tests {
 
         world.run_schedule(&mut schedule);
     }
+
+    #[test]
+    fn contains() {
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        assert!(world.contains(entity_identifier));
+    }
+
+    #[test]
+    fn not_contains() {
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.remove(entity_identifier);
+
+        assert!(!world.contains(entity_identifier));
+    }
 }
