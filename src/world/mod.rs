@@ -715,6 +715,8 @@ mod tests {
         query::{filter, result, views},
         registry,
     };
+    #[cfg(feature = "rayon")]
+    use rayon::iter::ParallelIterator;
 
     #[derive(Clone)]
     struct A(u32);
@@ -915,6 +917,164 @@ mod tests {
 
     #[test]
     fn query_or_filter() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let mut result = world
+            .query::<views!(&A), filter::Or<filter::Has<A>, filter::Has<B>>>()
+            .map(|result!(a)| a.0)
+            .collect::<Vec<_>>();
+        result.sort();
+        assert_eq!(result, vec![1, 2]);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn par_query_refs() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let mut result = world
+            .par_query::<views!(&A), filter::None>()
+            .map(|result!(a)| a.0)
+            .collect::<Vec<_>>();
+        result.sort();
+        assert_eq!(result, vec![1, 2]);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn par_query_mut_refs() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let mut result = world
+            .par_query::<views!(&mut B), filter::None>()
+            .map(|result!(b)| b.0)
+            .collect::<Vec<_>>();
+        result.sort();
+        assert_eq!(result, vec!['a', 'b']);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn par_query_option_refs() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let mut result = world
+            .par_query::<views!(Option<&A>), filter::None>()
+            .map(|result!(a)| a.map(|a| a.0))
+            .collect::<Vec<_>>();
+        result.sort();
+        assert_eq!(result, vec![None, None, Some(1), Some(2)]);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn par_query_option_mut_refs() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let mut result = world
+            .par_query::<views!(Option<&mut B>), filter::None>()
+            .map(|result!(b)| b.map(|b| b.0))
+            .collect::<Vec<_>>();
+        result.sort();
+        assert_eq!(result, vec![None, None, Some('a'), Some('b')]);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn par_query_entity_identifiers() {
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let result = world
+            .par_query::<views!(entity::Identifier), filter::And<filter::Has<A>, filter::Has<B>>>()
+            .map(|result!(identifier)| identifier)
+            .collect::<Vec<_>>();
+        assert_eq!(result, vec![entity_identifier]);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn par_query_has_filter() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let result = world
+            .par_query::<views!(&A), filter::Has<B>>()
+            .map(|result!(a)| a.0)
+            .collect::<Vec<_>>();
+        assert_eq!(result, vec![1]);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn par_query_not_filter() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let result = world
+            .par_query::<views!(&A), filter::Not<filter::Has<B>>>()
+            .map(|result!(a)| a.0)
+            .collect::<Vec<_>>();
+        assert_eq!(result, vec![2]);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn par_query_and_filter() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let result = world
+            .par_query::<views!(&A), filter::And<filter::Has<A>, filter::Has<B>>>()
+            .map(|result!(a)| a.0)
+            .collect::<Vec<_>>();
+        assert_eq!(result, vec![1]);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn par_query_or_filter() {
         let mut world = World::<Registry>::new();
 
         world.insert(entity!(A(1), B('a')));
