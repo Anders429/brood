@@ -1610,7 +1610,7 @@ mod tests {
 
         world.run_par_system(&mut TestSystem);
     }
-    
+
     #[cfg(feature = "rayon")]
     #[test]
     fn schedule() {
@@ -1653,7 +1653,10 @@ mod tests {
         world.insert(entity!(B('b')));
         world.insert(entity!());
 
-        let mut schedule = Schedule::builder().system(TestSystem).par_system(TestParSystem).build();
+        let mut schedule = Schedule::builder()
+            .system(TestSystem)
+            .par_system(TestParSystem)
+            .build();
 
         world.run_schedule(&mut schedule);
     }
