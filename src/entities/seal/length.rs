@@ -38,3 +38,31 @@ where
         self.component_len() == len && self.1.check_len_against(len)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::entities;
+    use alloc::vec;
+
+    #[derive(Clone, Copy)]
+    struct A;
+
+    #[derive(Clone, Copy)]
+    struct B;
+
+    #[test]
+    fn component_len() {
+        assert_eq!(entities!((A, B); 100).entities.component_len(), 100);
+    }
+
+    #[test]
+    fn check_len_passes() {
+        assert!(entities!((A, B); 100).entities.check_len());
+    }
+
+    #[test]
+    fn check_len_fails() {
+        assert!(!(vec![A; 100], (vec![B; 99], entities::Null)).check_len());
+    }
+}
