@@ -715,13 +715,14 @@ mod tests {
         query::{filter, result, views},
         registry,
     };
+    use claim::{assert_none, assert_some};
     #[cfg(feature = "rayon")]
     use rayon::iter::ParallelIterator;
 
-    #[derive(Clone)]
+    #[derive(Clone, Debug)]
     struct A(u32);
 
-    #[derive(Clone)]
+    #[derive(Clone, Debug)]
     struct B(char);
 
     type Registry = registry!(A, B);
@@ -1685,5 +1686,59 @@ mod tests {
         world.remove(entity_identifier);
 
         assert!(!world.contains(entity_identifier));
+    }
+
+    #[test]
+    fn entry_add_component() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        let entity_identifier = world.insert(entity!());
+
+        let mut entry = assert_some!(world.entry(entity_identifier));
+        entry.add(A(3));
+
+        let mut result = world
+            .query::<views!(&A), filter::None>()
+            .map(|result!(a)| a.0)
+            .collect::<Vec<_>>();
+        result.sort();
+        assert_eq!(result, vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn entry_remove_component() {
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let mut entry = assert_some!(world.entry(entity_identifier));
+        entry.remove::<A>();
+
+        let mut result = world
+            .query::<views!(&A), filter::None>()
+            .map(|result!(a)| a.0)
+            .collect::<Vec<_>>();
+        result.sort();
+        assert_eq!(result, vec![2]);
+    }
+
+    #[test]
+    fn no_entry_found() {
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.remove(entity_identifier);
+
+        assert_none!(world.entry(entity_identifier));
     }
 }
