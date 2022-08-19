@@ -61,9 +61,7 @@ where
                     .next_element_seed(DeserializeArchetypes::new(&mut len))?
                     .ok_or_else(|| de::Error::invalid_length(0, &self))?;
                 let entity_allocator = seq
-                    .next_element_seed(DeserializeAllocator {
-                        archetypes: &archetypes,
-                    })?
+                    .next_element_seed(DeserializeAllocator::new(&archetypes))?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
                 Ok(World::from_raw_parts(archetypes, entity_allocator, len))
             }

@@ -54,7 +54,16 @@ pub(crate) struct DeserializeAllocator<'a, R>
 where
     R: Registry,
 {
-    pub(crate) archetypes: &'a Archetypes<R>,
+    archetypes: &'a Archetypes<R>,
+}
+
+impl<'a, R> DeserializeAllocator<'a, R>
+where
+    R: Registry,
+{
+    pub(crate) fn new(archetypes: &'a Archetypes<R>) -> Self {
+        Self { archetypes }
+    }
 }
 
 impl<'de, R> DeserializeSeed<'de> for DeserializeAllocator<'_, R>
@@ -191,13 +200,13 @@ where
         for entity_identifier in &free {
             let slot = slots.get_mut(entity_identifier.index).ok_or_else(|| {
                 de::Error::custom(format!(
-                    "entity index {} is out of bounds",
+                    "freed entity index {} is out of bounds",
                     entity_identifier.index
                 ))
             })?;
             match slot {
                 Some(_) => Err(de::Error::custom(format!(
-                    "duplicate entity index {}",
+                    "duplicate freed entity index {}",
                     entity_identifier.index
                 ))),
                 None => {
@@ -215,13 +224,13 @@ where
             for (i, entity_identifier) in archetype.entity_identifiers().enumerate() {
                 let slot = slots.get_mut(entity_identifier.index).ok_or_else(|| {
                     de::Error::custom(format!(
-                        "entity index {} is out of bounds",
+                        "archetype entity index {} is out of bounds",
                         entity_identifier.index
                     ))
                 })?;
                 match slot {
                     Some(_) => Err(de::Error::custom(format!(
-                        "duplicate entity index {}",
+                        "duplicate archetype entity index {}",
                         entity_identifier.index
                     ))),
                     None => {
@@ -261,5 +270,602 @@ where
                 .map(|entity_identifier| entity_identifier.index)
                 .collect(),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        archetype,
+        archetype::Archetype,
+        entity, registry,
+        registry::{
+            RegistryDebug, RegistryDeserialize, RegistryEq, RegistryPartialEq, RegistrySerialize,
+        },
+    };
+    use claim::assert_ok;
+    use core::{fmt, fmt::Debug, marker::PhantomData};
+    use serde_derive::{Deserialize, Serialize};
+    use serde_test::{assert_de_tokens, assert_de_tokens_error, assert_tokens, Token};
+
+    #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+    struct A;
+    #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+    struct B;
+
+    type Registry = registry!(A, B);
+
+    trait Seed<R>
+    where
+        R: crate::registry::Registry,
+    {
+        fn archetypes() -> Archetypes<R>;
+    }
+
+    struct SeededAllocator<R, S>(Allocator<R>, Option<Archetypes<R>>, PhantomData<S>)
+    where
+        R: crate::registry::Registry;
+
+    impl<R, S> SeededAllocator<R, S>
+    where
+        R: crate::registry::Registry,
+    {
+        fn new(allocator: Allocator<R>) -> Self {
+            Self(allocator, None, PhantomData)
+        }
+    }
+
+    impl<R, S> PartialEq for SeededAllocator<R, S>
+    where
+        R: RegistryPartialEq,
+    {
+        fn eq(&self, other: &Self) -> bool {
+            self.0 == other.0
+        }
+    }
+
+    impl<R, S> Eq for SeededAllocator<R, S> where R: RegistryEq {}
+
+    impl<R, S> Debug for SeededAllocator<R, S>
+    where
+        R: RegistryDebug,
+    {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    impl<R, S> Serialize for SeededAllocator<R, S>
+    where
+        R: RegistrySerialize,
+    {
+        fn serialize<T>(&self, serializer: T) -> Result<T::Ok, T::Error>
+        where
+            T: Serializer,
+        {
+            self.0.serialize(serializer)
+        }
+    }
+
+    impl<'de, R, S> Deserialize<'de> for SeededAllocator<R, S>
+    where
+        R: RegistryDeserialize<'de>,
+        S: Seed<R>,
+    {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            let archetypes = S::archetypes();
+            let allocator = DeserializeAllocator::new(&archetypes).deserialize(deserializer)?;
+            Ok(Self(allocator, Some(archetypes), PhantomData))
+        }
+    }
+
+    #[test]
+    fn serialize_deserialize_empty() {
+        let allocator = Allocator::new();
+
+        struct EmptySeed;
+
+        impl<R> Seed<R> for EmptySeed
+        where
+            R: crate::registry::Registry,
+        {
+            fn archetypes() -> Archetypes<R> {
+                Archetypes::new()
+            }
+        }
+
+        assert_tokens(
+            &SeededAllocator::<Registry, EmptySeed>::new(allocator),
+            &[
+                Token::Struct {
+                    name: "Allocator",
+                    len: 2,
+                },
+                Token::String("length"),
+                Token::U64(0),
+                Token::String("free"),
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                Token::StructEnd,
+            ],
+        );
+    }
+
+    #[test]
+    fn serialize_deserialize_with_values() {
+        let mut allocator = Allocator::new();
+        let archetype_identifier = unsafe { archetype::Identifier::<Registry>::new(vec![3]) };
+
+        let entity_identifier = allocator.allocate(Location {
+            identifier: unsafe { archetype_identifier.as_ref() },
+            index: 0,
+        });
+        unsafe { allocator.free_unchecked(entity_identifier) };
+        allocator.allocate(Location {
+            identifier: unsafe { archetype_identifier.as_ref() },
+            index: 0,
+        });
+        allocator.allocate(Location {
+            identifier: unsafe { archetype_identifier.as_ref() },
+            index: 1,
+        });
+        let entity_identifier = allocator.allocate(Location {
+            identifier: unsafe { archetype_identifier.as_ref() },
+            index: 2,
+        });
+        unsafe { allocator.free_unchecked(entity_identifier) };
+        let entity_identifier = allocator.allocate(Location {
+            identifier: unsafe { archetype_identifier.as_ref() },
+            index: 2,
+        });
+        unsafe { allocator.free_unchecked(entity_identifier) };
+
+        struct PopulatedSeed;
+
+        impl Seed<Registry> for PopulatedSeed {
+            fn archetypes() -> Archetypes<Registry> {
+                let mut archetypes = Archetypes::new();
+                let mut allocator = Allocator::new();
+
+                let mut archetype =
+                    Archetype::new(unsafe { archetype::Identifier::<Registry>::new(vec![3]) });
+                unsafe {
+                    let entity_identifier = archetype.push(entity!(A, B), &mut allocator); // index 0.
+                    archetype.remove_row_unchecked(entity_identifier.index, &mut allocator); // remove index 0.
+                    archetype.push(entity!(A, B), &mut allocator); // index 0.
+                    archetype.push(entity!(A, B), &mut allocator); // index 1.
+                    let entity_identifier = archetype.push(entity!(A, B), &mut allocator); // index 2.
+                    archetype.remove_row_unchecked(entity_identifier.index, &mut allocator); // remove index 2.
+                    let entity_identifier = archetype.push(entity!(A, B), &mut allocator); // index 2.
+                    archetype.remove_row_unchecked(entity_identifier.index, &mut allocator);
+                    // remove index 2.
+                }
+                assert_ok!(archetypes.insert(archetype));
+
+                archetypes
+            }
+        }
+
+        assert_tokens(
+            &SeededAllocator::<Registry, PopulatedSeed>::new(allocator),
+            &[
+                Token::Struct {
+                    name: "Allocator",
+                    len: 2,
+                },
+                Token::String("length"),
+                Token::U64(3),
+                Token::String("free"),
+                Token::Seq { len: Some(1) },
+                Token::Struct {
+                    name: "Identifier",
+                    len: 2,
+                },
+                Token::String("index"),
+                Token::U64(2),
+                Token::String("generation"),
+                Token::U64(1),
+                Token::StructEnd,
+                Token::SeqEnd,
+                Token::StructEnd,
+            ],
+        );
+    }
+
+    #[test]
+    fn deserialize_from_seq() {
+        let mut allocator = Allocator::new();
+        let archetype_identifier = unsafe { archetype::Identifier::<Registry>::new(vec![3]) };
+
+        let entity_identifier = allocator.allocate(Location {
+            identifier: unsafe { archetype_identifier.as_ref() },
+            index: 0,
+        });
+        unsafe { allocator.free_unchecked(entity_identifier) };
+        allocator.allocate(Location {
+            identifier: unsafe { archetype_identifier.as_ref() },
+            index: 0,
+        });
+        allocator.allocate(Location {
+            identifier: unsafe { archetype_identifier.as_ref() },
+            index: 1,
+        });
+        let entity_identifier = allocator.allocate(Location {
+            identifier: unsafe { archetype_identifier.as_ref() },
+            index: 2,
+        });
+        unsafe { allocator.free_unchecked(entity_identifier) };
+        let entity_identifier = allocator.allocate(Location {
+            identifier: unsafe { archetype_identifier.as_ref() },
+            index: 2,
+        });
+        unsafe { allocator.free_unchecked(entity_identifier) };
+
+        struct PopulatedSeed;
+
+        impl Seed<Registry> for PopulatedSeed {
+            fn archetypes() -> Archetypes<Registry> {
+                let mut archetypes = Archetypes::new();
+                let mut allocator = Allocator::new();
+
+                let mut archetype =
+                    Archetype::new(unsafe { archetype::Identifier::<Registry>::new(vec![3]) });
+                unsafe {
+                    let entity_identifier = archetype.push(entity!(A, B), &mut allocator); // index 0.
+                    archetype.remove_row_unchecked(entity_identifier.index, &mut allocator); // remove index 0.
+                    archetype.push(entity!(A, B), &mut allocator); // index 0.
+                    archetype.push(entity!(A, B), &mut allocator); // index 1.
+                    let entity_identifier = archetype.push(entity!(A, B), &mut allocator); // index 2.
+                    archetype.remove_row_unchecked(entity_identifier.index, &mut allocator); // remove index 2.
+                    let entity_identifier = archetype.push(entity!(A, B), &mut allocator); // index 2.
+                    archetype.remove_row_unchecked(entity_identifier.index, &mut allocator);
+                    // remove index 2.
+                }
+                assert_ok!(archetypes.insert(archetype));
+
+                archetypes
+            }
+        }
+
+        assert_de_tokens(
+            &SeededAllocator::<Registry, PopulatedSeed>::new(allocator),
+            &[
+                Token::Seq { len: Some(2) },
+                Token::U64(3),
+                Token::Seq { len: Some(1) },
+                Token::Struct {
+                    name: "Identifier",
+                    len: 2,
+                },
+                Token::String("index"),
+                Token::U64(2),
+                Token::String("generation"),
+                Token::U64(1),
+                Token::StructEnd,
+                Token::SeqEnd,
+                Token::SeqEnd,
+            ],
+        );
+    }
+
+    #[test]
+    fn deserialize_missing_field_length() {
+        struct EmptySeed;
+
+        impl<R> Seed<R> for EmptySeed
+        where
+            R: crate::registry::Registry,
+        {
+            fn archetypes() -> Archetypes<R> {
+                Archetypes::new()
+            }
+        }
+
+        assert_de_tokens_error::<SeededAllocator<Registry, EmptySeed>>(
+            &[
+                Token::Struct {
+                    name: "Allocator",
+                    len: 2,
+                },
+                Token::String("free"),
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                Token::StructEnd,
+            ],
+            "missing field `length`",
+        );
+    }
+
+    #[test]
+    fn deserialize_missing_field_free() {
+        struct EmptySeed;
+
+        impl<R> Seed<R> for EmptySeed
+        where
+            R: crate::registry::Registry,
+        {
+            fn archetypes() -> Archetypes<R> {
+                Archetypes::new()
+            }
+        }
+
+        assert_de_tokens_error::<SeededAllocator<Registry, EmptySeed>>(
+            &[
+                Token::Struct {
+                    name: "Allocator",
+                    len: 2,
+                },
+                Token::String("length"),
+                Token::U64(0),
+                Token::StructEnd,
+            ],
+            "missing field `free`",
+        );
+    }
+
+    #[test]
+    fn deserialize_duplicate_field_length() {
+        struct EmptySeed;
+
+        impl<R> Seed<R> for EmptySeed
+        where
+            R: crate::registry::Registry,
+        {
+            fn archetypes() -> Archetypes<R> {
+                Archetypes::new()
+            }
+        }
+
+        assert_de_tokens_error::<SeededAllocator<Registry, EmptySeed>>(
+            &[
+                Token::Struct {
+                    name: "Allocator",
+                    len: 2,
+                },
+                Token::String("length"),
+                Token::U64(0),
+                Token::String("free"),
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                Token::String("length"),
+                Token::U64(0),
+            ],
+            "duplicate field `length`",
+        );
+    }
+
+    #[test]
+    fn deserialize_duplicate_field_free() {
+        struct EmptySeed;
+
+        impl<R> Seed<R> for EmptySeed
+        where
+            R: crate::registry::Registry,
+        {
+            fn archetypes() -> Archetypes<R> {
+                Archetypes::new()
+            }
+        }
+
+        assert_de_tokens_error::<SeededAllocator<Registry, EmptySeed>>(
+            &[
+                Token::Struct {
+                    name: "Allocator",
+                    len: 2,
+                },
+                Token::String("free"),
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                Token::String("length"),
+                Token::U64(0),
+                Token::String("free"),
+                Token::Seq { len: Some(0) },
+            ],
+            "duplicate field `free`",
+        );
+    }
+
+    #[test]
+    fn deserialize_out_of_bounds_free_index() {
+        struct EmptySeed;
+
+        impl<R> Seed<R> for EmptySeed
+        where
+            R: crate::registry::Registry,
+        {
+            fn archetypes() -> Archetypes<R> {
+                Archetypes::new()
+            }
+        }
+
+        assert_de_tokens_error::<SeededAllocator<Registry, EmptySeed>>(
+            &[
+                Token::Struct {
+                    name: "Allocator",
+                    len: 2,
+                },
+                Token::String("length"),
+                Token::U64(0),
+                Token::String("free"),
+                Token::Seq { len: Some(1) },
+                Token::Struct {
+                    name: "Identifier",
+                    len: 2,
+                },
+                Token::String("index"),
+                Token::U64(42),
+                Token::String("generation"),
+                Token::U64(0),
+                Token::StructEnd,
+                Token::SeqEnd,
+                Token::StructEnd,
+            ],
+            "freed entity index 42 is out of bounds",
+        );
+    }
+
+    #[test]
+    fn deserialize_duplicate_free_index() {
+        struct EmptySeed;
+
+        impl<R> Seed<R> for EmptySeed
+        where
+            R: crate::registry::Registry,
+        {
+            fn archetypes() -> Archetypes<R> {
+                Archetypes::new()
+            }
+        }
+
+        assert_de_tokens_error::<SeededAllocator<Registry, EmptySeed>>(
+            &[
+                Token::Struct {
+                    name: "Allocator",
+                    len: 2,
+                },
+                Token::String("length"),
+                Token::U64(1),
+                Token::String("free"),
+                Token::Seq { len: Some(2) },
+                Token::Struct {
+                    name: "Identifier",
+                    len: 2,
+                },
+                Token::String("index"),
+                Token::U64(0),
+                Token::String("generation"),
+                Token::U64(0),
+                Token::StructEnd,
+                Token::Struct {
+                    name: "Identifier",
+                    len: 2,
+                },
+                Token::String("index"),
+                Token::U64(0),
+                Token::String("generation"),
+                Token::U64(1),
+                Token::StructEnd,
+                Token::SeqEnd,
+                Token::StructEnd,
+            ],
+            "duplicate freed entity index 0",
+        );
+    }
+
+    #[test]
+    fn deserialize_out_of_bounds_archetype_index() {
+        struct PopulatedSeed;
+
+        impl Seed<Registry> for PopulatedSeed {
+            fn archetypes() -> Archetypes<Registry> {
+                let mut archetypes = Archetypes::new();
+                let mut allocator = Allocator::new();
+
+                let mut archetype =
+                    Archetype::new(unsafe { archetype::Identifier::<Registry>::new(vec![3]) });
+                unsafe {
+                    archetype.push(entity!(A, B), &mut allocator);
+                }
+                assert_ok!(archetypes.insert(archetype));
+
+                archetypes
+            }
+        }
+
+        assert_de_tokens_error::<SeededAllocator<Registry, PopulatedSeed>>(
+            &[
+                Token::Struct {
+                    name: "Allocator",
+                    len: 2,
+                },
+                Token::String("length"),
+                Token::U64(0),
+                Token::String("free"),
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                Token::StructEnd,
+            ],
+            "archetype entity index 0 is out of bounds",
+        );
+    }
+
+    #[test]
+    fn deserialize_duplicate_archetype_index() {
+        struct PopulatedSeed;
+
+        impl Seed<Registry> for PopulatedSeed {
+            fn archetypes() -> Archetypes<Registry> {
+                let mut archetypes = Archetypes::new();
+                let mut allocator = Allocator::new();
+
+                let mut archetype =
+                    Archetype::new(unsafe { archetype::Identifier::<Registry>::new(vec![3]) });
+                unsafe {
+                    archetype.push(entity!(A, B), &mut allocator);
+                }
+                assert_ok!(archetypes.insert(archetype));
+
+                archetypes
+            }
+        }
+
+        assert_de_tokens_error::<SeededAllocator<Registry, PopulatedSeed>>(
+            &[
+                Token::Struct {
+                    name: "Allocator",
+                    len: 2,
+                },
+                Token::String("length"),
+                Token::U64(1),
+                Token::String("free"),
+                Token::Seq { len: Some(1) },
+                Token::Struct {
+                    name: "Identifier",
+                    len: 2,
+                },
+                Token::String("index"),
+                Token::U64(0),
+                Token::String("generation"),
+                Token::U64(0),
+                Token::StructEnd,
+                Token::SeqEnd,
+                Token::StructEnd,
+            ],
+            "duplicate archetype entity index 0",
+        );
+    }
+
+    #[test]
+    fn deserialize_missing_index() {
+        struct EmptySeed;
+
+        impl<R> Seed<R> for EmptySeed
+        where
+            R: crate::registry::Registry,
+        {
+            fn archetypes() -> Archetypes<R> {
+                Archetypes::new()
+            }
+        }
+
+        assert_de_tokens_error::<SeededAllocator<Registry, EmptySeed>>(
+            &[
+                Token::Struct {
+                    name: "Allocator",
+                    len: 2,
+                },
+                Token::String("length"),
+                Token::U64(1),
+                Token::String("free"),
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                Token::StructEnd,
+            ],
+            "missing entity index 0",
+        );
     }
 }
