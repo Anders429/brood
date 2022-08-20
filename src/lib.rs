@@ -98,7 +98,7 @@
 //! `brood` can be used in `no_std` contexts where
 //! [`alloc`](https://doc.rust-lang.org/alloc/index.html) is available.
 //!
-//! [`Registry`]: crate::registry::Registry;
+//! [`Registry`]: crate::registry::Registry
  
 #![no_std]
 #![cfg_attr(doc_cfg, feature(doc_cfg, decl_macro))]
