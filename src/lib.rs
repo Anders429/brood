@@ -64,20 +64,14 @@
 //! let mut world = World::<Registry>::new();
 //!
 //! // Insert entity with both position and velocity.
-//! world.insert(entity!(Position {
-//!     x: 1.5,
-//!     y: 2.5,
-//! }, Velocity {
-//!     x: 0.0,
-//!     y: 1.0,
-//! }));
+//! world.insert(entity!(
+//!     Position { x: 1.5, y: 2.5 },
+//!     Velocity { x: 0.0, y: 1.0 }
+//! ));
 //! // Insert entity with just position.
-//! world.insert(entity!(Position {
-//!     x: 1.5,
-//!     y: 2.5,
-//! }));
+//! world.insert(entity!(Position { x: 1.5, y: 2.5 }));
 //! ```
-//! 
+//!
 //! The entities in the `World` can now be manipulated using queries or systems. See the
 //! documentation in the [`query`] and [`system`] modules for examples of this.
 //!
@@ -93,13 +87,13 @@
 //!
 //! ## rayon
 //! Enabling the feature flag `rayon` allows for parallel operations on components.
-//! 
+//!
 //! # `#[no_std]` Support
 //! `brood` can be used in `no_std` contexts where
 //! [`alloc`](https://doc.rust-lang.org/alloc/index.html) is available.
 //!
 //! [`Registry`]: crate::registry::Registry
- 
+
 #![no_std]
 #![cfg_attr(doc_cfg, feature(doc_cfg, decl_macro))]
 #![warn(
