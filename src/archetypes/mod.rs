@@ -75,7 +75,7 @@ where
     }
 
     /// Returns a reference to the `Archetype` identified by the given identifier.
-    /// 
+    ///
     /// If no `Archetype` exists for the identifier, `None` is returned.
     pub(crate) fn get(&self, identifier: archetype::IdentifierRef<R>) -> Option<&Archetype<R>> {
         self.raw_archetypes.get(
@@ -85,7 +85,7 @@ where
     }
 
     /// Returns a mutable reference to the `Archetype` identified by the given identifier.
-    /// 
+    ///
     /// If no `Archetype` exists for the identifier, `None` is returned.
     pub(crate) fn get_mut(
         &mut self,

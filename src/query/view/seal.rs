@@ -35,7 +35,7 @@ pub trait ViewSeal<'a>: Claim {
     ) -> Self::Result;
 
     /// View a specific row of an `Archetype`.
-    /// 
+    ///
     /// # Safety
     /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
     /// for components `C`. Each of those components `C` must have an entry in `component_map`,
@@ -48,7 +48,7 @@ pub trait ViewSeal<'a>: Claim {
     /// `View`, and that entry must contain the index for the column of type `C` in `columns`. Note
     /// that it is not required for optionally viewed components to be contained in the
     /// `component_map`.
-    /// 
+    ///
     /// `index` must be a valid index in the `Vec<entity::Identifier>` and each component column
     /// `Vec<C>`.
     unsafe fn view_one(
@@ -333,8 +333,8 @@ impl<'a> ViewSeal<'a> for entity::Identifier {
         // SAFETY: `entity_identifiers` is guaranteed to contain the raw parts for a valid
         // `Vec<entity::Identifier>` of size `length`. `index` is guaranteed to be a valid index
         // into the `Vec<entity::Identifier>`.
-        *unsafe { slice::from_raw_parts_mut::<'a, Self>(entity_identifiers.0, length) 
-            .get_unchecked(index)
+        *unsafe {
+            slice::from_raw_parts_mut::<'a, Self>(entity_identifiers.0, length).get_unchecked(index)
         }
     }
 
@@ -364,7 +364,7 @@ pub trait ViewsSeal<'a>: Claim {
     ) -> Self::Results;
 
     /// View a specific row of an `Archetype`.
-    /// 
+    ///
     /// # Safety
     /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
     /// for components `C`. Each of those components `C` must have an entry in `component_map`,
@@ -377,7 +377,7 @@ pub trait ViewsSeal<'a>: Claim {
     /// `View`, and that entry must contain the index for the column of type `C` in `columns`. Note
     /// that it is not required for optionally viewed components to be contained in the
     /// `component_map`.
-    /// 
+    ///
     /// `index` must be a valid index in the `Vec<entity::Identifier>` and each component column
     /// `Vec<C>`.
     unsafe fn view_one(
