@@ -271,10 +271,10 @@ where
     }
 
     /// View a single entity in this archetype without doing bounds checking.
-    /// 
+    ///
     /// # Safety
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
-    /// 
+    ///
     /// The index `index` must be a valid index into this archetype.
     pub(crate) unsafe fn view_row_unchecked<'a, V>(
         &mut self,

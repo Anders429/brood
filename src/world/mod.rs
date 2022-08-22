@@ -1759,7 +1759,8 @@ mod tests {
 
         let mut entry = assert_some!(world.entry(entity_identifier));
 
-        let result!(queried_identifier, a, b) = assert_some!(entry.query::<views!(entity::Identifier, &A, Option<&B>), filter::None>());
+        let result!(queried_identifier, a, b) =
+            assert_some!(entry.query::<views!(entity::Identifier, &A, Option<&B>), filter::None>());
         assert_eq!(queried_identifier, entity_identifier);
         assert_eq!(a.0, 1);
         let b = assert_some!(b);

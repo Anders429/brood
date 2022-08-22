@@ -297,11 +297,12 @@ where
                 // valid index to a row within this archetype, since they share the same archetype
                 // identifier.
                 unsafe {
-                self.world
-                    .archetypes
-                    .get_mut(self.location.identifier)?
-                    .view_row_unchecked::<V>(self.location.index)
-            })
+                    self.world
+                        .archetypes
+                        .get_mut(self.location.identifier)?
+                        .view_row_unchecked::<V>(self.location.index)
+                },
+            )
         } else {
             None
         }
