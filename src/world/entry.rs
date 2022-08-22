@@ -2,6 +2,10 @@ use crate::{
     archetype,
     component::Component,
     entity::allocator::Location,
+    query::{
+        filter::{And, Filter, Seal},
+        view::Views,
+    },
     registry::{Registry, RegistryDebug},
     world::World,
 };
@@ -244,13 +248,65 @@ where
         }
     }
 
-    // pub fn query<'a, V, F>(&'a mut self) -> iter::Flatten<vec::IntoIter<V::Results>>
-    // where
-    //     V: Views<'a>,
-    //     F: Filter,
-    // {
-    //     todo!()
-    // }
+    /// Query for components contained within this entity using the given [`Views`] `V` and
+    /// [`Filter`] `F`.
+    ///
+    /// Returns a `Some` value if the entity matches the views and filter combination, and returns
+    /// a `None` value otherwise.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{
+    ///     entity,
+    ///     query::{filter, result, views},
+    ///     registry, World,
+    /// };
+    ///
+    /// struct Foo(u32);
+    /// struct Bar(bool);
+    ///
+    /// type Registry = registry!(Foo, Bar);
+    ///
+    /// let mut world = World::<Registry>::new();
+    /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
+    /// let mut entry = world.entry(entity_identifier).unwrap();
+    ///
+    /// let result = entry.query::<views!(&Foo, &Bar), filter::None>();
+    /// assert!(result.is_some());
+    /// let result!(foo, bar) = result.unwrap();
+    /// assert_eq!(foo.0, 42);
+    /// assert_eq!(bar.0, true);
+    /// ```
+    pub fn query<V, F>(&mut self) -> Option<<V::Results as Iterator>::Item>
+    where
+        V: Views<'a>,
+        F: Filter,
+    {
+        self.world.view_assertion_buffer.clear();
+        V::assert_claims(&mut self.world.view_assertion_buffer);
+
+        // SAFETY: `self.component_map` contains an entry for each `TypeId<C>` per
+        // component `C` in the registry `R`.
+        if unsafe { And::<V, F>::filter(self.location.identifier, &self.world.component_map) } {
+            Some(
+                // SAFETY: Since the archetype wasn't filtered out by the views, then each
+                // component viewed by `V` is also identified by the archetype's identifier.
+                //
+                // `self.world.entity_allocator` contains entries for entities stored in
+                // `self.world.archetypes`. As such, `self.location.index` is guaranteed to be a
+                // valid index to a row within this archetype, since they share the same archetype
+                // identifier.
+                unsafe {
+                    self.world
+                        .archetypes
+                        .get_mut(self.location.identifier)?
+                        .view_row_unchecked::<V>(self.location.index)
+                },
+            )
+        } else {
+            None
+        }
+    }
 }
 
 impl<'a, R> Debug for Entry<'a, R>

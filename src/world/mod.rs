@@ -1749,6 +1749,57 @@ mod tests {
     }
 
     #[test]
+    fn entry_query() {
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let mut entry = assert_some!(world.entry(entity_identifier));
+
+        let result!(queried_identifier, a, b) =
+            assert_some!(entry.query::<views!(entity::Identifier, &A, Option<&B>), filter::None>());
+        assert_eq!(queried_identifier, entity_identifier);
+        assert_eq!(a.0, 1);
+        let b = assert_some!(b);
+        assert_eq!(b.0, 'a');
+    }
+
+    #[test]
+    fn entry_query_mut() {
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let mut entry = assert_some!(world.entry(entity_identifier));
+
+        let result!(a, b) =
+            assert_some!(entry.query::<views!(&mut A, Option<&mut B>), filter::None>());
+        assert_eq!(a.0, 1);
+        let b = assert_some!(b);
+        assert_eq!(b.0, 'a');
+    }
+
+    #[test]
+    fn entry_query_fails() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        let entity_identifier = world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let mut entry = assert_some!(world.entry(entity_identifier));
+
+        assert_none!(entry.query::<views!(entity::Identifier, &A, &B), filter::None>());
+    }
+
+    #[test]
     fn no_entry_found() {
         let mut world = World::<Registry>::new();
 
