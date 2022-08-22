@@ -74,8 +74,24 @@ where
         }
     }
 
+    /// Returns a reference to the `Archetype` identified by the given identifier.
+    /// 
+    /// If no `Archetype` exists for the identifier, `None` is returned.
     pub(crate) fn get(&self, identifier: archetype::IdentifierRef<R>) -> Option<&Archetype<R>> {
         self.raw_archetypes.get(
+            Self::make_hash(identifier, &self.hash_builder),
+            Self::equivalent_identifier(identifier),
+        )
+    }
+
+    /// Returns a mutable reference to the `Archetype` identified by the given identifier.
+    /// 
+    /// If no `Archetype` exists for the identifier, `None` is returned.
+    pub(crate) fn get_mut(
+        &mut self,
+        identifier: archetype::IdentifierRef<R>,
+    ) -> Option<&mut Archetype<R>> {
+        self.raw_archetypes.get_mut(
             Self::make_hash(identifier, &self.hash_builder),
             Self::equivalent_identifier(identifier),
         )

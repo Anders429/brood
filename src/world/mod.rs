@@ -1749,6 +1749,24 @@ mod tests {
     }
 
     #[test]
+    fn entry_query() {
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let mut entry = assert_some!(world.entry(entity_identifier));
+
+        let result!(queried_identifier, a, b) = assert_some!(entry.query::<views!(entity::Identifier, &A, Option<&B>), filter::None>());
+        assert_eq!(queried_identifier, entity_identifier);
+        assert_eq!(a.0, 1);
+        let b = assert_some!(b);
+        assert_eq!(b.0, 'a');
+    }
+
+    #[test]
     fn no_entry_found() {
         let mut world = World::<Registry>::new();
 
