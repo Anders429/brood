@@ -19,9 +19,7 @@ pub use entry::Entry;
 use crate::{
     archetype,
     archetypes::Archetypes,
-    entities,
-    entities::Entities,
-    entity,
+    entities, entity,
     entity::Entity,
     query::{filter::Filter, result, view, view::Views},
     registry::Registry,
@@ -200,11 +198,15 @@ where
     /// Panics if the entities contain any components not included in the `World`'s [`Registry`].
     ///
     /// [`Registry`]: crate::registry::Registry
-    pub fn extend<E>(&mut self, entities: entities::Batch<E>) -> Vec<entity::Identifier>
+    pub fn extend<E, T>(&mut self, entities: T) -> Vec<entity::Identifier>
     where
-        E: Entities,
+        T: IntoIterator<Item = E>,
+        E: Entity,
     {
-        self.len += entities.len();
+        // SAFETY: `E::unzip` will return the same number of values for each column.
+        let batch = unsafe { entities::Batch::new_unchecked(E::unzip(entities)) };
+
+        self.len += batch.len();
 
         let mut identifier = vec![0; (R::LEN + 7) / 8];
         // SAFETY: `identifier` is a zeroed-out allocation of `R::LEN` bits. `self.component_map`
@@ -224,7 +226,7 @@ where
         unsafe {
             self.archetypes
                 .get_mut_or_insert_new(identifier_buffer)
-                .extend(entities, &mut self.entity_allocator)
+                .extend(batch, &mut self.entity_allocator)
         }
     }
 
@@ -704,6 +706,19 @@ where
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+}
+
+impl<E, R> Extend<E> for World<R>
+where
+    E: Entity,
+    R: Registry,
+{
+    fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = E>,
+    {
+        self.extend(iter);
     }
 }
 

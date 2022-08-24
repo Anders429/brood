@@ -53,12 +53,12 @@ mod tests {
 
     #[test]
     fn component_len() {
-        assert_eq!(entities!((A, B); 100).entities.component_len(), 100);
+        assert_eq!((vec![A; 100], (vec![B; 100], Null)).component_len(), 100);
     }
 
     #[test]
     fn check_len_passes() {
-        assert!(entities!((A, B); 100).entities.check_len());
+        assert!((vec![A; 100], (vec![B; 100], Null)).check_len());
     }
 
     #[test]

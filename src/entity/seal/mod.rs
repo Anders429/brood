@@ -1,9 +1,11 @@
 mod storage;
+mod unzip;
 
 use crate::{component::Component, entity::Null};
 use storage::Storage;
+use unzip::Unzip;
 
-pub trait Seal: Storage {}
+pub trait Seal: Storage + Unzip {}
 
 impl Seal for Null {}
 

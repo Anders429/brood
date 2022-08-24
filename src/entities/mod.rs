@@ -35,13 +35,25 @@
 //! [`Registry`]: crate::registry::Registry
 //! [`World`]: crate::world::World
 
+mod iter;
+mod raw;
 mod seal;
 
-use crate::{component::Component, hlist::define_null};
+pub use iter::Iter;
+
+use crate::{component::Component, entity, hlist::define_null};
 use alloc::vec::Vec;
 use seal::Seal;
 
 define_null!();
+
+impl Extend<entity::Null> for Null {
+    fn extend<T>(&mut self, _iter: T)
+    where
+        T: IntoIterator<Item = entity::Null>,
+    {
+    }
+}
 
 /// A heterogeneous list of columns of [`Component`]s.
 ///
@@ -71,15 +83,21 @@ define_null!();
 /// [`Component`]: crate::component::Component
 /// [`Registry`]: crate::registry::Registry
 /// [`World`]: crate::world::World
-pub trait Entities: Seal {}
+pub trait Entities: Seal {
+    /// The entity type contained in this list of entities.
+    type Entity: entity::Entity;
+}
 
-impl Entities for Null {}
+impl Entities for Null {
+    type Entity = entity::Null;
+}
 
 impl<C, E> Entities for (Vec<C>, E)
 where
     C: Component,
     E: Entities,
 {
+    type Entity = (C, E::Entity);
 }
 
 /// A batch of entity columns of unified length.
@@ -236,7 +254,7 @@ macro_rules! entities {
     (($component:expr $(,$components:expr)* $(,)?); $n:expr) => {
         // SAFETY: Each `Vec` created here will be of length `$n`.
         unsafe {
-            $crate::entities::Batch::new_unchecked(
+            $crate::entities::Iter::new_unchecked(
                 ($crate::reexports::vec![$component; $n], $crate::entities!(@cloned ($($components),*); $n))
             )
         }
@@ -245,7 +263,7 @@ macro_rules! entities {
         // SAFETY: During transposition, each column is guaranteed to have an equal number of
         // components.
         unsafe {
-            $crate::entities::Batch::new_unchecked(
+            $crate::entities::Iter::new_unchecked(
                 $crate::entities!(@transpose [] $(($($components),*)),+)
             )
         }
@@ -253,13 +271,13 @@ macro_rules! entities {
     ((); $n:expr) => {
         // SAFETY: There are no columns to check.
         unsafe {
-            $crate::entities::Batch::new_unchecked($crate::entities::Null)
+            $crate::entities::Iter::new_unchecked($crate::entities::Null)
         }
     };
     () => {
         // SAFETY: There are no columns to check.
         unsafe {
-            $crate::entities::Batch::new_unchecked($crate::entities::Null)
+            $crate::entities::Iter::new_unchecked($crate::entities::Null)
         }
     };
 
@@ -297,16 +315,11 @@ mod tests {
     struct B(char);
 
     #[test]
-    fn entities() {
-        assert_eq!(
-            entities!((A(42), B('f')); 100),
-            Batch::new((vec![A(42); 100], (vec![B('f'); 100], Null)))
-        );
-    }
-
-    #[test]
     fn entities_len() {
-        assert_eq!(entities!((A(42), B('f')); 100).len(), 100);
+        assert_eq!(
+            Batch::new((vec![A(42); 100], (vec![B('f'); 100], Null))).len(),
+            100
+        );
     }
 
     #[test]
