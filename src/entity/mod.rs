@@ -39,12 +39,14 @@
 
 pub(crate) mod allocator;
 
+mod get;
 mod identifier;
 mod seal;
 
 pub use identifier::Identifier;
 
 pub(crate) use allocator::Allocator;
+pub(crate) use get::Get;
 
 use crate::{component::Component, hlist::define_null};
 use seal::Seal;

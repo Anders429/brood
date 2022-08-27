@@ -24,7 +24,7 @@ use crate::{
     entity,
     entity::Entity,
     query::{filter::Filter, result, view, view::Views},
-    registry::Registry,
+    registry::{Registry, Canonical},
     system::System,
 };
 #[cfg(feature = "rayon")]
@@ -132,7 +132,7 @@ where
         Self::from_raw_parts(Archetypes::new(), entity::Allocator::new(), 0)
     }
 
-    /// Insert an entity, returning an [`entity::Identifier`].
+     /// Insert an entity, returning an [`entity::Identifier`].
     ///
     /// # Example
     /// ``` rust
@@ -152,11 +152,14 @@ where
     /// Panics if the entity contains any components not included in the `World`'s [`Registry`].
     ///
     /// [`Registry`]: crate::registry::Registry
-    pub fn insert<E>(&mut self, entity: E) -> entity::Identifier
+    pub fn insert<E, I, P>(&mut self, entity: E) -> entity::Identifier
     where
         E: Entity,
+        R: Canonical<E, I, P>,
     {
         self.len += 1;
+
+        let canonical_entity = R::canonical(entity);
 
         let mut identifier = vec![0; (R::LEN + 7) / 8];
         // SAFETY: `identifier` is a zeroed-out allocation of `R::LEN` bits. `self.component_map`
@@ -176,7 +179,7 @@ where
         unsafe {
             self.archetypes
                 .get_mut_or_insert_new(identifier_buffer)
-                .push(entity, &mut self.entity_allocator)
+                .push(canonical_entity, &mut self.entity_allocator)
         }
     }
 
@@ -742,17 +745,6 @@ mod tests {
         world.insert(entity!(A(2)));
         world.insert(entity!(B('b')));
         world.insert(entity!());
-    }
-
-    #[test]
-    #[should_panic]
-    fn insert_with_nonexistant_component() {
-        struct C;
-
-        let mut world = World::<Registry>::new();
-
-        // `C` isn't in the `Registry`.
-        world.insert(entity!(C));
     }
 
     #[test]

@@ -111,7 +111,7 @@ where
 
     /// # Safety
     /// `entity` must be made up of only components that are identified by this `Archetype`'s
-    /// `Identifier`. These can, however, be in any order.
+    /// `Identifier`, in the same order.
     ///
     /// The `entity_allocator`, together with its contained `Location`s, must not outlive `self`.
     pub(crate) unsafe fn push<E>(
@@ -122,13 +122,10 @@ where
     where
         E: Entity,
     {
-        // SAFETY: `self.component_map` contains an entry for every component identified by the
-        // archetype's `Identifier`. Therefore, it also contains an entry for every component `C`
-        // contained in the entity `E`.
-        //
-        // Also, `self.components`, together with `self.length`, define valid `Vec<C>`s for each
-        // component.
-        unsafe { entity.push_components(&self.component_map, &mut self.components, self.length) };
+        // SAFETY: `self.components`, together with `self.length`, define valid `Vec<C>` for each
+        // component, and the components in `self.components` are in the same order as the
+        // components in `entity`.
+        unsafe { entity.push_components(&mut self.components, self.length) };
 
         let entity_identifier = entity_allocator.allocate(Location {
             identifier:
