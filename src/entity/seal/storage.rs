@@ -17,11 +17,7 @@ pub trait Storage {
     /// in the same order.
     ///
     /// `components`, together with `length`, must define a valid `Vec<C>` for each component.
-    unsafe fn push_components(
-        self,
-        components: &mut [(*mut u8, usize)],
-        length: usize,
-    );
+    unsafe fn push_components(self, components: &mut [(*mut u8, usize)], length: usize);
 
     /// Populate raw identifier bits corresponding to this entity's components.
     ///
@@ -45,12 +41,7 @@ pub trait Storage {
 }
 
 impl Storage for Null {
-    unsafe fn push_components(
-        self,
-        _components: &mut [(*mut u8, usize)],
-        _length: usize,
-    ) {
-    }
+    unsafe fn push_components(self, _components: &mut [(*mut u8, usize)], _length: usize) {}
 
     unsafe fn to_identifier(
         _identifier: &mut [u8],
@@ -64,12 +55,8 @@ where
     C: Component,
     E: Storage,
 {
-    unsafe fn push_components(
-        self,
-        components: &mut [(*mut u8, usize)],
-        length: usize,
-    ) {
-        let component_column = unsafe {components.get_unchecked_mut(0)};
+    unsafe fn push_components(self, components: &mut [(*mut u8, usize)], length: usize) {
+        let component_column = unsafe { components.get_unchecked_mut(0) };
         let mut v = ManuallyDrop::new(
             // SAFETY: The `component_column` extracted from `components` is guaranteed to,
             // together with `length`, define a valid `Vec<C>` for the current `C`.

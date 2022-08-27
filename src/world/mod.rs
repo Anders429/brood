@@ -24,7 +24,7 @@ use crate::{
     entity,
     entity::Entity,
     query::{filter::Filter, result, view, view::Views},
-    registry::{Registry, Canonical},
+    registry::{Canonical, Registry},
     system::System,
 };
 #[cfg(feature = "rayon")]
@@ -132,7 +132,7 @@ where
         Self::from_raw_parts(Archetypes::new(), entity::Allocator::new(), 0)
     }
 
-     /// Insert an entity, returning an [`entity::Identifier`].
+    /// Insert an entity, returning an [`entity::Identifier`].
     ///
     /// # Example
     /// ``` rust
