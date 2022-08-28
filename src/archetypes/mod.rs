@@ -13,10 +13,20 @@ pub(crate) use iter::IterMut;
 #[cfg(feature = "rayon")]
 pub(crate) use par_iter::ParIterMut;
 
-use crate::{archetype, archetype::Archetype, entity, registry::Registry};
-use core::hash::{BuildHasher, Hash, Hasher};
+use crate::{
+    archetype,
+    archetype::Archetype,
+    entity::{self, Entity},
+    registry::Registry,
+};
+use alloc::vec;
+use core::{
+    any::TypeId,
+    hash::{BuildHasher, Hash, Hasher},
+    hint::unreachable_unchecked,
+};
 use fnv::FnvBuildHasher;
-use hashbrown::raw::RawTable;
+use hashbrown::{raw::RawTable, HashMap};
 use iter::Iter;
 
 pub(crate) struct Archetypes<R>
@@ -25,6 +35,8 @@ where
 {
     raw_archetypes: RawTable<Archetype<R>>,
     hash_builder: FnvBuildHasher,
+
+    type_id_lookup: HashMap<TypeId, archetype::IdentifierRef<R>, FnvBuildHasher>,
 }
 
 impl<R> Archetypes<R>
@@ -35,6 +47,8 @@ where
         Self {
             raw_archetypes: RawTable::new(),
             hash_builder: FnvBuildHasher::default(),
+
+            type_id_lookup: HashMap::default(),
         }
     }
 
@@ -43,6 +57,8 @@ where
         Self {
             raw_archetypes: RawTable::with_capacity(capacity),
             hash_builder: FnvBuildHasher::default(),
+
+            type_id_lookup: HashMap::with_capacity_and_hasher(capacity, FnvBuildHasher::default()),
         }
     }
 
@@ -124,6 +140,75 @@ where
                 Archetype::new(identifier_buffer),
                 Self::make_hasher(&self.hash_builder),
             ),
+        }
+    }
+
+    /// # Safety
+    /// `component_map` must contain an entry for each component in the entity `E`. Each entry must
+    /// correspond to its component's location in the registry `R`.
+    pub(crate) unsafe fn get_mut_or_insert_new_for_entity<E>(
+        &mut self,
+        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
+    ) -> &mut Archetype<R>
+    where
+        E: Entity,
+    {
+        // Lookup the archetype identifier.
+        if let Some(identifier) = self.type_id_lookup.get(&TypeId::of::<E>()) {
+            let hash = Self::make_hash(*identifier, &self.hash_builder);
+
+            match self
+                .raw_archetypes
+                .find(hash, Self::equivalent_identifier(*identifier))
+            {
+                // SAFETY: This reference to the archetype contained in this bucket is unique.
+                Some(archetype_bucket) => unsafe { archetype_bucket.as_mut() },
+                // SAFETY: If the type has an entry in `self.type_id_lookup`, then it will
+                // invariantly have an archetype stored.
+                None => unsafe { unreachable_unchecked() },
+            }
+        } else {
+            let mut raw_identifier = vec![0; (R::LEN + 7) / 8];
+            // SAFETY: `identifier` is a zeroed-out allocation of `R::LEN` bits.
+            // `self.component_map` only contains `usize` values up to the number of components in
+            // the registry `R`.
+            unsafe {
+                E::to_identifier(&mut raw_identifier, component_map);
+            }
+            // SAFETY: `identifier` is a properly-initialized buffer of `(R::LEN + 7) / 8` bytes
+            // whose bits correspond to each component in the registry `R`.
+            let identifier = unsafe { archetype::Identifier::<R>::new(raw_identifier) };
+
+            let hash = Self::make_hash(
+                // SAFETY: The `IdentifierRef` obtained here does not live longer than the
+                // `identifier_buffer`.
+                unsafe { identifier.as_ref() },
+                &self.hash_builder,
+            );
+
+            if let Some(archetype_bucket) = self.raw_archetypes.find(
+                hash,
+                Self::equivalent_identifier(
+                    // SAFETY: The `IdentifierRef` obtained here does not live longer than the
+                    // `identifier_buffer`.
+                    unsafe { identifier.as_ref() },
+                ),
+            ) {
+                // SAFETY: This reference to the archetype contained in this bucket is unique.
+                unsafe { archetype_bucket.as_mut() }
+            } else {
+                self.type_id_lookup.insert(
+                    TypeId::of::<E>(),
+                    // SAFETY: The `IdentifierRef` obtained here does not live longer than the
+                    // `identifier_buffer`.
+                    unsafe { identifier.as_ref() },
+                );
+                self.raw_archetypes.insert_entry(
+                    hash,
+                    Archetype::new(identifier),
+                    Self::make_hasher(&self.hash_builder),
+                )
+            }
         }
     }
 

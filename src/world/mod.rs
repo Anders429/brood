@@ -17,7 +17,6 @@ mod impl_sync;
 pub use entry::Entry;
 
 use crate::{
-    archetype,
     archetypes::Archetypes,
     entities,
     entities::Entities,
@@ -32,7 +31,7 @@ use crate::{
     query::view::ParViews,
     system::{schedule::stage::Stages, ParSystem, Schedule},
 };
-use alloc::{vec, vec::Vec};
+use alloc::vec::Vec;
 use core::any::TypeId;
 use fnv::FnvBuildHasher;
 use hashbrown::{HashMap, HashSet};
@@ -156,16 +155,6 @@ where
 
         let canonical_entity = R::canonical(entity);
 
-        let mut identifier = vec![0; (R::LEN + 7) / 8];
-        // SAFETY: `identifier` is a zeroed-out allocation of `R::LEN` bits. `self.component_map`
-        // only contains `usize` values up to the number of components in the registry `R`.
-        unsafe {
-            E::to_identifier(&mut identifier, &self.component_map);
-        }
-        // SAFETY: `identifier` is a properly-initialized buffer of `(R::LEN + 7) / 8` bytes whose
-        // bits correspond to each component in the registry `R`.
-        let identifier_buffer = unsafe { archetype::Identifier::new(identifier) };
-
         // SAFETY: Since the archetype was obtained using the `identifier_buffer` created from the
         // entity `E`, then the entity is guaranteed to be made up of componpents identified by the
         // archetype's identifier.
@@ -173,7 +162,9 @@ where
         // `self.entity_allocator` is guaranteed to live as long as the archetype.
         unsafe {
             self.archetypes
-                .get_mut_or_insert_new(identifier_buffer)
+                .get_mut_or_insert_new_for_entity::<<R as ContainsEntity<E, I, P>>::Canonical>(
+                    &self.component_map,
+                )
                 .push(canonical_entity, &mut self.entity_allocator)
         }
     }
@@ -200,21 +191,11 @@ where
     {
         self.len += entities.len();
 
-        // SAFETY: Since `entities` is already a `Batch`, then the canonical entities derived from
-        // `entities` can safely be converted into a batch as well, since the components will be of
-        // the same length.
         let canonical_entities =
+            // SAFETY: Since `entities` is already a `Batch`, then the canonical entities derived
+            // from `entities` can safely be converted into a batch as well, since the components
+            // will be of the same length.
             unsafe { entities::Batch::new_unchecked(R::canonical(entities.entities)) };
-
-        let mut identifier = vec![0; (R::LEN + 7) / 8];
-        // SAFETY: `identifier` is a zeroed-out allocation of `R::LEN` bits. `self.component_map`
-        // only contains `usize` values up to the number of components in the registry `R`.
-        unsafe {
-            E::to_identifier(&mut identifier, &self.component_map);
-        }
-        // SAFETY: `identifier` is a properly-initialized buffer of `(R::LEN + 7) / 8` bytes whose
-        // bits correspond to each component in the registry `R`.
-        let identifier_buffer = unsafe { archetype::Identifier::new(identifier) };
 
         // SAFETY: Since the archetype was obtained using the `identifier_buffer` created from the
         // entities `E`, then the entities are guaranteed to be made up of componpents identified
@@ -223,7 +204,7 @@ where
         // `self.entity_allocator` is guaranteed to live as long as the archetype.
         unsafe {
             self.archetypes
-                .get_mut_or_insert_new(identifier_buffer)
+                .get_mut_or_insert_new_for_entity::<<<R as ContainsEntities<E, I, P>>::Canonical as entities::Contains>::Entity>(&self.component_map)
                 .extend(canonical_entities, &mut self.entity_allocator)
         }
     }
@@ -715,6 +696,7 @@ mod tests {
         query::{filter, result, views},
         registry,
     };
+    use alloc::vec;
     use claim::{assert_none, assert_some};
     #[cfg(feature = "rayon")]
     use rayon::iter::ParallelIterator;

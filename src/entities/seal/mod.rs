@@ -1,12 +1,15 @@
+mod contains;
 mod length;
 mod storage;
+
+pub(crate) use contains::Contains;
 
 use crate::{component::Component, entities::Null};
 use alloc::vec::Vec;
 use length::Length;
 use storage::Storage;
 
-pub trait Seal: Length + Storage {}
+pub trait Seal: Contains + Length + Storage {}
 
 impl Seal for Null {}
 

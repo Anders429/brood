@@ -76,7 +76,7 @@ define_null!();
 /// [`Component`]: crate::component::Component
 /// [`Registry`]: crate::registry::Registry
 /// [`World`]: crate::world::World
-pub trait Entity: Seal {}
+pub trait Entity: Seal + 'static {}
 
 impl Entity for Null {}
 
