@@ -24,7 +24,7 @@ use crate::{
     entity,
     entity::Entity,
     query::{filter::Filter, result, view, view::Views},
-    registry::{Canonical, ContainsEntities, Registry},
+    registry::{ContainsEntities, ContainsEntity, Registry},
     system::System,
 };
 #[cfg(feature = "rayon")]
@@ -155,7 +155,7 @@ where
     pub fn insert<E, I, P>(&mut self, entity: E) -> entity::Identifier
     where
         E: Entity,
-        R: Canonical<E, I, P>,
+        R: ContainsEntity<E, I, P>,
     {
         self.len += 1;
 

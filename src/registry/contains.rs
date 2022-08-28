@@ -1,7 +1,9 @@
 use crate::{
     component::Component,
     entities,
-    entities::{Entities, Get},
+    entities::Entities,
+    entity,
+    entity::Entity,
     registry,
 };
 use alloc::vec::Vec;
@@ -33,6 +35,59 @@ pub enum Null {}
 /// This is generic over an entity `E`, containments `P` (indicating whether each component is
 /// contained in the registry), and indices `I` (indicating the location of each component in the
 /// entity `E`).
+pub trait ContainsEntity<E, P, I> {
+    /// The canonical form of the entity `E`.
+    type Canonical: Entity;
+
+    /// Returns the canonical form of the entity, consuming the original entity.
+    fn canonical(entity: E) -> Self::Canonical;
+}
+
+impl ContainsEntity<entity::Null, Null, Null> for registry::Null {
+    type Canonical = entity::Null;
+
+    fn canonical(_entity: entity::Null) -> Self::Canonical {
+        entity::Null
+    }
+}
+
+impl<C, E, I, P, R, IS> ContainsEntity<E, (Contained, P), (I, IS)> for (C, R)
+where
+    R: ContainsEntity<<E as entity::Get<C, I>>::Remainder, P, IS>,
+    E: entity::Get<C, I>,
+    C: Component,
+{
+    type Canonical = (
+        C,
+        <R as ContainsEntity<<E as entity::Get<C, I>>::Remainder, P, IS>>::Canonical,
+    );
+
+    fn canonical(entity: E) -> Self::Canonical {
+        let (component, remainder) = entity.get();
+        (component, R::canonical(remainder))
+    }
+}
+
+impl<C, E, I, P, R> ContainsEntity<E, (NotContained, P), I> for (C, R)
+where
+    R: ContainsEntity<E, P, I>,
+{
+    type Canonical = <R as ContainsEntity<E, P, I>>::Canonical;
+
+    fn canonical(entity: E) -> Self::Canonical {
+        R::canonical(entity)
+    }
+}
+
+/// Converts an entity to the canonical form defined by this registry.
+///
+/// If the entity contains components not in this registry, attempting to use this trait will
+/// result in a compiler error, since the trait won't be implemented for the combination of entity
+/// and registry.
+///
+/// This is generic over an entity `E`, containments `P` (indicating whether each component is
+/// contained in the registry), and indices `I` (indicating the location of each component in the
+/// entity `E`).
 pub trait ContainsEntities<E, P, I> {
     /// The canonical form of the entity `E`.
     type Canonical: Entities;
@@ -51,13 +106,13 @@ impl ContainsEntities<entities::Null, Null, Null> for registry::Null {
 
 impl<C, E, I, P, R, IS> ContainsEntities<E, (Contained, P), (I, IS)> for (C, R)
 where
-    R: ContainsEntities<<E as Get<C, I>>::Remainder, P, IS>,
-    E: Get<C, I>,
+    R: ContainsEntities<<E as entities::Get<C, I>>::Remainder, P, IS>,
+    E: entities::Get<C, I>,
     C: Component,
 {
     type Canonical = (
         Vec<C>,
-        <R as ContainsEntities<<E as Get<C, I>>::Remainder, P, IS>>::Canonical,
+        <R as ContainsEntities<<E as entities::Get<C, I>>::Remainder, P, IS>>::Canonical,
     );
 
     fn canonical(entities: E) -> Self::Canonical {
@@ -78,8 +133,54 @@ where
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
+mod entity_tests {
+    use super::ContainsEntity;
+    use crate::{entity, registry};
+
+    #[derive(Debug, Eq, PartialEq)]
+    struct A;
+    #[derive(Debug, Eq, PartialEq)]
+    struct B;
+    #[derive(Debug, Eq, PartialEq)]
+    struct C;
+    #[derive(Debug, Eq, PartialEq)]
+    struct D;
+    #[derive(Debug, Eq, PartialEq)]
+    struct E;
+
+    type Registry = registry!(A, B, C, D, E);
+
+    #[test]
+    fn entity_empty() {
+        assert_eq!(Registry::canonical(entity!()), entity!());
+    }
+
+    #[test]
+    fn entity_subset() {
+        assert_eq!(Registry::canonical(entity!(E, C, B)), entity!(B, C, E));
+    }
+
+    #[test]
+    fn entity_all_components_already_canonical_order() {
+        assert_eq!(
+            Registry::canonical(entity!(A, B, C, D, E)),
+            entity!(A, B, C, D, E)
+        );
+    }
+
+    #[test]
+    fn entity_all_components_reordered() {
+        assert_eq!(
+            Registry::canonical(entity!(D, B, A, E, C)),
+            entity!(A, B, C, D, E)
+        );
+    }
+}
+
+
+#[cfg(test)]
+mod entities_tests {
+    use super::ContainsEntities;
     use crate::{entities, registry};
 
     #[derive(Clone, Debug, Eq, PartialEq)]
@@ -96,17 +197,17 @@ mod tests {
     type Registry = registry!(A, B, C, D, E);
 
     #[test]
-    fn entity_empty() {
+    fn entities_empty() {
         assert_eq!(Registry::canonical(entities!((); 100).entities), entities!((); 100).entities);
     }
 
     #[test]
-    fn entity_subset() {
+    fn entities_subset() {
         assert_eq!(Registry::canonical(entities!((E, C, B); 100).entities), entities!((B, C, E); 100).entities);
     }
 
     #[test]
-    fn entity_all_components_already_canonical_order() {
+    fn entities_all_components_already_canonical_order() {
         assert_eq!(
             Registry::canonical(entities!((A, B, C, D, E); 100).entities),
             entities!((A, B, C, D, E); 100).entities
@@ -114,7 +215,7 @@ mod tests {
     }
 
     #[test]
-    fn entity_all_components_reordered() {
+    fn entities_all_components_reordered() {
         assert_eq!(
             Registry::canonical(entities!((D, B, A, E, C); 100).entities),
             entities!((A, B, C, D, E); 100).entities
