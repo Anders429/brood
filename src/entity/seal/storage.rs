@@ -56,6 +56,8 @@ where
     E: Storage,
 {
     unsafe fn push_components(self, components: &mut [(*mut u8, usize)], length: usize) {
+        // SAFETY: `components` is guaranteed by the safety contract of this method to contain a
+        // column for component `C` as its first value.
         let component_column = unsafe { components.get_unchecked_mut(0) };
         let mut v = ManuallyDrop::new(
             // SAFETY: The `component_column` extracted from `components` is guaranteed to,
