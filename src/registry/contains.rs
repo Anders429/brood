@@ -1,3 +1,9 @@
+//! Traits indicating that the components in a heterogeneous list are contained within a registry.
+//! 
+//! These traits are implemented for different kinds of heterogeneous lists (entity, entities,
+//! etc.). They allow for reordering the components within that heterogeneous list in the same
+//! order as the components in the registry, also known as the "canonical order".
+
 use crate::{
     component::Component,
     entities,
@@ -20,18 +26,21 @@ pub enum Contained {}
 /// value.
 pub enum NotContained {}
 
-/// Defines either a null position or a null index.
+/// Defines either a null containment or a null index.
 ///
 /// This does not have to be specified when calling `canonical()`. The compiler can infer its
 /// value.
 pub enum Null {}
 
-/// Converts an entity to the canonical form defined by this registry.
-///
+/// Indicates that all of an entity's components are contained in the registry.
+/// 
+/// This allows reordering the components of the entity into the canonical ordering defined by the
+/// registry.
+/// 
 /// If the entity contains components not in this registry, attempting to use this trait will
 /// result in a compiler error, since the trait won't be implemented for the combination of entity
 /// and registry.
-///
+/// 
 /// This is generic over an entity `E`, containments `P` (indicating whether each component is
 /// contained in the registry), and indices `I` (indicating the location of each component in the
 /// entity `E`).
@@ -79,20 +88,23 @@ where
     }
 }
 
-/// Converts an entity to the canonical form defined by this registry.
-///
-/// If the entity contains components not in this registry, attempting to use this trait will
+/// Indicates that all of an entities' components are contained in the registry.
+/// 
+/// This allows reordering the components of the entities into the canonical ordering defined by
+/// the registry.
+/// 
+/// If the entities contain components not in this registry, attempting to use this trait will
 /// result in a compiler error, since the trait won't be implemented for the combination of entity
 /// and registry.
-///
-/// This is generic over an entity `E`, containments `P` (indicating whether each component is
+/// 
+/// This is generic over entities `E`, containments `P` (indicating whether each component is
 /// contained in the registry), and indices `I` (indicating the location of each component in the
 /// entity `E`).
 pub trait ContainsEntities<E, P, I> {
     /// The canonical form of the entity `E`.
     type Canonical: Entities;
 
-    /// Returns the canonical form of the entity, consuming the original entity.
+    /// Returns the canonical form of the entities, consuming the original entities.
     fn canonical(entities: E) -> Self::Canonical;
 }
 
