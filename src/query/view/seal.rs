@@ -219,7 +219,7 @@ where
     ) -> <Self::Result as Iterator>::Item {
         component_map.get(&TypeId::of::<C>()).map(|component_index|
             // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of size
-            //  `length`. Since `component_map` contains an entry for the given component `C`'s
+            // `length`. Since `component_map` contains an entry for the given component `C`'s
             // entry in `columns`, then the column obtained here can be interpreted as a slice of
             // type `C` of size `length`. `index` is guaranteed to be a valid index into the
             // `Vec<C>`.
@@ -281,7 +281,7 @@ where
     ) -> <Self::Result as Iterator>::Item {
         component_map.get(&TypeId::of::<C>()).map(|component_index|
             // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of size
-            //  `length`. Since `component_map` contains an entry for the given component `C`'s
+            // `length`. Since `component_map` contains an entry for the given component `C`'s
             // entry in `columns`, then the column obtained here can be interpreted as a slice of
             // type `C` of size `length`. `index` is guaranteed to be a valid index into the
             // `Vec<C>`.
