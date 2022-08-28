@@ -147,11 +147,6 @@ where
     ///
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(false)));
     /// ```
-    ///
-    /// # Panics
-    /// Panics if the entity contains any components not included in the `World`'s [`Registry`].
-    ///
-    /// [`Registry`]: crate::registry::Registry
     pub fn insert<E, I, P>(&mut self, entity: E) -> entity::Identifier
     where
         E: Entity,
@@ -198,11 +193,6 @@ where
     ///
     /// let entity_identiifers = world.extend(entities![(Foo(1), Bar(false)), (Foo(2), Bar(true))]);
     /// ```
-    ///
-    /// # Panics
-    /// Panics if the entities contain any components not included in the `World`'s [`Registry`].
-    ///
-    /// [`Registry`]: crate::registry::Registry
     pub fn extend<E, I, P>(&mut self, entities: entities::Batch<E>) -> Vec<entity::Identifier>
     where
         E: Entities,
