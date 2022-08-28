@@ -17,11 +17,7 @@ pub trait Storage {
     /// in the same order.
     ///
     /// `components`, together with `length`, must define a valid `Vec<C>` for each component.
-    unsafe fn extend_components(
-        self,
-        components: &mut [(*mut u8, usize)],
-        length: usize,
-    );
+    unsafe fn extend_components(self, components: &mut [(*mut u8, usize)], length: usize);
 
     /// Populate raw identifier bits corresponding to the entities' components.
     ///
@@ -45,12 +41,7 @@ pub trait Storage {
 }
 
 impl Storage for Null {
-    unsafe fn extend_components(
-        self,
-        _components: &mut [(*mut u8, usize)],
-        _length: usize,
-    ) {
-    }
+    unsafe fn extend_components(self, _components: &mut [(*mut u8, usize)], _length: usize) {}
 
     unsafe fn to_identifier(
         _identifier: &mut [u8],
@@ -64,11 +55,7 @@ where
     C: Component,
     E: Storage,
 {
-    unsafe fn extend_components(
-        self,
-        components: &mut [(*mut u8, usize)],
-        length: usize,
-    ) {
+    unsafe fn extend_components(self, components: &mut [(*mut u8, usize)], length: usize) {
         // SAFETY: `components` is guaranteed by the safety contract of this method to contain a
         // column for component `C` as its first value.
         let component_column = unsafe { components.get_unchecked_mut(0) };

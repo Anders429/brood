@@ -1,17 +1,10 @@
 //! Traits indicating that the components in a heterogeneous list are contained within a registry.
-//! 
+//!
 //! These traits are implemented for different kinds of heterogeneous lists (entity, entities,
 //! etc.). They allow for reordering the components within that heterogeneous list in the same
 //! order as the components in the registry, also known as the "canonical order".
 
-use crate::{
-    component::Component,
-    entities,
-    entities::Entities,
-    entity,
-    entity::Entity,
-    registry,
-};
+use crate::{component::Component, entities, entities::Entities, entity, entity::Entity, registry};
 use alloc::vec::Vec;
 
 /// Type marker for a component contained in an entity.
@@ -33,14 +26,14 @@ pub enum NotContained {}
 pub enum Null {}
 
 /// Indicates that all of an entity's components are contained in the registry.
-/// 
+///
 /// This allows reordering the components of the entity into the canonical ordering defined by the
 /// registry.
-/// 
+///
 /// If the entity contains components not in this registry, attempting to use this trait will
 /// result in a compiler error, since the trait won't be implemented for the combination of entity
 /// and registry.
-/// 
+///
 /// This is generic over an entity `E`, containments `P` (indicating whether each component is
 /// contained in the registry), and indices `I` (indicating the location of each component in the
 /// entity `E`).
@@ -89,14 +82,14 @@ where
 }
 
 /// Indicates that all of an entities' components are contained in the registry.
-/// 
+///
 /// This allows reordering the components of the entities into the canonical ordering defined by
 /// the registry.
-/// 
+///
 /// If the entities contain components not in this registry, attempting to use this trait will
 /// result in a compiler error, since the trait won't be implemented for the combination of entity
 /// and registry.
-/// 
+///
 /// This is generic over entities `E`, containments `P` (indicating whether each component is
 /// contained in the registry), and indices `I` (indicating the location of each component in the
 /// entity `E`).
@@ -189,7 +182,6 @@ mod entity_tests {
     }
 }
 
-
 #[cfg(test)]
 mod entities_tests {
     use super::ContainsEntities;
@@ -210,12 +202,18 @@ mod entities_tests {
 
     #[test]
     fn entities_empty() {
-        assert_eq!(Registry::canonical(entities!((); 100).entities), entities!((); 100).entities);
+        assert_eq!(
+            Registry::canonical(entities!((); 100).entities),
+            entities!((); 100).entities
+        );
     }
 
     #[test]
     fn entities_subset() {
-        assert_eq!(Registry::canonical(entities!((E, C, B); 100).entities), entities!((B, C, E); 100).entities);
+        assert_eq!(
+            Registry::canonical(entities!((E, C, B); 100).entities),
+            entities!((B, C, E); 100).entities
+        );
     }
 
     #[test]

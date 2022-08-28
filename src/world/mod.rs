@@ -206,14 +206,15 @@ where
     pub fn extend<E, I, P>(&mut self, entities: entities::Batch<E>) -> Vec<entity::Identifier>
     where
         E: Entities,
-        R: ContainsEntities<E, I, P>
+        R: ContainsEntities<E, I, P>,
     {
         self.len += entities.len();
 
         // SAFETY: Since `entities` is already a `Batch`, then the canonical entities derived from
         // `entities` can safely be converted into a batch as well, since the components will be of
         // the same length.
-        let canonical_entities = unsafe {entities::Batch::new_unchecked(R::canonical(entities.entities))};
+        let canonical_entities =
+            unsafe { entities::Batch::new_unchecked(R::canonical(entities.entities)) };
 
         let mut identifier = vec![0; (R::LEN + 7) / 8];
         // SAFETY: `identifier` is a zeroed-out allocation of `R::LEN` bits. `self.component_map`

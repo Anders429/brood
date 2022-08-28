@@ -172,15 +172,13 @@ where
     {
         let component_len = entities.entities.component_len();
 
-        
         // SAFETY: `self.components`, together with `self.length`, define valid `Vec<C>` for each
         // component, and the components in `self.components` are in the same order as the
         // components in `entities`.
         unsafe {
-            entities.entities.extend_components(
-                &mut self.components,
-                self.length,
-            );
+            entities
+                .entities
+                .extend_components(&mut self.components, self.length);
         }
 
         let entity_identifiers = entity_allocator.allocate_batch(Locations::new(

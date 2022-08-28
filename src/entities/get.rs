@@ -54,8 +54,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloc::vec;
     use crate::entities;
+    use alloc::vec;
 
     #[derive(Clone, Debug, Eq, PartialEq)]
     struct A;
@@ -66,16 +66,25 @@ mod tests {
 
     #[test]
     fn get_a() {
-        assert_eq!(entities!((A, B, C); 100).entities.get(), (vec![A; 100], entities!((B, C); 100).entities));
+        assert_eq!(
+            entities!((A, B, C); 100).entities.get(),
+            (vec![A; 100], entities!((B, C); 100).entities)
+        );
     }
 
     #[test]
     fn get_b() {
-        assert_eq!(entities!((A, B, C); 100).entities.get(), (vec![B; 100], entities!((A, C); 100).entities));
+        assert_eq!(
+            entities!((A, B, C); 100).entities.get(),
+            (vec![B; 100], entities!((A, C); 100).entities)
+        );
     }
 
     #[test]
     fn get_c() {
-        assert_eq!(entities!((A, B, C); 100).entities.get(), (vec![C; 100], entities!((A, B); 100).entities));
+        assert_eq!(
+            entities!((A, B, C); 100).entities.get(),
+            (vec![C; 100], entities!((A, B); 100).entities)
+        );
     }
 }
