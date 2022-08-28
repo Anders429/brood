@@ -13,14 +13,12 @@ pub trait Storage {
     /// the given `component_map` to determine which column each components should be added to.
     ///
     /// # Safety
-    /// `component_map` must contain an entry for every type `C` that makes up these entities. Each
-    /// entry must contain a unique index corresponding with a valid `components` entry.
+    /// The components in both the entities and `components` much correspond to the same components
+    /// in the same order.
     ///
-    /// `components`, together with `length`, must define a valid `Vec<C>` for each component for
-    /// which `component_map` has an entry whose index references it.
+    /// `components`, together with `length`, must define a valid `Vec<C>` for each component.
     unsafe fn extend_components(
         self,
-        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
         components: &mut [(*mut u8, usize)],
         length: usize,
     );
@@ -49,7 +47,6 @@ pub trait Storage {
 impl Storage for Null {
     unsafe fn extend_components(
         self,
-        _component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
         _components: &mut [(*mut u8, usize)],
         _length: usize,
     ) {
@@ -69,16 +66,12 @@ where
 {
     unsafe fn extend_components(
         self,
-        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
         components: &mut [(*mut u8, usize)],
         length: usize,
     ) {
-        let component_column =
-            // SAFETY: `component_map` is guaranteed to have an entry for `TypeId::of::<C>`, and
-            // entry is guaranteed to be a valid index into `components`.
-            unsafe {
-                components.get_unchecked_mut(*component_map.get(&TypeId::of::<C>()).unwrap_unchecked())
-            };
+        // SAFETY: `components` is guaranteed by the safety contract of this method to contain a
+        // column for component `C` as its first value.
+        let component_column = unsafe { components.get_unchecked_mut(0) };
         if length == 0 {
             let mut v = ManuallyDrop::new(self.0);
             *component_column = (v.as_mut_ptr().cast::<u8>(), v.capacity());
@@ -102,7 +95,7 @@ where
         // SAFETY: Since `component_map`, `components`, and `length` all meet the safety
         // requirements for the current method body, they will meet those same requirements for
         // this method call.
-        unsafe { E::extend_components(self.1, component_map, components, length) };
+        unsafe { E::extend_components(self.1, components.get_unchecked_mut(1..), length) };
     }
 
     unsafe fn to_identifier(

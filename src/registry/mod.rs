@@ -25,6 +25,7 @@
 //! [`World`]: crate::world::World
 
 mod canonical;
+mod contains;
 mod debug;
 mod eq;
 mod seal;
@@ -36,6 +37,7 @@ mod sync;
 #[cfg(feature = "serde")]
 pub(crate) use self::serde::{RegistryDeserialize, RegistrySerialize};
 pub(crate) use canonical::Canonical;
+pub(crate) use contains::ContainsEntities;
 pub(crate) use debug::RegistryDebug;
 pub(crate) use eq::{RegistryEq, RegistryPartialEq};
 pub(crate) use send::RegistrySend;

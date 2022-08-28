@@ -24,7 +24,7 @@ use crate::{
     entity,
     entity::Entity,
     query::{filter::Filter, result, view, view::Views},
-    registry::{Canonical, Registry},
+    registry::{Canonical, ContainsEntities, Registry},
     system::System,
 };
 #[cfg(feature = "rayon")]
@@ -203,11 +203,17 @@ where
     /// Panics if the entities contain any components not included in the `World`'s [`Registry`].
     ///
     /// [`Registry`]: crate::registry::Registry
-    pub fn extend<E>(&mut self, entities: entities::Batch<E>) -> Vec<entity::Identifier>
+    pub fn extend<E, I, P>(&mut self, entities: entities::Batch<E>) -> Vec<entity::Identifier>
     where
         E: Entities,
+        R: ContainsEntities<E, I, P>
     {
         self.len += entities.len();
+
+        // SAFETY: Since `entities` is already a `Batch`, then the canonical entities derived from
+        // `entities` can safely be converted into a batch as well, since the components will be of
+        // the same length.
+        let canonical_entities = unsafe {entities::Batch::new_unchecked(R::canonical(entities.entities))};
 
         let mut identifier = vec![0; (R::LEN + 7) / 8];
         // SAFETY: `identifier` is a zeroed-out allocation of `R::LEN` bits. `self.component_map`
@@ -227,7 +233,7 @@ where
         unsafe {
             self.archetypes
                 .get_mut_or_insert_new(identifier_buffer)
-                .extend(entities, &mut self.entity_allocator)
+                .extend(canonical_entities, &mut self.entity_allocator)
         }
     }
 
@@ -762,18 +768,6 @@ mod tests {
         world.extend(entities!((A(2)); 200));
         world.extend(entities!((B('b')); 300));
         world.extend(entities!((); 400));
-    }
-
-    #[test]
-    #[should_panic]
-    fn extend_with_nonexistant_component() {
-        #[derive(Clone)]
-        struct C;
-
-        let mut world = World::<Registry>::new();
-
-        // `C` isn't in the `Registry`.
-        world.extend(entities!((C); 100));
     }
 
     #[test]

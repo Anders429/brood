@@ -35,7 +35,10 @@
 //! [`Registry`]: crate::registry::Registry
 //! [`World`]: crate::world::World
 
+mod get;
 mod seal;
+
+pub(crate) use get::Get;
 
 use crate::{component::Component, hlist::define_null};
 use alloc::vec::Vec;
