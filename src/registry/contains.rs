@@ -7,6 +7,8 @@
 use crate::{component::Component, entities, entities::Entities, entity, entity::Entity, registry};
 use alloc::vec::Vec;
 
+use super::Canonical;
+
 /// Type marker for a component contained in an entity.
 ///
 /// This does not have to be specified when calling `canonical()`. The compiler can infer its
@@ -37,15 +39,21 @@ pub enum Null {}
 /// This is generic over an entity `E`, containments `P` (indicating whether each component is
 /// contained in the registry), and indices `I` (indicating the location of each component in the
 /// entity `E`).
-pub trait ContainsEntity<E, P, I> {
+pub trait ContainsEntity<E, P, Q, I>: Canonical<Self::Canonical, Q> {
     /// The canonical form of the entity `E`.
+    ///
+    /// This type is guaranteed to be canonical with respect to the current registry, and that
+    /// relationship is embodied by an impl of the `Canonical` trait on the current registry.
     type Canonical: Entity;
 
     /// Returns the canonical form of the entity, consuming the original entity.
     fn canonical(entity: E) -> Self::Canonical;
 }
 
-impl ContainsEntity<entity::Null, Null, Null> for registry::Null {
+impl<Q> ContainsEntity<entity::Null, Null, Q, Null> for registry::Null
+where
+    Self: Canonical<entity::Null, Q>,
+{
     type Canonical = entity::Null;
 
     fn canonical(_entity: entity::Null) -> Self::Canonical {
@@ -53,15 +61,22 @@ impl ContainsEntity<entity::Null, Null, Null> for registry::Null {
     }
 }
 
-impl<C, E, I, P, R, IS> ContainsEntity<E, (Contained, P), (I, IS)> for (C, R)
+impl<C, E, I, P, Q, QS, R, IS> ContainsEntity<E, (Contained, P), (Q, QS), (I, IS)> for (C, R)
 where
-    R: ContainsEntity<<E as entity::Get<C, I>>::Remainder, P, IS>,
+    Self: Canonical<
+        (
+            C,
+            <R as ContainsEntity<<E as entity::Get<C, I>>::Remainder, P, QS, IS>>::Canonical,
+        ),
+        (Q, QS),
+    >,
+    R: ContainsEntity<<E as entity::Get<C, I>>::Remainder, P, QS, IS>,
     E: entity::Get<C, I>,
     C: Component,
 {
     type Canonical = (
         C,
-        <R as ContainsEntity<<E as entity::Get<C, I>>::Remainder, P, IS>>::Canonical,
+        <R as ContainsEntity<<E as entity::Get<C, I>>::Remainder, P, QS, IS>>::Canonical,
     );
 
     fn canonical(entity: E) -> Self::Canonical {
@@ -70,11 +85,12 @@ where
     }
 }
 
-impl<C, E, I, P, R> ContainsEntity<E, (NotContained, P), I> for (C, R)
+impl<C, E, I, P, Q, QS, R> ContainsEntity<E, (NotContained, P), (Q, QS), I> for (C, R)
 where
-    R: ContainsEntity<E, P, I>,
+    Self: Canonical<<R as ContainsEntity<E, P, QS, I>>::Canonical, (Q, QS)>,
+    R: ContainsEntity<E, P, QS, I>,
 {
-    type Canonical = <R as ContainsEntity<E, P, I>>::Canonical;
+    type Canonical = <R as ContainsEntity<E, P, QS, I>>::Canonical;
 
     fn canonical(entity: E) -> Self::Canonical {
         R::canonical(entity)
@@ -93,15 +109,23 @@ where
 /// This is generic over entities `E`, containments `P` (indicating whether each component is
 /// contained in the registry), and indices `I` (indicating the location of each component in the
 /// entity `E`).
-pub trait ContainsEntities<E, P, I> {
+pub trait ContainsEntities<E, P, Q, I>:
+    Canonical<<Self::Canonical as entities::Contains>::Entity, Q>
+{
     /// The canonical form of the entity `E`.
+    ///
+    /// This type is guaranteed to be canonical with respect to the current registry, and that
+    /// relationship is embodied by an impl of the `Canonical` trait on the current registry.
     type Canonical: Entities;
 
     /// Returns the canonical form of the entities, consuming the original entities.
     fn canonical(entities: E) -> Self::Canonical;
 }
 
-impl ContainsEntities<entities::Null, Null, Null> for registry::Null {
+impl<Q> ContainsEntities<entities::Null, Null, Q, Null> for registry::Null
+where
+    Self: Canonical<<entities::Null as entities::Contains>::Entity, Q>,
+{
     type Canonical = entities::Null;
 
     fn canonical(_entities: entities::Null) -> Self::Canonical {
@@ -109,15 +133,22 @@ impl ContainsEntities<entities::Null, Null, Null> for registry::Null {
     }
 }
 
-impl<C, E, I, P, R, IS> ContainsEntities<E, (Contained, P), (I, IS)> for (C, R)
+impl<C, E, I, P, Q, QS, R, IS> ContainsEntities<E, (Contained, P), (Q, QS), (I, IS)> for (C, R)
 where
-    R: ContainsEntities<<E as entities::Get<C, I>>::Remainder, P, IS>,
+    Self: Canonical<
+        <(
+            Vec<C>,
+            <R as ContainsEntities<<E as entities::Get<C, I>>::Remainder, P, QS, IS>>::Canonical,
+        ) as entities::Contains>::Entity,
+        (Q, QS),
+    >,
+    R: ContainsEntities<<E as entities::Get<C, I>>::Remainder, P, QS, IS>,
     E: entities::Get<C, I>,
     C: Component,
 {
     type Canonical = (
         Vec<C>,
-        <R as ContainsEntities<<E as entities::Get<C, I>>::Remainder, P, IS>>::Canonical,
+        <R as ContainsEntities<<E as entities::Get<C, I>>::Remainder, P, QS, IS>>::Canonical,
     );
 
     fn canonical(entities: E) -> Self::Canonical {
@@ -126,11 +157,15 @@ where
     }
 }
 
-impl<C, E, I, P, R> ContainsEntities<E, (NotContained, P), I> for (C, R)
+impl<C, E, I, P, Q, QS, R> ContainsEntities<E, (NotContained, P), (Q, QS), I> for (C, R)
 where
-    R: ContainsEntities<E, P, I>,
+    Self: Canonical<
+        <<R as ContainsEntities<E, P, QS, I>>::Canonical as entities::Contains>::Entity,
+        (Q, QS),
+    >,
+    R: ContainsEntities<E, P, QS, I>,
 {
-    type Canonical = <R as ContainsEntities<E, P, I>>::Canonical;
+    type Canonical = <R as ContainsEntities<E, P, QS, I>>::Canonical;
 
     fn canonical(entities: E) -> Self::Canonical {
         R::canonical(entities)

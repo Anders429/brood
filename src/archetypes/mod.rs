@@ -17,9 +17,8 @@ use crate::{
     archetype,
     archetype::Archetype,
     entity::{self, Entity},
-    registry::Registry,
+    registry::{Canonical, Registry},
 };
-use alloc::vec;
 use core::{
     any::TypeId,
     hash::{BuildHasher, Hash, Hasher},
@@ -146,12 +145,10 @@ where
     /// # Safety
     /// `component_map` must contain an entry for each component in the entity `E`. Each entry must
     /// correspond to its component's location in the registry `R`.
-    pub(crate) unsafe fn get_mut_or_insert_new_for_entity<E>(
-        &mut self,
-        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> &mut Archetype<R>
+    pub(crate) unsafe fn get_mut_or_insert_new_for_entity<E, P>(&mut self) -> &mut Archetype<R>
     where
         E: Entity,
+        R: Canonical<E, P>,
     {
         // Lookup the archetype identifier.
         if let Some(identifier) = self.type_id_lookup.get(&TypeId::of::<E>()) {
@@ -168,16 +165,7 @@ where
                 None => unsafe { unreachable_unchecked() },
             }
         } else {
-            let mut raw_identifier = vec![0; (R::LEN + 7) / 8];
-            // SAFETY: `identifier` is a zeroed-out allocation of `R::LEN` bits.
-            // `self.component_map` only contains `usize` values up to the number of components in
-            // the registry `R`.
-            unsafe {
-                E::to_identifier(&mut raw_identifier, component_map);
-            }
-            // SAFETY: `identifier` is a properly-initialized buffer of `(R::LEN + 7) / 8` bytes
-            // whose bits correspond to each component in the registry `R`.
-            let identifier = unsafe { archetype::Identifier::<R>::new(raw_identifier) };
+            let identifier = R::create_archetype_identifier();
 
             let hash = Self::make_hash(
                 // SAFETY: The `IdentifierRef` obtained here does not live longer than the

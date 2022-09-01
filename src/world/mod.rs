@@ -146,10 +146,10 @@ where
     ///
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(false)));
     /// ```
-    pub fn insert<E, I, P>(&mut self, entity: E) -> entity::Identifier
+    pub fn insert<E, I, P, Q>(&mut self, entity: E) -> entity::Identifier
     where
         E: Entity,
-        R: ContainsEntity<E, I, P>,
+        R: ContainsEntity<E, P, Q, I>,
     {
         self.len += 1;
 
@@ -162,9 +162,7 @@ where
         // `self.entity_allocator` is guaranteed to live as long as the archetype.
         unsafe {
             self.archetypes
-                .get_mut_or_insert_new_for_entity::<<R as ContainsEntity<E, I, P>>::Canonical>(
-                    &self.component_map,
-                )
+                .get_mut_or_insert_new_for_entity::<<R as ContainsEntity<E, P, Q, I>>::Canonical, Q>()
                 .push(canonical_entity, &mut self.entity_allocator)
         }
     }
@@ -184,10 +182,10 @@ where
     ///
     /// let entity_identiifers = world.extend(entities![(Foo(1), Bar(false)), (Foo(2), Bar(true))]);
     /// ```
-    pub fn extend<E, I, P>(&mut self, entities: entities::Batch<E>) -> Vec<entity::Identifier>
+    pub fn extend<E, I, P, Q>(&mut self, entities: entities::Batch<E>) -> Vec<entity::Identifier>
     where
         E: Entities,
-        R: ContainsEntities<E, I, P>,
+        R: ContainsEntities<E, P, Q, I>,
     {
         self.len += entities.len();
 
@@ -204,7 +202,7 @@ where
         // `self.entity_allocator` is guaranteed to live as long as the archetype.
         unsafe {
             self.archetypes
-                .get_mut_or_insert_new_for_entity::<<<R as ContainsEntities<E, I, P>>::Canonical as entities::Contains>::Entity>(&self.component_map)
+                .get_mut_or_insert_new_for_entity::<<<R as ContainsEntities<E, P, Q, I>>::Canonical as entities::Contains>::Entity, Q>()
                 .extend(canonical_entities, &mut self.entity_allocator)
         }
     }

@@ -12,6 +12,7 @@
 //! [`Registry`]: crate::registry::Registry
 
 mod assertions;
+mod canonical;
 mod length;
 mod storage;
 
@@ -19,6 +20,8 @@ use crate::{component::Component, registry::Null};
 use assertions::Assertions;
 use length::Length;
 use storage::Storage;
+
+pub(crate) use canonical::Canonical;
 
 /// A trait that is public but defined within a private module.
 ///
