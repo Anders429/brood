@@ -6,10 +6,10 @@ use crate::{
         filter::{And, Filter, Seal},
         view::Views,
     },
-    registry::{Registry, RegistryDebug},
+    registry::{ContainsComponent, Registry, RegistryDebug},
     world::World,
 };
-use core::{any::TypeId, fmt, fmt::Debug};
+use core::{fmt, fmt::Debug};
 
 /// A view into a single entity in a [`World`].
 ///
@@ -71,17 +71,15 @@ where
     ///
     /// entry.add(Baz(1.5));
     /// ```
-    ///
-    /// # Panics
-    /// Panics if the component `C` is not in the registry R.
-    pub fn add<C>(&mut self, component: C)
+    pub fn add<C, I>(&mut self, component: C)
     where
         C: Component,
+        R: ContainsComponent<C, I>,
     {
-        let component_index = *self.world.component_map.get(&TypeId::of::<C>()).unwrap();
+        let component_index = R::LEN - R::INDEX - 1;
         if
-        // SAFETY: The `component_index` obtained from `self.world.component_map` is guaranteed to
-        // be a valid index into `self.location.identifier`.
+        // SAFETY: The `component_index` obtained from `R::LEN - R::INDEX - 1` is guaranteed to be
+        // a valid index into `self.location.identifier`, since an identifier has `R::LEN` bits.
         unsafe { self.location.identifier.get_unchecked(component_index) } {
             // The component already exists within this entity. Replace it.
             // SAFETY: An archetype with this identifier is guaranteed to exist, since there is an
@@ -174,19 +172,17 @@ where
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
     /// let mut entry = world.entry(entity_identifier).unwrap();
     ///
-    /// entry.remove::<Foo>();
+    /// entry.remove::<Foo, _>();
     /// ```
-    ///
-    /// # Panics
-    /// Panics if the component `C` is not in the registry R.
-    pub fn remove<C>(&mut self)
+    pub fn remove<C, I>(&mut self)
     where
         C: Component,
+        R: ContainsComponent<C, I>,
     {
-        let component_index = *self.world.component_map.get(&TypeId::of::<C>()).unwrap();
+        let component_index = R::LEN - R::INDEX - 1;
         if
-        // SAFETY: The `component_index` obtained from `self.world.component_map` is guaranteed to
-        // be a valid index into `self.location.identifier`.
+        // SAFETY: The `component_index` obtained from `R::LEN - R::INDEX - 1` is guaranteed to be
+        // a valid index into `self.location.identifier`, since an identifier has `R::LEN` bits.
         unsafe { self.location.identifier.get_unchecked(component_index) } {
             // The component exists and needs to be removed.
             let (entity_identifier, current_component_bytes) =

@@ -35,10 +35,10 @@ mod sync;
 
 #[cfg(feature = "serde")]
 pub(crate) use self::serde::{RegistryDeserialize, RegistrySerialize};
-pub(crate) use contains::{ContainsEntities, ContainsEntity};
+pub(crate) use contains::{ContainsComponent, ContainsEntities, ContainsEntity};
 pub(crate) use debug::RegistryDebug;
 pub(crate) use eq::{RegistryEq, RegistryPartialEq};
-pub(crate) use seal::{Canonical, Filter};
+pub(crate) use seal::{Canonical, Filter, Length};
 pub(crate) use send::RegistrySend;
 pub(crate) use sync::RegistrySync;
 

@@ -32,9 +32,8 @@ use crate::{
     system::{schedule::stage::Stages, ParSystem, Schedule},
 };
 use alloc::vec::Vec;
-use core::any::TypeId;
 use fnv::FnvBuildHasher;
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashSet;
 
 /// A container of entities.
 ///
@@ -75,8 +74,6 @@ where
     entity_allocator: entity::Allocator<R>,
     len: usize,
 
-    component_map: HashMap<TypeId, usize, FnvBuildHasher>,
-
     view_assertion_buffer: view::AssertionBuffer,
 }
 
@@ -94,15 +91,10 @@ where
             FnvBuildHasher::default(),
         ));
 
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        R::create_component_map(&mut component_map, 0);
-
         Self {
             archetypes,
             entity_allocator,
             len,
-
-            component_map,
 
             view_assertion_buffer: view::AssertionBuffer::with_capacity(R::LEN),
         }
@@ -582,7 +574,7 @@ where
     ///
     /// let mut entry = world.entry(entity_identifier).unwrap();
     /// // Remove the `Bar` component.
-    /// entry.remove::<Bar>();
+    /// entry.remove::<Bar, _>();
     /// ```
     ///
     /// [`Entry`]: crate::world::Entry
@@ -1800,7 +1792,7 @@ mod tests {
         world.insert(entity!());
 
         let mut entry = assert_some!(world.entry(entity_identifier));
-        entry.remove::<A>();
+        entry.remove::<A, _>();
 
         let mut result = world
             .query::<views!(&A), filter::None, _, _>()

@@ -4,7 +4,10 @@
 //! etc.). They allow for reordering the components within that heterogeneous list in the same
 //! order as the components in the registry, also known as the "canonical order".
 
-use crate::{component::Component, entities, entities::Entities, entity, entity::Entity, registry};
+use crate::{
+    component::Component, entities, entities::Entities, entity, entity::Entity, registry,
+    registry::Length,
+};
 use alloc::vec::Vec;
 
 use super::Canonical;
@@ -26,6 +29,29 @@ pub enum NotContained {}
 /// This does not have to be specified when calling `canonical()`. The compiler can infer its
 /// value.
 pub enum Null {}
+
+/// Indicates that the component `C` is contained in the registry.
+pub trait ContainsComponent<C, I> {
+    /// Defines the index of the heterogeneous list where the component is located.
+    ///
+    /// Note that this is likely the opposite of what you want, since the last component has the
+    /// index 0. To get the reverse of this, use `R::LEN - R::INDEX - 1`.
+    const INDEX: usize;
+}
+
+impl<C, R> ContainsComponent<C, Contained> for (C, R)
+where
+    R: Length,
+{
+    const INDEX: usize = R::LEN;
+}
+
+impl<C, C_, I, R> ContainsComponent<C_, (I,)> for (C, R)
+where
+    R: ContainsComponent<C_, I>,
+{
+    const INDEX: usize = R::INDEX;
+}
 
 /// Indicates that all of an entity's components are contained in the registry.
 ///
@@ -169,6 +195,35 @@ where
 
     fn canonical(entities: E) -> Self::Canonical {
         R::canonical(entities)
+    }
+}
+
+#[cfg(test)]
+mod component_tests {
+    use super::ContainsComponent;
+    use crate::registry;
+
+    struct A;
+    struct B;
+    struct C;
+    struct D;
+    struct E;
+
+    type Registry = registry!(A, B, C, D, E);
+
+    #[test]
+    fn contains_start() {
+        assert_eq!(<Registry as ContainsComponent<A, _>>::INDEX, 4);
+    }
+
+    #[test]
+    fn contains_middle() {
+        assert_eq!(<Registry as ContainsComponent<C, _>>::INDEX, 2);
+    }
+
+    #[test]
+    fn contains_end() {
+        assert_eq!(<Registry as ContainsComponent<E, _>>::INDEX, 0);
     }
 }
 
