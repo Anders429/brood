@@ -12,7 +12,7 @@
 //!
 //! ``` rust
 //! use brood::{
-//!     query::{filter, result, views},
+//!     query::{filter, filter::Filter, result, views},
 //!     registry::Registry,
 //!     system::{Schedule, System},
 //! };
@@ -28,9 +28,13 @@
 //!     type Views = views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
 //!
-//!     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-//!     where
+//!     fn run<R, FI, VI>(
+//!         &mut self,
+//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
+//!     ) where
 //!         R: Registry + 'a,
+//!         Self::Filter: Filter<R, FI>,
+//!         Self::Views: Filter<R, VI>,
 //!     {
 //!         for result!(foo, bar) in query_results {
 //!             // Do something...
@@ -44,9 +48,13 @@
 //!     type Views = views!(&'a mut Baz, &'a Bar);
 //!     type Filter = filter::None;
 //!
-//!     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-//!     where
+//!     fn run<R, FI, VI>(
+//!         &mut self,
+//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
+//!     ) where
 //!         R: Registry + 'a,
+//!         Self::Filter: Filter<R, FI>,
+//!         Self::Views: Filter<R, VI>,
 //!     {
 //!         for result!(baz, bar) in query_results {
 //!             // Do something...
@@ -89,7 +97,7 @@ use stage::Stages;
 ///
 /// ``` rust
 /// use brood::{
-///     query::{filter, result, views},
+///     query::{filter, filter::Filter, result, views},
 ///     registry::Registry,
 ///     system::{Schedule, System},
 /// };
@@ -105,9 +113,13 @@ use stage::Stages;
 ///     type Views = views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-///     where
+///     fn run<R, FI, VI>(
+///         &mut self,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
+///     ) where
 ///         R: Registry + 'a,
+///         Self::Filter: Filter<R, FI>,
+///         Self::Views: Filter<R, VI>,
 ///     {
 ///         for result!(foo, bar) in query_results {
 ///             // Do something...
@@ -121,9 +133,13 @@ use stage::Stages;
 ///     type Views = views!(&'a mut Baz, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-///     where
+///     fn run<R, FI, VI>(
+///         &mut self,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
+///     ) where
 ///         R: Registry + 'a,
+///         Self::Filter: Filter<R, FI>,
+///         Self::Views: Filter<R, VI>,
 ///     {
 ///         for result!(baz, bar) in query_results {
 ///             // Do something...
@@ -161,13 +177,11 @@ impl Schedule<stage::Null> {
     }
 }
 
-impl<'a, S> Schedule<S>
-where
-    S: Stages<'a>,
-{
-    pub(crate) fn run<R>(&mut self, world: &'a mut World<R>)
+impl<'a, S> Schedule<S> {
+    pub(crate) fn run<R, SFI, SVI, PFI, PVI>(&mut self, world: &'a mut World<R>)
     where
         R: Registry,
+        S: Stages<'a, R, SFI, SVI, PFI, PVI>,
     {
         self.stages.run(
             // SAFETY: The pointer provided here is unique, being created from a mutable reference.

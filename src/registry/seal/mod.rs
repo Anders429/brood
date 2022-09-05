@@ -13,15 +13,17 @@
 
 mod assertions;
 mod canonical;
+mod filter;
 mod length;
 mod storage;
+
+pub(crate) use canonical::Canonical;
+pub(crate) use filter::Filter;
 
 use crate::{component::Component, registry::Null};
 use assertions::Assertions;
 use length::Length;
 use storage::Storage;
-
-pub(crate) use canonical::Canonical;
 
 /// A trait that is public but defined within a private module.
 ///

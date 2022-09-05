@@ -271,23 +271,21 @@ where
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
     /// let mut entry = world.entry(entity_identifier).unwrap();
     ///
-    /// let result = entry.query::<views!(&Foo, &Bar), filter::None>();
+    /// let result = entry.query::<views!(&Foo, &Bar), filter::None, _, _>();
     /// assert!(result.is_some());
     /// let result!(foo, bar) = result.unwrap();
     /// assert_eq!(foo.0, 42);
     /// assert_eq!(bar.0, true);
     /// ```
-    pub fn query<V, F>(&mut self) -> Option<<V::Results as Iterator>::Item>
+    pub fn query<V, F, VI, FI>(&mut self) -> Option<<V::Results as Iterator>::Item>
     where
-        V: Views<'a>,
-        F: Filter,
+        V: Views<'a> + Filter<R, VI>,
+        F: Filter<R, FI>,
     {
         self.world.view_assertion_buffer.clear();
         V::assert_claims(&mut self.world.view_assertion_buffer);
 
-        // SAFETY: `self.component_map` contains an entry for each `TypeId<C>` per
-        // component `C` in the registry `R`.
-        if unsafe { And::<V, F>::filter(self.location.identifier, &self.world.component_map) } {
+        if And::<V, F>::filter(self.location.identifier) {
             Some(
                 // SAFETY: Since the archetype wasn't filtered out by the views, then each
                 // component viewed by `V` is also identified by the archetype's identifier.
@@ -300,7 +298,7 @@ where
                     self.world
                         .archetypes
                         .get_mut(self.location.identifier)?
-                        .view_row_unchecked::<V>(self.location.index)
+                        .view_row_unchecked::<V, VI>(self.location.index)
                 },
             )
         } else {

@@ -268,7 +268,7 @@ where
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
     ///
     /// The index `index` must be a valid index into this archetype.
-    pub(crate) unsafe fn view_row_unchecked<'a, V>(
+    pub(crate) unsafe fn view_row_unchecked<'a, V, I>(
         &mut self,
         index: usize,
     ) -> <V::Results as Iterator>::Item

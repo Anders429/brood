@@ -15,6 +15,8 @@ mod seal;
 use crate::{
     doc,
     hlist::define_null,
+    query::filter::Filter,
+    registry::Registry,
     system::{schedule::task::Task, ParSystem, System},
 };
 use seal::Seal;
@@ -34,17 +36,27 @@ pub enum Stage<S, P> {
 /// The ordered `Stage`s provided here define the actual stages of the schedule. Note that the
 /// stages are defined inside-out, with the last of the heterogeneous list being the beginning of
 /// the list of stages.
-pub trait Stages<'a>: Seal<'a> {}
+pub trait Stages<'a, R, SFI, SVI, PFI, PVI>: Seal<'a, R, SFI, SVI, PFI, PVI>
+where
+    R: Registry + 'a,
+{
+}
 
 define_null!();
 
-impl<'a> Stages<'a> for Null {}
+impl<'a, R> Stages<'a, R, Null, Null, Null, Null> for Null where R: Registry + 'a {}
 
-impl<'a, S, P, L> Stages<'a> for (Stage<S, P>, L)
+impl<'a, S, P, L, R, SFI, SFIS, SVI, SVIS, PFI, PFIS, PVI, PVIS>
+    Stages<'a, R, (SFI, SFIS), (SVI, SVIS), (PFI, PFIS), (PVI, PVIS)> for (Stage<S, P>, L)
 where
+    R: Registry + 'a,
     S: System<'a> + Send,
+    S::Filter: Filter<R, SFI>,
+    S::Views: Filter<R, SVI>,
+    P::Filter: Filter<R, PFI>,
+    P::Views: Filter<R, PVI>,
     P: ParSystem<'a> + Send,
-    L: Stages<'a>,
+    L: Stages<'a, R, SFIS, SVIS, PFIS, PVIS>,
 {
 }
 
@@ -65,7 +77,7 @@ doc::non_root_macro! {
     /// These can be provided to the macro to generate the correct type annotations, like so:
     ///
     /// ``` rust
-    /// use brood::{query::{filter, result, views}, registry::Registry, system::{schedule::stages, System, ParSystem}};
+    /// use brood::{query::{filter, filter::Filter, result, views}, registry::Registry, system::{schedule::stages, System, ParSystem}};
     ///
     /// // Define components.
     /// struct A;
@@ -78,9 +90,11 @@ doc::non_root_macro! {
     ///     type Filter = filter::None;
     ///     type Views = views!(&'a mut A, &'a B);
     ///
-    ///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+    ///     fn run<R, FI, VI>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>)
     ///     where
     ///         R: Registry + 'a,
+    ///         Self::Filter: Filter<R, FI>,
+    ///         Self::Views: Filter<R, VI>,
     ///     {
     ///         // Operate on result here.
     ///     }
@@ -92,9 +106,11 @@ doc::non_root_macro! {
     ///     type Filter = filter::None;
     ///     type Views = views!(&'a B, &'a mut C);
     ///
-    ///     fn run<R>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, Self::Views>)
+    ///     fn run<R, FI, VI>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>)
     ///     where
-    ///         R: Registry + 'a
+    ///         R: Registry + 'a,
+    ///         Self::Filter: Filter<R, FI>,
+    ///         Self::Views: Filter<R, VI>,
     ///     {
     ///         // Operate on result here.
     ///     }

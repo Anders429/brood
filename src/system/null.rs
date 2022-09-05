@@ -1,7 +1,7 @@
 #[cfg(feature = "rayon")]
 use crate::system::ParSystem;
 use crate::{
-    query::{filter, result, view},
+    query::{filter, filter::Filter, result, view},
     registry::Registry,
     system::System,
     world::World,
@@ -21,9 +21,13 @@ impl<'a> System<'a> for Null {
     type Filter = filter::None;
     type Views = view::Null;
 
-    fn run<R>(&mut self, _query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-    where
+    fn run<R, FI, VI>(
+        &mut self,
+        _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
+    ) where
         R: Registry + 'a,
+        Self::Filter: Filter<R, FI>,
+        Self::Views: Filter<R, VI>,
     {
         // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }
@@ -43,9 +47,13 @@ impl<'a> ParSystem<'a> for Null {
     type Filter = filter::None;
     type Views = view::Null;
 
-    fn run<R>(&mut self, _query_results: result::ParIter<'a, R, Self::Filter, Self::Views>)
-    where
+    fn run<R, FI, VI>(
+        &mut self,
+        _query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>,
+    ) where
         R: Registry + 'a,
+        Self::Filter: Filter<R, FI>,
+        Self::Views: Filter<R, VI>,
     {
         // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }

@@ -1,4 +1,5 @@
 use crate::{
+    query::filter::Filter,
     registry::Registry,
     system::{schedule::sendable::SendableWorld, ParSystem, System},
     world::World,
@@ -14,16 +15,22 @@ where
     S: System<'a>,
     P: ParSystem<'a>,
 {
-    pub(crate) fn run<R>(&mut self, world: SendableWorld<R>)
+    pub(crate) fn run<R, SFI, SVI, PFI, PVI>(&mut self, world: SendableWorld<R>)
     where
         R: Registry + 'a,
+        S::Filter: Filter<R, SFI>,
+        S::Views: Filter<R, SVI>,
+        P::Filter: Filter<R, PFI>,
+        P::Views: Filter<R, PVI>,
     {
         match self {
             Task::Seq(system) => {
                 // Query world using system.
-                // SAFETY: The `Views` checks were already done when constructing the `Schedule`.
-                // Also, the access to the world's components follows Rust's borrowing rules.
-                let result = unsafe { (*world.get()).query_unchecked::<S::Views, S::Filter>() };
+                let result =
+                    // SAFETY: The `Views` checks were already done when constructing the
+                    // `Schedule`. Also, the access to the world's components follows Rust's
+                    // borrowing rules.
+                    unsafe { (*world.get()).query_unchecked::<S::Views, S::Filter, SVI, SFI>() };
                 // Run system using the query result.
                 system.run(result);
             }
@@ -32,7 +39,9 @@ where
                 // SAFETY: The `ParViews` checks were already done when constructing the
                 // `Schedule`. Also, the access to the world's components follows Rust's borrowing
                 // rules.
-                let result = unsafe { (*world.get()).par_query_unchecked::<P::Views, P::Filter>() };
+                let result = unsafe {
+                    (*world.get()).par_query_unchecked::<P::Views, P::Filter, PVI, PFI>()
+                };
                 // Run system using the query result.
                 system.run(result);
             }

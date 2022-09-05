@@ -1,4 +1,5 @@
 use crate::{
+    query::filter::Filter,
     registry::Registry,
     system::{
         schedule::{
@@ -10,78 +11,54 @@ use crate::{
     world::World,
 };
 
-pub trait Seal<'a>: Send {
-    fn run<R>(&mut self, world: SendableWorld<R>)
-    where
-        R: Registry + 'a;
-
-    fn defer<R>(&mut self, world: SendableWorld<R>)
-    where
-        R: Registry + 'a;
-
-    fn run_current<R>(&mut self, world: SendableWorld<R>)
-    where
-        R: Registry + 'a;
-
-    fn run_continuing<R>(&mut self, world: SendableWorld<R>)
-    where
-        R: Registry + 'a;
-
-    fn flush<R>(&mut self, world: SendableWorld<R>)
-    where
-        R: Registry + 'a;
-}
-
-impl<'a> Seal<'a> for Null {
-    fn run<R>(&mut self, _world: SendableWorld<R>)
-    where
-        R: Registry + 'a,
-    {
-    }
-
-    fn defer<R>(&mut self, _world: SendableWorld<R>)
-    where
-        R: Registry + 'a,
-    {
-    }
-
-    fn run_current<R>(&mut self, _world: SendableWorld<R>)
-    where
-        R: Registry + 'a,
-    {
-    }
-
-    fn run_continuing<R>(&mut self, _world: SendableWorld<R>)
-    where
-        R: Registry + 'a,
-    {
-    }
-
-    fn flush<R>(&mut self, _world: SendableWorld<R>)
-    where
-        R: Registry + 'a,
-    {
-    }
-}
-
-impl<'a, S, P, L> Seal<'a> for (Stage<S, P>, L)
+pub trait Seal<'a, R, SFI, SVI, PFI, PVI>: Send
 where
-    S: System<'a> + Send,
-    P: ParSystem<'a> + Send,
-    L: Seal<'a>,
+    R: Registry + 'a,
 {
-    fn run<R>(&mut self, world: SendableWorld<R>)
-    where
-        R: Registry + 'a,
-    {
+    fn run(&mut self, world: SendableWorld<R>);
+
+    fn defer(&mut self, world: SendableWorld<R>);
+
+    fn run_current(&mut self, world: SendableWorld<R>);
+
+    fn run_continuing(&mut self, world: SendableWorld<R>);
+
+    fn flush(&mut self, world: SendableWorld<R>);
+}
+
+impl<'a, R> Seal<'a, R, Null, Null, Null, Null> for Null
+where
+    R: Registry + 'a,
+{
+    fn run(&mut self, _world: SendableWorld<R>) {}
+
+    fn defer(&mut self, _world: SendableWorld<R>) {}
+
+    fn run_current(&mut self, _world: SendableWorld<R>) {}
+
+    fn run_continuing(&mut self, _world: SendableWorld<R>) {}
+
+    fn flush(&mut self, _world: SendableWorld<R>) {}
+}
+
+impl<'a, S, P, L, R, SFI, SFIS, SVI, SVIS, PFI, PFIS, PVI, PVIS>
+    Seal<'a, R, (SFI, SFIS), (SVI, SVIS), (PFI, PFIS), (PVI, PVIS)> for (Stage<S, P>, L)
+where
+    R: Registry + 'a,
+    S: System<'a> + Send,
+    S::Filter: Filter<R, SFI>,
+    S::Views: Filter<R, SVI>,
+    P::Filter: Filter<R, PFI>,
+    P::Views: Filter<R, PVI>,
+    P: ParSystem<'a> + Send,
+    L: Seal<'a, R, SFIS, SVIS, PFIS, PVIS>,
+{
+    fn run(&mut self, world: SendableWorld<R>) {
         self.defer(world);
         self.run_current(world);
     }
 
-    fn defer<R>(&mut self, world: SendableWorld<R>)
-    where
-        R: Registry + 'a,
-    {
+    fn defer(&mut self, world: SendableWorld<R>) {
         match self.0 {
             Stage::Start(_) | Stage::Flush => {
                 self.1.run(world);
@@ -92,10 +69,7 @@ where
         }
     }
 
-    fn run_current<R>(&mut self, world: SendableWorld<R>)
-    where
-        R: Registry + 'a,
-    {
+    fn run_current(&mut self, world: SendableWorld<R>) {
         match &mut self.0 {
             Stage::Start(task) => {
                 task.run(world);
@@ -116,10 +90,7 @@ where
         }
     }
 
-    fn run_continuing<R>(&mut self, world: SendableWorld<R>)
-    where
-        R: Registry + 'a,
-    {
+    fn run_continuing(&mut self, world: SendableWorld<R>) {
         match &mut self.0 {
             Stage::Start(task) => {
                 task.run(world);
@@ -138,10 +109,7 @@ where
         }
     }
 
-    fn flush<R>(&mut self, world: SendableWorld<R>)
-    where
-        R: Registry + 'a,
-    {
+    fn flush(&mut self, world: SendableWorld<R>) {
         match &mut self.0 {
             Stage::Start(task) => {
                 task.flush(

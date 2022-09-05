@@ -55,9 +55,7 @@ pub use par::{ParView, ParViews};
 
 pub(crate) use assertion_buffer::AssertionBuffer;
 
-use crate::{
-    component::Component, doc, entity, hlist::define_null_uninstantiable, query::filter::Filter,
-};
+use crate::{component::Component, doc, entity, hlist::define_null_uninstantiable};
 use seal::{ViewSeal, ViewsSeal};
 
 /// A view over a single aspect of an entity.
@@ -104,7 +102,7 @@ use seal::{ViewSeal, ViewsSeal};
 /// [`Views`]: crate::query::view::Views
 /// [`views!`]: crate::query::views!
 /// [`World`]: crate::world::World
-pub trait View<'a>: Filter + ViewSeal<'a> {}
+pub trait View<'a>: ViewSeal<'a> {}
 
 impl<'a, C> View<'a> for &C where C: Component {}
 
@@ -147,7 +145,7 @@ define_null_uninstantiable!();
 /// [`View`]: crate::query::view::View
 /// [`views!`]: crate::query::views!
 /// [`World`]: crate::world::World
-pub trait Views<'a>: Filter + ViewsSeal<'a> {}
+pub trait Views<'a>: ViewsSeal<'a> {}
 
 impl<'a> Views<'a> for Null {}
 

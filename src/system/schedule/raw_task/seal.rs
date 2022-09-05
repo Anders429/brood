@@ -4,7 +4,7 @@ use crate::{
         schedule::{
             raw_task::{Null, RawTask},
             stage,
-            stage::{Stage, Stages},
+            stage::Stage,
         },
         ParSystem, System,
     },
@@ -14,7 +14,7 @@ use fnv::FnvBuildHasher;
 use hashbrown::HashSet;
 
 pub trait Seal<'a> {
-    type Stages: Stages<'a>;
+    type Stages;
 
     fn into_stages(
         self,

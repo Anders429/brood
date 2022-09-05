@@ -1,10 +1,6 @@
 mod seal;
 
-use crate::{
-    component::Component,
-    entity,
-    query::{filter::Filter, view::Null},
-};
+use crate::{component::Component, entity, query::view::Null};
 use seal::{ParViewSeal, ParViewsSeal};
 
 /// A parallel view over a single aspect of an entity.
@@ -33,7 +29,7 @@ use seal::{ParViewSeal, ParViewsSeal};
 /// [`par_query`]: crate::world::World::par_query()
 /// [`View`]: crate::query::view::View
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-pub trait ParView<'a>: Filter + ParViewSeal<'a> {}
+pub trait ParView<'a>: ParViewSeal<'a> {}
 
 impl<'a, C> ParView<'a> for &C where C: Component + Sync {}
 
@@ -75,7 +71,7 @@ impl<'a> ParView<'a> for entity::Identifier {}
 /// [`par_query`]: crate::world::World::par_query()
 /// [`Views`]: crate::query::view::Views
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-pub trait ParViews<'a>: Filter + ParViewsSeal<'a> {}
+pub trait ParViews<'a>: ParViewsSeal<'a> {}
 
 impl<'a> ParViews<'a> for Null {}
 

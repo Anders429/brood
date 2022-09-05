@@ -29,7 +29,7 @@ use hashbrown::HashSet;
 ///
 /// ``` rust
 /// use brood::{
-///     query::{filter, result, views},
+///     query::{filter, filter::Filter, result, views},
 ///     registry::Registry,
 ///     system::{Schedule, System},
 /// };
@@ -45,9 +45,13 @@ use hashbrown::HashSet;
 ///     type Views = views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-///     where
+///     fn run<R, FI, VI>(
+///         &mut self,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
+///     ) where
 ///         R: Registry + 'a,
+///         Self::Filter: Filter<R, FI>,
+///         Self::Views: Filter<R, VI>,
 ///     {
 ///         for result!(foo, bar) in query_results {
 ///             // Do something...
@@ -61,9 +65,13 @@ use hashbrown::HashSet;
 ///     type Views = views!(&'a mut Baz, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-///     where
+///     fn run<R, FI, VI>(
+///         &mut self,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
+///     ) where
 ///         R: Registry + 'a,
+///         Self::Filter: Filter<R, FI>,
+///         Self::Views: Filter<R, VI>,
 ///     {
 ///         for result!(baz, bar) in query_results {
 ///             // Do something...

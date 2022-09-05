@@ -6,9 +6,7 @@ use crate::{
     },
     registry::Registry,
 };
-use core::{any::TypeId, iter::FusedIterator, marker::PhantomData};
-use fnv::FnvBuildHasher;
-use hashbrown::HashMap;
+use core::{iter::FusedIterator, marker::PhantomData};
 
 /// An [`Iterator`] over the results of a query.
 ///
@@ -35,7 +33,7 @@ use hashbrown::HashMap;
 /// let mut world = World::<Registry>::new();
 /// world.insert(entity!(Foo(42), Bar(true)));
 ///
-/// for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None>() {
+/// for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None, _, _>() {
 ///     if bar.0 {
 ///         foo.0 += 1;
 ///     }
@@ -48,48 +46,45 @@ use hashbrown::HashMap;
 /// [`result!`]: crate::query::result!
 /// [`Views`]: crate::query::view::Views
 /// [`World`]: crate::world::World
-pub struct Iter<'a, R, F, V>
+pub struct Iter<'a, R, F, FI, V, VI>
 where
     R: Registry,
-    F: Filter,
-    V: Views<'a>,
+    F: Filter<R, FI>,
+    V: Views<'a> + Filter<R, VI>,
 {
     archetypes_iter: archetypes::IterMut<'a, R>,
 
     current_results_iter: Option<V::Results>,
 
-    component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>,
-
     filter: PhantomData<F>,
+    filter_indices: PhantomData<FI>,
+    view_indices: PhantomData<VI>,
 }
 
-impl<'a, R, F, V> Iter<'a, R, F, V>
+impl<'a, R, F, FI, V, VI> Iter<'a, R, F, FI, V, VI>
 where
     R: Registry,
-    F: Filter,
-    V: Views<'a>,
+    F: Filter<R, FI>,
+    V: Views<'a> + Filter<R, VI>,
 {
-    pub(crate) fn new(
-        archetypes_iter: archetypes::IterMut<'a, R>,
-        component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> Self {
+    pub(crate) fn new(archetypes_iter: archetypes::IterMut<'a, R>) -> Self {
         Self {
             archetypes_iter,
 
             current_results_iter: None,
 
-            component_map,
-
             filter: PhantomData,
+            filter_indices: PhantomData,
+            view_indices: PhantomData,
         }
     }
 }
 
-impl<'a, R, F, V> Iterator for Iter<'a, R, F, V>
+impl<'a, R, F, FI, V, VI> Iterator for Iter<'a, R, F, FI, V, VI>
 where
     R: Registry + 'a,
-    F: Filter,
-    V: Views<'a>,
+    F: Filter<R, FI>,
+    V: Views<'a> + Filter<R, VI>,
 {
     type Item = <V::Results as Iterator>::Item;
 
@@ -102,9 +97,10 @@ where
                 }
             }
             let archetype = self.archetypes_iter.find(|archetype| {
-                // SAFETY: `self.component_map` contains an entry for each `TypeId<C>` per
-                // component `C` in the registry `R`.
-                unsafe { And::<V, F>::filter(archetype.identifier(), self.component_map) }
+                And::<V, F>::filter(
+                    // SAFETY: This identifier reference will not outlive `archetype`.
+                    unsafe { archetype.identifier() },
+                )
             })?;
             self.current_results_iter = Some(
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`,
@@ -137,10 +133,10 @@ where
         }
 
         self.archetypes_iter.fold(init, |acc, archetype| {
-            if
-            // SAFETY: `self.component_map` contains an entry for each `TypeId<C>` per component
-            // `C` in the registry `R`.
-            unsafe { And::<V, F>::filter(archetype.identifier(), self.component_map) } {
+            if And::<V, F>::filter(
+                // SAFETY: This identifier reference will not outlive `archetype`.
+                unsafe { archetype.identifier() },
+            ) {
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`
                 // since the `filter` function in the if-statement returned `true`.
                 unsafe { archetype.view::<V>() }.fold(acc, &mut fold)
@@ -151,20 +147,20 @@ where
     }
 }
 
-impl<'a, R, F, V> FusedIterator for Iter<'a, R, F, V>
+impl<'a, R, F, FI, V, VI> FusedIterator for Iter<'a, R, F, FI, V, VI>
 where
     R: Registry + 'a,
-    F: Filter,
-    V: Views<'a>,
+    F: Filter<R, FI>,
+    V: Views<'a> + Filter<R, VI>,
 {
 }
 
 // SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<'a, R, F, V> Send for Iter<'a, R, F, V>
+unsafe impl<'a, R, F, FI, V, VI> Send for Iter<'a, R, F, FI, V, VI>
 where
     R: Registry + 'a,
-    F: Filter,
-    V: Views<'a>,
+    F: Filter<R, FI>,
+    V: Views<'a> + Filter<R, VI>,
 {
 }

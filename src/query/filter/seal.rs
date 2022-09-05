@@ -5,216 +5,134 @@ use crate::{
     query::{
         filter::{And, Filter, Has, None, Not, Or},
         view,
-        view::{View, Views},
     },
-    registry::Registry,
+    registry::{self, Registry},
 };
-use core::any::TypeId;
-use fnv::FnvBuildHasher;
-use hashbrown::HashMap;
 
-pub trait Seal {
-    /// # Safety
-    /// `component_map` must contain an entry for the `TypeId<C>` of each component `C` in the
-    /// registry `R` corresponding to the index of that component in the archetype identifier.
-    ///
-    /// Note that the component(s) being viewed do not necessarily need to be in the registry `R`.
-    unsafe fn filter<R>(
-        identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> bool
-    where
-        R: Registry;
+pub trait Seal<R, I>
+where
+    R: Registry,
+{
+    fn filter(identifier: archetype::IdentifierRef<R>) -> bool;
 }
 
-impl Seal for None {
-    unsafe fn filter<R>(
-        _identifier: archetype::IdentifierRef<R>,
-        _component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> bool
-    where
-        R: Registry,
-    {
+impl<R> Seal<R, None> for None
+where
+    R: Registry,
+{
+    fn filter(_identifier: archetype::IdentifierRef<R>) -> bool {
         true
     }
 }
 
-impl<C> Seal for Has<C>
+impl<C, I, R> Seal<R, I> for Has<C>
 where
     C: Component,
+    R: Registry + registry::Filter<C, I>,
 {
-    unsafe fn filter<R>(
-        identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> bool
-    where
-        R: Registry,
-    {
-        match component_map.get(&TypeId::of::<C>()) {
-            Some(&index) =>
-            // SAFETY: `index` is guaranteed to correspond to a valid component in `identifier`.
-            unsafe { identifier.get_unchecked(index) },
-            Option::None => false,
-        }
+    fn filter(identifier: archetype::IdentifierRef<R>) -> bool {
+        R::has(identifier)
     }
 }
 
-impl<F> Seal for Not<F>
+impl<F, I, R> Seal<R, Not<I>> for Not<F>
 where
-    F: Filter,
+    F: Filter<R, I>,
+    R: Registry,
 {
-    unsafe fn filter<R>(
-        identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> bool
-    where
-        R: Registry,
-    {
-        // SAFETY: The safety guarantees for this call are already upheld by the safety contract
-        // of this method.
-        unsafe { !F::filter(identifier, component_map) }
+    fn filter(identifier: archetype::IdentifierRef<R>) -> bool {
+        !F::filter(identifier)
     }
 }
 
-impl<F1, F2> Seal for And<F1, F2>
+impl<F1, F2, I, J, R> Seal<R, And<I, J>> for And<F1, F2>
 where
-    F1: Filter,
-    F2: Filter,
+    F1: Filter<R, I>,
+    F2: Filter<R, J>,
+    R: Registry,
 {
-    unsafe fn filter<R>(
-        identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> bool
-    where
-        R: Registry,
-    {
-        // SAFETY: The safety guarantees for these calls are already upheld by the safety contract
-        // of this method.
-        unsafe { F1::filter(identifier, component_map) && F2::filter(identifier, component_map) }
+    fn filter(identifier: archetype::IdentifierRef<R>) -> bool {
+        F1::filter(identifier) && F2::filter(identifier)
     }
 }
 
-impl<F1, F2> Seal for Or<F1, F2>
+impl<F1, F2, I, J, R> Seal<R, Or<I, J>> for Or<F1, F2>
 where
-    F1: Filter,
-    F2: Filter,
+    F1: Filter<R, I>,
+    F2: Filter<R, J>,
+    R: Registry,
 {
-    unsafe fn filter<R>(
-        identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> bool
-    where
-        R: Registry,
-    {
-        // SAFETY: The safety guarantees for these calls are already upheld by the safety contract
-        // of this method.
-        unsafe { F1::filter(identifier, component_map) || F2::filter(identifier, component_map) }
+    fn filter(identifier: archetype::IdentifierRef<R>) -> bool {
+        F1::filter(identifier) || F2::filter(identifier)
     }
 }
 
-impl<C> Seal for &C
+impl<C, I, R> Seal<R, I> for &C
 where
     C: Component,
+    R: Registry + registry::Filter<C, I>,
 {
-    unsafe fn filter<R>(
-        identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> bool
-    where
-        R: Registry,
-    {
-        // SAFETY: The safety guarantees for this call are already upheld by the safety contract
-        // of this method.
-        unsafe { Has::<C>::filter(identifier, component_map) }
+    fn filter(identifier: archetype::IdentifierRef<R>) -> bool {
+        Has::<C>::filter(identifier)
     }
 }
 
-impl<C> Seal for &mut C
+impl<C, I, R> Seal<R, I> for &mut C
 where
     C: Component,
+    R: Registry + registry::Filter<C, I>,
 {
-    unsafe fn filter<R>(
-        identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> bool
-    where
-        R: Registry,
-    {
-        // SAFETY: The safety guarantees for this call are already upheld by the safety contract
-        // of this method.
-        unsafe { Has::<C>::filter(identifier, component_map) }
+    fn filter(identifier: archetype::IdentifierRef<R>) -> bool {
+        Has::<C>::filter(identifier)
     }
 }
 
-impl<C> Seal for Option<&C>
+impl<C, R> Seal<R, None> for Option<&C>
 where
     C: Component,
+    R: Registry,
 {
-    unsafe fn filter<R>(
-        _identifier: archetype::IdentifierRef<R>,
-        _component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> bool
-    where
-        R: Registry,
-    {
+    fn filter(_identifier: archetype::IdentifierRef<R>) -> bool {
         true
     }
 }
 
-impl<C> Seal for Option<&mut C>
+impl<C, R> Seal<R, None> for Option<&mut C>
 where
     C: Component,
+    R: Registry,
 {
-    unsafe fn filter<R>(
-        _identifier: archetype::IdentifierRef<R>,
-        _component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> bool
-    where
-        R: Registry,
-    {
+    fn filter(_identifier: archetype::IdentifierRef<R>) -> bool {
         true
     }
 }
 
-impl Seal for entity::Identifier {
-    unsafe fn filter<R>(
-        _identifier: archetype::IdentifierRef<R>,
-        _component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> bool
-    where
-        R: Registry,
-    {
-        true
-    }
-}
-
-impl Seal for view::Null {
-    unsafe fn filter<R>(
-        _identifier: archetype::IdentifierRef<R>,
-        _component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> bool
-    where
-        R: Registry,
-    {
-        true
-    }
-}
-
-impl<'a, V, W> Seal for (V, W)
+impl<R> Seal<R, None> for entity::Identifier
 where
-    V: View<'a>,
-    W: Views<'a>,
+    R: Registry,
 {
-    unsafe fn filter<R>(
-        identifier: archetype::IdentifierRef<R>,
-        component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> bool
-    where
-        R: Registry,
-    {
-        // SAFETY: The safety guarantees for this call are already upheld by the safety contract
-        // of this method.
-        unsafe { And::<V, W>::filter(identifier, component_map) }
+    fn filter(_identifier: archetype::IdentifierRef<R>) -> bool {
+        true
+    }
+}
+
+impl<R> Seal<R, None> for view::Null
+where
+    R: Registry,
+{
+    fn filter(_identifier: archetype::IdentifierRef<R>) -> bool {
+        true
+    }
+}
+
+impl<I, J, R, V, W> Seal<R, And<I, J>> for (V, W)
+where
+    R: Registry,
+    V: Filter<R, I>,
+    W: Filter<R, J>,
+{
+    fn filter(identifier: archetype::IdentifierRef<R>) -> bool {
+        And::<V, W>::filter(identifier)
     }
 }
 
@@ -231,170 +149,100 @@ mod tests {
 
     #[test]
     fn filter_none() {
-        assert!(unsafe {
-            None::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &HashMap::with_hasher(FnvBuildHasher::default()),
-            )
-        });
+        assert!(unsafe { None::filter(archetype::Identifier::<Registry>::new(vec![1]).as_ref(),) });
     }
 
     #[test]
     fn filter_has_true() {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        component_map.insert(TypeId::of::<A>(), 0);
-
         assert!(unsafe {
-            Has::<A>::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &component_map,
-            )
+            Has::<A>::filter(archetype::Identifier::<Registry>::new(vec![1]).as_ref())
         });
     }
 
     #[test]
     fn filter_has_false() {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        component_map.insert(TypeId::of::<A>(), 0);
-
         assert!(!unsafe {
-            Has::<B>::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &component_map,
-            )
+            Has::<B>::filter(archetype::Identifier::<Registry>::new(vec![1]).as_ref())
         });
     }
 
     #[test]
     fn not() {
         assert!(!unsafe {
-            Not::<None>::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &HashMap::with_hasher(FnvBuildHasher::default()),
-            )
+            Not::<None>::filter(archetype::Identifier::<Registry>::new(vec![1]).as_ref())
         });
     }
 
     #[test]
     fn and() {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        component_map.insert(TypeId::of::<A>(), 0);
-
         assert!(unsafe {
-            And::<None, Has<A>>::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &component_map,
-            )
+            And::<None, Has<A>>::filter(archetype::Identifier::<Registry>::new(vec![1]).as_ref())
         });
     }
 
     #[test]
     fn or() {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        component_map.insert(TypeId::of::<A>(), 0);
-
         assert!(unsafe {
-            Or::<Has<B>, Has<A>>::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &component_map,
-            )
+            Or::<Has<B>, Has<A>>::filter(archetype::Identifier::<Registry>::new(vec![1]).as_ref())
         });
     }
 
     #[test]
     fn ref_true() {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        component_map.insert(TypeId::of::<A>(), 0);
-
-        assert!(unsafe {
-            <&A>::filter::<Registry>(archetype::Identifier::new(vec![1]).as_ref(), &component_map)
-        });
+        assert!(unsafe { <&A>::filter(archetype::Identifier::<Registry>::new(vec![1]).as_ref()) });
     }
 
     #[test]
     fn ref_false() {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        component_map.insert(TypeId::of::<A>(), 0);
-
-        assert!(!unsafe {
-            <&B>::filter::<Registry>(archetype::Identifier::new(vec![1]).as_ref(), &component_map)
-        });
+        assert!(!unsafe { <&B>::filter(archetype::Identifier::<Registry>::new(vec![1]).as_ref()) });
     }
 
     #[test]
     fn mut_ref_true() {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        component_map.insert(TypeId::of::<A>(), 0);
-
         assert!(unsafe {
-            <&mut A>::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &component_map,
-            )
+            <&mut A>::filter(archetype::Identifier::<Registry>::new(vec![1]).as_ref())
         });
     }
 
     #[test]
     fn mut_ref_false() {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        component_map.insert(TypeId::of::<A>(), 0);
-
         assert!(!unsafe {
-            <&mut B>::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &component_map,
-            )
+            <&mut B>::filter(archetype::Identifier::<Registry>::new(vec![1]).as_ref())
         });
     }
 
     #[test]
     fn option_contains() {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        component_map.insert(TypeId::of::<A>(), 0);
-
         assert!(unsafe {
-            <Option<&A> as Seal>::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &component_map,
+            <Option<&A> as Seal<Registry, _>>::filter(
+                archetype::Identifier::<Registry>::new(vec![1]).as_ref(),
             )
         });
     }
 
     #[test]
     fn option_not_contains() {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        component_map.insert(TypeId::of::<A>(), 0);
-
         assert!(unsafe {
-            <Option<&B> as Seal>::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &component_map,
+            <Option<&B> as Seal<Registry, _>>::filter(
+                archetype::Identifier::<Registry>::new(vec![1]).as_ref(),
             )
         });
     }
 
     #[test]
     fn option_mut_contains() {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        component_map.insert(TypeId::of::<A>(), 0);
-
         assert!(unsafe {
-            <Option<&mut A> as Seal>::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &component_map,
+            <Option<&mut A> as Seal<Registry, _>>::filter(
+                archetype::Identifier::<Registry>::new(vec![1]).as_ref(),
             )
         });
     }
 
     #[test]
     fn option_mut_not_contains() {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        component_map.insert(TypeId::of::<A>(), 0);
-
         assert!(unsafe {
-            <Option<&mut B> as Seal>::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &component_map,
+            <Option<&mut B> as Seal<Registry, _>>::filter(
+                archetype::Identifier::<Registry>::new(vec![1]).as_ref(),
             )
         });
     }
@@ -402,46 +250,28 @@ mod tests {
     #[test]
     fn entity_identifier() {
         assert!(unsafe {
-            entity::Identifier::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &HashMap::with_hasher(FnvBuildHasher::default()),
-            )
+            entity::Identifier::filter(archetype::Identifier::<Registry>::new(vec![1]).as_ref())
         });
     }
 
     #[test]
     fn view_null() {
         assert!(unsafe {
-            view::Null::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &HashMap::with_hasher(FnvBuildHasher::default()),
-            )
+            view::Null::filter(archetype::Identifier::<Registry>::new(vec![1]).as_ref())
         });
     }
 
     #[test]
     fn views_true() {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        component_map.insert(TypeId::of::<A>(), 0);
-
         assert!(unsafe {
-            <views!(&mut A)>::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &component_map,
-            )
+            <views!(&mut A)>::filter(archetype::Identifier::<Registry>::new(vec![1]).as_ref())
         });
     }
 
     #[test]
     fn views_false() {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        component_map.insert(TypeId::of::<A>(), 0);
-
         assert!(!unsafe {
-            <views!(&mut A, &B)>::filter::<Registry>(
-                archetype::Identifier::new(vec![1]).as_ref(),
-                &component_map,
-            )
+            <views!(&mut A, &B)>::filter(archetype::Identifier::<Registry>::new(vec![1]).as_ref())
         });
     }
 }
