@@ -7,7 +7,7 @@
 //! ``` rust
 //! use brood::{
 //!     query::{filter, filter::Filter, result, views},
-//!     registry::Registry,
+//!     registry::{ContainsViews, Registry},
 //!     system::System,
 //! };
 //!
@@ -22,11 +22,12 @@
 //!     type Views = views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
 //!
-//!     fn run<R, FI, VI>(
+//!     fn run<R, FI, VI, P, I>(
 //!         &mut self,
 //!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
 //!     ) where
 //!         R: Registry + 'a,
+//!         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
 //!         Self::Filter: Filter<R, FI>,
 //!         Self::Views: Filter<R, VI>,
 //!     {
@@ -63,7 +64,7 @@ pub use schedule::Schedule;
 
 use crate::{
     query::{filter::Filter, result, view::Views},
-    registry::Registry,
+    registry::{ContainsViews, Registry},
     world::World,
 };
 
@@ -82,7 +83,7 @@ use crate::{
 /// ``` rust
 /// use brood::{
 ///     query::{filter, filter::Filter, result, views},
-///     registry::Registry,
+///     registry::{ContainsViews, Registry},
 ///     system::System,
 /// };
 ///
@@ -97,11 +98,12 @@ use crate::{
 ///     type Views = views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R, FI, VI>(
+///     fn run<R, FI, VI, P, I>(
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
 ///     ) where
 ///         R: Registry + 'a,
+///         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
 ///         Self::Filter: Filter<R, FI>,
 ///         Self::Views: Filter<R, VI>,
 ///     {
@@ -131,7 +133,7 @@ pub trait System<'a> {
     /// ``` rust
     /// use brood::{
     ///     query::{filter, filter::Filter, result, views},
-    ///     registry::Registry,
+    ///     registry::{ContainsViews, Registry},
     ///     system::System,
     /// };
     ///
@@ -146,11 +148,12 @@ pub trait System<'a> {
     ///     type Views = views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R, FI, VI>(
+    ///     fn run<R, FI, VI, P, I>(
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
     ///     ) where
     ///         R: Registry + 'a,
+    ///         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>,
     ///     {
@@ -165,11 +168,12 @@ pub trait System<'a> {
     ///
     /// [`World`]: crate::world::World
     /// [`world_post_processing`]: crate::system::System::world_post_processing()
-    fn run<R, FI, VI>(
+    fn run<R, FI, VI, P, I>(
         &mut self,
         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
     ) where
         R: Registry + 'a,
+        R::Viewable: ContainsViews<'a, Self::Views, P, I>,
         Self::Filter: Filter<R, FI>,
         Self::Views: Filter<R, VI>;
 
@@ -184,7 +188,7 @@ pub trait System<'a> {
     /// executes the removal during post processing.
     ///
     /// ``` rust
-    /// use brood::{entity, query::{filter, filter::Filter, result, views}, registry::Registry, system::System, World};
+    /// use brood::{entity, query::{filter, filter::Filter, result, views}, registry::{ContainsViews, Registry}, system::System, World};
     ///
     /// // Define components.
     /// struct Foo(usize);
@@ -200,9 +204,10 @@ pub trait System<'a> {
     ///     type Views = views!(&'a mut Foo, &'a Bar, entity::Identifier);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R, FI, VI>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>)
+    ///     fn run<R, FI, VI, P, I>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>)
     ///     where
     ///         R: Registry + 'a,
+    ///         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>, {
     ///         for result!(foo, bar, entity_identifier) in query_results {

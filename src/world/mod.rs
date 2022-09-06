@@ -22,13 +22,14 @@ use crate::{
     entities::Entities,
     entity,
     entity::Entity,
-    query::{filter::Filter, result, view, view::Views},
-    registry::{ContainsEntities, ContainsEntity, Registry},
+    query::{filter::Filter, result, view::Views},
+    registry::{ContainsEntities, ContainsEntity, ContainsViews, Registry},
     system::System,
 };
 #[cfg(feature = "rayon")]
 use crate::{
     query::view::ParViews,
+    registry::ContainsParViews,
     system::{schedule::stage::Stages, ParSystem, Schedule},
 };
 use alloc::vec::Vec;
@@ -73,8 +74,6 @@ where
     archetypes: Archetypes<R>,
     entity_allocator: entity::Allocator<R>,
     len: usize,
-
-    view_assertion_buffer: view::AssertionBuffer,
 }
 
 impl<R> World<R>
@@ -95,8 +94,6 @@ where
             archetypes,
             entity_allocator,
             len,
-
-            view_assertion_buffer: view::AssertionBuffer::with_capacity(R::LEN),
         }
     }
 
@@ -224,7 +221,7 @@ where
     ///
     /// // Note that the views provide implicit filters.
     /// for result!(foo, baz, entity_identifier) in
-    ///     world.query::<views!(&mut Foo, &Baz, entity::Identifier), filter::Has<Bar>, _, _>()
+    ///     world.query::<views!(&mut Foo, &Baz, entity::Identifier), filter::Has<Bar>, _, _, _, _>()
     /// {
     ///     // Allows immutable or mutable access to queried components.
     ///     foo.0 = baz.0;
@@ -239,14 +236,12 @@ where
     /// [`Iterator`]: core::iter::Iterator
     /// [`query`]: crate::query
     /// [`Views`]: crate::query::view::Views
-    pub fn query<'a, V, F, VI, FI>(&'a mut self) -> result::Iter<'a, R, F, FI, V, VI>
+    pub fn query<'a, V, F, VI, FI, P, I>(&'a mut self) -> result::Iter<'a, R, F, FI, V, VI>
     where
         V: Views<'a> + Filter<R, VI>,
         F: Filter<R, FI>,
+        R::Viewable: ContainsViews<'a, V, P, I>,
     {
-        self.view_assertion_buffer.clear();
-        V::assert_claims(&mut self.view_assertion_buffer);
-
         result::Iter::new(self.archetypes.iter_mut())
     }
 
@@ -277,7 +272,7 @@ where
     ///
     /// // Note that the views provide implicit filters.
     /// world
-    ///     .par_query::<views!(&mut Foo, &Baz, entity::Identifier), filter::Has<Bar>, _, _>()
+    ///     .par_query::<views!(&mut Foo, &Baz, entity::Identifier), filter::Has<Bar>, _, _, _, _>()
     ///     .for_each(|result!(foo, baz, entity_identifier)| {
     ///         // Allows immutable or mutable access to queried components.
     ///         foo.0 = baz.0;
@@ -295,47 +290,11 @@ where
     /// [`query()`]: World::query()
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub fn par_query<'a, V, F, VI, FI>(&'a mut self) -> result::ParIter<'a, R, F, FI, V, VI>
+    pub fn par_query<'a, V, F, VI, FI, P, I>(&'a mut self) -> result::ParIter<'a, R, F, FI, V, VI>
     where
         V: ParViews<'a> + Filter<R, VI>,
         F: Filter<R, FI>,
-    {
-        self.view_assertion_buffer.clear();
-        V::assert_claims(&mut self.view_assertion_buffer);
-
-        result::ParIter::new(self.archetypes.par_iter_mut())
-    }
-
-    /// Performs a query, skipping checks on views.
-    ///
-    /// # Safety
-    /// The [`Views`] `V` must follow Rust's borrowing rules, meaning that a component that is
-    /// mutably borrowed is only borrowed once.
-    #[cfg(feature = "rayon")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub(crate) unsafe fn query_unchecked<'a, V, F, VI, FI>(
-        &'a mut self,
-    ) -> result::Iter<'a, R, F, FI, V, VI>
-    where
-        V: Views<'a> + Filter<R, VI>,
-        F: Filter<R, FI>,
-    {
-        result::Iter::new(self.archetypes.iter_mut())
-    }
-
-    /// Performs a parallel query, skipping checks on views.
-    ///
-    /// # Safety
-    /// The [`ParViews`] `V` must follow Rust's borrowing rules, meaning that a component that is
-    /// mutably borrowed is only borrowed once.
-    #[cfg(feature = "rayon")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub(crate) unsafe fn par_query_unchecked<'a, V, F, VI, FI>(
-        &'a mut self,
-    ) -> result::ParIter<'a, R, F, FI, V, VI>
-    where
-        V: ParViews<'a> + Filter<R, VI>,
-        F: Filter<R, FI>,
+        R::Viewable: ContainsParViews<'a, V, P, I>,
     {
         result::ParIter::new(self.archetypes.par_iter_mut())
     }
@@ -348,7 +307,7 @@ where
     ///     entity,
     ///     query::{filter, filter::Filter, result, views},
     ///     registry,
-    ///     registry::Registry,
+    ///     registry::{ContainsViews, Registry},
     ///     system::System,
     ///     World,
     /// };
@@ -366,11 +325,12 @@ where
     ///     type Views = views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R, FI, VI>(
+    ///     fn run<R, FI, VI, P, I>(
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
     ///     ) where
     ///         R: Registry + 'a,
+    ///         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>,
     ///     {
@@ -388,13 +348,14 @@ where
     /// ```
     ///
     /// [`System`]: crate::system::System
-    pub fn run_system<'a, S, FI, VI>(&'a mut self, system: &mut S)
+    pub fn run_system<'a, S, FI, VI, P, I>(&'a mut self, system: &mut S)
     where
         S: System<'a>,
         S::Filter: Filter<R, FI>,
         S::Views: Filter<R, VI>,
+        R::Viewable: ContainsViews<'a, S::Views, P, I>,
     {
-        system.run(self.query::<S::Views, S::Filter, _, _>());
+        system.run(self.query::<S::Views, S::Filter, _, _, _, _>());
     }
 
     /// Run a [`ParSystem`] over the entities in this `World`.
@@ -405,7 +366,7 @@ where
     ///     entity,
     ///     query::{filter, filter::Filter, result, views},
     ///     registry,
-    ///     registry::Registry,
+    ///     registry::{ContainsParViews, Registry},
     ///     system::ParSystem,
     ///     World,
     /// };
@@ -424,11 +385,12 @@ where
     ///     type Views = views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R, FI, VI>(
+    ///     fn run<R, FI, VI, P, I>(
     ///         &mut self,
     ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>,
     ///     ) where
     ///         R: Registry + 'a,
+    ///         R::Viewable: ContainsParViews<'a, Self::Views, P, I>,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>,
     ///     {
@@ -445,13 +407,14 @@ where
     /// [`ParSystem`]: crate::system::ParSystem
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub fn run_par_system<'a, S, FI, VI>(&'a mut self, par_system: &mut S)
+    pub fn run_par_system<'a, S, FI, VI, P, I>(&'a mut self, par_system: &mut S)
     where
         S: ParSystem<'a>,
         S::Filter: Filter<R, FI>,
         S::Views: Filter<R, VI>,
+        R::Viewable: ContainsParViews<'a, S::Views, P, I>,
     {
-        par_system.run(self.par_query::<S::Views, S::Filter, _, _>());
+        par_system.run(self.par_query::<S::Views, S::Filter, _, _, _, _>());
     }
 
     /// Run a [`Schedule`] over the entities in this `World`.
@@ -462,7 +425,7 @@ where
     ///     entity,
     ///     query::{filter, filter::Filter, result, views},
     ///     registry,
-    ///     registry::Registry,
+    ///     registry::{ContainsViews, Registry},
     ///     system::{Schedule, System},
     ///     World,
     /// };
@@ -481,11 +444,12 @@ where
     ///     type Views = views!(&'a mut Foo);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R, FI, VI>(
+    ///     fn run<R, FI, VI, P, I>(
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
     ///     ) where
     ///         R: Registry + 'a,
+    ///         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>,
     ///     {
@@ -499,11 +463,12 @@ where
     ///     type Views = views!(&'a mut Bar);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R, FI, VI>(
+    ///     fn run<R, FI, VI, P, I>(
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
     ///     ) where
     ///         R: Registry + 'a,
+    ///         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>,
     ///     {
@@ -525,9 +490,11 @@ where
     /// [`Schedule`]: crate::system::Schedule
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub fn run_schedule<'a, S, SFI, SVI, PFI, PVI>(&'a mut self, schedule: &mut Schedule<S>)
-    where
-        S: Stages<'a, R, SFI, SVI, PFI, PVI>,
+    pub fn run_schedule<'a, S, SFI, SVI, PFI, PVI, SP, SI, PP, PI>(
+        &'a mut self,
+        schedule: &mut Schedule<S>,
+    ) where
+        S: Stages<'a, R, SFI, SVI, PFI, PVI, SP, SI, PP, PI>,
     {
         schedule.run(self);
     }
@@ -767,7 +734,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query::<views!(&A), filter::None, _, _>()
+            .query::<views!(&A), filter::None, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -784,7 +751,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query::<views!(&mut B), filter::None, _, _>()
+            .query::<views!(&mut B), filter::None, _, _, _, _>()
             .map(|result!(b)| b.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -801,7 +768,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query::<views!(Option<&A>), filter::None, _, _>()
+            .query::<views!(Option<&A>), filter::None, _, _, _, _>()
             .map(|result!(a)| a.map(|a| a.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -818,7 +785,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query::<views!(Option<&mut B>), filter::None, _, _>()
+            .query::<views!(Option<&mut B>), filter::None, _, _, _, _>()
             .map(|result!(b)| b.map(|b| b.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -835,7 +802,7 @@ mod tests {
         world.insert(entity!());
 
         let result = world
-            .query::<views!(entity::Identifier), filter::And<filter::Has<A>, filter::Has<B>>, _, _>(
+            .query::<views!(entity::Identifier), filter::And<filter::Has<A>, filter::Has<B>>, _, _, _, _>(
             )
             .map(|result!(identifier)| identifier)
             .collect::<Vec<_>>();
@@ -852,7 +819,7 @@ mod tests {
         world.insert(entity!());
 
         let result = world
-            .query::<views!(&A), filter::Has<B>, _, _>()
+            .query::<views!(&A), filter::Has<B>, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![1]);
@@ -868,7 +835,7 @@ mod tests {
         world.insert(entity!());
 
         let result = world
-            .query::<views!(&A), filter::Not<filter::Has<B>>, _, _>()
+            .query::<views!(&A), filter::Not<filter::Has<B>>, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![2]);
@@ -884,7 +851,7 @@ mod tests {
         world.insert(entity!());
 
         let result = world
-            .query::<views!(&A), filter::And<filter::Has<A>, filter::Has<B>>, _, _>()
+            .query::<views!(&A), filter::And<filter::Has<A>, filter::Has<B>>, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![1]);
@@ -900,7 +867,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query::<views!(&A), filter::Or<filter::Has<A>, filter::Has<B>>, _, _>()
+            .query::<views!(&A), filter::Or<filter::Has<A>, filter::Has<B>>, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -918,7 +885,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .par_query::<views!(&A), filter::None, _, _>()
+            .par_query::<views!(&A), filter::None, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -936,7 +903,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .par_query::<views!(&mut B), filter::None, _, _>()
+            .par_query::<views!(&mut B), filter::None, _, _, _, _>()
             .map(|result!(b)| b.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -954,7 +921,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .par_query::<views!(Option<&A>), filter::None, _, _>()
+            .par_query::<views!(Option<&A>), filter::None, _, _, _, _>()
             .map(|result!(a)| a.map(|a| a.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -972,7 +939,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .par_query::<views!(Option<&mut B>), filter::None, _, _>()
+            .par_query::<views!(Option<&mut B>), filter::None, _, _, _, _>()
             .map(|result!(b)| b.map(|b| b.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -990,7 +957,7 @@ mod tests {
         world.insert(entity!());
 
         let result = world
-            .par_query::<views!(entity::Identifier), filter::And<filter::Has<A>, filter::Has<B>>, _, _>()
+            .par_query::<views!(entity::Identifier), filter::And<filter::Has<A>, filter::Has<B>>, _, _, _, _>()
             .map(|result!(identifier)| identifier)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![entity_identifier]);
@@ -1007,7 +974,7 @@ mod tests {
         world.insert(entity!());
 
         let result = world
-            .par_query::<views!(&A), filter::Has<B>, _, _>()
+            .par_query::<views!(&A), filter::Has<B>, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![1]);
@@ -1024,7 +991,7 @@ mod tests {
         world.insert(entity!());
 
         let result = world
-            .par_query::<views!(&A), filter::Not<filter::Has<B>>, _, _>()
+            .par_query::<views!(&A), filter::Not<filter::Has<B>>, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![2]);
@@ -1041,7 +1008,7 @@ mod tests {
         world.insert(entity!());
 
         let result = world
-            .par_query::<views!(&A), filter::And<filter::Has<A>, filter::Has<B>>, _, _>()
+            .par_query::<views!(&A), filter::And<filter::Has<A>, filter::Has<B>>, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![1]);
@@ -1058,7 +1025,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query::<views!(&A), filter::Or<filter::Has<A>, filter::Has<B>>, _, _>()
+            .par_query::<views!(&A), filter::Or<filter::Has<A>, filter::Has<B>>, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1073,11 +1040,12 @@ mod tests {
             type Views = views!(&'a A);
             type Filter = filter::None;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1105,11 +1073,12 @@ mod tests {
             type Views = views!(&'a mut B);
             type Filter = filter::None;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1137,11 +1106,12 @@ mod tests {
             type Views = views!(Option<&'a A>);
             type Filter = filter::None;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1171,11 +1141,12 @@ mod tests {
             type Views = views!(Option<&'a mut B>);
             type Filter = filter::None;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1207,11 +1178,12 @@ mod tests {
             type Views = views!(entity::Identifier);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1240,11 +1212,12 @@ mod tests {
             type Views = views!(&'a A);
             type Filter = filter::Has<B>;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1271,11 +1244,12 @@ mod tests {
             type Views = views!(&'a A);
             type Filter = filter::Not<filter::Has<B>>;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1302,11 +1276,12 @@ mod tests {
             type Views = views!(&'a A);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1333,11 +1308,12 @@ mod tests {
             type Views = views!(&'a A);
             type Filter = filter::Or<filter::Has<A>, filter::Has<B>>;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1366,11 +1342,12 @@ mod tests {
             type Views = views!(&'a A);
             type Filter = filter::None;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsParViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1399,11 +1376,12 @@ mod tests {
             type Views = views!(&'a mut B);
             type Filter = filter::None;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsParViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1432,11 +1410,12 @@ mod tests {
             type Views = views!(Option<&'a A>);
             type Filter = filter::None;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsParViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1467,11 +1446,12 @@ mod tests {
             type Views = views!(Option<&'a mut B>);
             type Filter = filter::None;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsParViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1504,11 +1484,12 @@ mod tests {
             type Views = views!(entity::Identifier);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsParViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1538,11 +1519,12 @@ mod tests {
             type Views = views!(&'a A);
             type Filter = filter::Has<B>;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsParViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1570,11 +1552,12 @@ mod tests {
             type Views = views!(&'a A);
             type Filter = filter::Not<filter::Has<B>>;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsParViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1602,11 +1585,12 @@ mod tests {
             type Views = views!(&'a A);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsParViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1634,11 +1618,12 @@ mod tests {
             type Views = views!(&'a A);
             type Filter = filter::Or<filter::Has<A>, filter::Has<B>>;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsParViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1667,11 +1652,12 @@ mod tests {
             type Views = views!(&'a A);
             type Filter = filter::None;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1687,11 +1673,12 @@ mod tests {
             type Views = views!(&'a mut B);
             type Filter = filter::None;
 
-            fn run<R, FI, VI>(
+            fn run<R, FI, VI, P, I>(
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>,
             ) where
                 R: crate::registry::Registry + 'a,
+                R::Viewable: ContainsParViews<'a, Self::Views, P, I>,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1755,7 +1742,7 @@ mod tests {
         entry.add(A(3));
 
         let mut result = world
-            .query::<views!(&A), filter::None, _, _>()
+            .query::<views!(&A), filter::None, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1775,7 +1762,7 @@ mod tests {
         entry.add(A(3));
 
         let mut result = world
-            .query::<views!(&A), filter::None, _, _>()
+            .query::<views!(&A), filter::None, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1795,7 +1782,7 @@ mod tests {
         entry.remove::<A, _>();
 
         let mut result = world
-            .query::<views!(&A), filter::None, _, _>()
+            .query::<views!(&A), filter::None, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1814,9 +1801,8 @@ mod tests {
         let mut entry = assert_some!(world.entry(entity_identifier));
 
         let result!(queried_identifier, a, b) =
-            assert_some!(
-                entry.query::<views!(entity::Identifier, &A, Option<&B>), filter::None, _, _>()
-            );
+            assert_some!(entry
+                .query::<views!(entity::Identifier, &A, Option<&B>), filter::None, _, _, _, _>());
         assert_eq!(queried_identifier, entity_identifier);
         assert_eq!(a.0, 1);
         let b = assert_some!(b);
@@ -1835,7 +1821,7 @@ mod tests {
         let mut entry = assert_some!(world.entry(entity_identifier));
 
         let result!(a, b) =
-            assert_some!(entry.query::<views!(&mut A, Option<&mut B>), filter::None, _, _>());
+            assert_some!(entry.query::<views!(&mut A, Option<&mut B>), filter::None, _, _, _, _>());
         assert_eq!(a.0, 1);
         let b = assert_some!(b);
         assert_eq!(b.0, 'a');
@@ -1852,7 +1838,7 @@ mod tests {
 
         let mut entry = assert_some!(world.entry(entity_identifier));
 
-        assert_none!(entry.query::<views!(entity::Identifier, &A, &B), filter::None, _, _>());
+        assert_none!(entry.query::<views!(entity::Identifier, &A, &B), filter::None, _, _, _, _>());
     }
 
     #[test]
@@ -1881,7 +1867,7 @@ mod tests {
         world.remove(entity_identifier);
 
         let mut result = world
-            .query::<views!(&A), filter::None, _, _>()
+            .query::<views!(&A), filter::None, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1917,7 +1903,7 @@ mod tests {
         world.clear();
 
         let mut result = world
-            .query::<views!(&A), filter::None, _, _>()
+            .query::<views!(&A), filter::None, _, _, _, _>()
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();

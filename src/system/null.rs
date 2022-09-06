@@ -1,11 +1,11 @@
-#[cfg(feature = "rayon")]
-use crate::system::ParSystem;
 use crate::{
     query::{filter, filter::Filter, result, view},
-    registry::Registry,
+    registry::{ContainsViews, Registry},
     system::System,
     world::World,
 };
+#[cfg(feature = "rayon")]
+use crate::{registry::ContainsParViews, system::ParSystem};
 use core::hint::unreachable_unchecked;
 
 /// A null system.
@@ -21,11 +21,12 @@ impl<'a> System<'a> for Null {
     type Filter = filter::None;
     type Views = view::Null;
 
-    fn run<R, FI, VI>(
+    fn run<R, FI, VI, P, I>(
         &mut self,
         _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
     ) where
         R: Registry + 'a,
+        R::Viewable: ContainsViews<'a, Self::Views, P, I>,
         Self::Filter: Filter<R, FI>,
         Self::Views: Filter<R, VI>,
     {
@@ -47,11 +48,12 @@ impl<'a> ParSystem<'a> for Null {
     type Filter = filter::None;
     type Views = view::Null;
 
-    fn run<R, FI, VI>(
+    fn run<R, FI, VI, P, I>(
         &mut self,
         _query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>,
     ) where
         R: Registry + 'a,
+        R::Viewable: ContainsParViews<'a, Self::Views, P, I>,
         Self::Filter: Filter<R, FI>,
         Self::Views: Filter<R, VI>,
     {

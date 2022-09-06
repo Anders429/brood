@@ -1,5 +1,4 @@
 use crate::{
-    query::view,
     system,
     system::{
         schedule::{
@@ -30,7 +29,7 @@ use hashbrown::HashSet;
 /// ``` rust
 /// use brood::{
 ///     query::{filter, filter::Filter, result, views},
-///     registry::Registry,
+///     registry::{ContainsViews, Registry},
 ///     system::{Schedule, System},
 /// };
 ///
@@ -45,11 +44,12 @@ use hashbrown::HashSet;
 ///     type Views = views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R, FI, VI>(
+///     fn run<R, FI, VI, P, I>(
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
 ///     ) where
 ///         R: Registry + 'a,
+///         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
 ///         Self::Filter: Filter<R, FI>,
 ///         Self::Views: Filter<R, VI>,
 ///     {
@@ -65,11 +65,12 @@ use hashbrown::HashSet;
 ///     type Views = views!(&'a mut Baz, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R, FI, VI>(
+///     fn run<R, FI, VI, P, I>(
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
 ///     ) where
 ///         R: Registry + 'a,
+///         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
 ///         Self::Filter: Filter<R, FI>,
 ///         Self::Views: Filter<R, VI>,
 ///     {
@@ -150,7 +151,6 @@ where
                 &mut HashSet::with_hasher(FnvBuildHasher::default()),
                 &mut HashSet::with_hasher(FnvBuildHasher::default()),
                 &mut HashSet::with_hasher(FnvBuildHasher::default()),
-                &mut view::AssertionBuffer::new(),
             ),
         }
     }

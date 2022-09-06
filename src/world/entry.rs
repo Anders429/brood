@@ -6,7 +6,7 @@ use crate::{
         filter::{And, Filter, Seal},
         view::Views,
     },
-    registry::{ContainsComponent, Registry, RegistryDebug},
+    registry::{ContainsComponent, ContainsViews, Registry, RegistryDebug},
     world::World,
 };
 use core::{fmt, fmt::Debug};
@@ -267,20 +267,18 @@ where
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
     /// let mut entry = world.entry(entity_identifier).unwrap();
     ///
-    /// let result = entry.query::<views!(&Foo, &Bar), filter::None, _, _>();
+    /// let result = entry.query::<views!(&Foo, &Bar), filter::None, _, _, _, _>();
     /// assert!(result.is_some());
     /// let result!(foo, bar) = result.unwrap();
     /// assert_eq!(foo.0, 42);
     /// assert_eq!(bar.0, true);
     /// ```
-    pub fn query<V, F, VI, FI>(&mut self) -> Option<<V::Results as Iterator>::Item>
+    pub fn query<V, F, VI, FI, P, I>(&mut self) -> Option<<V::Results as Iterator>::Item>
     where
         V: Views<'a> + Filter<R, VI>,
         F: Filter<R, FI>,
+        R::Viewable: ContainsViews<'a, V, P, I>,
     {
-        self.world.view_assertion_buffer.clear();
-        V::assert_claims(&mut self.world.view_assertion_buffer);
-
         if And::<V, F>::filter(self.location.identifier) {
             Some(
                 // SAFETY: Since the archetype wasn't filtered out by the views, then each

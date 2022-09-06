@@ -30,7 +30,7 @@
 //! let mut world = World::<Registry>::new();
 //! world.insert(entity!(Foo(42), Bar(true)));
 //!
-//! for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None, _, _>() {
+//! for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _>() {
 //!     if bar.0 {
 //!         foo.0 += 1;
 //!     }
@@ -73,7 +73,7 @@ doc::non_root_macro! {
     /// let mut world = World::<Registry>::new();
     /// world.insert(entity!(Foo(42), Bar(true)));
     ///
-    /// for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None, _, _>() {
+    /// for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _>() {
     ///     // ...
     /// }
     /// ```

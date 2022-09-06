@@ -33,6 +33,10 @@ mod send;
 mod serde;
 mod sync;
 
+#[cfg(feature = "rayon")]
+pub use contains::ContainsParViews;
+pub use contains::ContainsViews;
+
 #[cfg(feature = "serde")]
 pub(crate) use self::serde::{RegistryDeserialize, RegistrySerialize};
 pub(crate) use contains::{ContainsComponent, ContainsEntities, ContainsEntity};

@@ -44,7 +44,7 @@
 //! [`views!`]: crate::query::views!
 //! [`World`]: crate::world::World.
 
-mod assertion_buffer;
+mod get;
 #[cfg(feature = "rayon")]
 mod par;
 
@@ -53,7 +53,7 @@ pub(crate) mod seal;
 #[cfg(feature = "rayon")]
 pub use par::{ParView, ParViews};
 
-pub(crate) use assertion_buffer::AssertionBuffer;
+pub(crate) use get::Get;
 
 use crate::{component::Component, doc, entity, hlist::define_null_uninstantiable};
 use seal::{ViewSeal, ViewsSeal};

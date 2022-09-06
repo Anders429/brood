@@ -39,7 +39,7 @@ use rayon::iter::{
 /// world.insert(entity!(Foo(42), Bar(true)));
 ///
 /// world
-///     .par_query::<views!(&mut Foo, &Bar), filter::None, _, _>()
+///     .par_query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _>()
 ///     .for_each(|result!(foo, bar)| {
 ///         if bar.0 {
 ///             foo.0 += 1;
