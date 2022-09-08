@@ -11,7 +11,7 @@ impl<'a, T, V> Get<'a, &'a T, Index> for (&'a T, V) {
     type Remainder = V;
 }
 
-impl<'a, T, V> Get<'a, &'a T, Index> for (&'a mut T, V) {
+impl<'a, T, V> Get<'a, &'a mut T, Index> for (&'a mut T, V) {
     type Remainder = V;
 }
 
