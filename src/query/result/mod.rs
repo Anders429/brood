@@ -53,8 +53,6 @@ pub use par_iter::ParIter;
 
 use crate::{doc, hlist::define_null};
 
-define_null!();
-
 doc::non_root_macro! {
     /// Defines identifiers to match items returned by a [`result::Iter`] iterator.
     ///
