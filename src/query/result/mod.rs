@@ -51,7 +51,7 @@ pub use iter::Iter;
 #[cfg(feature = "rayon")]
 pub use par_iter::ParIter;
 
-use crate::{doc, hlist::define_null};
+use crate::doc;
 
 doc::non_root_macro! {
     /// Defines identifiers to match items returned by a [`result::Iter`] iterator.
