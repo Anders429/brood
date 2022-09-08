@@ -271,7 +271,7 @@ where
     pub(crate) unsafe fn view_row_unchecked<'a, V, I>(
         &mut self,
         index: usize,
-    ) -> <V::Results as Iterator>::Item
+    ) -> V
     where
         V: Views<'a>,
     {

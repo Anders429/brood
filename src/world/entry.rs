@@ -273,7 +273,7 @@ where
     /// assert_eq!(foo.0, 42);
     /// assert_eq!(bar.0, true);
     /// ```
-    pub fn query<V, F, VI, FI, P, I>(&mut self) -> Option<<V::Results as Iterator>::Item>
+    pub fn query<V, F, VI, FI, P, I>(&mut self) -> Option<V>
     where
         V: Views<'a> + Filter<R, VI>,
         F: Filter<R, FI>,

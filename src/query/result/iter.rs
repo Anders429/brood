@@ -2,6 +2,7 @@ use crate::{
     archetypes,
     query::{
         filter::{And, Filter, Seal},
+        result::Results,
         view::Views,
     },
     registry::Registry,
@@ -54,7 +55,7 @@ where
 {
     archetypes_iter: archetypes::IterMut<'a, R>,
 
-    current_results_iter: Option<V::Results>,
+    current_results_iter: Option<<V::Results as Results>::Iterator>,
 
     filter: PhantomData<F>,
     filter_indices: PhantomData<FI>,
@@ -106,7 +107,7 @@ where
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`,
                 // since the archetype was not removed by the `find()` method above which filters
                 // out archetypes that do not contain the viewed components.
-                unsafe { archetype.view::<V>() },
+                unsafe { archetype.view::<V>() }.into_iterator(),
             );
         }
     }
@@ -116,7 +117,7 @@ where
         let (low, high) = self
             .current_results_iter
             .as_ref()
-            .map_or((0, Some(0)), V::Results::size_hint);
+            .map_or((0, Some(0)), <V::Results as Results>::Iterator::size_hint);
         match (self.archetypes_iter.size_hint(), high) {
             ((0, Some(0)), Some(_)) => (low, high),
             _ => (low, None),
@@ -139,7 +140,7 @@ where
             ) {
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`
                 // since the `filter` function in the if-statement returned `true`.
-                unsafe { archetype.view::<V>() }.fold(acc, &mut fold)
+                unsafe { archetype.view::<V>() }.into_iterator().fold(acc, &mut fold)
             } else {
                 acc
             }

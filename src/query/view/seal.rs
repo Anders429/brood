@@ -1,7 +1,7 @@
 use crate::{
     component::Component,
     entity,
-    query::{claim::Claim, view::Null},
+    query::{claim::Claim, view::Null, result::Results},
 };
 use core::{any::TypeId, iter, slice};
 use either::Either;
@@ -310,7 +310,8 @@ impl<'a> ViewSeal<'a> for entity::Identifier {
 }
 
 pub trait ViewsSeal<'a>: Claim {
-    type Results: Iterator<Item = Self>;
+    // type Results: Iterator<Item = Self>;
+    type Results: Results<View = Self>;
 
     /// # Safety
     /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
@@ -354,7 +355,7 @@ pub trait ViewsSeal<'a>: Claim {
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> <Self::Results as Iterator>::Item;
+    ) -> Self;
 }
 
 impl<'a> ViewsSeal<'a> for Null {
@@ -375,7 +376,7 @@ impl<'a> ViewsSeal<'a> for Null {
         _entity_identifiers: (*mut entity::Identifier, usize),
         _length: usize,
         _component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> <Self::Results as Iterator>::Item {
+    ) -> Self {
         Null
     }
 }
@@ -385,7 +386,7 @@ where
     V: ViewSeal<'a>,
     W: ViewsSeal<'a>,
 {
-    type Results = iter::Zip<V::Result, W::Results>;
+    type Results = (V::Result, W::Results);
 
     unsafe fn view(
         columns: &[(*mut u8, usize)],
@@ -395,8 +396,8 @@ where
     ) -> Self::Results {
         // SAFETY: The safety guarantees of this method are the exact what are required by the
         // safety guarantees of both `V::view()` and `W::view()`.
-        unsafe {
-            V::view(columns, entity_identifiers, length, component_map).zip(W::view(
+        unsafe {(
+            V::view(columns, entity_identifiers, length, component_map), W::view(
                 columns,
                 entity_identifiers,
                 length,
@@ -411,7 +412,7 @@ where
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> <Self::Results as Iterator>::Item {
+    ) -> Self {
         // SAFETY: The safety guarantees of this method are the exact what are required by the
         // safety guarantees of both `V::view_one()` and `W::view_one()`.
         unsafe {

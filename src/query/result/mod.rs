@@ -46,10 +46,13 @@
 mod iter;
 #[cfg(feature = "rayon")]
 mod par_iter;
+mod seal;
 
 pub use iter::Iter;
 #[cfg(feature = "rayon")]
 pub use par_iter::ParIter;
+
+pub(crate) use seal::Results;
 
 use crate::doc;
 
