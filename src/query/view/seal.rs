@@ -1,7 +1,7 @@
 use crate::{
     component::Component,
     entity,
-    query::{claim::Claim, result, view::Null},
+    query::{claim::Claim, view::Null},
 };
 use core::{any::TypeId, iter, slice};
 use either::Either;
@@ -9,7 +9,7 @@ use fnv::FnvBuildHasher;
 use hashbrown::HashMap;
 
 pub trait ViewSeal<'a>: Claim {
-    type Result: Iterator;
+    type Result: Iterator<Item = Self>;
 
     /// # Safety
     /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
@@ -56,7 +56,7 @@ pub trait ViewSeal<'a>: Claim {
     ) -> <Self::Result as Iterator>::Item;
 }
 
-impl<'a, C> ViewSeal<'a> for &C
+impl<'a, C> ViewSeal<'a> for &'a C
 where
     C: Component,
 {
@@ -108,7 +108,7 @@ where
     }
 }
 
-impl<'a, C> ViewSeal<'a> for &mut C
+impl<'a, C> ViewSeal<'a> for &'a mut C
 where
     C: Component,
 {
@@ -165,7 +165,7 @@ fn wrap_some<T>(val: T) -> Option<T> {
     Some(val)
 }
 
-impl<'a, C> ViewSeal<'a> for Option<&C>
+impl<'a, C> ViewSeal<'a> for Option<&'a C>
 where
     C: Component,
 {
@@ -219,7 +219,7 @@ where
     }
 }
 
-impl<'a, C> ViewSeal<'a> for Option<&mut C>
+impl<'a, C> ViewSeal<'a> for Option<&'a mut C>
 where
     C: Component,
 {
@@ -310,7 +310,7 @@ impl<'a> ViewSeal<'a> for entity::Identifier {
 }
 
 pub trait ViewsSeal<'a>: Claim {
-    type Results: Iterator;
+    type Results: Iterator<Item = Self>;
 
     /// # Safety
     /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
@@ -358,7 +358,7 @@ pub trait ViewsSeal<'a>: Claim {
 }
 
 impl<'a> ViewsSeal<'a> for Null {
-    type Results = iter::Repeat<result::Null>;
+    type Results = iter::Repeat<Null>;
 
     unsafe fn view(
         _columns: &[(*mut u8, usize)],
@@ -366,7 +366,7 @@ impl<'a> ViewsSeal<'a> for Null {
         _length: usize,
         _component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> Self::Results {
-        iter::repeat(result::Null)
+        iter::repeat(Null)
     }
 
     unsafe fn view_one(
@@ -376,7 +376,7 @@ impl<'a> ViewsSeal<'a> for Null {
         _length: usize,
         _component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> <Self::Results as Iterator>::Item {
-        result::Null
+        Null
     }
 }
 

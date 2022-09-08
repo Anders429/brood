@@ -55,7 +55,7 @@ pub use par::{ParView, ParViews};
 
 pub(crate) use get::Get;
 
-use crate::{component::Component, doc, entity, hlist::define_null_uninstantiable};
+use crate::{component::Component, doc, entity, hlist::define_null};
 use seal::{ViewSeal, ViewsSeal};
 
 /// A view over a single aspect of an entity.
@@ -104,17 +104,17 @@ use seal::{ViewSeal, ViewsSeal};
 /// [`World`]: crate::world::World
 pub trait View<'a>: ViewSeal<'a> {}
 
-impl<'a, C> View<'a> for &C where C: Component {}
+impl<'a, C> View<'a> for &'a C where C: Component {}
 
-impl<'a, C> View<'a> for &mut C where C: Component {}
+impl<'a, C> View<'a> for &'a mut C where C: Component {}
 
-impl<'a, C> View<'a> for Option<&C> where C: Component {}
+impl<'a, C> View<'a> for Option<&'a C> where C: Component {}
 
-impl<'a, C> View<'a> for Option<&mut C> where C: Component {}
+impl<'a, C> View<'a> for Option<&'a mut C> where C: Component {}
 
 impl<'a> View<'a> for entity::Identifier {}
 
-define_null_uninstantiable!();
+define_null!();
 
 /// A heterogeneous list of [`View`]s.
 ///

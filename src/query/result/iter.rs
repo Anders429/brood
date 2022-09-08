@@ -86,7 +86,7 @@ where
     F: Filter<R, FI>,
     V: Views<'a> + Filter<R, VI>,
 {
-    type Item = <V::Results as Iterator>::Item;
+    type Item = V;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {

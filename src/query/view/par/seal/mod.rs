@@ -4,7 +4,6 @@ use crate::{
     component::Component,
     entity,
     query::{
-        result,
         view::{Null, View, Views},
     },
 };
@@ -22,7 +21,7 @@ use rayon::{
 use repeat::RepeatNone;
 
 pub trait ParViewSeal<'a>: View<'a> {
-    type ParResult: IndexedParallelIterator;
+    type ParResult: IndexedParallelIterator<Item = Self>;
 
     /// # Safety
     /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
@@ -44,7 +43,7 @@ pub trait ParViewSeal<'a>: View<'a> {
     ) -> Self::ParResult;
 }
 
-impl<'a, C> ParViewSeal<'a> for &C
+impl<'a, C> ParViewSeal<'a> for &'a C
 where
     C: Component + Sync,
 {
@@ -73,7 +72,7 @@ where
     }
 }
 
-impl<'a, C> ParViewSeal<'a> for &mut C
+impl<'a, C> ParViewSeal<'a> for &'a mut C
 where
     C: Component + Send,
 {
@@ -107,7 +106,7 @@ fn wrap_some<T>(val: T) -> Option<T> {
     Some(val)
 }
 
-impl<'a, C> ParViewSeal<'a> for Option<&C>
+impl<'a, C> ParViewSeal<'a> for Option<&'a C>
 where
     C: Component + Sync,
 {
@@ -139,7 +138,7 @@ where
     }
 }
 
-impl<'a, C> ParViewSeal<'a> for Option<&mut C>
+impl<'a, C> ParViewSeal<'a> for Option<&'a mut C>
 where
     C: Component + Send,
 {
@@ -192,7 +191,7 @@ impl<'a> ParViewSeal<'a> for entity::Identifier {
 }
 
 pub trait ParViewsSeal<'a>: Views<'a> {
-    type ParResults: IndexedParallelIterator;
+    type ParResults: IndexedParallelIterator<Item = Self>;
 
     /// # Safety
     /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
@@ -215,7 +214,7 @@ pub trait ParViewsSeal<'a>: Views<'a> {
 }
 
 impl<'a> ParViewsSeal<'a> for Null {
-    type ParResults = iter::RepeatN<result::Null>;
+    type ParResults = iter::RepeatN<Null>;
 
     unsafe fn par_view(
         _columns: &[(*mut u8, usize)],
@@ -223,7 +222,7 @@ impl<'a> ParViewsSeal<'a> for Null {
         _length: usize,
         _component_map: &HashMap<TypeId, usize, FnvBuildHasher>,
     ) -> Self::ParResults {
-        iter::repeatn(result::Null, usize::MAX)
+        iter::repeatn(Null, usize::MAX)
     }
 }
 

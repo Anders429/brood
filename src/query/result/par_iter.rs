@@ -113,7 +113,7 @@ where
     F: Filter<R, FI>,
     V: ParViews<'a> + Filter<R, VI>,
 {
-    type Item = <V::ParResults as ParallelIterator>::Item;
+    type Item = V;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
     where
