@@ -24,7 +24,7 @@ use crate::{
         Entity,
     },
     query::view::Views,
-    registry::Registry,
+    registry::{CanonicalViews, Registry},
 };
 use alloc::vec::Vec;
 use core::{
@@ -212,9 +212,10 @@ where
 
     /// # Safety
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
-    pub(crate) unsafe fn view<'a, V>(&mut self) -> V::Results
+    pub(crate) unsafe fn view<'a, V, P>(&mut self) -> V::Results
     where
         V: Views<'a>,
+        R::Viewable: CanonicalViews<'a, V, P>,
     {
         // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`,
         // where each `C` is a component for which the entry in `component_map` corresponds to the
@@ -226,11 +227,11 @@ where
         // Since each component viewed by `V` is also identified by this archetype's `Identifier`,
         // `self.component` will contain an entry for every viewed component.
         unsafe {
-            V::view(
+            R::Viewable::view(
                 &self.components,
                 self.entity_identifiers,
                 self.length,
-                &self.component_map,
+                self.identifier.iter(),
             )
         }
     }

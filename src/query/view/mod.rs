@@ -47,16 +47,16 @@
 mod get;
 #[cfg(feature = "rayon")]
 mod par;
-
-pub(crate) mod seal;
+mod seal;
 
 #[cfg(feature = "rayon")]
 pub use par::{ParView, ParViews};
 
 pub(crate) use get::Get;
+pub(crate) use seal::ViewsSeal;
 
 use crate::{component::Component, doc, entity, hlist::define_null};
-use seal::{ViewSeal, ViewsSeal};
+use seal::ViewSeal;
 
 /// A view over a single aspect of an entity.
 ///

@@ -115,7 +115,7 @@ where
                 // since the archetype was not removed by the `find()` method above which filters
                 // out archetypes that do not contain the viewed components.
                 unsafe {
-                    archetype.view::<<R::Viewable as ContainsViews<'a, V, P, I, Q>>::Canonical>()
+                    archetype.view::<<R::Viewable as ContainsViews<'a, V, P, I, Q>>::Canonical, P>()
                 }
                 .reshape()
                 .into_iterator(),

@@ -16,10 +16,12 @@ mod canonical;
 mod filter;
 mod length;
 mod storage;
+mod view;
 
 pub(crate) use canonical::Canonical;
 pub(crate) use filter::Filter;
 pub(crate) use length::Length;
+pub(crate) use view::CanonicalViews;
 
 use crate::{
     component::Component,
