@@ -2,10 +2,10 @@ use crate::{
     archetypes,
     query::{
         filter::{And, Filter, Seal},
-        result::Results,
+        result::{Reshape, Results},
         view::Views,
     },
-    registry::Registry,
+    registry::{ContainsViews, Registry},
 };
 use core::{iter::FusedIterator, marker::PhantomData};
 
@@ -34,7 +34,7 @@ use core::{iter::FusedIterator, marker::PhantomData};
 /// let mut world = World::<Registry>::new();
 /// world.insert(entity!(Foo(42), Bar(true)));
 ///
-/// for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _>() {
+/// for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _, _>() {
 ///     if bar.0 {
 ///         foo.0 += 1;
 ///     }
@@ -47,7 +47,7 @@ use core::{iter::FusedIterator, marker::PhantomData};
 /// [`result!`]: crate::query::result!
 /// [`Views`]: crate::query::view::Views
 /// [`World`]: crate::world::World
-pub struct Iter<'a, R, F, FI, V, VI>
+pub struct Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
     F: Filter<R, FI>,
@@ -59,10 +59,13 @@ where
 
     filter: PhantomData<F>,
     filter_indices: PhantomData<FI>,
-    view_indices: PhantomData<VI>,
+    view_filter_indices: PhantomData<VI>,
+    view_containments: PhantomData<P>,
+    view_indices: PhantomData<I>,
+    reshape_indices: PhantomData<Q>,
 }
 
-impl<'a, R, F, FI, V, VI> Iter<'a, R, F, FI, V, VI>
+impl<'a, R, F, FI, V, VI, P, I, Q> Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
     F: Filter<R, FI>,
@@ -76,16 +79,20 @@ where
 
             filter: PhantomData,
             filter_indices: PhantomData,
+            view_filter_indices: PhantomData,
+            view_containments: PhantomData,
             view_indices: PhantomData,
+            reshape_indices: PhantomData,
         }
     }
 }
 
-impl<'a, R, F, FI, V, VI> Iterator for Iter<'a, R, F, FI, V, VI>
+impl<'a, R, F, FI, V, VI, P, I, Q> Iterator for Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry + 'a,
     F: Filter<R, FI>,
     V: Views<'a> + Filter<R, VI>,
+    R::Viewable: ContainsViews<'a, V, P, I, Q>,
 {
     type Item = V;
 
@@ -107,7 +114,11 @@ where
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`,
                 // since the archetype was not removed by the `find()` method above which filters
                 // out archetypes that do not contain the viewed components.
-                unsafe { archetype.view::<V>() }.into_iterator(),
+                unsafe {
+                    archetype.view::<<R::Viewable as ContainsViews<'a, V, P, I, Q>>::Canonical>()
+                }
+                .reshape()
+                .into_iterator(),
             );
         }
     }
@@ -140,7 +151,9 @@ where
             ) {
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`
                 // since the `filter` function in the if-statement returned `true`.
-                unsafe { archetype.view::<V>() }.into_iterator().fold(acc, &mut fold)
+                unsafe { archetype.view::<V>() }
+                    .into_iterator()
+                    .fold(acc, &mut fold)
             } else {
                 acc
             }
@@ -148,17 +161,18 @@ where
     }
 }
 
-impl<'a, R, F, FI, V, VI> FusedIterator for Iter<'a, R, F, FI, V, VI>
+impl<'a, R, F, FI, V, VI, P, I, Q> FusedIterator for Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry + 'a,
     F: Filter<R, FI>,
     V: Views<'a> + Filter<R, VI>,
+    R::Viewable: ContainsViews<'a, V, P, I, Q>,
 {
 }
 
 // SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<'a, R, F, FI, V, VI> Send for Iter<'a, R, F, FI, V, VI>
+unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Send for Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry + 'a,
     F: Filter<R, FI>,

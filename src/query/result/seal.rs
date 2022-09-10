@@ -17,7 +17,7 @@ impl Results for iter::Repeat<view::Null> {
     }
 }
 
-impl<'a, C, I, R> Results for (I, R)
+impl<C, I, R> Results for (I, R)
 where
     I: Iterator<Item = C>,
     R: Results,

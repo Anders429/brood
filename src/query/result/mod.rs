@@ -30,7 +30,7 @@
 //! let mut world = World::<Registry>::new();
 //! world.insert(entity!(Foo(42), Bar(true)));
 //!
-//! for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _>() {
+//! for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _, _>() {
 //!     if bar.0 {
 //!         foo.0 += 1;
 //!     }
@@ -43,6 +43,9 @@
 //! [`Views`]: crate::query::view::Views
 //! [`World`]: crate::world::World
 
+pub(crate) mod reshape;
+
+mod get;
 mod iter;
 #[cfg(feature = "rayon")]
 mod par_iter;
@@ -52,6 +55,8 @@ pub use iter::Iter;
 #[cfg(feature = "rayon")]
 pub use par_iter::ParIter;
 
+pub(crate) use get::Get;
+pub(crate) use reshape::Reshape;
 pub(crate) use seal::Results;
 
 use crate::doc;
@@ -74,7 +79,7 @@ doc::non_root_macro! {
     /// let mut world = World::<Registry>::new();
     /// world.insert(entity!(Foo(42), Bar(true)));
     ///
-    /// for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _>() {
+    /// for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _, _>() {
     ///     // ...
     /// }
     /// ```

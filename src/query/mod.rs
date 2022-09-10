@@ -29,7 +29,9 @@
 //! let mut world = World::<Registry>::new();
 //! world.insert(entity!(Foo(42), Bar(true), Baz(1.5)));
 //!
-//! for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::Has<Baz>, _, _, _, _>() {
+//! for result!(foo, bar) in
+//!     world.query::<views!(&mut Foo, &Bar), filter::Has<Baz>, _, _, _, _, _>()
+//! {
 //!     // Do something.
 //! }
 //! ```

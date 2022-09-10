@@ -1,7 +1,7 @@
 use crate::{
     component::Component,
     entity,
-    query::{claim::Claim, view::Null, result::Results},
+    query::{claim::Claim, result::Results, view::Null},
 };
 use core::{any::TypeId, iter, slice};
 use either::Either;
@@ -396,13 +396,11 @@ where
     ) -> Self::Results {
         // SAFETY: The safety guarantees of this method are the exact what are required by the
         // safety guarantees of both `V::view()` and `W::view()`.
-        unsafe {(
-            V::view(columns, entity_identifiers, length, component_map), W::view(
-                columns,
-                entity_identifiers,
-                length,
-                component_map,
-            ))
+        unsafe {
+            (
+                V::view(columns, entity_identifiers, length, component_map),
+                W::view(columns, entity_identifiers, length, component_map),
+            )
         }
     }
 

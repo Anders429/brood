@@ -11,7 +11,7 @@ use crate::{
     world::World,
 };
 
-pub trait Seal<'a, R, SFI, SVI, PFI, PVI, SP, SI, PP, PI>: Send
+pub trait Seal<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI>: Send
 where
     R: Registry + 'a,
 {
@@ -26,7 +26,7 @@ where
     fn flush(&mut self, world: SendableWorld<R>);
 }
 
-impl<'a, R> Seal<'a, R, Null, Null, Null, Null, Null, Null, Null, Null> for Null
+impl<'a, R> Seal<'a, R, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null
 where
     R: Registry + 'a,
 {
@@ -59,6 +59,8 @@ impl<
         SPS,
         SI,
         SIS,
+        SQ,
+        SQS,
         PP,
         PPS,
         PI,
@@ -73,19 +75,20 @@ impl<
         (PVI, PVIS),
         (SP, SPS),
         (SI, SIS),
+        (SQ, SQS),
         (PP, PPS),
         (PI, PIS),
     > for (Stage<S, P>, L)
 where
     R: Registry + 'a,
-    R::Viewable: ContainsViews<'a, S::Views, SP, SI> + ContainsParViews<'a, P::Views, PP, PI>,
+    R::Viewable: ContainsViews<'a, S::Views, SP, SI, SQ> + ContainsParViews<'a, P::Views, PP, PI>,
     S: System<'a> + Send,
     S::Filter: Filter<R, SFI>,
     S::Views: Filter<R, SVI>,
     P::Filter: Filter<R, PFI>,
     P::Views: Filter<R, PVI>,
     P: ParSystem<'a> + Send,
-    L: Seal<'a, R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, PPS, PIS>,
+    L: Seal<'a, R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS>,
 {
     fn run(&mut self, world: SendableWorld<R>) {
         self.defer(world);

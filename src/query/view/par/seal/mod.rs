@@ -3,9 +3,7 @@ mod repeat;
 use crate::{
     component::Component,
     entity,
-    query::{
-        view::{Null, View, Views},
-    },
+    query::view::{Null, View, Views},
 };
 use core::any::TypeId;
 use fnv::FnvBuildHasher;

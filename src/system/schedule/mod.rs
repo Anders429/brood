@@ -28,12 +28,12 @@
 //!     type Views = views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
 //!
-//!     fn run<R, FI, VI, P, I>(
+//!     fn run<R, FI, VI, P, I, Q>(
 //!         &mut self,
-//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
+//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 //!     ) where
 //!         R: Registry + 'a,
-//!         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
+//!         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
 //!         Self::Filter: Filter<R, FI>,
 //!         Self::Views: Filter<R, VI>,
 //!     {
@@ -49,12 +49,12 @@
 //!     type Views = views!(&'a mut Baz, &'a Bar);
 //!     type Filter = filter::None;
 //!
-//!     fn run<R, FI, VI, P, I>(
+//!     fn run<R, FI, VI, P, I, Q>(
 //!         &mut self,
-//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
+//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 //!     ) where
 //!         R: Registry + 'a,
-//!         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
+//!         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
 //!         Self::Filter: Filter<R, FI>,
 //!         Self::Views: Filter<R, VI>,
 //!     {
@@ -115,12 +115,12 @@ use stage::Stages;
 ///     type Views = views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R, FI, VI, P, I>(
+///     fn run<R, FI, VI, P, I, Q>(
 ///         &mut self,
-///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
 ///         R: Registry + 'a,
-///         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
+///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
 ///         Self::Filter: Filter<R, FI>,
 ///         Self::Views: Filter<R, VI>,
 ///     {
@@ -136,12 +136,12 @@ use stage::Stages;
 ///     type Views = views!(&'a mut Baz, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R, FI, VI, P, I>(
+///     fn run<R, FI, VI, P, I, Q>(
 ///         &mut self,
-///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
 ///         R: Registry + 'a,
-///         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
+///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
 ///         Self::Filter: Filter<R, FI>,
 ///         Self::Views: Filter<R, VI>,
 ///     {
@@ -182,10 +182,10 @@ impl Schedule<stage::Null> {
 }
 
 impl<'a, S> Schedule<S> {
-    pub(crate) fn run<R, SFI, SVI, PFI, PVI, SP, SI, PP, PI>(&mut self, world: &'a mut World<R>)
+    pub(crate) fn run<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI>(&mut self, world: &'a mut World<R>)
     where
         R: Registry,
-        S: Stages<'a, R, SFI, SVI, PFI, PVI, SP, SI, PP, PI>,
+        S: Stages<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI>,
     {
         self.stages.run(
             // SAFETY: The pointer provided here is unique, being created from a mutable reference.

@@ -44,12 +44,12 @@ use hashbrown::HashSet;
 ///     type Views = views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R, FI, VI, P, I>(
+///     fn run<R, FI, VI, P, I, Q>(
 ///         &mut self,
-///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
 ///         R: Registry + 'a,
-///         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
+///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
 ///         Self::Filter: Filter<R, FI>,
 ///         Self::Views: Filter<R, VI>,
 ///     {
@@ -65,12 +65,12 @@ use hashbrown::HashSet;
 ///     type Views = views!(&'a mut Baz, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R, FI, VI, P, I>(
+///     fn run<R, FI, VI, P, I, Q>(
 ///         &mut self,
-///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI>,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
 ///         R: Registry + 'a,
-///         R::Viewable: ContainsViews<'a, Self::Views, P, I>,
+///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
 ///         Self::Filter: Filter<R, FI>,
 ///         Self::Views: Filter<R, VI>,
 ///     {

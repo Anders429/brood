@@ -12,7 +12,10 @@ use crate::{
     entities::Entities,
     entity,
     entity::Entity,
-    query::view::{self, Views},
+    query::{
+        result::{self, Reshape},
+        view::{self, seal::ViewsSeal, Views},
+    },
     registry,
     registry::Length,
 };
@@ -208,89 +211,367 @@ where
 
 pub enum EntityIdentifierMarker {}
 
-pub trait ContainsViews<'a, V, P, I> {
-    type Canonical: Views<'a>;
+pub trait ContainsViews<'a, V, P, I, Q>
+where
+    V: Views<'a>,
+{
+    type Canonical: Views<'a> + ViewsSeal<'a, Results = Self::CanonicalResults>;
+    type CanonicalResults: Reshape<V::Results, Q>;
 }
 
-impl ContainsViews<'_, view::Null, Null, Null> for registry::Null {
+impl<'a> ContainsViews<'a, view::Null, Null, Null, result::reshape::Null> for registry::Null {
     type Canonical = view::Null;
+    type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
 }
 
-impl<'a, C, I, IS, P, R, V> ContainsViews<'a, V, (&'a Contained, P), (I, IS)> for (C, R)
+impl<'a, C, I, IS, P, R, V, Q> ContainsViews<'a, V, (&'a Contained, P), (I, IS), Q> for (C, R)
 where
     C: Component,
-    R: ContainsViews<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>,
-    V: view::Get<'a, &'a C, I>,
+    R: ContainsViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>,
+    V: Views<'a> + view::Get<'a, &'a C, I>,
+    <(
+        &'a C,
+        <R as ContainsViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>>::Canonical,
+    ) as ViewsSeal<'a>>::Results: Reshape<<V as ViewsSeal<'a>>::Results, Q>,
 {
     type Canonical = (
         &'a C,
-        <R as ContainsViews<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>>::Canonical,
+        <R as ContainsViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>>::Canonical,
     );
+    type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
 }
 
-impl<'a, C, I, IS, P, R, V> ContainsViews<'a, V, (&'a mut Contained, P), (I, IS)> for (C, R)
+impl<'a, C, I, IS, P, R, V, Q> ContainsViews<'a, V, (&'a mut Contained, P), (I, IS), Q> for (C, R)
 where
     C: Component,
-    R: ContainsViews<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>,
-    V: view::Get<'a, &'a mut C, I>,
+    R: ContainsViewsInner<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>,
+    V: Views<'a> + view::Get<'a, &'a mut C, I>,
+    <(
+        &'a mut C,
+        <R as ContainsViewsInner<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>>::Canonical,
+    ) as ViewsSeal<'a>>::Results: Reshape<<V as ViewsSeal<'a>>::Results, Q>,
 {
     type Canonical = (
         &'a mut C,
-        <R as ContainsViews<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>>::Canonical,
+        <R as ContainsViewsInner<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>>::Canonical,
+    );
+    type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+}
+
+impl<'a, C, I, IS, P, R, V, Q> ContainsViews<'a, V, (Option<&'a Contained>, P), (I, IS), Q> for (C, R)
+where
+    C: Component,
+    R: ContainsViewsInner<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS>,
+    V: Views<'a> + view::Get<'a, Option<&'a C>, I>,
+    <(
+        Option<&'a C>,
+        <R as ContainsViewsInner<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS>>::Canonical
+    ) as ViewsSeal<'a>>::Results: Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+{
+    type Canonical = (Option<&'a C>, <R as ContainsViewsInner<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS>>::Canonical);
+    type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+}
+
+impl<'a, C, I, IS, P, R, V, Q> ContainsViews<'a, V, (Option<&'a mut Contained>, P), (I, IS), Q>
+    for (C, R)
+where
+    C: Component,
+    R: ContainsViewsInner<'a, <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder, P, IS>,
+    V: Views<'a> + view::Get<'a, Option<&'a mut C>, I>,
+    <(
+        Option<&'a mut C>,
+        <R as ContainsViewsInner<
+            'a,
+            <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder,
+            P,
+            IS,
+        >>::Canonical,
+    ) as ViewsSeal<'a>>::Results: Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+{
+    type Canonical = (
+        Option<&'a mut C>,
+        <R as ContainsViewsInner<
+            'a,
+            <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder,
+            P,
+            IS,
+        >>::Canonical,
+    );
+    type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+}
+
+impl<'a, I, IS, P, V, R, Q> ContainsViews<'a, V, (Contained, P), (I, IS), Q>
+    for (EntityIdentifierMarker, R)
+where
+    R: ContainsViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>,
+    V: Views<'a> + view::Get<'a, entity::Identifier, I>,
+    <(
+        entity::Identifier,
+        <R as ContainsViewsInner<
+            'a,
+            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            P,
+            IS,
+        >>::Canonical,
+    ) as ViewsSeal<'a>>::Results: Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+{
+    type Canonical = (
+        entity::Identifier,
+        <R as ContainsViewsInner<
+            'a,
+            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            P,
+            IS,
+        >>::Canonical,
+    );
+    type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+}
+
+impl<'a, C, I, P, R, V, Q> ContainsViews<'a, V, (NotContained, P), I, Q> for (C, R)
+where
+    R: ContainsViewsInner<'a, V, P, I>,
+    <<R as ContainsViewsInner<'a, V, P, I>>::Canonical as ViewsSeal<'a>>::Results:
+        Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+    V: Views<'a>,
+{
+    type Canonical = <R as ContainsViewsInner<'a, V, P, I>>::Canonical;
+    type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+}
+
+pub trait ContainsViewsInner<'a, V, P, I>
+where
+    V: Views<'a>,
+{
+    type Canonical: Views<'a>;
+}
+
+impl<'a> ContainsViewsInner<'a, view::Null, Null, Null> for registry::Null {
+    type Canonical = view::Null;
+}
+
+impl<'a, C, I, IS, P, R, V> ContainsViewsInner<'a, V, (&'a Contained, P), (I, IS)> for (C, R)
+where
+    C: Component,
+    R: ContainsViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>,
+    V: Views<'a> + view::Get<'a, &'a C, I>,
+{
+    type Canonical = (
+        &'a C,
+        <R as ContainsViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>>::Canonical,
     );
 }
 
-impl<'a, C, I, IS, P, R, V> ContainsViews<'a, V, (Option<&'a Contained>, P), (I, IS)> for (C, R)
+impl<'a, C, I, IS, P, R, V> ContainsViewsInner<'a, V, (&'a mut Contained, P), (I, IS)> for (C, R)
 where
     C: Component,
-    R: ContainsViews<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS>,
-    V: view::Get<'a, Option<&'a C>, I>,
+    R: ContainsViewsInner<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>,
+    V: Views<'a> + view::Get<'a, &'a mut C, I>,
 {
-    type Canonical = (Option<&'a C>, <R as ContainsViews<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS>>::Canonical);
+    type Canonical = (
+        &'a mut C,
+        <R as ContainsViewsInner<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>>::Canonical,
+    );
 }
 
-impl<'a, C, I, IS, P, R, V> ContainsViews<'a, V, (Option<&'a mut Contained>, P), (I, IS)> for (C, R)
+impl<'a, C, I, IS, P, R, V> ContainsViewsInner<'a, V, (Option<&'a Contained>, P), (I, IS)>
+    for (C, R)
 where
     C: Component,
-    R: ContainsViews<'a, <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder, P, IS>,
-    V: view::Get<'a, Option<&'a mut C>, I>,
+    R: ContainsViewsInner<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS>,
+    V: Views<'a> + view::Get<'a, Option<&'a C>, I>,
 {
     type Canonical =
         (
-            Option<&'a mut C>,
-            <R as ContainsViews<
+            Option<&'a C>,
+            <R as ContainsViewsInner<
                 'a,
-                <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder,
+                <V as view::Get<'a, Option<&'a C>, I>>::Remainder,
                 P,
                 IS,
             >>::Canonical,
         );
 }
 
-impl<'a, I, IS, P, V, R> ContainsViews<'a, V, (Contained, P), (I, IS)>
+impl<'a, C, I, IS, P, R, V> ContainsViewsInner<'a, V, (Option<&'a mut Contained>, P), (I, IS)>
+    for (C, R)
+where
+    C: Component,
+    R: ContainsViewsInner<'a, <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder, P, IS>,
+    V: Views<'a> + view::Get<'a, Option<&'a mut C>, I>,
+{
+    type Canonical = (
+        Option<&'a mut C>,
+        <R as ContainsViewsInner<
+            'a,
+            <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder,
+            P,
+            IS,
+        >>::Canonical,
+    );
+}
+
+impl<'a, I, IS, P, V, R> ContainsViewsInner<'a, V, (Contained, P), (I, IS)>
     for (EntityIdentifierMarker, R)
 where
-    R: ContainsViews<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>,
-    V: view::Get<'a, entity::Identifier, I>,
+    R: ContainsViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>,
+    V: Views<'a> + view::Get<'a, entity::Identifier, I>,
 {
-    type Canonical =
-        (
-            entity::Identifier,
-            <R as ContainsViews<
-                'a,
-                <V as view::Get<'a, entity::Identifier, I>>::Remainder,
-                P,
-                IS,
-            >>::Canonical,
-        );
+    type Canonical = (
+        entity::Identifier,
+        <R as ContainsViewsInner<
+            'a,
+            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            P,
+            IS,
+        >>::Canonical,
+    );
 }
 
-impl<'a, C, I, P, R, V> ContainsViews<'a, V, (NotContained, P), I> for (C, R)
+impl<'a, C, I, P, R, V> ContainsViewsInner<'a, V, (NotContained, P), I> for (C, R)
 where
-    R: ContainsViews<'a, V, P, I>,
+    R: ContainsViewsInner<'a, V, P, I>,
+    V: Views<'a>,
 {
-    type Canonical = <R as ContainsViews<'a, V, P, I>>::Canonical;
+    type Canonical = <R as ContainsViewsInner<'a, V, P, I>>::Canonical;
 }
+
+// pub trait ContainsViewsInner<'a, V, P, I, Q>
+// where
+//     V: Views<'a>,
+// {
+//     type Canonical: Views<'a> + ViewsSeal<'a, Results = Self::CanonicalResults>;
+//     type CanonicalResults: Reshape<V::Results, Self::ReshapeIndices>;
+//     type ReshapeIndices;
+// }
+
+// impl<'a> ContainsViewsInner<'a, view::Null, Null, Null, result::reshape::Null> for registry::Null {
+//     type Canonical = view::Null;
+//     type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+//     type ReshapeIndices = result::reshape::Null;
+// }
+
+// impl<'a, C, I, IS, P, R, V, Q, QS> ContainsViewsInner<'a, V, (&'a Contained, P), (I, IS), (Q, QS)>
+//     for (C, R)
+// where
+//     C: Component,
+//     R: ContainsViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS, QS>,
+//     V: Views<'a> + view::Get<'a, &'a C, I>,
+//     <(
+//         &'a C,
+//         <R as ContainsViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS, QS>>::Canonical,
+//     ) as ViewsSeal<'a>>::Results: Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+// {
+//     type Canonical = (
+//         &'a C,
+//         <R as ContainsViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS, QS>>::Canonical,
+//     );
+//     type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+//     type ReshapeIndices = Q;
+// }
+
+// impl<'a, C, I, IS, P, R, V, Q, QS> ContainsViewsInner<'a, V, (&'a mut Contained, P), (I, IS), (Q, QS)> for (C, R)
+// where
+//     C: Component,
+//     R: ContainsViewsInner<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS, QS>,
+//     V: Views<'a> + view::Get<'a, &'a mut C, I>,
+//     <(
+//         &'a mut C,
+//         <R as ContainsViewsInner<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS, QS>>::Canonical,
+//     ) as ViewsSeal<'a>>::Results: Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+// {
+//     type Canonical = (
+//         &'a mut C,
+//         <R as ContainsViewsInner<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS, QS>>::Canonical,
+//     );
+//     type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+//     type ReshapeIndices = Q;
+// }
+
+// impl<'a, C, I, IS, P, R, V, Q, QS> ContainsViewsInner<'a, V, (Option<&'a Contained>, P), (I, IS), (Q, QS)> for (C, R)
+// where
+//     C: Component,
+//     R: ContainsViewsInner<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS, QS>,
+//     V: Views<'a> + view::Get<'a, Option<&'a C>, I>,
+//     <(
+//         Option<&'a C>,
+//         <R as ContainsViewsInner<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS, QS>>::Canonical
+//     ) as ViewsSeal<'a>>::Results: Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+// {
+//     type Canonical = (Option<&'a C>, <R as ContainsViewsInner<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS, QS>>::Canonical);
+//     type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+//     type ReshapeIndices = Q;
+// }
+
+// impl<'a, C, I, IS, P, R, V, Q, QS>
+//     ContainsViewsInner<'a, V, (Option<&'a mut Contained>, P), (I, IS), (Q, QS)> for (C, R)
+// where
+//     C: Component,
+//     R: ContainsViewsInner<'a, <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder, P, IS, QS>,
+//     V: Views<'a> + view::Get<'a, Option<&'a mut C>, I>,
+//     <(
+//         Option<&'a mut C>,
+//         <R as ContainsViewsInner<
+//             'a,
+//             <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder,
+//             P,
+//             IS,
+//             QS,
+//         >>::Canonical,
+//     ) as ViewsSeal<'a>>::Results: Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+// {
+//     type Canonical = (
+//         Option<&'a mut C>,
+//         <R as ContainsViewsInner<
+//             'a,
+//             <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder,
+//             P,
+//             IS,
+//             QS,
+//         >>::Canonical,
+//     );
+//     type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+//     type ReshapeIndices = Q;
+// }
+
+// impl<'a, I, IS, P, V, R, Q, QS> ContainsViewsInner<'a, V, (Contained, P), (I, IS), (Q, QS)>
+//     for (EntityIdentifierMarker, R)
+// where
+//     R: ContainsViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS, QS>,
+//     V: Views<'a> + view::Get<'a, entity::Identifier, I>,
+//     <(
+//         entity::Identifier,
+//         <R as ContainsViewsInner<
+//             'a,
+//             <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+//             P,
+//             IS,
+//             QS,
+//         >>::Canonical,
+//     ) as ViewsSeal<'a>>::Results: Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+// {
+//     type Canonical = (
+//         entity::Identifier,
+//         <R as ContainsViewsInner<
+//             'a,
+//             <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+//             P,
+//             IS,
+//             QS,
+//         >>::Canonical,
+//     );
+//     type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+//     type ReshapeIndices = Q;
+// }
+
+// impl<'a, C, I, P, R, V, Q> ContainsViewsInner<'a, V, (NotContained, P), I, Q> for (C, R)
+// where
+//     R: ContainsViewsInner<'a, V, P, I, Q>,
+//     V: Views<'a>,
+// {
+//     type Canonical = <R as ContainsViewsInner<'a, V, P, I, Q>>::Canonical;
+//     type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+//     type ReshapeIndices = <R as ContainsViewsInner<'a, V, P, I, Q>>::ReshapeIndices;
+// }
 
 #[cfg(feature = "rayon")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
