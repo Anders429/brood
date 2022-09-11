@@ -19,7 +19,7 @@ where
     V: Views<'a>,
 {
     /// # Safety
-    /// 
+    ///
     /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
     /// for components `C`, ordered for the archetype identified by `archetype_identifier`.
     unsafe fn view<R>(
@@ -69,13 +69,7 @@ where
             // SAFETY: The remaining components in `columns` are guaranteed to contain raw parts
             // for valid `Vec<C>`s of length `length` for each of the remaining components
             // identified by `archetype_identifier`.
-            unsafe {
-                R::view(
-                    columns.get_unchecked(1..),
-                    length,
-                    archetype_identifier,
-                )
-            },
+            unsafe { R::view(columns.get_unchecked(1..), length, archetype_identifier) },
         )
     }
 }
@@ -105,13 +99,7 @@ where
             // SAFETY: The remaining components in `columns` are guaranteed to contain raw parts
             // for valid `Vec<C>`s of length `length` for each of the remaining components
             // identified by `archetype_identifier`.
-            unsafe {
-                R::view(
-                    columns.get_unchecked(1..),
-                    length,
-                    archetype_identifier,
-                )
-            },
+            unsafe { R::view(columns.get_unchecked(1..), length, archetype_identifier) },
         )
     }
 }
@@ -153,13 +141,7 @@ where
             // SAFETY: The remaining components in `columns` are guaranteed to contain raw parts
             // for valid `Vec<C>`s of length `length` for each of the remaining components
             // identified by `archetype_identifier`.
-            unsafe {
-                R::view(
-                    columns.get_unchecked(1..),
-                    length,
-                    archetype_identifier,
-                )
-            },
+            unsafe { R::view(columns.get_unchecked(1..), length, archetype_identifier) },
         )
     }
 }
@@ -201,13 +183,7 @@ where
             // SAFETY: The remaining components in `columns` are guaranteed to contain raw parts
             // for valid `Vec<C>`s of length `length` for each of the remaining components
             // identified by `archetype_identifier`.
-            unsafe {
-                R::view(
-                    columns.get_unchecked(1..),
-                    length,
-                    archetype_identifier,
-                )
-            },
+            unsafe { R::view(columns.get_unchecked(1..), length, archetype_identifier) },
         )
     }
 }
@@ -235,8 +211,8 @@ where
             }
         }
         // SAFETY: The remaining components in `columns` are guaranteed to contain raw parts
-            // for valid `Vec<C>`s of length `length` for each of the remaining components
-            // identified by `archetype_identifier`.
+        // for valid `Vec<C>`s of length `length` for each of the remaining components
+        // identified by `archetype_identifier`.
         unsafe { R::view(columns, length, archetype_identifier) }
     }
 }

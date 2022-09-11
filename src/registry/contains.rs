@@ -219,10 +219,10 @@ where
     type CanonicalResults: Reshape<V::Results, Q>;
 
     /// # Safety
-    /// 
+    ///
     /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
     /// for components `C`, ordered for the archetype identified by `archetype_identifier`.
-    /// 
+    ///
     /// Additionally, `entity_identifiers` must contain the raw parts for a valid
     /// `Vec<entity::Identifier>` of length `length`.
     unsafe fn view<R>(
@@ -239,15 +239,15 @@ impl<'a, I, IS, P, V, R, Q> ContainsViews<'a, V, (Contained, P), (I, IS), Q>
     for (EntityIdentifierMarker, R)
 where
     R: CanonicalViews<
-        'a,
-        <R as ContainsViewsInner<
             'a,
-            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            <R as ContainsViewsInner<
+                'a,
+                <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                P,
+                IS,
+            >>::Canonical,
             P,
-            IS,
-        >>::Canonical,
-        P,
-    > + ContainsViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>,
+        > + ContainsViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>,
     V: Views<'a> + view::Get<'a, entity::Identifier, I>,
     <(
         entity::Identifier,
@@ -290,13 +290,7 @@ where
             // SAFETY: The components in `columns` are guaranteed to contain raw parts for valid
             // `Vec<C>`s of length `length` for each of the components identified by
             // `archetype_identifier`.
-            unsafe {
-                R::view(
-                    columns,
-                    length,
-                    archetype_identifier,
-                )
-            },
+            unsafe { R::view(columns, length, archetype_identifier) },
         )
     }
 }
@@ -304,7 +298,8 @@ where
 impl<'a, I, P, R, V, Q> ContainsViews<'a, V, (NotContained, P), I, Q>
     for (EntityIdentifierMarker, R)
 where
-    R: CanonicalViews<'a, <R as ContainsViewsInner<'a, V, P, I>>::Canonical, P> + ContainsViewsInner<'a, V, P, I>,
+    R: CanonicalViews<'a, <R as ContainsViewsInner<'a, V, P, I>>::Canonical, P>
+        + ContainsViewsInner<'a, V, P, I>,
     <<R as ContainsViewsInner<'a, V, P, I>>::Canonical as ViewsSeal<'a>>::Results:
         Reshape<<V as ViewsSeal<'a>>::Results, Q>,
     V: Views<'a>,
