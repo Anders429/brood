@@ -219,15 +219,12 @@ where
         V: Views<'a>,
         R::Viewable: ContainsViews<'a, V, P, I, Q>,
     {
-        // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`,
-        // where each `C` is a component for which the entry in `component_map` corresponds to the
-        // correct index.
+        // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`
+        // for each component `C` identified in `self.identifier` in the canonical order defined by
+        // the registry.
         //
         // `self.entity_identifiers` also contains the raw parts for a valid
         // `Vec<entity::Identifier>` of size `self.length`.
-        //
-        // Since each component viewed by `V` is also identified by this archetype's `Identifier`,
-        // `self.component` will contain an entry for every viewed component.
         unsafe {
             R::Viewable::view(
                 &self.components,
