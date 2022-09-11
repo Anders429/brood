@@ -115,7 +115,7 @@ where
                 // since the archetype was not removed by the `find()` method above which filters
                 // out archetypes that do not contain the viewed components.
                 unsafe {
-                    archetype.view::<<R::Viewable as ContainsViews<'a, V, P, I, Q>>::Canonical, P>()
+                    archetype.view::<V, P, I, Q>()
                 }
                 .reshape()
                 .into_iterator(),
@@ -135,30 +135,30 @@ where
         }
     }
 
-    #[inline]
-    fn fold<A, Fold>(self, mut init: A, mut fold: Fold) -> A
-    where
-        Fold: FnMut(A, Self::Item) -> A,
-    {
-        if let Some(results) = self.current_results_iter {
-            init = results.fold(init, &mut fold);
-        }
+    // #[inline]
+    // fn fold<A, Fold>(self, mut init: A, mut fold: Fold) -> A
+    // where
+    //     Fold: FnMut(A, Self::Item) -> A,
+    // {
+    //     if let Some(results) = self.current_results_iter {
+    //         init = results.fold(init, &mut fold);
+    //     }
 
-        self.archetypes_iter.fold(init, |acc, archetype| {
-            if And::<V, F>::filter(
-                // SAFETY: This identifier reference will not outlive `archetype`.
-                unsafe { archetype.identifier() },
-            ) {
-                // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`
-                // since the `filter` function in the if-statement returned `true`.
-                unsafe { archetype.view::<V>() }
-                    .into_iterator()
-                    .fold(acc, &mut fold)
-            } else {
-                acc
-            }
-        })
-    }
+    //     self.archetypes_iter.fold(init, |acc, archetype| {
+    //         if And::<V, F>::filter(
+    //             // SAFETY: This identifier reference will not outlive `archetype`.
+    //             unsafe { archetype.identifier() },
+    //         ) {
+    //             // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`
+    //             // since the `filter` function in the if-statement returned `true`.
+    //             unsafe { archetype.view::<V>() }
+    //                 .into_iterator()
+    //                 .fold(acc, &mut fold)
+    //         } else {
+    //             acc
+    //         }
+    //     })
+    // }
 }
 
 impl<'a, R, F, FI, V, VI, P, I, Q> FusedIterator for Iter<'a, R, F, FI, V, VI, P, I, Q>

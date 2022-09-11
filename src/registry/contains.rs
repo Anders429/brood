@@ -13,13 +13,14 @@ use crate::{
     entity,
     entity::Entity,
     query::{
-        result::{self, Reshape},
+        result::Reshape,
         view::{self, ViewsSeal, Views},
     },
     registry,
-    registry::{CanonicalViews, Canonical, Length},
+    registry::{CanonicalViews, Canonical, Length, Registry}, archetype,
 };
 use alloc::vec::Vec;
+use core::slice;
 
 /// Type marker for a component contained in an entity.
 ///
@@ -209,34 +210,35 @@ where
 
 pub enum EntityIdentifierMarker {}
 
-pub trait ContainsViews<'a, V, P, I, Q>: CanonicalViews<'a, Self::Canonical, P>
+pub trait ContainsViews<'a, V, P, I, Q>
 where
     V: Views<'a>,
 {
     type Canonical: Views<'a> + ViewsSeal<'a, Results = Self::CanonicalResults>;
     type CanonicalResults: Reshape<V::Results, Q>;
-}
 
-impl<'a> ContainsViews<'a, view::Null, Null, Null, result::reshape::Null> for registry::Null {
-    type Canonical = view::Null;
-    type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+    unsafe fn view<R>(
+        columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R>,
+    ) -> Self::CanonicalResults
+    where
+        R: Registry;
 }
 
 impl<'a, I, IS, P, V, R, Q> ContainsViews<'a, V, (Contained, P), (I, IS), Q>
     for (EntityIdentifierMarker, R)
 where
-    Self: CanonicalViews<
+    R: CanonicalViews<
         'a,
-        (
-            entity::Identifier,
             <R as ContainsViewsInner<
                 'a,
                 <V as view::Get<'a, entity::Identifier, I>>::Remainder,
                 P,
                 IS,
             >>::Canonical,
-        ),
-        (Contained, P),
+        P,
     >,
     R: ContainsViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>,
     V: Views<'a> + view::Get<'a, entity::Identifier, I>,
@@ -260,11 +262,37 @@ where
         >>::Canonical,
     );
     type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+
+    unsafe fn view<R_>(
+        columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> Self::CanonicalResults
+    where
+        R_: Registry
+    {
+        (
+            unsafe {
+                slice::from_raw_parts_mut::<'a, entity::Identifier>(entity_identifiers.0, length)
+            }
+            .iter()
+            .copied(),
+            unsafe {
+                R::view(
+                    columns.get_unchecked(1..),
+                    entity_identifiers,
+                    length,
+                    archetype_identifier,
+                )
+            },
+        )
+    }
 }
 
 impl<'a, I, P, R, V, Q> ContainsViews<'a, V, (NotContained, P), I, Q> for (EntityIdentifierMarker, R)
 where
-    Self: CanonicalViews<'a, <R as ContainsViewsInner<'a, V, P, I>>::Canonical, (NotContained, P)>,
+    R: CanonicalViews<'a, <R as ContainsViewsInner<'a, V, P, I>>::Canonical, P>,
     R: ContainsViewsInner<'a, V, P, I>,
     <<R as ContainsViewsInner<'a, V, P, I>>::Canonical as ViewsSeal<'a>>::Results:
         Reshape<<V as ViewsSeal<'a>>::Results, Q>,
@@ -272,6 +300,18 @@ where
 {
     type Canonical = <R as ContainsViewsInner<'a, V, P, I>>::Canonical;
     type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+
+    unsafe fn view<R_>(
+        columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> Self::CanonicalResults
+    where
+        R_: Registry {
+        
+            unsafe { R::view(columns, entity_identifiers, length, archetype_identifier) }
+    }
 }
 
 pub trait ContainsViewsInner<'a, V, P, I>

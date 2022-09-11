@@ -8,7 +8,7 @@ use crate::{
     },
     registry,
     registry::{
-        contains::{Contained, EntityIdentifierMarker, NotContained, Null},
+        contains::{Contained, NotContained, Null},
         Registry,
     },
 };
@@ -197,40 +197,6 @@ where
     }
 }
 
-impl<'a, P, R, V> CanonicalViews<'a, (entity::Identifier, V), (Contained, P)>
-    for (EntityIdentifierMarker, R)
-where
-    R: CanonicalViews<'a, V, P>,
-    V: Views<'a>,
-{
-    unsafe fn view<R_>(
-        columns: &[(*mut u8, usize)],
-        entity_identifiers: (*mut entity::Identifier, usize),
-        length: usize,
-        mut archetype_identifier: archetype::identifier::Iter<R_>,
-    ) -> <(entity::Identifier, V) as ViewsSeal<'a>>::Results
-    where
-        R_: Registry,
-    {
-        archetype_identifier.next();
-        (
-            unsafe {
-                slice::from_raw_parts_mut::<'a, entity::Identifier>(entity_identifiers.0, length)
-            }
-            .iter()
-            .copied(),
-            unsafe {
-                R::view(
-                    columns.get_unchecked(1..),
-                    entity_identifiers,
-                    length,
-                    archetype_identifier,
-                )
-            },
-        )
-    }
-}
-
 impl<'a, C, P, R, V> CanonicalViews<'a, V, (NotContained, P)> for (C, R)
 where
     C: Component,
@@ -238,7 +204,7 @@ where
     V: Views<'a>,
 {
     unsafe fn view<R_>(
-        columns: &[(*mut u8, usize)],
+        mut columns: &[(*mut u8, usize)],
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         mut archetype_identifier: archetype::identifier::Iter<R_>,
@@ -246,7 +212,9 @@ where
     where
         R_: Registry,
     {
-        archetype_identifier.next();
+        if unsafe {archetype_identifier.next().unwrap_unchecked()} {
+            unsafe {columns = columns.get_unchecked(1..);}
+        }
         unsafe { R::view(columns, entity_identifiers, length, archetype_identifier) }
     }
 }

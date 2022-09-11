@@ -23,8 +23,8 @@ use crate::{
         allocator::{Location, Locations},
         Entity,
     },
-    query::view::Views,
-    registry::{CanonicalViews, Registry},
+    query::view::{Views, ViewsSeal},
+    registry::{Registry, ContainsViews},
 };
 use alloc::vec::Vec;
 use core::{
@@ -212,10 +212,10 @@ where
 
     /// # Safety
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
-    pub(crate) unsafe fn view<'a, V, P>(&mut self) -> V::Results
+    pub(crate) unsafe fn view<'a, V, P, I, Q>(&mut self) -> <<R::Viewable as ContainsViews<'a, V, P, I, Q>>::Canonical as ViewsSeal<'a>>::Results
     where
         V: Views<'a>,
-        R::Viewable: CanonicalViews<'a, V, P>,
+        R::Viewable: ContainsViews<'a, V, P, I, Q>,
     {
         // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`,
         // where each `C` is a component for which the entry in `component_map` corresponds to the
