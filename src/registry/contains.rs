@@ -292,7 +292,7 @@ where
             // `archetype_identifier`.
             unsafe {
                 R::view(
-                    columns.get_unchecked(1..),
+                    columns,
                     length,
                     archetype_identifier,
                 )
