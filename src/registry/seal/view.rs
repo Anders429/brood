@@ -212,8 +212,10 @@ where
     where
         R_: Registry,
     {
-        if unsafe {archetype_identifier.next().unwrap_unchecked()} {
-            unsafe {columns = columns.get_unchecked(1..);}
+        if unsafe { archetype_identifier.next().unwrap_unchecked() } {
+            unsafe {
+                columns = columns.get_unchecked(1..);
+            }
         }
         unsafe { R::view(columns, entity_identifiers, length, archetype_identifier) }
     }

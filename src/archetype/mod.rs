@@ -24,7 +24,7 @@ use crate::{
         Entity,
     },
     query::view::{Views, ViewsSeal},
-    registry::{Registry, ContainsViews},
+    registry::{ContainsViews, Registry},
 };
 use alloc::vec::Vec;
 use core::{
@@ -212,7 +212,9 @@ where
 
     /// # Safety
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
-    pub(crate) unsafe fn view<'a, V, P, I, Q>(&mut self) -> <<R::Viewable as ContainsViews<'a, V, P, I, Q>>::Canonical as ViewsSeal<'a>>::Results
+    pub(crate) unsafe fn view<'a, V, P, I, Q>(
+        &mut self,
+    ) -> <<R::Viewable as ContainsViews<'a, V, P, I, Q>>::Canonical as ViewsSeal<'a>>::Results
     where
         V: Views<'a>,
         R::Viewable: ContainsViews<'a, V, P, I, Q>,

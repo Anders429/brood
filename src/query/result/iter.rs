@@ -114,11 +114,9 @@ where
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`,
                 // since the archetype was not removed by the `find()` method above which filters
                 // out archetypes that do not contain the viewed components.
-                unsafe {
-                    archetype.view::<V, P, I, Q>()
-                }
-                .reshape()
-                .into_iterator(),
+                unsafe { archetype.view::<V, P, I, Q>() }
+                    .reshape()
+                    .into_iterator(),
             );
         }
     }

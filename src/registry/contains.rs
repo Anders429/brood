@@ -7,6 +7,7 @@
 #[cfg(feature = "rayon")]
 use crate::query::view::ParViews;
 use crate::{
+    archetype,
     component::Component,
     entities,
     entities::Entities,
@@ -14,10 +15,10 @@ use crate::{
     entity::Entity,
     query::{
         result::Reshape,
-        view::{self, ViewsSeal, Views},
+        view::{self, Views, ViewsSeal},
     },
     registry,
-    registry::{CanonicalViews, Canonical, Length, Registry}, archetype,
+    registry::{Canonical, CanonicalViews, Length, Registry},
 };
 use alloc::vec::Vec;
 use core::slice;
@@ -232,12 +233,12 @@ impl<'a, I, IS, P, V, R, Q> ContainsViews<'a, V, (Contained, P), (I, IS), Q>
 where
     R: CanonicalViews<
         'a,
-            <R as ContainsViewsInner<
-                'a,
-                <V as view::Get<'a, entity::Identifier, I>>::Remainder,
-                P,
-                IS,
-            >>::Canonical,
+        <R as ContainsViewsInner<
+            'a,
+            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            P,
+            IS,
+        >>::Canonical,
         P,
     >,
     R: ContainsViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>,
@@ -270,7 +271,7 @@ where
         archetype_identifier: archetype::identifier::Iter<R_>,
     ) -> Self::CanonicalResults
     where
-        R_: Registry
+        R_: Registry,
     {
         (
             unsafe {
@@ -290,7 +291,8 @@ where
     }
 }
 
-impl<'a, I, P, R, V, Q> ContainsViews<'a, V, (NotContained, P), I, Q> for (EntityIdentifierMarker, R)
+impl<'a, I, P, R, V, Q> ContainsViews<'a, V, (NotContained, P), I, Q>
+    for (EntityIdentifierMarker, R)
 where
     R: CanonicalViews<'a, <R as ContainsViewsInner<'a, V, P, I>>::Canonical, P>,
     R: ContainsViewsInner<'a, V, P, I>,
@@ -308,9 +310,9 @@ where
         archetype_identifier: archetype::identifier::Iter<R_>,
     ) -> Self::CanonicalResults
     where
-        R_: Registry {
-        
-            unsafe { R::view(columns, entity_identifiers, length, archetype_identifier) }
+        R_: Registry,
+    {
+        unsafe { R::view(columns, entity_identifiers, length, archetype_identifier) }
     }
 }
 
