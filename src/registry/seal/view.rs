@@ -282,7 +282,7 @@ where
             unsafe {
                 R::view_one(
                     index,
-                    columns.get_unchecked(1..),
+                    columns,
                     length,
                     archetype_identifier,
                 )
@@ -376,7 +376,7 @@ where
             unsafe {
                 R::view_one(
                     index,
-                    columns.get_unchecked(1..),
+                    columns,
                     length,
                     archetype_identifier,
                 )
