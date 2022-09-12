@@ -279,14 +279,7 @@ where
             // for valid `Vec<C>`s of length `length` for each of the remaining components
             // identified by `archetype_identifier`. `index` is guaranteed to be less than
             // `length`.
-            unsafe {
-                R::view_one(
-                    index,
-                    columns,
-                    length,
-                    archetype_identifier,
-                )
-            },
+            unsafe { R::view_one(index, columns, length, archetype_identifier) },
         )
     }
 }
@@ -373,14 +366,7 @@ where
             // for valid `Vec<C>`s of length `length` for each of the remaining components
             // identified by `archetype_identifier`. `index` is guaranteed to be less than
             // `length`.
-            unsafe {
-                R::view_one(
-                    index,
-                    columns,
-                    length,
-                    archetype_identifier,
-                )
-            },
+            unsafe { R::view_one(index, columns, length, archetype_identifier) },
         )
     }
 }
