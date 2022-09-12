@@ -3,7 +3,10 @@ mod repeat;
 use crate::{
     component::Component,
     entity,
-    query::view::{Null, View, Views},
+    query::{
+        result::ParResults,
+        view::{Null, View, Views},
+    },
 };
 use core::any::TypeId;
 use fnv::FnvBuildHasher;
@@ -189,7 +192,7 @@ impl<'a> ParViewSeal<'a> for entity::Identifier {
 }
 
 pub trait ParViewsSeal<'a>: Views<'a> {
-    type ParResults: IndexedParallelIterator<Item = Self>;
+    type ParResults: ParResults;
 
     /// # Safety
     /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
@@ -226,10 +229,10 @@ impl<'a> ParViewsSeal<'a> for Null {
 
 impl<'a, V, W> ParViewsSeal<'a> for (V, W)
 where
-    V: ParViewSeal<'a>,
+    V: ParViewSeal<'a> + Send,
     W: ParViewsSeal<'a>,
 {
-    type ParResults = iter::Zip<V::ParResult, W::ParResults>;
+    type ParResults = (V::ParResult, W::ParResults);
 
     unsafe fn par_view(
         columns: &[(*mut u8, usize)],
@@ -240,12 +243,10 @@ where
         // SAFETY: The safety guarantees of this method are the exact what are required by the
         // safety guarantees of both `V::par_view()` and `W::par_view()`.
         unsafe {
-            V::par_view(columns, entity_identifiers, length, component_map).zip(W::par_view(
-                columns,
-                entity_identifiers,
-                length,
-                component_map,
-            ))
+            (
+                V::par_view(columns, entity_identifiers, length, component_map),
+                W::par_view(columns, entity_identifiers, length, component_map),
+            )
         }
     }
 }

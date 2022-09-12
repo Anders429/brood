@@ -3,7 +3,8 @@ use crate::{
     archetypes,
     query::{
         filter::{And, Filter, Seal},
-        view::ParViews,
+        result::ParResults,
+        view::{ParViews, ParViewsSeal},
     },
     registry::Registry,
 };
@@ -113,7 +114,7 @@ where
     F: Filter<R, FI>,
     V: ParViews<'a> + Filter<R, VI>,
 {
-    type Item = V;
+    type Item = <<V as ParViewsSeal<'a>>::ParResults as ParResults>::View;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
     where
@@ -156,7 +157,7 @@ unsafe impl<C, F, FI, V, VI> Sync for ResultsConsumer<C, F, FI, V, VI> {}
 
 impl<'a, C, R, F, FI, V, VI> Consumer<&'a mut Archetype<R>> for ResultsConsumer<C, F, FI, V, VI>
 where
-    C: UnindexedConsumer<<V::ParResults as ParallelIterator>::Item>,
+    C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
     R: Registry,
     F: Filter<R, FI>,
     V: ParViews<'a> + Filter<R, VI>,
@@ -194,7 +195,7 @@ where
 impl<'a, C, R, F, FI, V, VI> UnindexedConsumer<&'a mut Archetype<R>>
     for ResultsConsumer<C, F, FI, V, VI>
 where
-    C: UnindexedConsumer<<V::ParResults as ParallelIterator>::Item>,
+    C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
     R: Registry,
     F: Filter<R, FI>,
     V: ParViews<'a> + Filter<R, VI>,
@@ -221,7 +222,7 @@ struct ResultsFolder<C, P, F, FI, V, VI> {
 impl<'a, C, R, F, FI, V, VI> Folder<&'a mut Archetype<R>>
     for ResultsFolder<C, C::Result, F, FI, V, VI>
 where
-    C: UnindexedConsumer<<V::ParResults as ParallelIterator>::Item>,
+    C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
     R: Registry,
     F: Filter<R, FI>,
     V: ParViews<'a> + Filter<R, VI>,
@@ -237,7 +238,7 @@ where
             let result =
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`
                 // since the `filter` function in the if-statement returned `true`.
-                unsafe { archetype.par_view::<V>() }.drive_unindexed(consumer);
+                unsafe { archetype.par_view::<V>() }.into_parallel_iterator().drive_unindexed(consumer);
 
             let previous = match self.previous {
                 None => Some(result),

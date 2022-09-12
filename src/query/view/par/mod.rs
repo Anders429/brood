@@ -1,7 +1,9 @@
 mod seal;
 
+pub(crate) use seal::ParViewsSeal;
+
 use crate::{component::Component, entity, query::view::Null};
-use seal::{ParViewSeal, ParViewsSeal};
+use seal::ParViewSeal;
 
 /// A parallel view over a single aspect of an entity.
 ///

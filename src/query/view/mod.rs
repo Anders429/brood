@@ -54,6 +54,8 @@ mod seal;
 pub use par::{ParView, ParViews};
 
 pub(crate) use get::Get;
+#[cfg(feature = "rayon")]
+pub(crate) use par::ParViewsSeal;
 pub(crate) use reshape::Reshape;
 pub(crate) use seal::ViewsSeal;
 

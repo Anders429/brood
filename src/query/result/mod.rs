@@ -57,6 +57,8 @@ pub use par_iter::ParIter;
 
 pub(crate) use get::Get;
 pub(crate) use reshape::Reshape;
+#[cfg(feature = "rayon")]
+pub(crate) use seal::ParResults;
 pub(crate) use seal::Results;
 
 use crate::doc;

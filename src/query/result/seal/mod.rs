@@ -1,3 +1,9 @@
+#[cfg(feature = "rayon")]
+mod par;
+
+#[cfg(feature = "rayon")]
+pub(crate) use par::ParResults;
+
 use crate::query::view;
 use core::iter;
 
