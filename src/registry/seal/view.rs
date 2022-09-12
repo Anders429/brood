@@ -116,7 +116,7 @@ where
     V: Views<'a>,
 {
     unsafe fn view<R_>(
-        columns: &[(*mut u8, usize)],
+        mut columns: &[(*mut u8, usize)],
         length: usize,
         mut archetype_identifier: archetype::identifier::Iter<R_>,
     ) -> <(Option<&'a C>, V) as ViewsSeal<'a>>::Results
@@ -130,7 +130,7 @@ where
                     // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of
                     // size `length` for the currently viewed component `C`.
                     unsafe {
-                        slice::from_raw_parts(columns.get_unchecked(0).0.cast::<C>(), length)
+                        slice::from_raw_parts({let column = columns.get_unchecked(0); columns = columns.get_unchecked(1..); column}.0.cast::<C>(), length)
                     }
                     .iter()
                     .map(wrap_some),
@@ -141,7 +141,7 @@ where
             // SAFETY: The remaining components in `columns` are guaranteed to contain raw parts
             // for valid `Vec<C>`s of length `length` for each of the remaining components
             // identified by `archetype_identifier`.
-            unsafe { R::view(columns.get_unchecked(1..), length, archetype_identifier) },
+            unsafe { R::view(columns, length, archetype_identifier) },
         )
     }
 }
@@ -154,7 +154,7 @@ where
     V: Views<'a>,
 {
     unsafe fn view<R_>(
-        columns: &[(*mut u8, usize)],
+        mut columns: &[(*mut u8, usize)],
         length: usize,
         mut archetype_identifier: archetype::identifier::Iter<R_>,
     ) -> <(Option<&'a mut C>, V) as ViewsSeal<'a>>::Results
@@ -172,7 +172,7 @@ where
                     // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of
                     // size `length` for the currently viewed component `C`.
                     unsafe {
-                        slice::from_raw_parts_mut(columns.get_unchecked(0).0.cast::<C>(), length)
+                        slice::from_raw_parts_mut({let column = columns.get_unchecked(0); columns = columns.get_unchecked(1..); column}.0.cast::<C>(), length)
                     }
                     .iter_mut()
                     .map(wrap_some),
@@ -183,7 +183,7 @@ where
             // SAFETY: The remaining components in `columns` are guaranteed to contain raw parts
             // for valid `Vec<C>`s of length `length` for each of the remaining components
             // identified by `archetype_identifier`.
-            unsafe { R::view(columns.get_unchecked(1..), length, archetype_identifier) },
+            unsafe { R::view(columns, length, archetype_identifier) },
         )
     }
 }
