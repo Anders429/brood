@@ -6,9 +6,6 @@ use core::iter;
 
 define_null_uninstantiable!();
 
-// source: ([&A], [&B], [null])  <-  T
-// target: ([&B], [&A], [null])  <-  R
-
 pub trait Reshape<R, I> {
     fn reshape(self) -> R;
 }
@@ -19,7 +16,6 @@ impl Reshape<iter::Repeat<view::Null>, Null> for iter::Repeat<view::Null> {
     }
 }
 
-// ([&B], ([&A], [null])) for ([&A], [&B], [null])
 impl<I, IS, R, S, T> Reshape<(R, S), (I, IS)> for T
 where
     T: Get<R, I>,

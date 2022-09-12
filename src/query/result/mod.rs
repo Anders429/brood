@@ -43,9 +43,9 @@
 //! [`Views`]: crate::query::view::Views
 //! [`World`]: crate::world::World
 
+pub(crate) mod get;
 pub(crate) mod reshape;
 
-mod get;
 mod iter;
 #[cfg(feature = "rayon")]
 mod par_iter;

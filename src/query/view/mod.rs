@@ -47,12 +47,14 @@
 mod get;
 #[cfg(feature = "rayon")]
 mod par;
+mod reshape;
 mod seal;
 
 #[cfg(feature = "rayon")]
 pub use par::{ParView, ParViews};
 
 pub(crate) use get::Get;
+pub(crate) use reshape::Reshape;
 pub(crate) use seal::ViewsSeal;
 
 use crate::{component::Component, doc, entity, hlist::define_null};

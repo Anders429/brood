@@ -268,30 +268,31 @@ where
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
     ///
     /// The index `index` must be a valid index into this archetype.
-    pub(crate) unsafe fn view_row_unchecked<'a, V, I>(&mut self, index: usize) -> V
+    pub(crate) unsafe fn view_row_unchecked<'a, V, P, I, Q>(
+        &mut self,
+        index: usize,
+    ) -> <R::Viewable as ContainsViews<'a, V, P, I, Q>>::Canonical
     where
         V: Views<'a>,
+        R::Viewable: ContainsViews<'a, V, P, I, Q>,
     {
-        // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`,
-        // where each `C` is a component for which the entry in `component_map` corresponds to the
-        // correct index.
+        // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`
+        // for each component `C` identified in `self.identifier` in the canonical order defined by
+        // the registry.
         //
         // `self.entity_identifiers` also contains the raw parts for a valid
         // `Vec<entity::Identifier>` of size `self.length`.
-        //
-        // Since each component viewed by `V` is also identified by this archetype's `Identifier`,
-        // `self.component` will contain an entry for every viewed component.
         //
         // `index` is guaranteed by the safety contract of this method to be within the bounds of
         // this archetype, and therefore within the bounds of each column and the entity
         // identifiers of this archetype.
         unsafe {
-            V::view_one(
+            R::Viewable::view_one(
                 index,
                 &self.components,
                 self.entity_identifiers,
                 self.length,
-                &self.component_map,
+                self.identifier.iter(),
             )
         }
     }

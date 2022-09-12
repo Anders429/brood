@@ -14,8 +14,8 @@ use crate::{
     entity,
     entity::Entity,
     query::{
-        result::Reshape,
-        view::{self, Views, ViewsSeal},
+        result, view,
+        view::{Views, ViewsSeal},
     },
     registry,
     registry::{Canonical, CanonicalViews, Length, Registry},
@@ -215,8 +215,10 @@ pub trait ContainsViews<'a, V, P, I, Q>
 where
     V: Views<'a>,
 {
-    type Canonical: Views<'a> + ViewsSeal<'a, Results = Self::CanonicalResults>;
-    type CanonicalResults: Reshape<V::Results, Q>;
+    type Canonical: Views<'a>
+        + ViewsSeal<'a, Results = Self::CanonicalResults>
+        + view::Reshape<'a, V, Q>;
+    type CanonicalResults: result::Reshape<V::Results, Q>;
 
     /// # Safety
     ///
@@ -231,6 +233,25 @@ where
         length: usize,
         archetype_identifier: archetype::identifier::Iter<R>,
     ) -> Self::CanonicalResults
+    where
+        R: Registry;
+
+    /// # Safety
+    ///
+    /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
+    /// for components `C`, ordered for the archetype identified by `archetype_identifier`.
+    ///
+    /// Additionally, `entity_identifiers` must contain the raw parts for a valid
+    /// `Vec<entity::Identifier>` of length `length`.
+    ///
+    /// Finally, `index` must be a less than `length`.
+    unsafe fn view_one<R>(
+        index: usize,
+        columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R>,
+    ) -> Self::Canonical
     where
         R: Registry;
 }
@@ -257,7 +278,16 @@ where
             P,
             IS,
         >>::Canonical,
-    ) as ViewsSeal<'a>>::Results: Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+    ) as ViewsSeal<'a>>::Results: result::Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+    (
+        entity::Identifier,
+        <R as ContainsViewsInner<
+            'a,
+            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            P,
+            IS,
+        >>::Canonical,
+    ): view::Reshape<'a, V, Q>,
 {
     type Canonical = (
         entity::Identifier,
@@ -293,6 +323,31 @@ where
             unsafe { R::view(columns, length, archetype_identifier) },
         )
     }
+
+    unsafe fn view_one<R_>(
+        index: usize,
+        columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> Self::Canonical
+    where
+        R_: Registry,
+    {
+        (
+            // SAFETY: `entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec<entity::Identifier>` of size `length`. Consequentially, `index` is guaranteed
+            // to be a valid index into the `Vec<entity::Identifier>`.
+            *unsafe {
+                slice::from_raw_parts_mut::<'a, entity::Identifier>(entity_identifiers.0, length)
+                    .get_unchecked(index)
+            },
+            // SAFETY: The components in `columns` are guaranteed to contain raw parts for valid
+            // `Vec<C>`s of length `length` for each of the components identified by
+            // `archetype_identifier`. `index` is guaranteed to be less than `length`.
+            unsafe { R::view_one(index, columns, length, archetype_identifier) },
+        )
+    }
 }
 
 impl<'a, I, P, R, V, Q> ContainsViews<'a, V, (NotContained, P), I, Q>
@@ -301,7 +356,8 @@ where
     R: CanonicalViews<'a, <R as ContainsViewsInner<'a, V, P, I>>::Canonical, P>
         + ContainsViewsInner<'a, V, P, I>,
     <<R as ContainsViewsInner<'a, V, P, I>>::Canonical as ViewsSeal<'a>>::Results:
-        Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+        result::Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+    <R as ContainsViewsInner<'a, V, P, I>>::Canonical: view::Reshape<'a, V, Q>,
     V: Views<'a>,
 {
     type Canonical = <R as ContainsViewsInner<'a, V, P, I>>::Canonical;
@@ -320,6 +376,22 @@ where
         // `Vec<C>`s of length `length` for each of the components identified by
         // `archetype_identifier`.
         unsafe { R::view(columns, length, archetype_identifier) }
+    }
+
+    unsafe fn view_one<R_>(
+        index: usize,
+        columns: &[(*mut u8, usize)],
+        _entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> Self::Canonical
+    where
+        R_: Registry,
+    {
+        // SAFETY: The components in `columns` are guaranteed to contain raw parts for valid
+        // `Vec<C>`s of length `length` for each of the components identified by
+        // `archetype_identifier`. `index` is guaranteed to be less than `length`.
+        unsafe { R::view_one(index, columns, length, archetype_identifier) }
     }
 }
 

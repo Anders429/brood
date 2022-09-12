@@ -4,7 +4,7 @@ use crate::{
     entity::allocator::Location,
     query::{
         filter::{And, Filter, Seal},
-        view::Views,
+        view::{Reshape, Views},
     },
     registry::{ContainsComponent, ContainsViews, Registry, RegistryDebug},
     world::World,
@@ -273,7 +273,7 @@ where
     /// assert_eq!(foo.0, 42);
     /// assert_eq!(bar.0, true);
     /// ```
-    pub fn query<V, F, VI, FI, P, I, Q>(&mut self) -> Option<V>
+    pub fn query<V, F, VI, FI, P, I, Q>(&'a mut self) -> Option<V>
     where
         V: Views<'a> + Filter<R, VI>,
         F: Filter<R, FI>,
@@ -292,7 +292,8 @@ where
                     self.world
                         .archetypes
                         .get_mut(self.location.identifier)?
-                        .view_row_unchecked::<V, VI>(self.location.index)
+                        .view_row_unchecked::<V, P, I, Q>(self.location.index)
+                        .reshape()
                 },
             )
         } else {
