@@ -130,7 +130,16 @@ where
                     // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of
                     // size `length` for the currently viewed component `C`.
                     unsafe {
-                        slice::from_raw_parts({let column = columns.get_unchecked(0); columns = columns.get_unchecked(1..); column}.0.cast::<C>(), length)
+                        slice::from_raw_parts(
+                            {
+                                let column = columns.get_unchecked(0);
+                                columns = columns.get_unchecked(1..);
+                                column
+                            }
+                            .0
+                            .cast::<C>(),
+                            length,
+                        )
                     }
                     .iter()
                     .map(wrap_some),
@@ -172,7 +181,16 @@ where
                     // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of
                     // size `length` for the currently viewed component `C`.
                     unsafe {
-                        slice::from_raw_parts_mut({let column = columns.get_unchecked(0); columns = columns.get_unchecked(1..); column}.0.cast::<C>(), length)
+                        slice::from_raw_parts_mut(
+                            {
+                                let column = columns.get_unchecked(0);
+                                columns = columns.get_unchecked(1..);
+                                column
+                            }
+                            .0
+                            .cast::<C>(),
+                            length,
+                        )
                     }
                     .iter_mut()
                     .map(wrap_some),
