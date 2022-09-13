@@ -22,7 +22,7 @@ use crate::{
         Entity,
     },
     query::view::{Views, ViewsSeal},
-    registry::{ContainsViews, Registry},
+    registry::{ContainsComponent, ContainsViews, Registry},
 };
 #[cfg(feature = "rayon")]
 use crate::{
@@ -30,14 +30,12 @@ use crate::{
     registry::ContainsParViews,
 };
 use alloc::vec::Vec;
+#[cfg(feature = "serde")]
+use core::slice;
 use core::{
-    any::TypeId,
     marker::PhantomData,
     mem::{ManuallyDrop, MaybeUninit},
-    slice,
 };
-use fnv::FnvBuildHasher;
-use hashbrown::HashMap;
 
 pub(crate) struct Archetype<R>
 where
@@ -48,8 +46,6 @@ where
     entity_identifiers: (*mut entity::Identifier, usize),
     components: Vec<(*mut u8, usize)>,
     length: usize,
-
-    component_map: HashMap<TypeId, usize, FnvBuildHasher>,
 }
 
 impl<R> Archetype<R>
@@ -68,19 +64,12 @@ where
         components: Vec<(*mut u8, usize)>,
         length: usize,
     ) -> Self {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        // SAFETY: `identifier.iter()` is generic over the same registry `R` that this associated
-        // function is being called on.
-        unsafe { R::create_component_map_for_identifier(&mut component_map, 0, identifier.iter()) };
-
         Self {
             identifier,
 
             entity_identifiers,
             components,
             length,
-
-            component_map,
         }
     }
 
@@ -307,31 +296,23 @@ where
     ///
     /// `index` must be a valid index within this archetype (meaning it must be less than
     /// `self.length`).
-    pub(crate) unsafe fn set_component_unchecked<C>(&mut self, index: usize, component: C)
+    pub(crate) unsafe fn set_component_unchecked<C, I>(&mut self, index: usize, component: C)
     where
         C: Component,
+        R: ContainsComponent<C, I>,
     {
-        // SAFETY: `self.component_map` is guaranteed to have an entry for `TypeId::of::<C>()` by
-        // the safety contract of this method. Additionally, `self.components` is guaranteed to
-        // have an entry for the index returned from `self.component_map`, and furthermore that
-        // entry is guaranteed to be the valid raw parts for a `Vec<C>` of length `self.length`.
-        //
-        // The slice view over the component column for `C` is also guaranteed by the safety
-        // contract of this method to have an entry for the given `index`.
+        // SAFETY: `index` is guaranteed to be less than `length`. Also, `components` is guaranteed
+        // to contain the valid raw parts for `Vec<C>`s for each component identified by
+        // `self.identifier.iter()`. Finally, `C` is guaranteed by the safety contract of this
+        // method to be a component type contained in this archetype.
         unsafe {
-            *slice::from_raw_parts_mut(
-                self.components
-                    .get_unchecked(
-                        *self
-                            .component_map
-                            .get(&TypeId::of::<C>())
-                            .unwrap_unchecked(),
-                    )
-                    .0
-                    .cast::<C>(),
+            R::set_component(
+                index,
+                component,
+                &self.components,
                 self.length,
-            )
-            .get_unchecked_mut(index) = component;
+                self.identifier.iter(),
+            );
         }
     }
 

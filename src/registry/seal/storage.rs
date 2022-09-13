@@ -25,36 +25,8 @@ use core::{
     mem::{drop, size_of, ManuallyDrop, MaybeUninit},
     ptr,
 };
-use fnv::FnvBuildHasher;
-use hashbrown::HashMap;
 
 pub trait Storage {
-    /// Populate a map with component [`TypeId`]s and their associated index within the registry.
-    ///
-    /// [`TypeId`]: core::any::TypeId
-    fn create_component_map(
-        component_map: &mut HashMap<TypeId, usize, FnvBuildHasher>,
-        index: usize,
-    );
-
-    /// Populate a map with component [`TypeId`]s and their associated index within the components
-    /// identified by the identifier in the order defined by the registry.
-    ///
-    /// # Safety
-    /// When called externally, the `Registry` `R` provided to the method must by the same as the
-    /// `Registry` on which this method is being called.
-    ///
-    /// When called internally, the `identifier_iter` must have the same amount of bits left as
-    /// there are components remaining.
-    ///
-    /// [`TypeId`]: core::any::TypeId
-    unsafe fn create_component_map_for_identifier<R>(
-        component_map: &mut HashMap<TypeId, usize, FnvBuildHasher>,
-        index: usize,
-        identifier_iter: archetype::identifier::Iter<R>,
-    ) where
-        R: Registry;
-
     /// Populate a [`Vec`] with component columns corresponding to the given identifier, each with
     /// the requested capacity.
     ///
@@ -333,21 +305,6 @@ pub trait Storage {
 }
 
 impl Storage for Null {
-    fn create_component_map(
-        _component_map: &mut HashMap<TypeId, usize, FnvBuildHasher>,
-        _index: usize,
-    ) {
-    }
-
-    unsafe fn create_component_map_for_identifier<R>(
-        _component_map: &mut HashMap<TypeId, usize, FnvBuildHasher>,
-        _index: usize,
-        _identifier_iter: archetype::identifier::Iter<R>,
-    ) where
-        R: Registry,
-    {
-    }
-
     unsafe fn new_components_with_capacity<R>(
         _components: &mut Vec<(*mut u8, usize)>,
         _capacity: usize,
@@ -452,34 +409,6 @@ where
     C: Component,
     R: Storage,
 {
-    fn create_component_map(
-        component_map: &mut HashMap<TypeId, usize, FnvBuildHasher>,
-        index: usize,
-    ) {
-        component_map.insert(TypeId::of::<C>(), index);
-        R::create_component_map(component_map, index + 1);
-    }
-
-    unsafe fn create_component_map_for_identifier<R_>(
-        component_map: &mut HashMap<TypeId, usize, FnvBuildHasher>,
-        mut index: usize,
-        mut identifier_iter: archetype::identifier::Iter<R_>,
-    ) where
-        R_: Registry,
-    {
-        if
-        // SAFETY: `identifier_iter` is guaranteed by the safety contract of this method to
-        // return a value for every component within the registry.
-        unsafe { identifier_iter.next().unwrap_unchecked() } {
-            component_map.insert(TypeId::of::<C>(), index);
-            index += 1;
-        }
-        // SAFETY: One bit of `identifier_iter` has been consumed, and since `R` is one component
-        // smaller than `(C, R)`, `identifier_iter` has the same number of bits remaining as `R`
-        // has components remaining.
-        unsafe { R::create_component_map_for_identifier(component_map, index, identifier_iter) };
-    }
-
     unsafe fn new_components_with_capacity<R_>(
         components: &mut Vec<(*mut u8, usize)>,
         capacity: usize,
@@ -1063,170 +992,10 @@ mod tests {
     use super::Storage;
     use crate::{archetype::Identifier, registry};
     use alloc::{vec, vec::Vec};
-    use claim::{assert_none, assert_some_eq};
     use core::{
-        any::TypeId,
         marker::PhantomData,
         mem::{size_of, ManuallyDrop, MaybeUninit},
     };
-    use fnv::FnvBuildHasher;
-    use hashbrown::HashMap;
-
-    #[test]
-    fn create_component_map_for_empty_registry() {
-        type Registry = registry!();
-
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        Registry::create_component_map(&mut component_map, 0);
-
-        assert!(component_map.is_empty());
-    }
-
-    #[test]
-    fn create_component_map_for_registry() {
-        struct A;
-        struct B;
-        struct C;
-        type Registry = registry!(A, B, C);
-
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        Registry::create_component_map(&mut component_map, 0);
-
-        assert_some_eq!(component_map.get(&TypeId::of::<A>()), &0);
-        assert_some_eq!(component_map.get(&TypeId::of::<B>()), &1);
-        assert_some_eq!(component_map.get(&TypeId::of::<C>()), &2);
-    }
-
-    #[test]
-    fn create_component_map_for_registry_starting_from_nonzero() {
-        struct A;
-        struct B;
-        struct C;
-        type Registry = registry!(A, B, C);
-
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        Registry::create_component_map(&mut component_map, 42);
-
-        assert_some_eq!(component_map.get(&TypeId::of::<A>()), &42);
-        assert_some_eq!(component_map.get(&TypeId::of::<B>()), &43);
-        assert_some_eq!(component_map.get(&TypeId::of::<C>()), &44);
-    }
-
-    #[test]
-    #[should_panic]
-    fn create_component_map_for_registry_overflow() {
-        struct A;
-        struct B;
-        struct C;
-        type Registry = registry!(A, B, C);
-
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        Registry::create_component_map(&mut component_map, usize::MAX);
-    }
-
-    #[test]
-    fn create_component_map_for_identifier_empty() {
-        type Registry = registry!();
-        let identifier = unsafe { Identifier::<Registry>::new(Vec::new()) };
-
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        unsafe {
-            Registry::create_component_map_for_identifier(&mut component_map, 0, identifier.iter())
-        };
-
-        assert!(component_map.is_empty());
-    }
-
-    #[test]
-    fn create_component_map_for_identifier_all() {
-        struct A;
-        struct B;
-        struct C;
-        type Registry = registry!(A, B, C);
-        let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
-
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        unsafe {
-            Registry::create_component_map_for_identifier(&mut component_map, 0, identifier.iter())
-        };
-
-        assert_some_eq!(component_map.get(&TypeId::of::<A>()), &0);
-        assert_some_eq!(component_map.get(&TypeId::of::<B>()), &1);
-        assert_some_eq!(component_map.get(&TypeId::of::<C>()), &2);
-    }
-
-    #[test]
-    fn create_component_map_for_identifier_subset() {
-        struct A;
-        struct B;
-        struct C;
-        type Registry = registry!(A, B, C);
-        let identifier = unsafe { Identifier::<Registry>::new(vec![3]) };
-
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        unsafe {
-            Registry::create_component_map_for_identifier(&mut component_map, 0, identifier.iter())
-        };
-
-        assert_some_eq!(component_map.get(&TypeId::of::<A>()), &0);
-        assert_some_eq!(component_map.get(&TypeId::of::<B>()), &1);
-        assert_none!(component_map.get(&TypeId::of::<C>()));
-    }
-
-    #[test]
-    fn create_component_map_for_empty_identifier() {
-        struct A;
-        struct B;
-        struct C;
-        type Registry = registry!(A, B, C);
-        let identifier = unsafe { Identifier::<Registry>::new(vec![0]) };
-
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        unsafe {
-            Registry::create_component_map_for_identifier(&mut component_map, 0, identifier.iter())
-        };
-
-        assert_none!(component_map.get(&TypeId::of::<A>()));
-        assert_none!(component_map.get(&TypeId::of::<B>()));
-        assert_none!(component_map.get(&TypeId::of::<C>()));
-    }
-
-    #[test]
-    fn create_component_map_for_identifier_subset_starting_from_nonzero() {
-        struct A;
-        struct B;
-        struct C;
-        type Registry = registry!(A, B, C);
-        let identifier = unsafe { Identifier::<Registry>::new(vec![5]) };
-
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        unsafe {
-            Registry::create_component_map_for_identifier(&mut component_map, 42, identifier.iter())
-        };
-
-        assert_some_eq!(component_map.get(&TypeId::of::<A>()), &42);
-        assert_none!(component_map.get(&TypeId::of::<B>()));
-        assert_some_eq!(component_map.get(&TypeId::of::<C>()), &43);
-    }
-
-    #[test]
-    #[should_panic]
-    fn create_component_map_for_identifier_subset_overflow() {
-        struct A;
-        struct B;
-        struct C;
-        type Registry = registry!(A, B, C);
-        let identifier = unsafe { Identifier::<Registry>::new(vec![5]) };
-
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        unsafe {
-            Registry::create_component_map_for_identifier(
-                &mut component_map,
-                usize::MAX,
-                identifier.iter(),
-            )
-        };
-    }
 
     #[test]
     fn new_components_with_capacity_empty_registry() {
