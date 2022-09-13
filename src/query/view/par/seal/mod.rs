@@ -1,5 +1,7 @@
 mod repeat;
 
+pub(crate) use repeat::RepeatNone;
+
 use crate::{
     component::Component,
     entity,
@@ -19,7 +21,6 @@ use rayon::{
     },
     slice,
 };
-use repeat::RepeatNone;
 
 pub trait ParViewSeal<'a>: View<'a> {
     type ParResult: IndexedParallelIterator<Item = Self>;

@@ -1,6 +1,6 @@
 mod seal;
 
-pub(crate) use seal::ParViewsSeal;
+pub(crate) use seal::{ParViewsSeal, RepeatNone};
 
 use crate::{component::Component, entity, query::view::Null};
 use seal::ParViewSeal;

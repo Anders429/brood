@@ -4,8 +4,6 @@
 //! etc.). They allow for reordering the components within that heterogeneous list in the same
 //! order as the components in the registry, also known as the "canonical order".
 
-#[cfg(feature = "rayon")]
-use crate::query::view::{ParViews, ParViewsSeal};
 use crate::{
     archetype,
     component::Component,
@@ -20,8 +18,15 @@ use crate::{
     registry,
     registry::{Canonical, CanonicalViews, Length, Registry},
 };
+#[cfg(feature = "rayon")]
+use crate::{
+    query::view::{ParViews, ParViewsSeal},
+    registry::CanonicalParViews,
+};
 use alloc::vec::Vec;
 use core::slice;
+#[cfg(feature = "rayon")]
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
 /// Type marker for a component contained in an entity.
 ///
@@ -498,15 +503,41 @@ pub trait ContainsParViews<'a, V, P, I, Q>
 where
     V: ParViews<'a>,
 {
-    type Canonical: ParViews<'a>;
+    type Canonical: ParViews<'a, ParResults = Self::CanonicalResults>;
     type CanonicalResults: result::Reshape<V::ParResults, Q>;
+
+    /// # Safety
+    ///
+    /// Each tuple in `columns` must contain the raw parts for a valid `Vec<C>` of size `length`
+    /// for components `C`, ordered for the archetype identified by `archetype_identifier`.
+    ///
+    /// Additionally, `entity_identifiers` must contain the raw parts for a valid
+    /// `Vec<entity::Identifier>` of length `length`.
+    unsafe fn par_view<R>(
+        columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R>,
+    ) -> Self::CanonicalResults
+    where
+        R: Registry;
 }
 
 #[cfg(feature = "rayon")]
 impl<'a, I, IS, P, V, R, Q> ContainsParViews<'a, V, (Contained, P), (I, IS), Q>
     for (EntityIdentifierMarker, R)
 where
-    R: ContainsParViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>,
+    R: ContainsParViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>
+        + CanonicalParViews<
+            'a,
+            <R as ContainsParViewsInner<
+                'a,
+                <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                P,
+                IS,
+            >>::Canonical,
+            P,
+        >,
     V: ParViews<'a> + view::Get<'a, entity::Identifier, I>,
     (
         rayon::iter::Cloned<rayon::slice::Iter<'a, entity::Identifier>>,
@@ -528,19 +559,62 @@ where
         >>::Canonical,
     );
     type CanonicalResults = <Self::Canonical as ParViewsSeal<'a>>::ParResults;
+
+    unsafe fn par_view<R_>(
+        columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> Self::CanonicalResults
+    where
+        R_: Registry,
+    {
+        (
+            // SAFETY: `entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec<entity::Identifier>` of size `length`.
+            unsafe {
+                core::slice::from_raw_parts_mut::<'a, entity::Identifier>(
+                    entity_identifiers.0,
+                    length,
+                )
+            }
+            .par_iter()
+            .cloned(),
+            // SAFETY: The components in `columns` are guaranteed to contain raw parts for valid
+            // `Vec<C>`s of length `length` for each of the components identified by
+            // `archetype_identifier`.
+            unsafe { R::par_view(columns, length, archetype_identifier) },
+        )
+    }
 }
 
 #[cfg(feature = "rayon")]
 impl<'a, I, P, R, V, Q> ContainsParViews<'a, V, (NotContained, P), I, Q>
     for (EntityIdentifierMarker, R)
 where
-    R: ContainsParViewsInner<'a, V, P, I>,
+    R: ContainsParViewsInner<'a, V, P, I>
+        + CanonicalParViews<'a, <R as ContainsParViewsInner<'a, V, P, I>>::Canonical, P>,
     V: ParViews<'a>,
     <<R as ContainsParViewsInner<'a, V, P, I>>::Canonical as ParViewsSeal<'a>>::ParResults:
         result::Reshape<<V as ParViewsSeal<'a>>::ParResults, Q>,
 {
     type Canonical = <R as ContainsParViewsInner<'a, V, P, I>>::Canonical;
     type CanonicalResults = <Self::Canonical as ParViewsSeal<'a>>::ParResults;
+
+    unsafe fn par_view<R_>(
+        columns: &[(*mut u8, usize)],
+        _entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> Self::CanonicalResults
+    where
+        R_: Registry,
+    {
+        // SAFETY: The components in `columns` are guaranteed to contain raw parts for valid
+        // `Vec<C>`s of length `length` for each of the components identified by
+        // `archetype_identifier`.
+        unsafe { R::par_view(columns, length, archetype_identifier) }
+    }
 }
 
 #[cfg(feature = "rayon")]

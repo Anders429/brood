@@ -3,7 +3,7 @@ use crate::{
     archetypes,
     query::{
         filter::{And, Filter, Seal},
-        result::ParResults,
+        result::{ParResults, Reshape},
         view::{ParViews, ParViewsSeal},
     },
     registry::{ContainsParViews, Registry},
@@ -127,21 +127,24 @@ where
     where
         C: UnindexedConsumer<Self::Item>,
     {
-        let consumer = ResultsConsumer::<_, F, FI, V, VI>::new(consumer);
+        let consumer = ResultsConsumer::<_, F, FI, V, VI, P, I, Q>::new(consumer);
         self.archetypes_iter.drive_unindexed(consumer)
     }
 }
 
-struct ResultsConsumer<C, F, FI, V, VI> {
+struct ResultsConsumer<C, F, FI, V, VI, P, I, Q> {
     base: C,
 
     filter: PhantomData<F>,
     views: PhantomData<V>,
     filter_indices: PhantomData<FI>,
-    view_indices: PhantomData<VI>,
+    view_filter_indices: PhantomData<VI>,
+    view_containments: PhantomData<P>,
+    view_indices: PhantomData<I>,
+    reshape_indices: PhantomData<Q>,
 }
 
-impl<C, F, FI, V, VI> ResultsConsumer<C, F, FI, V, VI> {
+impl<C, F, FI, V, VI, P, I, Q> ResultsConsumer<C, F, FI, V, VI, P, I, Q> {
     fn new(base: C) -> Self {
         Self {
             base,
@@ -149,27 +152,32 @@ impl<C, F, FI, V, VI> ResultsConsumer<C, F, FI, V, VI> {
             filter: PhantomData,
             views: PhantomData,
             filter_indices: PhantomData,
+            view_filter_indices: PhantomData,
+            view_containments: PhantomData,
             view_indices: PhantomData,
+            reshape_indices: PhantomData,
         }
     }
 }
 
 // SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<C, F, FI, V, VI> Send for ResultsConsumer<C, F, FI, V, VI> {}
+unsafe impl<C, F, FI, V, VI, P, I, Q> Send for ResultsConsumer<C, F, FI, V, VI, P, I, Q> {}
 
 // SAFETY: This type is safe to share between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<C, F, FI, V, VI> Sync for ResultsConsumer<C, F, FI, V, VI> {}
+unsafe impl<C, F, FI, V, VI, P, I, Q> Sync for ResultsConsumer<C, F, FI, V, VI, P, I, Q> {}
 
-impl<'a, C, R, F, FI, V, VI> Consumer<&'a mut Archetype<R>> for ResultsConsumer<C, F, FI, V, VI>
+impl<'a, C, R, F, FI, V, VI, P, I, Q> Consumer<&'a mut Archetype<R>>
+    for ResultsConsumer<C, F, FI, V, VI, P, I, Q>
 where
     C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
     R: Registry,
     F: Filter<R, FI>,
     V: ParViews<'a> + Filter<R, VI>,
+    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
 {
-    type Folder = ResultsFolder<C, C::Result, F, FI, V, VI>;
+    type Folder = ResultsFolder<C, C::Result, F, FI, V, VI, P, I, Q>;
     type Reducer = C::Reducer;
     type Result = C::Result;
 
@@ -190,7 +198,10 @@ where
             filter: PhantomData,
             views: PhantomData,
             filter_indices: PhantomData,
+            view_filter_indices: PhantomData,
+            view_containments: PhantomData,
             view_indices: PhantomData,
+            reshape_indices: PhantomData,
         }
     }
 
@@ -199,13 +210,14 @@ where
     }
 }
 
-impl<'a, C, R, F, FI, V, VI> UnindexedConsumer<&'a mut Archetype<R>>
-    for ResultsConsumer<C, F, FI, V, VI>
+impl<'a, C, R, F, FI, V, VI, P, I, Q> UnindexedConsumer<&'a mut Archetype<R>>
+    for ResultsConsumer<C, F, FI, V, VI, P, I, Q>
 where
     C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
     R: Registry,
     F: Filter<R, FI>,
     V: ParViews<'a> + Filter<R, VI>,
+    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
 {
     fn split_off_left(&self) -> Self {
         ResultsConsumer::new(self.base.split_off_left())
@@ -216,21 +228,25 @@ where
     }
 }
 
-struct ResultsFolder<C, P, F, FI, V, VI> {
+struct ResultsFolder<C, P, F, FI, V, VI, P_, I, Q> {
     base: C,
     previous: Option<P>,
 
     filter: PhantomData<F>,
     views: PhantomData<V>,
     filter_indices: PhantomData<FI>,
-    view_indices: PhantomData<VI>,
+    view_filter_indices: PhantomData<VI>,
+    view_containments: PhantomData<P_>,
+    view_indices: PhantomData<I>,
+    reshape_indices: PhantomData<Q>,
 }
 
-impl<'a, C, R, F, FI, V, VI> Folder<&'a mut Archetype<R>>
-    for ResultsFolder<C, C::Result, F, FI, V, VI>
+impl<'a, C, R, F, FI, V, VI, P, I, Q> Folder<&'a mut Archetype<R>>
+    for ResultsFolder<C, C::Result, F, FI, V, VI, P, I, Q>
 where
     C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
     R: Registry,
+    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
     F: Filter<R, FI>,
     V: ParViews<'a> + Filter<R, VI>,
 {
@@ -245,7 +261,7 @@ where
             let result =
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`
                 // since the `filter` function in the if-statement returned `true`.
-                unsafe { archetype.par_view::<V>() }.into_parallel_iterator().drive_unindexed(consumer);
+                unsafe { archetype.par_view::<V, _, _, _>() }.reshape().into_parallel_iterator().drive_unindexed(consumer);
 
             let previous = match self.previous {
                 None => Some(result),
@@ -262,7 +278,10 @@ where
                 filter: self.filter,
                 views: self.views,
                 filter_indices: self.filter_indices,
+                view_filter_indices: self.view_filter_indices,
+                view_containments: self.view_containments,
                 view_indices: self.view_indices,
+                reshape_indices: self.reshape_indices,
             }
         } else {
             self

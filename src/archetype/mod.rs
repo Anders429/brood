@@ -12,8 +12,6 @@ pub(crate) use identifier::{Identifier, IdentifierRef};
 #[cfg(feature = "serde")]
 pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
 
-#[cfg(feature = "rayon")]
-use crate::query::view::ParViews;
 use crate::{
     component::Component,
     entities,
@@ -25,6 +23,11 @@ use crate::{
     },
     query::view::{Views, ViewsSeal},
     registry::{ContainsViews, Registry},
+};
+#[cfg(feature = "rayon")]
+use crate::{
+    query::view::{ParViews, ParViewsSeal},
+    registry::ContainsParViews,
 };
 use alloc::vec::Vec;
 use core::{
@@ -239,9 +242,10 @@ where
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub(crate) unsafe fn par_view<'a, V>(&mut self) -> V::ParResults
+    pub(crate) unsafe fn par_view<'a, V, P, I, Q>(&mut self) -> <<R::Viewable as ContainsParViews<'a, V, P, I, Q>>::Canonical as ParViewsSeal<'a>>::ParResults
     where
         V: ParViews<'a>,
+        R::Viewable: ContainsParViews<'a, V, P, I, Q>,
     {
         // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`,
         // where each `C` is a component for which the entry in `component_map` corresponds to the
@@ -253,11 +257,11 @@ where
         // Since each component viewed by `V` is also identified by this archetype's `Identifier`,
         // `self.component` will contain an entry for every viewed component.
         unsafe {
-            V::par_view(
+            R::Viewable::par_view(
                 &self.components,
                 self.entity_identifiers,
                 self.length,
-                &self.component_map,
+                self.identifier.iter(),
             )
         }
     }
