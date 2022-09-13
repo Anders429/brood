@@ -6,7 +6,7 @@ use crate::{
         result::ParResults,
         view::{ParViews, ParViewsSeal},
     },
-    registry::Registry,
+    registry::{ContainsParViews, Registry},
 };
 use core::marker::PhantomData;
 use rayon::iter::{
@@ -40,7 +40,7 @@ use rayon::iter::{
 /// world.insert(entity!(Foo(42), Bar(true)));
 ///
 /// world
-///     .par_query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _>()
+///     .par_query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _, _>()
 ///     .for_each(|result!(foo, bar)| {
 ///         if bar.0 {
 ///             foo.0 += 1;
@@ -56,7 +56,7 @@ use rayon::iter::{
 /// [`result!`]: crate::query::result!
 /// [`World`]: crate::world::World
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-pub struct ParIter<'a, R, F, FI, V, VI>
+pub struct ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
     F: Filter<R, FI>,
@@ -67,10 +67,13 @@ where
     filter: PhantomData<F>,
     views: PhantomData<V>,
     filter_indices: PhantomData<FI>,
-    view_indices: PhantomData<VI>,
+    view_filter_indices: PhantomData<VI>,
+    view_containments: PhantomData<P>,
+    view_indices: PhantomData<I>,
+    reshape_indices: PhantomData<Q>,
 }
 
-impl<'a, R, F, FI, V, VI> ParIter<'a, R, F, FI, V, VI>
+impl<'a, R, F, FI, V, VI, P, I, Q> ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
     F: Filter<R, FI>,
@@ -83,14 +86,17 @@ where
             filter: PhantomData,
             views: PhantomData,
             filter_indices: PhantomData,
+            view_filter_indices: PhantomData,
+            view_containments: PhantomData,
             view_indices: PhantomData,
+            reshape_indices: PhantomData,
         }
     }
 }
 
 // SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<'a, R, F, FI, V, VI> Send for ParIter<'a, R, F, FI, V, VI>
+unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Send for ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
     F: Filter<R, FI>,
@@ -100,7 +106,7 @@ where
 
 // SAFETY: This type is safe to share between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<'a, R, F, FI, V, VI> Sync for ParIter<'a, R, F, FI, V, VI>
+unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Sync for ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
     F: Filter<R, FI>,
@@ -108,11 +114,12 @@ where
 {
 }
 
-impl<'a, R, F, FI, V, VI> ParallelIterator for ParIter<'a, R, F, FI, V, VI>
+impl<'a, R, F, FI, V, VI, P, I, Q> ParallelIterator for ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry + 'a,
     F: Filter<R, FI>,
     V: ParViews<'a> + Filter<R, VI>,
+    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
 {
     type Item = <<V as ParViewsSeal<'a>>::ParResults as ParResults>::View;
 

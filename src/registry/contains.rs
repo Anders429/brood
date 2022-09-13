@@ -5,7 +5,7 @@
 //! order as the components in the registry, also known as the "canonical order".
 
 #[cfg(feature = "rayon")]
-use crate::query::view::ParViews;
+use crate::query::view::{ParViews, ParViewsSeal};
 use crate::{
     archetype,
     component::Component,
@@ -494,62 +494,92 @@ where
 
 #[cfg(feature = "rayon")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-pub trait ContainsParViews<'a, V, P, I> {
+pub trait ContainsParViews<'a, V, P, I, Q>
+where
+    V: ParViews<'a>,
+{
+    type Canonical: ParViews<'a>;
+    type CanonicalResults: result::Reshape<V::ParResults, Q>;
+}
+
+#[cfg(feature = "rayon")]
+impl<'a, I, IS, P, V, R, Q> ContainsParViews<'a, V, (Contained, P), (I, IS), Q>
+    for (EntityIdentifierMarker, R)
+where
+    R: ContainsParViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>,
+    V: ParViews<'a> + view::Get<'a, entity::Identifier, I>,
+    (
+        rayon::iter::Cloned<rayon::slice::Iter<'a, entity::Identifier>>,
+        <<R as ContainsParViewsInner<
+            'a,
+            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            P,
+            IS,
+        >>::Canonical as ParViewsSeal<'a>>::ParResults,
+    ): result::Reshape<<V as ParViewsSeal<'a>>::ParResults, Q>,
+{
+    type Canonical = (
+        entity::Identifier,
+        <R as ContainsParViewsInner<
+            'a,
+            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            P,
+            IS,
+        >>::Canonical,
+    );
+    type CanonicalResults = <Self::Canonical as ParViewsSeal<'a>>::ParResults;
+}
+
+#[cfg(feature = "rayon")]
+impl<'a, I, P, R, V, Q> ContainsParViews<'a, V, (NotContained, P), I, Q>
+    for (EntityIdentifierMarker, R)
+where
+    R: ContainsParViewsInner<'a, V, P, I>,
+    V: ParViews<'a>,
+    <<R as ContainsParViewsInner<'a, V, P, I>>::Canonical as ParViewsSeal<'a>>::ParResults:
+        result::Reshape<<V as ParViewsSeal<'a>>::ParResults, Q>,
+{
+    type Canonical = <R as ContainsParViewsInner<'a, V, P, I>>::Canonical;
+    type CanonicalResults = <Self::Canonical as ParViewsSeal<'a>>::ParResults;
+}
+
+#[cfg(feature = "rayon")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+pub trait ContainsParViewsInner<'a, V, P, I> {
     type Canonical: ParViews<'a>;
 }
 
 #[cfg(feature = "rayon")]
-impl ContainsParViews<'_, view::Null, Null, Null> for registry::Null {
+impl ContainsParViewsInner<'_, view::Null, Null, Null> for registry::Null {
     type Canonical = view::Null;
 }
 
 #[cfg(feature = "rayon")]
-impl<'a, C, I, IS, P, R, V> ContainsParViews<'a, V, (&'a Contained, P), (I, IS)> for (C, R)
+impl<'a, C, I, IS, P, R, V> ContainsParViewsInner<'a, V, (&'a Contained, P), (I, IS)> for (C, R)
 where
     C: Component + Sync,
-    R: ContainsParViews<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>,
+    R: ContainsParViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>,
     V: view::Get<'a, &'a C, I>,
 {
     type Canonical = (
         &'a C,
-        <R as ContainsParViews<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>>::Canonical,
+        <R as ContainsParViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>>::Canonical,
     );
 }
 
 #[cfg(feature = "rayon")]
-impl<'a, C, I, IS, P, R, V> ContainsParViews<'a, V, (&'a mut Contained, P), (I, IS)> for (C, R)
+impl<'a, C, I, IS, P, R, V> ContainsParViewsInner<'a, V, (&'a mut Contained, P), (I, IS)> for (C, R)
 where
     C: Component + Send,
-    R: ContainsParViews<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>,
+    R: ContainsParViewsInner<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>,
     V: view::Get<'a, &'a mut C, I>,
-{
-    type Canonical = (&'a mut C, <R as ContainsParViews<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>>::Canonical);
-}
-
-#[cfg(feature = "rayon")]
-impl<'a, C, I, IS, P, R, V> ContainsParViews<'a, V, (Option<&'a Contained>, P), (I, IS)> for (C, R)
-where
-    C: Component + Sync,
-    R: ContainsParViews<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS>,
-    V: view::Get<'a, Option<&'a C>, I>,
-{
-    type Canonical = (Option<&'a C>, <R as ContainsParViews<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS>>::Canonical);
-}
-
-#[cfg(feature = "rayon")]
-impl<'a, C, I, IS, P, R, V> ContainsParViews<'a, V, (Option<&'a mut Contained>, P), (I, IS)>
-    for (C, R)
-where
-    C: Component + Send,
-    R: ContainsParViews<'a, <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder, P, IS>,
-    V: view::Get<'a, Option<&'a mut C>, I>,
 {
     type Canonical =
         (
-            Option<&'a mut C>,
-            <R as ContainsParViews<
+            &'a mut C,
+            <R as ContainsParViewsInner<
                 'a,
-                <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder,
+                <V as view::Get<'a, &'a mut C, I>>::Remainder,
                 P,
                 IS,
             >>::Canonical,
@@ -557,17 +587,18 @@ where
 }
 
 #[cfg(feature = "rayon")]
-impl<'a, I, IS, P, V, R> ContainsParViews<'a, V, (Contained, P), (I, IS)>
-    for (EntityIdentifierMarker, R)
+impl<'a, C, I, IS, P, R, V> ContainsParViewsInner<'a, V, (Option<&'a Contained>, P), (I, IS)>
+    for (C, R)
 where
-    R: ContainsParViews<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>,
-    V: view::Get<'a, entity::Identifier, I>,
+    C: Component + Sync,
+    R: ContainsParViewsInner<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS>,
+    V: view::Get<'a, Option<&'a C>, I>,
 {
     type Canonical = (
-        entity::Identifier,
-        <R as ContainsParViews<
+        Option<&'a C>,
+        <R as ContainsParViewsInner<
             'a,
-            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            <V as view::Get<'a, Option<&'a C>, I>>::Remainder,
             P,
             IS,
         >>::Canonical,
@@ -575,11 +606,30 @@ where
 }
 
 #[cfg(feature = "rayon")]
-impl<'a, C, I, P, R, V> ContainsParViews<'a, V, (NotContained, P), I> for (C, R)
+impl<'a, C, I, IS, P, R, V> ContainsParViewsInner<'a, V, (Option<&'a mut Contained>, P), (I, IS)>
+    for (C, R)
 where
-    R: ContainsParViews<'a, V, P, I>,
+    C: Component + Send,
+    R: ContainsParViewsInner<'a, <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder, P, IS>,
+    V: view::Get<'a, Option<&'a mut C>, I>,
 {
-    type Canonical = <R as ContainsParViews<'a, V, P, I>>::Canonical;
+    type Canonical = (
+        Option<&'a mut C>,
+        <R as ContainsParViewsInner<
+            'a,
+            <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder,
+            P,
+            IS,
+        >>::Canonical,
+    );
+}
+
+#[cfg(feature = "rayon")]
+impl<'a, C, I, P, R, V> ContainsParViewsInner<'a, V, (NotContained, P), I> for (C, R)
+where
+    R: ContainsParViewsInner<'a, V, P, I>,
+{
+    type Canonical = <R as ContainsParViewsInner<'a, V, P, I>>::Canonical;
 }
 
 #[cfg(test)]

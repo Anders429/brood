@@ -15,11 +15,13 @@ where
     S: System<'a>,
     P: ParSystem<'a>,
 {
-    pub(crate) fn run<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI>(&mut self, world: SendableWorld<R>)
-    where
+    pub(crate) fn run<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>(
+        &mut self,
+        world: SendableWorld<R>,
+    ) where
         R: Registry + 'a,
         R::Viewable:
-            ContainsViews<'a, S::Views, SP, SI, SQ> + ContainsParViews<'a, P::Views, PP, PI>,
+            ContainsViews<'a, S::Views, SP, SI, SQ> + ContainsParViews<'a, P::Views, PP, PI, PQ>,
         S::Filter: Filter<R, SFI>,
         S::Views: Filter<R, SVI>,
         P::Filter: Filter<R, PFI>,
@@ -38,7 +40,7 @@ where
                 // Query world using system.
                 let result =
                     // SAFETY: The access to the world's components follows Rust's borrowing rules.
-                    unsafe { (*world.get()).par_query::<P::Views, P::Filter, _, _, _, _>() };
+                    unsafe { (*world.get()).par_query::<P::Views, P::Filter, _, _, _, _, _>() };
                 // Run system using the query result.
                 system.run(result);
             }

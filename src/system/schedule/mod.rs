@@ -182,10 +182,12 @@ impl Schedule<stage::Null> {
 }
 
 impl<'a, S> Schedule<S> {
-    pub(crate) fn run<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI>(&mut self, world: &'a mut World<R>)
-    where
+    pub(crate) fn run<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>(
+        &mut self,
+        world: &'a mut World<R>,
+    ) where
         R: Registry,
-        S: Stages<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI>,
+        S: Stages<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>,
     {
         self.stages.run(
             // SAFETY: The pointer provided here is unique, being created from a mutable reference.

@@ -16,6 +16,13 @@ impl Reshape<iter::Repeat<view::Null>, Null> for iter::Repeat<view::Null> {
     }
 }
 
+#[cfg(feature = "rayon")]
+impl Reshape<rayon::iter::RepeatN<view::Null>, Null> for rayon::iter::RepeatN<view::Null> {
+    fn reshape(self) -> rayon::iter::RepeatN<view::Null> {
+        self
+    }
+}
+
 impl<I, IS, R, S, T> Reshape<(R, S), (I, IS)> for T
 where
     T: Get<R, I>,

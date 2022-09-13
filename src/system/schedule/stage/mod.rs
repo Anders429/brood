@@ -36,8 +36,8 @@ pub enum Stage<S, P> {
 /// The ordered `Stage`s provided here define the actual stages of the schedule. Note that the
 /// stages are defined inside-out, with the last of the heterogeneous list being the beginning of
 /// the list of stages.
-pub trait Stages<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI>:
-    Seal<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI>
+pub trait Stages<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>:
+    Seal<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>
 where
     R: Registry + 'a,
 {
@@ -45,7 +45,7 @@ where
 
 define_null!();
 
-impl<'a, R> Stages<'a, R, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null where
+impl<'a, R> Stages<'a, R, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null where
     R: Registry + 'a
 {
 }
@@ -74,6 +74,8 @@ impl<
         PPS,
         PI,
         PIS,
+        PQ,
+        PQS,
     >
     Stages<
         'a,
@@ -87,17 +89,19 @@ impl<
         (SQ, SQS),
         (PP, PPS),
         (PI, PIS),
+        (PQ, PQS),
     > for (Stage<S, P>, L)
 where
     R: Registry + 'a,
-    R::Viewable: ContainsViews<'a, S::Views, SP, SI, SQ> + ContainsParViews<'a, P::Views, PP, PI>,
+    R::Viewable:
+        ContainsViews<'a, S::Views, SP, SI, SQ> + ContainsParViews<'a, P::Views, PP, PI, PQ>,
     S: System<'a> + Send,
     S::Filter: Filter<R, SFI>,
     S::Views: Filter<R, SVI>,
     P::Filter: Filter<R, PFI>,
     P::Views: Filter<R, PVI>,
     P: ParSystem<'a> + Send,
-    L: Stages<'a, R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS>,
+    L: Stages<'a, R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS, PQS>,
 {
 }
 
@@ -148,10 +152,10 @@ doc::non_root_macro! {
     ///     type Filter = filter::None;
     ///     type Views = views!(&'a B, &'a mut C);
     ///
-    ///     fn run<R, FI, VI, P, I>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI>)
+    ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     ///     where
     ///         R: Registry + 'a,
-    ///         R::Viewable: ContainsParViews<'a, Self::Views, P, I>,
+    ///         R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>,
     ///     {
