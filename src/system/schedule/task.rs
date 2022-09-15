@@ -1,5 +1,5 @@
 use crate::{
-    query::filter::Filter,
+    query::{filter::Filter, Query},
     registry::{ContainsParViews, ContainsViews, Registry},
     system::{schedule::sendable::SendableWorld, ParSystem, System},
     world::World,
@@ -32,7 +32,7 @@ where
                 // Query world using system.
                 let result =
                     // SAFETY: The access to the world's components follows Rust's borrowing rules.
-                    unsafe { (*world.get()).query::<S::Views, S::Filter, _, _, _, _, _>() };
+                    unsafe { (*world.get()).query(Query::<S::Views, S::Filter>::new()) };
                 // Run system using the query result.
                 system.run(result);
             }
@@ -40,7 +40,7 @@ where
                 // Query world using system.
                 let result =
                     // SAFETY: The access to the world's components follows Rust's borrowing rules.
-                    unsafe { (*world.get()).par_query::<P::Views, P::Filter, _, _, _, _, _>() };
+                    unsafe { (*world.get()).par_query(Query::<P::Views, P::Filter>::new()) };
                 // Run system using the query result.
                 system.run(result);
             }

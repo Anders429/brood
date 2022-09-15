@@ -5,6 +5,7 @@ use crate::{
     query::{
         filter::{And, Filter, Seal},
         view::{Reshape, Views},
+        Query,
     },
     registry::{ContainsComponent, ContainsViews, Registry, RegistryDebug},
     world::World,
@@ -255,7 +256,7 @@ where
     /// use brood::{
     ///     entity,
     ///     query::{filter, result, views},
-    ///     registry, World,
+    ///     registry, Query, World,
     /// };
     ///
     /// struct Foo(u32);
@@ -267,13 +268,16 @@ where
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
     /// let mut entry = world.entry(entity_identifier).unwrap();
     ///
-    /// let result = entry.query::<views!(&Foo, &Bar), filter::None, _, _, _, _, _>();
+    /// let result = entry.query(Query::<views!(&Foo, &Bar), filter::None>::new());
     /// assert!(result.is_some());
     /// let result!(foo, bar) = result.unwrap();
     /// assert_eq!(foo.0, 42);
     /// assert_eq!(bar.0, true);
     /// ```
-    pub fn query<V, F, VI, FI, P, I, Q>(&'a mut self) -> Option<V>
+    pub fn query<V, F, VI, FI, P, I, Q>(
+        &'a mut self,
+        #[allow(unused_variables)] query: Query<V, F>,
+    ) -> Option<V>
     where
         V: Views<'a> + Filter<R, VI>,
         F: Filter<R, FI>,

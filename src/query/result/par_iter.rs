@@ -27,7 +27,7 @@ use rayon::iter::{
 /// use brood::{
 ///     entity,
 ///     query::{filter, result, views},
-///     registry, World,
+///     registry, Query, World,
 /// };
 /// use rayon::iter::ParallelIterator;
 ///
@@ -40,7 +40,7 @@ use rayon::iter::{
 /// world.insert(entity!(Foo(42), Bar(true)));
 ///
 /// world
-///     .par_query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _, _>()
+///     .par_query(Query::<views!(&mut Foo, &Bar), filter::None>::new())
 ///     .for_each(|result!(foo, bar)| {
 ///         if bar.0 {
 ///             foo.0 += 1;

@@ -19,7 +19,7 @@
 //! use brood::{
 //!     entity,
 //!     query::{filter, result, views},
-//!     registry, World,
+//!     registry, Query, World,
 //! };
 //!
 //! struct Foo(u32);
@@ -30,7 +30,7 @@
 //! let mut world = World::<Registry>::new();
 //! world.insert(entity!(Foo(42), Bar(true)));
 //!
-//! for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _, _>() {
+//! for result!(foo, bar) in world.query(Query::<views!(&mut Foo, &Bar), filter::None>::new()) {
 //!     if bar.0 {
 //!         foo.0 += 1;
 //!     }
@@ -71,7 +71,7 @@ doc::non_root_macro! {
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entity, query::{filter, result, views}, registry, World};
+    /// use brood::{entity, query::{filter, result, views}, registry, Query, World};
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
@@ -81,7 +81,7 @@ doc::non_root_macro! {
     /// let mut world = World::<Registry>::new();
     /// world.insert(entity!(Foo(42), Bar(true)));
     ///
-    /// for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _, _>() {
+    /// for result!(foo, bar) in world.query(Query::<views!(&mut Foo, &Bar), filter::None>::new()) {
     ///     // ...
     /// }
     /// ```

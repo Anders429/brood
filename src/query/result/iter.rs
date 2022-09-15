@@ -23,7 +23,7 @@ use core::{iter::FusedIterator, marker::PhantomData};
 /// use brood::{
 ///     entity,
 ///     query::{filter, result, views},
-///     registry, World,
+///     registry, Query, World,
 /// };
 ///
 /// struct Foo(u32);
@@ -34,7 +34,7 @@ use core::{iter::FusedIterator, marker::PhantomData};
 /// let mut world = World::<Registry>::new();
 /// world.insert(entity!(Foo(42), Bar(true)));
 ///
-/// for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None, _, _, _, _, _>() {
+/// for result!(foo, bar) in world.query(Query::<views!(&mut Foo, &Bar), filter::None>::new()) {
 ///     if bar.0 {
 ///         foo.0 += 1;
 ///     }
