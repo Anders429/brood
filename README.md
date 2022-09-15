@@ -75,7 +75,7 @@ Note that entities stored in `world` above can be made up of any subset of the `
 To operate on the entities stored in a `World`, a `System` must be used. `System`s are defined to operate on any entities containing a specified set of components, reading and modifying those components. An example system could be defined and run as follows:
 
 ``` rust
-use brood::{query::{filter, result, views}, registry::Registry, system::System};
+use brood::{query::{filter, result, views, filter::Filter}, registry::{ContainsViews, Registry}, system::System};
 
 struct UpdatePosition;
 
@@ -83,9 +83,12 @@ impl<'a> System<'a> for UpdatePosition {
     type Filter: filter::None;
     type Views: views!(&'a mut Position, &'a Velocity);
 
-    fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+    fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views, FI, VI, P, I, Q>)
     where
         R: Registry + 'a,
+        R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+        Self::Filter: Filter<R, FI>,
+        Self::Views: Filter<R, VI>,
     {
         for result!(position, velocity) in query_results {
             position.x += velocity.x;
@@ -156,7 +159,7 @@ Note that there are two modes for serialization, depending on whether the serial
 To parallelize system operations on entities (commonly referred to as inner-parallelism), a `ParSystem` can be used instead of a standard `System`. This will allow the `ParSystem`'s operations to be spread across multiple CPUs. For example, a `ParSystem` can be defined as follows:
 
 ``` rust
-use brood::{entity, registry, World, system::ParSystem};
+use brood::{entity, query::{filter, filter::Filter, result, views}, registry, registry::{ContainsParViews, Registry}, World, system::ParSystem};
 
 struct Position {
     x: f32,
@@ -189,9 +192,12 @@ impl<'a> ParSystem<'a> for UpdatePosition {
     type Filter: filter::None;
     type Views: views!(&'a mut Position, &'a Velocity);
 
-    fn run<R>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, Self::Views>)
+    fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, Self::Views, FI, VI, P, I, Q>)
     where
         R: Registry + 'a,
+        R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+        Self::Filter: Filter<R, FI>,
+        Self::Views: Filter<R, VI>,
     {
         query_results.for_each(|result!(position, velocity)| {
             position.x += velocity.x;
@@ -211,7 +217,7 @@ Multiple `System`s and `ParSystem`s can be run in parallel as well by defining a
 Define and run a `Schedule` that contains multiple `System`s as follows:
 
 ``` rust
-use brood::{entity, registry, World, system::{Schedule, System}};
+use brood::{entity, query::{filter, filter::Filter, result, views}, registry, registry::{ContainsViews, Registry}, World, system::{Schedule, System}};
 
 struct Position {
     x: f32,
@@ -246,9 +252,12 @@ impl<'a> System<'a> for UpdatePosition {
     type Filter: filter::None;
     type Views: views!(&'a mut Position, &'a Velocity);
 
-    fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+    fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views, FI, VI, P, I, Q>)
     where
         R: Registry + 'a,
+        R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+        Self::Filter: Filter<R, FI>,
+        Self::Views: Filter<R, VI>,
     {
         for result!(position, velocity) in query_results {
             position.x += velocity.x;
@@ -263,9 +272,12 @@ impl<'a> System<'a> for UpdateIsMoving {
     type Filter: filter::None;
     type Views: views!(&'a Velocity, &'a mut IsMoving);
 
-    fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
+    fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views, FI, VI, P, I, Q>)
     where
         R: Registry + 'a,
+        R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+        Self::Filter: Filter<R, FI>,
+        Self::Views: Filter<R, VI>,
     {
         for result!(velocity, is_moving) in query_results {
             is_moving.0 = velocity.x != 0.0 || velocity.y != 0.0;
