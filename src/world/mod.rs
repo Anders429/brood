@@ -928,9 +928,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query(Query::<
-                views!(&B, &A),
-            >::new())
+            .query(Query::<views!(&B, &A)>::new())
             .map(|result!(b, a)| (a.0, b.0))
             .collect::<Vec<_>>();
         result.sort();
