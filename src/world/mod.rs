@@ -745,7 +745,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query(Query::<views!(&B, &A), filter::None>::new())
+            .query(Query::<views!(&B, &A)>::new())
             .map(|result!(b, a)| (b.0, a.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -762,7 +762,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query(Query::<views!(&A), filter::None>::new())
+            .query(Query::<views!(&A)>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -779,7 +779,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query(Query::<views!(&mut B), filter::None>::new())
+            .query(Query::<views!(&mut B)>::new())
             .map(|result!(b)| b.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -796,7 +796,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query(Query::<views!(Option<&A>), filter::None>::new())
+            .query(Query::<views!(Option<&A>)>::new())
             .map(|result!(a)| a.map(|a| a.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -813,7 +813,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query(Query::<views!(Option<&mut B>), filter::None>::new())
+            .query(Query::<views!(Option<&mut B>)>::new())
             .map(|result!(b)| b.map(|b| b.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -921,7 +921,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .par_query(Query::<views!(&A), filter::None>::new())
+            .par_query(Query::<views!(&A)>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -939,7 +939,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .par_query(Query::<views!(&mut B), filter::None>::new())
+            .par_query(Query::<views!(&mut B)>::new())
             .map(|result!(b)| b.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -957,7 +957,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .par_query(Query::<views!(Option<&A>), filter::None>::new())
+            .par_query(Query::<views!(Option<&A>)>::new())
             .map(|result!(a)| a.map(|a| a.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -975,7 +975,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .par_query(Query::<views!(Option<&mut B>), filter::None>::new())
+            .par_query(Query::<views!(Option<&mut B>)>::new())
             .map(|result!(b)| b.map(|b| b.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -1787,7 +1787,7 @@ mod tests {
         entry.add(A(3));
 
         let mut result = world
-            .query(Query::<views!(&A), filter::None>::new())
+            .query(Query::<views!(&A)>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1807,7 +1807,7 @@ mod tests {
         entry.add(A(3));
 
         let mut result = world
-            .query(Query::<views!(&A), filter::None>::new())
+            .query(Query::<views!(&A)>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1827,7 +1827,7 @@ mod tests {
         entry.remove::<A, _>();
 
         let mut result = world
-            .query(Query::<views!(&A), filter::None>::new())
+            .query(Query::<views!(&A)>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1867,7 +1867,7 @@ mod tests {
         let mut entry = assert_some!(world.entry(entity_identifier));
 
         let result!(a, b) =
-            assert_some!(entry.query(Query::<views!(&mut A, Option<&mut B>), filter::None>::new()));
+            assert_some!(entry.query(Query::<views!(&mut A, Option<&mut B>)>::new()));
         assert_eq!(a.0, 1);
         let b = assert_some!(b);
         assert_eq!(b.0, 'a');
@@ -1884,7 +1884,7 @@ mod tests {
 
         let mut entry = assert_some!(world.entry(entity_identifier));
 
-        assert_none!(entry.query(Query::<views!(entity::Identifier, &A, &B), filter::None>::new()));
+        assert_none!(entry.query(Query::<views!(entity::Identifier, &A, &B)>::new()));
     }
 
     #[test]
@@ -1913,7 +1913,7 @@ mod tests {
         world.remove(entity_identifier);
 
         let mut result = world
-            .query(Query::<views!(&A), filter::None>::new())
+            .query(Query::<views!(&A)>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1949,7 +1949,7 @@ mod tests {
         world.clear();
 
         let mut result = world
-            .query(Query::<views!(&A), filter::None>::new())
+            .query(Query::<views!(&A)>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
