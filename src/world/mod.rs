@@ -726,6 +726,14 @@ mod tests {
     }
 
     #[test]
+    fn extend_multiple_times() {
+        let mut world = World::<Registry>::new();
+
+        world.extend(entities!((A(42), B('f')); 100));
+        world.extend(entities!((A(1), B('c')); 50));
+    }
+
+    #[test]
     fn extend_different_entity_types() {
         let mut world = World::<Registry>::new();
 
