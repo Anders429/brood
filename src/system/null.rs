@@ -1,11 +1,11 @@
-#[cfg(feature = "rayon")]
-use crate::system::ParSystem;
 use crate::{
-    query::{filter, result, view},
-    registry::Registry,
+    query::{filter, filter::Filter, result, view},
+    registry::{ContainsViews, Registry},
     system::System,
     world::World,
 };
+#[cfg(feature = "rayon")]
+use crate::{registry::ContainsParViews, system::ParSystem};
 use core::hint::unreachable_unchecked;
 
 /// A null system.
@@ -21,9 +21,14 @@ impl<'a> System<'a> for Null {
     type Filter = filter::None;
     type Views = view::Null;
 
-    fn run<R>(&mut self, _query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-    where
+    fn run<R, FI, VI, P, I, Q>(
+        &mut self,
+        _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+    ) where
         R: Registry + 'a,
+        R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+        Self::Filter: Filter<R, FI>,
+        Self::Views: Filter<R, VI>,
     {
         // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }
@@ -43,9 +48,14 @@ impl<'a> ParSystem<'a> for Null {
     type Filter = filter::None;
     type Views = view::Null;
 
-    fn run<R>(&mut self, _query_results: result::ParIter<'a, R, Self::Filter, Self::Views>)
-    where
+    fn run<R, FI, VI, P, I, Q>(
+        &mut self,
+        _query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+    ) where
         R: Registry + 'a,
+        R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+        Self::Filter: Filter<R, FI>,
+        Self::Views: Filter<R, VI>,
     {
         // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }

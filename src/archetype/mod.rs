@@ -12,8 +12,6 @@ pub(crate) use identifier::{Identifier, IdentifierRef};
 #[cfg(feature = "serde")]
 pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
 
-#[cfg(feature = "rayon")]
-use crate::query::view::ParViews;
 use crate::{
     component::Component,
     entities,
@@ -23,18 +21,21 @@ use crate::{
         allocator::{Location, Locations},
         Entity,
     },
-    query::view::Views,
-    registry::Registry,
+    query::view::{Views, ViewsSeal},
+    registry::{ContainsComponent, ContainsViews, Registry},
+};
+#[cfg(feature = "rayon")]
+use crate::{
+    query::view::{ParViews, ParViewsSeal},
+    registry::ContainsParViews,
 };
 use alloc::vec::Vec;
+#[cfg(feature = "serde")]
+use core::slice;
 use core::{
-    any::TypeId,
     marker::PhantomData,
     mem::{ManuallyDrop, MaybeUninit},
-    slice,
 };
-use fnv::FnvBuildHasher;
-use hashbrown::HashMap;
 
 pub(crate) struct Archetype<R>
 where
@@ -45,8 +46,6 @@ where
     entity_identifiers: (*mut entity::Identifier, usize),
     components: Vec<(*mut u8, usize)>,
     length: usize,
-
-    component_map: HashMap<TypeId, usize, FnvBuildHasher>,
 }
 
 impl<R> Archetype<R>
@@ -65,19 +64,12 @@ where
         components: Vec<(*mut u8, usize)>,
         length: usize,
     ) -> Self {
-        let mut component_map = HashMap::with_hasher(FnvBuildHasher::default());
-        // SAFETY: `identifier.iter()` is generic over the same registry `R` that this associated
-        // function is being called on.
-        unsafe { R::create_component_map_for_identifier(&mut component_map, 0, identifier.iter()) };
-
         Self {
             identifier,
 
             entity_identifiers,
             components,
             length,
-
-            component_map,
         }
     }
 
@@ -111,7 +103,7 @@ where
 
     /// # Safety
     /// `entity` must be made up of only components that are identified by this `Archetype`'s
-    /// `Identifier`. These can, however, be in any order.
+    /// `Identifier`, in the same order.
     ///
     /// The `entity_allocator`, together with its contained `Location`s, must not outlive `self`.
     pub(crate) unsafe fn push<E>(
@@ -122,13 +114,10 @@ where
     where
         E: Entity,
     {
-        // SAFETY: `self.component_map` contains an entry for every component identified by the
-        // archetype's `Identifier`. Therefore, it also contains an entry for every component `C`
-        // contained in the entity `E`.
-        //
-        // Also, `self.components`, together with `self.length`, define valid `Vec<C>`s for each
-        // component.
-        unsafe { entity.push_components(&self.component_map, &mut self.components, self.length) };
+        // SAFETY: `self.components`, together with `self.length`, define valid `Vec<C>` for each
+        // component, and the components in `self.components` are in the same order as the
+        // components in `entity`.
+        unsafe { entity.push_components(&mut self.components, self.length) };
 
         let entity_identifier = entity_allocator.allocate(Location {
             identifier:
@@ -162,7 +151,7 @@ where
 
     /// # Safety
     /// `entities` must be made up of only components that are identified by this `Archetype`'s
-    /// `Identifier`. These can, however, be in any order.
+    /// `Identifier`, in the same order.
     ///
     /// The `entity_allocator`, together with its contained `Location`s, must not outlive `self`.
     pub(crate) unsafe fn extend<E>(
@@ -175,18 +164,13 @@ where
     {
         let component_len = entities.entities.component_len();
 
-        // SAFETY: `self.component_map` contains an entry for every component identified by the
-        // archetype's `Identifier`. Therefore, it also contains an entry for every component `C`
-        // contained in `entities`.
-        //
-        // Also, `self.components`, together with `self.length`, define valid `Vec<C>`s for each
-        // component.
+        // SAFETY: `self.components`, together with `self.length`, define valid `Vec<C>` for each
+        // component, and the components in `self.components` are in the same order as the
+        // components in `entities`.
         unsafe {
-            entities.entities.extend_components(
-                &self.component_map,
-                &mut self.components,
-                self.length,
-            );
+            entities
+                .entities
+                .extend_components(&mut self.components, self.length);
         }
 
         let entity_identifiers = entity_allocator.allocate_batch(Locations::new(
@@ -220,25 +204,25 @@ where
 
     /// # Safety
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
-    pub(crate) unsafe fn view<'a, V>(&mut self) -> V::Results
+    pub(crate) unsafe fn view<'a, V, P, I, Q>(
+        &mut self,
+    ) -> <<R::Viewable as ContainsViews<'a, V, P, I, Q>>::Canonical as ViewsSeal<'a>>::Results
     where
         V: Views<'a>,
+        R::Viewable: ContainsViews<'a, V, P, I, Q>,
     {
-        // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`,
-        // where each `C` is a component for which the entry in `component_map` corresponds to the
-        // correct index.
+        // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`
+        // for each component `C` identified in `self.identifier` in the canonical order defined by
+        // the registry.
         //
         // `self.entity_identifiers` also contains the raw parts for a valid
         // `Vec<entity::Identifier>` of size `self.length`.
-        //
-        // Since each component viewed by `V` is also identified by this archetype's `Identifier`,
-        // `self.component` will contain an entry for every viewed component.
         unsafe {
-            V::view(
+            R::Viewable::view(
                 &self.components,
                 self.entity_identifiers,
                 self.length,
-                &self.component_map,
+                self.identifier.iter(),
             )
         }
     }
@@ -247,9 +231,10 @@ where
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub(crate) unsafe fn par_view<'a, V>(&mut self) -> V::ParResults
+    pub(crate) unsafe fn par_view<'a, V, P, I, Q>(&mut self) -> <<R::Viewable as ContainsParViews<'a, V, P, I, Q>>::Canonical as ParViewsSeal<'a>>::ParResults
     where
         V: ParViews<'a>,
+        R::Viewable: ContainsParViews<'a, V, P, I, Q>,
     {
         // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`,
         // where each `C` is a component for which the entry in `component_map` corresponds to the
@@ -261,11 +246,11 @@ where
         // Since each component viewed by `V` is also identified by this archetype's `Identifier`,
         // `self.component` will contain an entry for every viewed component.
         unsafe {
-            V::par_view(
+            R::Viewable::par_view(
                 &self.components,
                 self.entity_identifiers,
                 self.length,
-                &self.component_map,
+                self.identifier.iter(),
             )
         }
     }
@@ -276,33 +261,31 @@ where
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
     ///
     /// The index `index` must be a valid index into this archetype.
-    pub(crate) unsafe fn view_row_unchecked<'a, V>(
+    pub(crate) unsafe fn view_row_unchecked<'a, V, P, I, Q>(
         &mut self,
         index: usize,
-    ) -> <V::Results as Iterator>::Item
+    ) -> <R::Viewable as ContainsViews<'a, V, P, I, Q>>::Canonical
     where
         V: Views<'a>,
+        R::Viewable: ContainsViews<'a, V, P, I, Q>,
     {
-        // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`,
-        // where each `C` is a component for which the entry in `component_map` corresponds to the
-        // correct index.
+        // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`
+        // for each component `C` identified in `self.identifier` in the canonical order defined by
+        // the registry.
         //
         // `self.entity_identifiers` also contains the raw parts for a valid
         // `Vec<entity::Identifier>` of size `self.length`.
-        //
-        // Since each component viewed by `V` is also identified by this archetype's `Identifier`,
-        // `self.component` will contain an entry for every viewed component.
         //
         // `index` is guaranteed by the safety contract of this method to be within the bounds of
         // this archetype, and therefore within the bounds of each column and the entity
         // identifiers of this archetype.
         unsafe {
-            V::view_one(
+            R::Viewable::view_one(
                 index,
                 &self.components,
                 self.entity_identifiers,
                 self.length,
-                &self.component_map,
+                self.identifier.iter(),
             )
         }
     }
@@ -313,31 +296,23 @@ where
     ///
     /// `index` must be a valid index within this archetype (meaning it must be less than
     /// `self.length`).
-    pub(crate) unsafe fn set_component_unchecked<C>(&mut self, index: usize, component: C)
+    pub(crate) unsafe fn set_component_unchecked<C, I>(&mut self, index: usize, component: C)
     where
         C: Component,
+        R: ContainsComponent<C, I>,
     {
-        // SAFETY: `self.component_map` is guaranteed to have an entry for `TypeId::of::<C>()` by
-        // the safety contract of this method. Additionally, `self.components` is guaranteed to
-        // have an entry for the index returned from `self.component_map`, and furthermore that
-        // entry is guaranteed to be the valid raw parts for a `Vec<C>` of length `self.length`.
-        //
-        // The slice view over the component column for `C` is also guaranteed by the safety
-        // contract of this method to have an entry for the given `index`.
+        // SAFETY: `index` is guaranteed to be less than `length`. Also, `components` is guaranteed
+        // to contain the valid raw parts for `Vec<C>`s for each component identified by
+        // `self.identifier.iter()`. Finally, `C` is guaranteed by the safety contract of this
+        // method to be a component type contained in this archetype.
         unsafe {
-            *slice::from_raw_parts_mut(
-                self.components
-                    .get_unchecked(
-                        *self
-                            .component_map
-                            .get(&TypeId::of::<C>())
-                            .unwrap_unchecked(),
-                    )
-                    .0
-                    .cast::<C>(),
+            R::set_component(
+                index,
+                component,
+                &self.components,
                 self.length,
-            )
-            .get_unchecked_mut(index) = component;
+                self.identifier.iter(),
+            );
         }
     }
 

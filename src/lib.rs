@@ -123,4 +123,6 @@ mod hlist;
 mod r#macro;
 
 #[doc(inline)]
+pub use query::Query;
+#[doc(inline)]
 pub use world::World;

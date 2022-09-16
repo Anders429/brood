@@ -16,7 +16,7 @@
 //! use brood::{
 //!     entity,
 //!     query::{filter, result, views},
-//!     registry, World,
+//!     registry, Query, World,
 //! };
 //!
 //! // Define components.
@@ -29,7 +29,7 @@
 //! let mut world = World::<Registry>::new();
 //! world.insert(entity!(Foo(42), Bar(true), Baz(1.5)));
 //!
-//! for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::Has<Baz>>() {
+//! for result!(foo, bar) in world.query(Query::<views!(&mut Foo, &Bar), filter::Has<Baz>>::new()) {
 //!     // Do something.
 //! }
 //! ```
@@ -50,3 +50,34 @@ pub(crate) mod claim;
 pub use result::result;
 #[doc(inline)]
 pub use view::views;
+
+use core::marker::PhantomData;
+
+pub struct Query<V, F = filter::None> {
+    view: PhantomData<V>,
+    filter: PhantomData<F>,
+}
+
+impl<V, F> Query<V, F> {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            view: PhantomData,
+            filter: PhantomData,
+        }
+    }
+}
+
+impl<V, F> Default for Query<V, F> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<V, F> Clone for Query<V, F> {
+    fn clone(&self) -> Self {
+        Self::new()
+    }
+}
+
+impl<V, F> Copy for Query<V, F> {}

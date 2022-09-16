@@ -1,5 +1,6 @@
 use crate::{
-    registry::Registry,
+    query::{filter::Filter, Query},
+    registry::{ContainsParViews, ContainsViews, Registry},
     system::{schedule::sendable::SendableWorld, ParSystem, System},
     world::World,
 };
@@ -14,25 +15,32 @@ where
     S: System<'a>,
     P: ParSystem<'a>,
 {
-    pub(crate) fn run<R>(&mut self, world: SendableWorld<R>)
-    where
+    pub(crate) fn run<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>(
+        &mut self,
+        world: SendableWorld<R>,
+    ) where
         R: Registry + 'a,
+        R::Viewable:
+            ContainsViews<'a, S::Views, SP, SI, SQ> + ContainsParViews<'a, P::Views, PP, PI, PQ>,
+        S::Filter: Filter<R, SFI>,
+        S::Views: Filter<R, SVI>,
+        P::Filter: Filter<R, PFI>,
+        P::Views: Filter<R, PVI>,
     {
         match self {
             Task::Seq(system) => {
                 // Query world using system.
-                // SAFETY: The `Views` checks were already done when constructing the `Schedule`.
-                // Also, the access to the world's components follows Rust's borrowing rules.
-                let result = unsafe { (*world.get()).query_unchecked::<S::Views, S::Filter>() };
+                let result =
+                    // SAFETY: The access to the world's components follows Rust's borrowing rules.
+                    unsafe { (*world.get()).query(Query::<S::Views, S::Filter>::new()) };
                 // Run system using the query result.
                 system.run(result);
             }
             Task::Par(system) => {
                 // Query world using system.
-                // SAFETY: The `ParViews` checks were already done when constructing the
-                // `Schedule`. Also, the access to the world's components follows Rust's borrowing
-                // rules.
-                let result = unsafe { (*world.get()).par_query_unchecked::<P::Views, P::Filter>() };
+                let result =
+                    // SAFETY: The access to the world's components follows Rust's borrowing rules.
+                    unsafe { (*world.get()).par_query(Query::<P::Views, P::Filter>::new()) };
                 // Run system using the query result.
                 system.run(result);
             }

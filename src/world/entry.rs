@@ -4,12 +4,13 @@ use crate::{
     entity::allocator::Location,
     query::{
         filter::{And, Filter, Seal},
-        view::Views,
+        view::{Reshape, Views},
+        Query,
     },
-    registry::{Registry, RegistryDebug},
+    registry::{ContainsComponent, ContainsViews, Registry, RegistryDebug},
     world::World,
 };
-use core::{any::TypeId, fmt, fmt::Debug};
+use core::{fmt, fmt::Debug};
 
 /// A view into a single entity in a [`World`].
 ///
@@ -71,17 +72,15 @@ where
     ///
     /// entry.add(Baz(1.5));
     /// ```
-    ///
-    /// # Panics
-    /// Panics if the component `C` is not in the registry R.
-    pub fn add<C>(&mut self, component: C)
+    pub fn add<C, I>(&mut self, component: C)
     where
         C: Component,
+        R: ContainsComponent<C, I>,
     {
-        let component_index = *self.world.component_map.get(&TypeId::of::<C>()).unwrap();
+        let component_index = R::LEN - R::INDEX - 1;
         if
-        // SAFETY: The `component_index` obtained from `self.world.component_map` is guaranteed to
-        // be a valid index into `self.location.identifier`.
+        // SAFETY: The `component_index` obtained from `R::LEN - R::INDEX - 1` is guaranteed to be
+        // a valid index into `self.location.identifier`, since an identifier has `R::LEN` bits.
         unsafe { self.location.identifier.get_unchecked(component_index) } {
             // The component already exists within this entity. Replace it.
             // SAFETY: An archetype with this identifier is guaranteed to exist, since there is an
@@ -174,19 +173,17 @@ where
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
     /// let mut entry = world.entry(entity_identifier).unwrap();
     ///
-    /// entry.remove::<Foo>();
+    /// entry.remove::<Foo, _>();
     /// ```
-    ///
-    /// # Panics
-    /// Panics if the component `C` is not in the registry R.
-    pub fn remove<C>(&mut self)
+    pub fn remove<C, I>(&mut self)
     where
         C: Component,
+        R: ContainsComponent<C, I>,
     {
-        let component_index = *self.world.component_map.get(&TypeId::of::<C>()).unwrap();
+        let component_index = R::LEN - R::INDEX - 1;
         if
-        // SAFETY: The `component_index` obtained from `self.world.component_map` is guaranteed to
-        // be a valid index into `self.location.identifier`.
+        // SAFETY: The `component_index` obtained from `R::LEN - R::INDEX - 1` is guaranteed to be
+        // a valid index into `self.location.identifier`, since an identifier has `R::LEN` bits.
         unsafe { self.location.identifier.get_unchecked(component_index) } {
             // The component exists and needs to be removed.
             let (entity_identifier, current_component_bytes) =
@@ -259,7 +256,7 @@ where
     /// use brood::{
     ///     entity,
     ///     query::{filter, result, views},
-    ///     registry, World,
+    ///     registry, Query, World,
     /// };
     ///
     /// struct Foo(u32);
@@ -271,23 +268,22 @@ where
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
     /// let mut entry = world.entry(entity_identifier).unwrap();
     ///
-    /// let result = entry.query::<views!(&Foo, &Bar), filter::None>();
+    /// let result = entry.query(Query::<views!(&Foo, &Bar), filter::None>::new());
     /// assert!(result.is_some());
     /// let result!(foo, bar) = result.unwrap();
     /// assert_eq!(foo.0, 42);
     /// assert_eq!(bar.0, true);
     /// ```
-    pub fn query<V, F>(&mut self) -> Option<<V::Results as Iterator>::Item>
+    pub fn query<V, F, VI, FI, P, I, Q>(
+        &'a mut self,
+        #[allow(unused_variables)] query: Query<V, F>,
+    ) -> Option<V>
     where
-        V: Views<'a>,
-        F: Filter,
+        V: Views<'a> + Filter<R, VI>,
+        F: Filter<R, FI>,
+        R::Viewable: ContainsViews<'a, V, P, I, Q>,
     {
-        self.world.view_assertion_buffer.clear();
-        V::assert_claims(&mut self.world.view_assertion_buffer);
-
-        // SAFETY: `self.component_map` contains an entry for each `TypeId<C>` per
-        // component `C` in the registry `R`.
-        if unsafe { And::<V, F>::filter(self.location.identifier, &self.world.component_map) } {
+        if And::<V, F>::filter(self.location.identifier) {
             Some(
                 // SAFETY: Since the archetype wasn't filtered out by the views, then each
                 // component viewed by `V` is also identified by the archetype's identifier.
@@ -300,7 +296,8 @@ where
                     self.world
                         .archetypes
                         .get_mut(self.location.identifier)?
-                        .view_row_unchecked::<V>(self.location.index)
+                        .view_row_unchecked::<V, P, I, Q>(self.location.index)
+                        .reshape()
                 },
             )
         } else {

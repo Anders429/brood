@@ -3,13 +3,12 @@ use crate::{
     archetypes,
     query::{
         filter::{And, Filter, Seal},
-        view::ParViews,
+        result::{ParResults, Reshape},
+        view::{ParViews, ParViewsSeal},
     },
-    registry::Registry,
+    registry::{ContainsParViews, Registry},
 };
-use core::{any::TypeId, marker::PhantomData};
-use fnv::FnvBuildHasher;
-use hashbrown::HashMap;
+use core::marker::PhantomData;
 use rayon::iter::{
     plumbing::{Consumer, Folder, Reducer, UnindexedConsumer},
     ParallelIterator,
@@ -28,7 +27,7 @@ use rayon::iter::{
 /// use brood::{
 ///     entity,
 ///     query::{filter, result, views},
-///     registry, World,
+///     registry, Query, World,
 /// };
 /// use rayon::iter::ParallelIterator;
 ///
@@ -41,7 +40,7 @@ use rayon::iter::{
 /// world.insert(entity!(Foo(42), Bar(true)));
 ///
 /// world
-///     .par_query::<views!(&mut Foo, &Bar), filter::None>()
+///     .par_query(Query::<views!(&mut Foo, &Bar)>::new())
 ///     .for_each(|result!(foo, bar)| {
 ///         if bar.0 {
 ///             foo.0 += 1;
@@ -57,122 +56,136 @@ use rayon::iter::{
 /// [`result!`]: crate::query::result!
 /// [`World`]: crate::world::World
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-pub struct ParIter<'a, R, F, V>
+pub struct ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    F: Filter,
-    V: ParViews<'a>,
+    F: Filter<R, FI>,
+    V: ParViews<'a> + Filter<R, VI>,
 {
     archetypes_iter: archetypes::ParIterMut<'a, R>,
 
-    component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>,
-
     filter: PhantomData<F>,
     views: PhantomData<V>,
+    filter_indices: PhantomData<FI>,
+    view_filter_indices: PhantomData<VI>,
+    view_containments: PhantomData<P>,
+    view_indices: PhantomData<I>,
+    reshape_indices: PhantomData<Q>,
 }
 
-impl<'a, R, F, V> ParIter<'a, R, F, V>
+impl<'a, R, F, FI, V, VI, P, I, Q> ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    F: Filter,
-    V: ParViews<'a>,
+    F: Filter<R, FI>,
+    V: ParViews<'a> + Filter<R, VI>,
 {
-    pub(crate) fn new(
-        archetypes_iter: archetypes::ParIterMut<'a, R>,
-        component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>,
-    ) -> Self {
+    pub(crate) fn new(archetypes_iter: archetypes::ParIterMut<'a, R>) -> Self {
         Self {
             archetypes_iter,
 
-            component_map,
-
             filter: PhantomData,
             views: PhantomData,
+            filter_indices: PhantomData,
+            view_filter_indices: PhantomData,
+            view_containments: PhantomData,
+            view_indices: PhantomData,
+            reshape_indices: PhantomData,
         }
     }
 }
 
 // SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<'a, R, F, V> Send for ParIter<'a, R, F, V>
+unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Send for ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    F: Filter,
-    V: ParViews<'a>,
+    F: Filter<R, FI>,
+    V: ParViews<'a> + Filter<R, VI>,
 {
 }
 
 // SAFETY: This type is safe to share between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<'a, R, F, V> Sync for ParIter<'a, R, F, V>
+unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Sync for ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    F: Filter,
-    V: ParViews<'a>,
+    F: Filter<R, FI>,
+    V: ParViews<'a> + Filter<R, VI>,
 {
 }
 
-impl<'a, R, F, V> ParallelIterator for ParIter<'a, R, F, V>
+impl<'a, R, F, FI, V, VI, P, I, Q> ParallelIterator for ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry + 'a,
-    F: Filter,
-    V: ParViews<'a>,
+    F: Filter<R, FI>,
+    V: ParViews<'a> + Filter<R, VI>,
+    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
 {
-    type Item = <V::ParResults as ParallelIterator>::Item;
+    type Item = <<V as ParViewsSeal<'a>>::ParResults as ParResults>::View;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
     where
         C: UnindexedConsumer<Self::Item>,
     {
-        let consumer = ResultsConsumer::<_, F, V>::new(consumer, self.component_map);
+        let consumer = ResultsConsumer::<_, F, FI, V, VI, P, I, Q>::new(consumer);
         self.archetypes_iter.drive_unindexed(consumer)
     }
 }
 
-struct ResultsConsumer<'a, C, F, V> {
+struct ResultsConsumer<C, F, FI, V, VI, P, I, Q> {
     base: C,
-    component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>,
 
     filter: PhantomData<F>,
     views: PhantomData<V>,
+    filter_indices: PhantomData<FI>,
+    view_filter_indices: PhantomData<VI>,
+    view_containments: PhantomData<P>,
+    view_indices: PhantomData<I>,
+    reshape_indices: PhantomData<Q>,
 }
 
-impl<'a, C, F, V> ResultsConsumer<'a, C, F, V> {
-    fn new(base: C, component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>) -> Self {
+impl<C, F, FI, V, VI, P, I, Q> ResultsConsumer<C, F, FI, V, VI, P, I, Q> {
+    fn new(base: C) -> Self {
         Self {
             base,
-            component_map,
 
             filter: PhantomData,
             views: PhantomData,
+            filter_indices: PhantomData,
+            view_filter_indices: PhantomData,
+            view_containments: PhantomData,
+            view_indices: PhantomData,
+            reshape_indices: PhantomData,
         }
     }
 }
 
 // SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<C, F, V> Send for ResultsConsumer<'_, C, F, V> {}
+unsafe impl<C, F, FI, V, VI, P, I, Q> Send for ResultsConsumer<C, F, FI, V, VI, P, I, Q> {}
 
 // SAFETY: This type is safe to share between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<C, F, V> Sync for ResultsConsumer<'_, C, F, V> {}
+unsafe impl<C, F, FI, V, VI, P, I, Q> Sync for ResultsConsumer<C, F, FI, V, VI, P, I, Q> {}
 
-impl<'a, C, R, F, V> Consumer<&'a mut Archetype<R>> for ResultsConsumer<'a, C, F, V>
+impl<'a, C, R, F, FI, V, VI, P, I, Q> Consumer<&'a mut Archetype<R>>
+    for ResultsConsumer<C, F, FI, V, VI, P, I, Q>
 where
-    C: UnindexedConsumer<<V::ParResults as ParallelIterator>::Item>,
+    C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
     R: Registry,
-    F: Filter,
-    V: ParViews<'a>,
+    F: Filter<R, FI>,
+    V: ParViews<'a> + Filter<R, VI>,
+    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
 {
-    type Folder = ResultsFolder<'a, C, C::Result, F, V>;
+    type Folder = ResultsFolder<C, C::Result, F, FI, V, VI, P, I, Q>;
     type Reducer = C::Reducer;
     type Result = C::Result;
 
     fn split_at(self, index: usize) -> (Self, Self, C::Reducer) {
         let (left, right, reducer) = self.base.split_at(index);
         (
-            ResultsConsumer::new(left, self.component_map),
-            ResultsConsumer::new(right, self.component_map),
+            ResultsConsumer::new(left),
+            ResultsConsumer::new(right),
             reducer,
         )
     }
@@ -180,11 +193,15 @@ where
     fn into_folder(self) -> Self::Folder {
         ResultsFolder {
             base: self.base,
-            component_map: self.component_map,
             previous: None,
 
             filter: PhantomData,
             views: PhantomData,
+            filter_indices: PhantomData,
+            view_filter_indices: PhantomData,
+            view_containments: PhantomData,
+            view_indices: PhantomData,
+            reshape_indices: PhantomData,
         }
     }
 
@@ -193,15 +210,17 @@ where
     }
 }
 
-impl<'a, C, R, F, V> UnindexedConsumer<&'a mut Archetype<R>> for ResultsConsumer<'a, C, F, V>
+impl<'a, C, R, F, FI, V, VI, P, I, Q> UnindexedConsumer<&'a mut Archetype<R>>
+    for ResultsConsumer<C, F, FI, V, VI, P, I, Q>
 where
-    C: UnindexedConsumer<<V::ParResults as ParallelIterator>::Item>,
+    C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
     R: Registry,
-    F: Filter,
-    V: ParViews<'a>,
+    F: Filter<R, FI>,
+    V: ParViews<'a> + Filter<R, VI>,
+    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
 {
     fn split_off_left(&self) -> Self {
-        ResultsConsumer::new(self.base.split_off_left(), self.component_map)
+        ResultsConsumer::new(self.base.split_off_left())
     }
 
     fn to_reducer(&self) -> Self::Reducer {
@@ -209,34 +228,40 @@ where
     }
 }
 
-struct ResultsFolder<'a, C, P, F, V> {
+struct ResultsFolder<C, P, F, FI, V, VI, P_, I, Q> {
     base: C,
-    component_map: &'a HashMap<TypeId, usize, FnvBuildHasher>,
     previous: Option<P>,
 
     filter: PhantomData<F>,
     views: PhantomData<V>,
+    filter_indices: PhantomData<FI>,
+    view_filter_indices: PhantomData<VI>,
+    view_containments: PhantomData<P_>,
+    view_indices: PhantomData<I>,
+    reshape_indices: PhantomData<Q>,
 }
 
-impl<'a, C, R, F, V> Folder<&'a mut Archetype<R>> for ResultsFolder<'a, C, C::Result, F, V>
+impl<'a, C, R, F, FI, V, VI, P, I, Q> Folder<&'a mut Archetype<R>>
+    for ResultsFolder<C, C::Result, F, FI, V, VI, P, I, Q>
 where
-    C: UnindexedConsumer<<V::ParResults as ParallelIterator>::Item>,
+    C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
     R: Registry,
-    F: Filter,
-    V: ParViews<'a>,
+    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
+    F: Filter<R, FI>,
+    V: ParViews<'a> + Filter<R, VI>,
 {
     type Result = C::Result;
 
     fn consume(self, archetype: &'a mut Archetype<R>) -> Self {
-        if
-        // SAFETY: `self.component_map` contains an entry for each `TypeId<C>` per component `C` in
-        // the registry `R`.
-        unsafe { And::<V, F>::filter(archetype.identifier(), self.component_map) } {
+        if And::<V, F>::filter(
+            // SAFETY: This identifier reference will not outlive `archetype`.
+            unsafe { archetype.identifier() },
+        ) {
             let consumer = self.base.split_off_left();
             let result =
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`
                 // since the `filter` function in the if-statement returned `true`.
-                unsafe { archetype.par_view::<V>() }.drive_unindexed(consumer);
+                unsafe { archetype.par_view::<V, _, _, _>() }.reshape().into_parallel_iterator().drive_unindexed(consumer);
 
             let previous = match self.previous {
                 None => Some(result),
@@ -248,11 +273,15 @@ where
 
             ResultsFolder {
                 base: self.base,
-                component_map: self.component_map,
                 previous,
 
                 filter: self.filter,
                 views: self.views,
+                filter_indices: self.filter_indices,
+                view_filter_indices: self.view_filter_indices,
+                view_containments: self.view_containments,
+                view_indices: self.view_indices,
+                reshape_indices: self.reshape_indices,
             }
         } else {
             self

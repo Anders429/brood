@@ -1,5 +1,5 @@
-use brood::query::result;
+use brood::query::{result, view};
 
 fn main() {
-    let result!(,) = result::Null;
+    let result!(,) = view::Null;
 }
