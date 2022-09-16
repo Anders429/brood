@@ -918,6 +918,25 @@ mod tests {
         assert_eq!(result, vec![1, 2]);
     }
 
+    #[test]
+    fn query_views_different_order() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let mut result = world
+            .query(Query::<
+                views!(&B, &A),
+            >::new())
+            .map(|result!(b, a)| (a.0, b.0))
+            .collect::<Vec<_>>();
+        result.sort();
+        assert_eq!(result, vec![(1, 'a')]);
+    }
+
     #[cfg(feature = "rayon")]
     #[test]
     fn par_query_refs() {
