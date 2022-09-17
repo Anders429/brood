@@ -9,3 +9,13 @@ updates:
   labels:
     - "C - Dependencies"
     - "P - Low"
+
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: "daily"
+  open-pull-requests-limit: 10
+  target-branch: "dev"
+  labels:
+    - "C - Continuous Integration"
+    - "P - Low"
