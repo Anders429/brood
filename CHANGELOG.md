@@ -2,7 +2,7 @@
 
 ## Unreleased
 ### Added
-- `query()` method on `Entry`.
+- `query()` method on `Entry` for viewing components of a single entity.
 ### Changed
 - `query()` and `par_query()` methods on `World` now require a `Query` parameter.
 - Performance improvements through canonicalization of heterogeneous lists instead of internal type index hash tables.
