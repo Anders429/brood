@@ -46,7 +46,7 @@ jobs:
       with:
         toolchain: ${{ matrix.rust }}
         targets: thumbv6m-none-eabi
-    - run: cargo install cargo-hack
+    - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
     - run: cargo hack build --feature-powerset --optional-deps --exclude-features rayon --target thumbv6m-none-eabi
 
   fmt:
@@ -63,7 +63,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: dtolnay/rust-toolchain@nightly
-    - run: cargo install cargo-hack
+    - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
     - run: cargo hack check --feature-powerset --optional-deps
 
   clippy:
@@ -73,7 +73,7 @@ jobs:
     - uses: dtolnay/rust-toolchain@nightly
       with:
         components: clippy
-    - run: cargo install cargo-hack
+    - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
     - run: cargo hack clippy --feature-powerset --optional-deps -- --deny warnings
 
   doc:
@@ -109,7 +109,7 @@ jobs:
     - uses: dtolnay/rust-toolchain@nightly
       with:
         components: miri
-    - run: cargo install cargo-hack
+    - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
     - run: cargo hack miri test --feature-powerset --optional-deps
       env:
         MIRIFLAGS: -Zmiri-disable-isolation -Zmiri-ignore-leaks
@@ -131,7 +131,7 @@ jobs:
     - run: sudo apt-get install libc6-dbg
     - uses: dtolnay/rust-toolchain@nightly
     - run: cargo install cargo-valgrind
-    - run: cargo install cargo-hack
+    - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
     - run: cargo hack valgrind test --feature-powerset --optional-deps --exclude-features rayon
       env:
         RUSTFLAGS: --cfg skip_trybuild
