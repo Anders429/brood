@@ -1,9 +1,9 @@
 version: 2
 updates:
-- package-ecosystem: cargo
+- package-ecosystem: "cargo"
   directory: "/"
   schedule:
-    interval: daily
+    interval: "daily"
   open-pull-requests-limit: 10
   target-branch: "dev"
   labels:
