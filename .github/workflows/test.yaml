@@ -99,7 +99,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: dtolnay/rust-toolchain@nightly
-    - run: cargo install cargo-msrv
+    - run: curl -LsSf https://github.com/foresterre/cargo-msrv/releases/latest/download/cargo-msrv_v0.15.1_Linux_x86_64.tar | tar xzf - -C ~/.cargo/bin
     - run: cargo msrv --verify
 
   miri:
