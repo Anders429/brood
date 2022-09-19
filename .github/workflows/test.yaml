@@ -28,7 +28,7 @@ jobs:
         toolchain: ${{ matrix.rust }}
         components: rust-src
     - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
-    - run: cargo hack test --feature-powerset --optional-deps
+    - run: cargo hack test --feature-powerset
 
   no_std:
     runs-on: ubuntu-latest
@@ -47,7 +47,7 @@ jobs:
         toolchain: ${{ matrix.rust }}
         targets: thumbv6m-none-eabi
     - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
-    - run: cargo hack build --feature-powerset --optional-deps --exclude-features rayon --target thumbv6m-none-eabi
+    - run: cargo hack build --feature-powerset --exclude-features rayon --target thumbv6m-none-eabi
 
   fmt:
     runs-on: ubuntu-latest
@@ -64,7 +64,7 @@ jobs:
     - uses: actions/checkout@v2
     - uses: dtolnay/rust-toolchain@nightly
     - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
-    - run: cargo hack check --feature-powerset --optional-deps
+    - run: cargo hack check --feature-powerset
 
   clippy:
     runs-on: ubuntu-latest
@@ -74,7 +74,7 @@ jobs:
       with:
         components: clippy
     - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
-    - run: cargo hack clippy --feature-powerset --optional-deps -- --deny warnings
+    - run: cargo hack clippy --feature-powerset -- --deny warnings
 
   doc:
     runs-on: ubuntu-latest
@@ -110,7 +110,7 @@ jobs:
       with:
         components: miri
     - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
-    - run: cargo hack miri test --feature-powerset --optional-deps
+    - run: cargo hack miri test --feature-powerset
       env:
         MIRIFLAGS: -Zmiri-disable-isolation -Zmiri-ignore-leaks
         RUSTFLAGS: --cfg skip_trybuild
@@ -123,7 +123,7 @@ jobs:
     - uses: dtolnay/rust-toolchain@nightly
     - run: curl -LsSf https://github.com/jfrimmel/cargo-valgrind/releases/latest/download/cargo-valgrind-2.1.0-x86_64-unknown-linux-musl.tar.gz | tar xzf - -C ~/.cargo/bin
     - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
-    - run: cargo hack valgrind test --feature-powerset --optional-deps --exclude-features rayon
+    - run: cargo hack valgrind test --feature-powerset --exclude-features rayon
       env:
         RUSTFLAGS: --cfg skip_trybuild
 

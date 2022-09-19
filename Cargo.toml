@@ -34,3 +34,4 @@ trybuild = {git = "https://github.com/Anders429/trybuild"}
 
 [features]
 rayon = ["dep:rayon", "hashbrown/rayon"]
+serde = ["dep:serde"]
