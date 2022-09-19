@@ -101,7 +101,7 @@ mod tests {
         registry::{RegistryDebug, RegistryEq, RegistryPartialEq},
     };
     use alloc::{format, vec};
-    use claim::assert_ok;
+    use claims::assert_ok;
     use core::{any::type_name, fmt, fmt::Debug};
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
     use serde_derive::{Deserialize, Serialize};

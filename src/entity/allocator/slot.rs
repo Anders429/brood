@@ -95,7 +95,7 @@ mod tests {
     use super::*;
     use crate::{archetype::Identifier, registry};
     use alloc::vec;
-    use claim::{assert_none, assert_some_eq};
+    use claims::{assert_none, assert_some_eq};
 
     macro_rules! create_components {
         ($( $variants:ident ),*) => {

@@ -689,7 +689,7 @@ mod tests {
         registry,
     };
     use alloc::vec;
-    use claim::{assert_none, assert_some};
+    use claims::{assert_none, assert_some};
     #[cfg(feature = "rayon")]
     use rayon::iter::ParallelIterator;
 

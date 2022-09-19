@@ -284,7 +284,7 @@ mod tests {
             RegistryDebug, RegistryDeserialize, RegistryEq, RegistryPartialEq, RegistrySerialize,
         },
     };
-    use claim::assert_ok;
+    use claims::assert_ok;
     use core::{fmt, fmt::Debug, marker::PhantomData};
     use serde_derive::{Deserialize, Serialize};
     use serde_test::{assert_de_tokens, assert_de_tokens_error, assert_tokens, Token};
