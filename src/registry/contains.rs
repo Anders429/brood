@@ -276,13 +276,20 @@ where
 
 pub enum EntityIdentifierMarker {}
 
+/// Indicates that all of the components viewed are contained in a registry.
+/// 
+/// This allows reordering the components viewed into a canonical form, as well as reordering the
+/// results back to the originally requested form.
 pub trait ContainsViews<'a, V, P, I, Q>
 where
     V: Views<'a>,
 {
+    /// The canonical form of the views `V`.
     type Canonical: Views<'a>
         + ViewsSeal<'a, Results = Self::CanonicalResults>
         + view::Reshape<'a, V, Q>;
+    /// The canonical form of the results of the views `V`. Equivalent to
+    /// `Self::Canonical::Results`.
     type CanonicalResults: result::Reshape<V::Results, Q>;
 
     /// # Safety
@@ -559,11 +566,18 @@ where
 
 #[cfg(feature = "rayon")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+/// Indicates that all of the components viewed are contained in a registry.
+/// 
+/// This allows reordering the components viewed into a canonical form, as well as reordering the
+/// results back to the originally requested form.
 pub trait ContainsParViews<'a, V, P, I, Q>
 where
     V: ParViews<'a>,
 {
+    /// The canonical form of the views `V`.
     type Canonical: ParViews<'a, ParResults = Self::CanonicalResults>;
+    /// The canonical form of the results of the views `V`. Equivalent to
+    /// `Self::Canonical::Results`.
     type CanonicalResults: result::Reshape<V::ParResults, Q>;
 
     /// # Safety
