@@ -54,11 +54,11 @@ pub use view::views;
 use core::marker::PhantomData;
 
 /// Defines a query to be run over a world.
-/// 
+///
 /// This defines either a regular or parallel query (parallel requires the `rayon` feature to be
 /// enabled). It is essentially a marker type, simply providing the types to the calls to
 /// [`query()`] to make the API as simple to use as possible.
-/// 
+///
 /// # Example
 /// ``` rust
 /// use brood::{
@@ -81,7 +81,7 @@ use core::marker::PhantomData;
 ///     // Do something.
 /// }
 /// ```
-/// 
+///
 /// [`query()`]: crate::world::World::query()
 pub struct Query<V, F = filter::None> {
     view: PhantomData<V>,
@@ -90,7 +90,7 @@ pub struct Query<V, F = filter::None> {
 
 impl<V, F> Query<V, F> {
     /// Creates a new `Query`.
-    /// 
+    ///
     /// When creating a query, you must specify the views type `V`, and can optionally specify the
     /// filter type `F`. If no filter is specified, the default filter, [`filter::None`], will be
     /// used.

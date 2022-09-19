@@ -100,7 +100,7 @@
     clippy::pedantic,
     clippy::undocumented_unsafe_blocks,
     missing_docs,
-    unsafe_op_in_unsafe_fn,
+    unsafe_op_in_unsafe_fn
 )]
 #![allow(clippy::module_name_repetitions)]
 
