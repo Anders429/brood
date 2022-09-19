@@ -89,6 +89,11 @@ pub struct Query<V, F = filter::None> {
 }
 
 impl<V, F> Query<V, F> {
+    /// Creates a new `Query`.
+    /// 
+    /// When creating a query, you must specify the views type `V`, and can optionally specify the
+    /// filter type `F`. If no filter is specified, the default filter, [`filter::None`], will be
+    /// used.
     #[must_use]
     pub fn new() -> Self {
         Self {
