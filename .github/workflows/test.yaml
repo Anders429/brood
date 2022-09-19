@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -20,18 +23,12 @@ jobs:
       fail-fast: false
     steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
+    - uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ matrix.rust }}
-        override: true
         components: rust-src
-    - uses: actions-rs/install@v0.1
-      with:
-        crate: cargo-hack
-    - uses: actions-rs/cargo@v1
-      with:
-        command: hack
-        args: test --feature-powerset --optional-deps
+    - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
+    - run: cargo hack test --feature-powerset
 
   no_std:
     runs-on: ubuntu-latest
@@ -45,78 +42,46 @@ jobs:
       fail-fast: false
     steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
+    - uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ matrix.rust }}
-        target: thumbv6m-none-eabi
-        override: true
-    - uses: actions-rs/install@v0.1
-      with:
-        crate: cargo-hack
-    - uses: actions-rs/cargo@v1
-      with:
-        command: hack
-        args: build --feature-powerset --optional-deps --exclude-features rayon --target thumbv6m-none-eabi
+        targets: thumbv6m-none-eabi
+    - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
+    - run: cargo hack build --feature-powerset --exclude-features rayon --target thumbv6m-none-eabi
 
   fmt:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
+    - uses: dtolnay/rust-toolchain@nightly
       with:
-        toolchain: nightly
-        override: true
         components: rustfmt
-    - uses: actions-rs/cargo@v1
-      with:
-        command: fmt
-        args: -- --check
+    - run: cargo fmt -- --check
 
   check:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: nightly
-        override: true
-    - uses: actions-rs/install@v0.1
-      with:
-        crate: cargo-hack
-    - uses: actions-rs/cargo@v1
-      with:
-        command: hack
-        args: check --feature-powerset --optional-deps
+    - uses: dtolnay/rust-toolchain@nightly
+    - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
+    - run: cargo hack check --feature-powerset
 
   clippy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
+    - uses: dtolnay/rust-toolchain@nightly
       with:
-        toolchain: nightly
-        override: true
         components: clippy
-    - uses: actions-rs/install@v0.1
-      with:
-        crate: cargo-hack
-    - uses: actions-rs/cargo@v1
-      with:
-        command: hack
-        args: clippy --feature-powerset --optional-deps -- --deny warnings
+    - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
+    - run: cargo hack clippy --feature-powerset -- --deny warnings
 
   doc:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: nightly
-        override: true
-    - uses: actions-rs/cargo@v1
-      with:
-        command: doc
-        args: --no-deps --all-features
+    - uses: dtolnay/rust-toolchain@nightly
+    - run: cargo doc --no-deps --all-features
       env:
         RUSTDOCFLAGS: --cfg doc_cfg -D warnings
 
@@ -124,14 +89,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: nightly
-        override: true
-    - uses: actions-rs/cargo@v1
-      with:
-        command: doc
-        args: --no-deps --all-features --document-private-items
+    - uses: dtolnay/rust-toolchain@nightly
+    - run: cargo doc --no-deps --all-features --document-private-items
       env:
         RUSTDOCFLAGS: --cfg doc_cfg -D warnings
 
@@ -139,34 +98,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: nightly
-        override: true
-    - uses: actions-rs/install@v0.1
-      with:
-        crate: cargo-msrv
-    - uses: actions-rs/cargo@v1
-      with:
-        command: msrv
-        args: --verify
+    - uses: dtolnay/rust-toolchain@nightly
+    - run: curl -LsSf https://github.com/foresterre/cargo-msrv/releases/latest/download/cargo-msrv_v0.15.1_Linux_x86_64.tar | tar xf - -C ~/.cargo/bin
+    - run: cargo msrv --verify
 
   miri:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
+    - uses: dtolnay/rust-toolchain@nightly
       with:
-        toolchain: nightly
-        override: true
         components: miri
-    - uses: actions-rs/install@v0.1
-      with:
-        crate: cargo-hack
-    - uses: actions-rs/cargo@v1
-      with:
-        command: hack
-        args: miri test --feature-powerset --optional-deps
+    - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
+    - run: cargo hack miri test --feature-powerset
       env:
         MIRIFLAGS: -Zmiri-disable-isolation -Zmiri-ignore-leaks
         RUSTFLAGS: --cfg skip_trybuild
@@ -175,30 +119,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: wget https://sourceware.org/pub/valgrind/valgrind-3.19.0.tar.bz2
-    - run: tar xvf valgrind-3.19.0.tar.bz2
-    - run: ./configure
-      working-directory: ./valgrind-3.19.0
-    - run: make
-      working-directory: ./valgrind-3.19.0
-    - run: sudo make install
-      working-directory: ./valgrind-3.19.0
-    - run: sudo apt-get update
-    - run: sudo apt-get install libc6-dbg
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: nightly
-        override: true
-    - uses: actions-rs/install@v0.1
-      with:
-        crate: cargo-valgrind
-    - uses: actions-rs/install@v0.1
-      with:
-        crate: cargo-hack
-    - uses: actions-rs/cargo@v1
-      with:
-        command: hack
-        args: valgrind test --feature-powerset --optional-deps --exclude-features rayon
+    - run: sudo apt install valgrind
+    - uses: dtolnay/rust-toolchain@nightly
+    - run: curl -LsSf https://github.com/jfrimmel/cargo-valgrind/releases/latest/download/cargo-valgrind-2.1.0-x86_64-unknown-linux-musl.tar.gz | tar xzf - -C ~/.cargo/bin
+    - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
+    - run: cargo hack valgrind test --feature-powerset --exclude-features rayon
       env:
         RUSTFLAGS: --cfg skip_trybuild
 
@@ -206,18 +131,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
+    - uses: dtolnay/rust-toolchain@nightly
       with:
-        toolchain: nightly
-        override: true
         components: llvm-tools-preview, rust-src
-    - uses: actions-rs/install@v0.1
-      with:
-        crate: cargo-llvm-cov
-    - uses: actions-rs/cargo@v1
-      with:
-        command: llvm-cov
-        args: --all-features --lcov --output-path lcov.info
+    - run: curl -LsSf https://github.com/taiki-e/cargo-llvm-cov/releases/latest/download/cargo-llvm-cov-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
+    - run: cargo llvm-cov --all-features --lcov --output-path lcov.info
     - uses: codecov/codecov-action@v2
       with:
         files: lcov.info

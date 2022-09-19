@@ -12,12 +12,26 @@
 //! [`Registry`]: crate::registry::Registry
 
 mod assertions;
+mod canonical;
+mod filter;
 mod length;
+#[cfg(feature = "rayon")]
+mod par_view;
 mod storage;
+mod view;
 
-use crate::{component::Component, registry::Null};
+pub(crate) use canonical::Canonical;
+pub(crate) use filter::Filter;
+pub(crate) use length::Length;
+#[cfg(feature = "rayon")]
+pub(crate) use par_view::CanonicalParViews;
+pub(crate) use view::CanonicalViews;
+
+use crate::{
+    component::Component,
+    registry::{contains::EntityIdentifierMarker, Null},
+};
 use assertions::Assertions;
-use length::Length;
 use storage::Storage;
 
 /// A trait that is public but defined within a private module.
@@ -29,13 +43,18 @@ use storage::Storage;
 /// While this trait specifically does not have any functions implemented, the traits it relies on
 /// do. See the modules where they are defined for more details on the internal functionality
 /// defined through these sealed traits.
-pub trait Seal: Assertions + Length + Storage {}
+pub trait Seal: Assertions + Length + Storage {
+    type Viewable;
+}
 
-impl Seal for Null {}
+impl Seal for Null {
+    type Viewable = (EntityIdentifierMarker, Null);
+}
 
 impl<C, R> Seal for (C, R)
 where
     C: Component,
     R: Seal,
 {
+    type Viewable = (EntityIdentifierMarker, (C, R));
 }

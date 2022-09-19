@@ -1,5 +1,4 @@
 use crate::{
-    query::view,
     system,
     system::{
         schedule::{
@@ -29,8 +28,8 @@ use hashbrown::HashSet;
 ///
 /// ``` rust
 /// use brood::{
-///     query::{filter, result, views},
-///     registry::Registry,
+///     query::{filter, filter::Filter, result, views},
+///     registry::{ContainsViews, Registry},
 ///     system::{Schedule, System},
 /// };
 ///
@@ -45,9 +44,14 @@ use hashbrown::HashSet;
 ///     type Views = views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-///     where
+///     fn run<R, FI, VI, P, I, Q>(
+///         &mut self,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+///     ) where
 ///         R: Registry + 'a,
+///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+///         Self::Filter: Filter<R, FI>,
+///         Self::Views: Filter<R, VI>,
 ///     {
 ///         for result!(foo, bar) in query_results {
 ///             // Do something...
@@ -61,9 +65,14 @@ use hashbrown::HashSet;
 ///     type Views = views!(&'a mut Baz, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-///     where
+///     fn run<R, FI, VI, P, I, Q>(
+///         &mut self,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+///     ) where
 ///         R: Registry + 'a,
+///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+///         Self::Filter: Filter<R, FI>,
+///         Self::Views: Filter<R, VI>,
 ///     {
 ///         for result!(baz, bar) in query_results {
 ///             // Do something...
@@ -142,7 +151,6 @@ where
                 &mut HashSet::with_hasher(FnvBuildHasher::default()),
                 &mut HashSet::with_hasher(FnvBuildHasher::default()),
                 &mut HashSet::with_hasher(FnvBuildHasher::default()),
-                &mut view::AssertionBuffer::new(),
             ),
         }
     }

@@ -19,7 +19,7 @@
 //! use brood::{
 //!     entity,
 //!     query::{filter, result, views},
-//!     registry, World,
+//!     registry, Query, World,
 //! };
 //!
 //! struct Foo(u32);
@@ -30,7 +30,7 @@
 //! let mut world = World::<Registry>::new();
 //! world.insert(entity!(Foo(42), Bar(true)));
 //!
-//! for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None>() {
+//! for result!(foo, bar) in world.query(Query::<views!(&mut Foo, &Bar)>::new()) {
 //!     if bar.0 {
 //!         foo.0 += 1;
 //!     }
@@ -43,17 +43,25 @@
 //! [`Views`]: crate::query::view::Views
 //! [`World`]: crate::world::World
 
+pub(crate) mod get;
+pub(crate) mod reshape;
+
 mod iter;
 #[cfg(feature = "rayon")]
 mod par_iter;
+mod seal;
 
 pub use iter::Iter;
 #[cfg(feature = "rayon")]
 pub use par_iter::ParIter;
 
-use crate::{doc, hlist::define_null};
+pub(crate) use get::Get;
+pub(crate) use reshape::Reshape;
+#[cfg(feature = "rayon")]
+pub(crate) use seal::ParResults;
+pub(crate) use seal::Results;
 
-define_null!();
+use crate::doc;
 
 doc::non_root_macro! {
     /// Defines identifiers to match items returned by a [`result::Iter`] iterator.
@@ -63,7 +71,7 @@ doc::non_root_macro! {
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entity, query::{filter, result, views}, registry, World};
+    /// use brood::{entity, query::{filter, result, views}, registry, Query, World};
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
@@ -73,7 +81,7 @@ doc::non_root_macro! {
     /// let mut world = World::<Registry>::new();
     /// world.insert(entity!(Foo(42), Bar(true)));
     ///
-    /// for result!(foo, bar) in world.query::<views!(&mut Foo, &Bar), filter::None>() {
+    /// for result!(foo, bar) in world.query(Query::<views!(&mut Foo, &Bar)>::new()) {
     ///     // ...
     /// }
     /// ```

@@ -1,7 +1,7 @@
 //! A fast and flexible [entity component system](https://en.wikipedia.org/wiki/Entity_component_system) library.
 //!
 //! # Design
-//! `brood` is build using heterogeneous lists of arbitrary length. This is achieved in Rust using
+//! `brood` is built using heterogeneous lists of arbitrary length. This is achieved in Rust using
 //! nested tuples to create lists of components of any length. This allows entities to be made up
 //! of any number of components, removing component size limitations that would normally occur with
 //! regular tuples.
@@ -99,6 +99,7 @@
 #![warn(
     clippy::pedantic,
     clippy::undocumented_unsafe_blocks,
+    missing_docs,
     unsafe_op_in_unsafe_fn
 )]
 #![allow(clippy::module_name_repetitions)]
@@ -122,5 +123,7 @@ mod doc;
 mod hlist;
 mod r#macro;
 
+#[doc(inline)]
+pub use query::Query;
 #[doc(inline)]
 pub use world::World;

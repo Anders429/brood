@@ -36,7 +36,7 @@ use core::{
 /// [`Archetype`]: crate::archetype::Archetype
 /// [`IdentifierRef`]: crate::archetype::IdentifierRef
 /// [`Registry`]: crate::registry::Registry
-pub(crate) struct Identifier<R>
+pub struct Identifier<R>
 where
     R: Registry,
 {

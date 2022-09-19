@@ -44,21 +44,23 @@
 //! [`views!`]: crate::query::views!
 //! [`World`]: crate::world::World.
 
-mod assertion_buffer;
+mod get;
 #[cfg(feature = "rayon")]
 mod par;
-
-pub(crate) mod seal;
+mod reshape;
+mod seal;
 
 #[cfg(feature = "rayon")]
 pub use par::{ParView, ParViews};
 
-pub(crate) use assertion_buffer::AssertionBuffer;
+pub(crate) use get::Get;
+#[cfg(feature = "rayon")]
+pub(crate) use par::{ParViewsSeal, RepeatNone};
+pub(crate) use reshape::Reshape;
+pub(crate) use seal::ViewsSeal;
 
-use crate::{
-    component::Component, doc, entity, hlist::define_null_uninstantiable, query::filter::Filter,
-};
-use seal::{ViewSeal, ViewsSeal};
+use crate::{component::Component, doc, entity, hlist::define_null};
+use seal::ViewSeal;
 
 /// A view over a single aspect of an entity.
 ///
@@ -104,19 +106,19 @@ use seal::{ViewSeal, ViewsSeal};
 /// [`Views`]: crate::query::view::Views
 /// [`views!`]: crate::query::views!
 /// [`World`]: crate::world::World
-pub trait View<'a>: Filter + ViewSeal<'a> {}
+pub trait View<'a>: ViewSeal<'a> {}
 
-impl<'a, C> View<'a> for &C where C: Component {}
+impl<'a, C> View<'a> for &'a C where C: Component {}
 
-impl<'a, C> View<'a> for &mut C where C: Component {}
+impl<'a, C> View<'a> for &'a mut C where C: Component {}
 
-impl<'a, C> View<'a> for Option<&C> where C: Component {}
+impl<'a, C> View<'a> for Option<&'a C> where C: Component {}
 
-impl<'a, C> View<'a> for Option<&mut C> where C: Component {}
+impl<'a, C> View<'a> for Option<&'a mut C> where C: Component {}
 
 impl<'a> View<'a> for entity::Identifier {}
 
-define_null_uninstantiable!();
+define_null!();
 
 /// A heterogeneous list of [`View`]s.
 ///
@@ -147,7 +149,7 @@ define_null_uninstantiable!();
 /// [`View`]: crate::query::view::View
 /// [`views!`]: crate::query::views!
 /// [`World`]: crate::world::World
-pub trait Views<'a>: Filter + ViewsSeal<'a> {}
+pub trait Views<'a>: ViewsSeal<'a> {}
 
 impl<'a> Views<'a> for Null {}
 

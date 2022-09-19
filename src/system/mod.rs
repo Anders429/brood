@@ -6,8 +6,8 @@
 //! # Example
 //! ``` rust
 //! use brood::{
-//!     query::{filter, result, views},
-//!     registry::Registry,
+//!     query::{filter, filter::Filter, result, views},
+//!     registry::{ContainsViews, Registry},
 //!     system::System,
 //! };
 //!
@@ -22,9 +22,14 @@
 //!     type Views = views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
 //!
-//!     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-//!     where
+//!     fn run<R, FI, VI, P, I, Q>(
+//!         &mut self,
+//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+//!     ) where
 //!         R: Registry + 'a,
+//!         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+//!         Self::Filter: Filter<R, FI>,
+//!         Self::Views: Filter<R, VI>,
 //!     {
 //!         for result!(foo, bar) in query_results {
 //!             if bar.0 {
@@ -59,7 +64,7 @@ pub use schedule::Schedule;
 
 use crate::{
     query::{filter::Filter, result, view::Views},
-    registry::Registry,
+    registry::{ContainsViews, Registry},
     world::World,
 };
 
@@ -77,8 +82,8 @@ use crate::{
 /// # Example
 /// ``` rust
 /// use brood::{
-///     query::{filter, result, views},
-///     registry::Registry,
+///     query::{filter, filter::Filter, result, views},
+///     registry::{ContainsViews, Registry},
 ///     system::System,
 /// };
 ///
@@ -93,9 +98,14 @@ use crate::{
 ///     type Views = views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-///     where
+///     fn run<R, FI, VI, P, I, Q>(
+///         &mut self,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+///     ) where
 ///         R: Registry + 'a,
+///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+///         Self::Filter: Filter<R, FI>,
+///         Self::Views: Filter<R, VI>,
 ///     {
 ///         for result!(foo, bar) in query_results {
 ///             if bar.0 {
@@ -110,7 +120,9 @@ use crate::{
 /// [`World`]: crate::world::World
 /// [`world_post_processing`]: crate::system::System::world_post_processing()
 pub trait System<'a> {
-    type Filter: Filter;
+    /// The filter to apply to queries run by this system.
+    type Filter;
+    /// The views on components this system should operate on.
     type Views: Views<'a>;
 
     /// Logic to be run over the query result.
@@ -122,8 +134,8 @@ pub trait System<'a> {
     /// # Example
     /// ``` rust
     /// use brood::{
-    ///     query::{filter, result, views},
-    ///     registry::Registry,
+    ///     query::{filter, filter::Filter, result, views},
+    ///     registry::{ContainsViews, Registry},
     ///     system::System,
     /// };
     ///
@@ -138,9 +150,14 @@ pub trait System<'a> {
     ///     type Views = views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-    ///     where
+    ///     fn run<R, FI, VI, P, I, Q>(
+    ///         &mut self,
+    ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+    ///     ) where
     ///         R: Registry + 'a,
+    ///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+    ///         Self::Filter: Filter<R, FI>,
+    ///         Self::Views: Filter<R, VI>,
     ///     {
     ///         for result!(foo, bar) in query_results {
     ///             if bar.0 {
@@ -153,9 +170,14 @@ pub trait System<'a> {
     ///
     /// [`World`]: crate::world::World
     /// [`world_post_processing`]: crate::system::System::world_post_processing()
-    fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>)
-    where
-        R: Registry + 'a;
+    fn run<R, FI, VI, P, I, Q>(
+        &mut self,
+        query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+    ) where
+        R: Registry + 'a,
+        R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+        Self::Filter: Filter<R, FI>,
+        Self::Views: Filter<R, VI>;
 
     /// Logic to be run after processing.
     ///
@@ -168,7 +190,7 @@ pub trait System<'a> {
     /// executes the removal during post processing.
     ///
     /// ``` rust
-    /// use brood::{entity, query::{filter, result, views}, registry::Registry, system::System, World};
+    /// use brood::{entity, query::{filter, filter::Filter, result, views}, registry::{ContainsViews, Registry}, system::System, World};
     ///
     /// // Define components.
     /// struct Foo(usize);
@@ -184,7 +206,12 @@ pub trait System<'a> {
     ///     type Views = views!(&'a mut Foo, &'a Bar, entity::Identifier);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R>(&mut self, query_results: result::Iter<'a, R, Self::Filter, Self::Views>) where R: Registry + 'a {
+    ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
+    ///     where
+    ///         R: Registry + 'a,
+    ///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+    ///         Self::Filter: Filter<R, FI>,
+    ///         Self::Views: Filter<R, VI>, {
     ///         for result!(foo, bar, entity_identifier) in query_results {
     ///             // If `bar` is true, increment `foo`. Otherwise, remove the entity in post processing.
     ///             if bar.0 {

@@ -21,7 +21,9 @@ use seal::Seal;
 /// [`ParSystem`]: crate::system::ParSystem
 /// [`System`]: crate::system::System
 pub enum RawTask<S, P> {
+    /// An unscheduled task.
     Task(Task<S, P>),
+    /// A manually-requested end to a stage.
     Flush,
 }
 

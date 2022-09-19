@@ -24,6 +24,7 @@
 //! [`registry!`]: crate::registry!
 //! [`World`]: crate::world::World
 
+mod contains;
 mod debug;
 mod eq;
 mod seal;
@@ -32,10 +33,18 @@ mod send;
 mod serde;
 mod sync;
 
+#[cfg(feature = "rayon")]
+pub use contains::ContainsParViews;
+pub use contains::ContainsViews;
+
 #[cfg(feature = "serde")]
 pub(crate) use self::serde::{RegistryDeserialize, RegistrySerialize};
+pub(crate) use contains::{ContainsComponent, ContainsEntities, ContainsEntity};
 pub(crate) use debug::RegistryDebug;
 pub(crate) use eq::{RegistryEq, RegistryPartialEq};
+#[cfg(feature = "rayon")]
+pub(crate) use seal::CanonicalParViews;
+pub(crate) use seal::{Canonical, CanonicalViews, Filter, Length};
 pub(crate) use send::RegistrySend;
 pub(crate) use sync::RegistrySync;
 

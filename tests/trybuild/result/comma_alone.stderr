@@ -1,5 +1,5 @@
 error: no rules expected the token `,`
  --> tests/trybuild/result/comma_alone.rs:4:17
   |
-4 |     let result!(,) = result::Null;
+4 |     let result!(,) = view::Null;
   |                 ^ no rules expected this token in macro call
