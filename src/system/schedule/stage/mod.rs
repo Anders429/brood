@@ -26,8 +26,11 @@ use seal::Seal;
 /// A step is a single task in a stage, along with information about whether this task is the
 /// beginning of a new stage or if it is a continuation of the current stage.
 pub enum Stage<S, P> {
+    /// The start of a new stage.
     Start(Task<S, P>),
+    /// A continuation of the current stage.
     Continue(Task<S, P>),
+    /// A manually-requested end to a stage.
     Flush,
 }
 
