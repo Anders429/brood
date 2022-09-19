@@ -53,6 +53,36 @@ pub use view::views;
 
 use core::marker::PhantomData;
 
+/// Defines a query to be run over a world.
+/// 
+/// This defines either a regular or parallel query (parallel requires the `rayon` feature to be
+/// enabled). It is essentially a marker type, simply providing the types to the calls to
+/// [`query()`] to make the API as simple to use as possible.
+/// 
+/// # Example
+/// ``` rust
+/// use brood::{
+///     entity,
+///     query::{filter, result, views},
+///     registry, Query, World,
+/// };
+///
+/// // Define components.
+/// struct Foo(u32);
+/// struct Bar(bool);
+/// struct Baz(f64);
+///
+/// type Registry = registry!(Foo, Bar, Baz);
+///
+/// let mut world = World::<Registry>::new();
+/// world.insert(entity!(Foo(42), Bar(true), Baz(1.5)));
+///
+/// for result!(foo, bar) in world.query(Query::<views!(&mut Foo, &Bar), filter::Has<Baz>>::new()) {
+///     // Do something.
+/// }
+/// ```
+/// 
+/// [`query()`]: crate::world::World::query()
 pub struct Query<V, F = filter::None> {
     view: PhantomData<V>,
     filter: PhantomData<F>,
