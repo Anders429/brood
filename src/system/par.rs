@@ -56,7 +56,9 @@ use crate::{
 /// [`World`]: crate::world::World
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub trait ParSystem<'a> {
+    /// The filter to apply to queries run by this system.
     type Filter;
+    /// The views on components this system should operate on.
     type Views: ParViews<'a>;
 
     /// Logic to be run over the parallel query result.
