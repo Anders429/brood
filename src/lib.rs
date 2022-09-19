@@ -99,7 +99,8 @@
 #![warn(
     clippy::pedantic,
     clippy::undocumented_unsafe_blocks,
-    unsafe_op_in_unsafe_fn
+    missing_docs,
+    unsafe_op_in_unsafe_fn,
 )]
 #![allow(clippy::module_name_repetitions)]
 
