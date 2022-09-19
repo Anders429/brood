@@ -120,7 +120,9 @@ use crate::{
 /// [`World`]: crate::world::World
 /// [`world_post_processing`]: crate::system::System::world_post_processing()
 pub trait System<'a> {
+    /// The filter to apply to queries run by this system.
     type Filter;
+    /// The views on components this system should operate on.
     type Views: Views<'a>;
 
     /// Logic to be run over the query result.
