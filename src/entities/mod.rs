@@ -109,10 +109,7 @@ where
 /// [`Entities`]: crate::entities::Entities
 /// [`entities!`]: crate::entities!
 #[derive(Debug, Eq, PartialEq)]
-pub struct Batch<E>
-where
-    E: Entities,
-{
+pub struct Batch<E> {
     pub(crate) entities: E,
     len: usize,
 }

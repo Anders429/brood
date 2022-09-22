@@ -50,8 +50,7 @@ use core::{iter::FusedIterator, marker::PhantomData};
 pub struct Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    F: Filter<R, FI>,
-    V: Views<'a> + Filter<R, VI>,
+    V: Views<'a>,
 {
     archetypes_iter: archetypes::IterMut<'a, R>,
 
@@ -68,8 +67,7 @@ where
 impl<'a, R, F, FI, V, VI, P, I, Q> Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    F: Filter<R, FI>,
-    V: Views<'a> + Filter<R, VI>,
+    V: Views<'a>,
 {
     pub(crate) fn new(archetypes_iter: archetypes::IterMut<'a, R>) -> Self {
         Self {
@@ -173,8 +171,7 @@ where
 // exclusive.
 unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Send for Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
-    R: Registry + 'a,
-    F: Filter<R, FI>,
-    V: Views<'a> + Filter<R, VI>,
+    R: Registry,
+    V: Views<'a>,
 {
 }
