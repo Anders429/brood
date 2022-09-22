@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.2.0 - 2022-09-18
 ### Added
 - `query()` method on `Entry` for viewing components of a single entity.
 - Documentation for some associated types and enum variants that was missing.
