@@ -59,8 +59,6 @@ use rayon::iter::{
 pub struct ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    F: Filter<R, FI>,
-    V: ParViews<'a> + Filter<R, VI>,
 {
     archetypes_iter: archetypes::ParIterMut<'a, R>,
 
@@ -76,8 +74,6 @@ where
 impl<'a, R, F, FI, V, VI, P, I, Q> ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    F: Filter<R, FI>,
-    V: ParViews<'a> + Filter<R, VI>,
 {
     pub(crate) fn new(archetypes_iter: archetypes::ParIterMut<'a, R>) -> Self {
         Self {
@@ -99,8 +95,6 @@ where
 unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Send for ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    F: Filter<R, FI>,
-    V: ParViews<'a> + Filter<R, VI>,
 {
 }
 
@@ -109,8 +103,6 @@ where
 unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Sync for ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    F: Filter<R, FI>,
-    V: ParViews<'a> + Filter<R, VI>,
 {
 }
 
