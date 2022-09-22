@@ -92,17 +92,15 @@ where
 
 // SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Send for ParIter<'a, R, F, FI, V, VI, P, I, Q>
-where
-    R: Registry,
+unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Send for ParIter<'a, R, F, FI, V, VI, P, I, Q> where
+    R: Registry
 {
 }
 
 // SAFETY: This type is safe to share between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Sync for ParIter<'a, R, F, FI, V, VI, P, I, Q>
-where
-    R: Registry,
+unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Sync for ParIter<'a, R, F, FI, V, VI, P, I, Q> where
+    R: Registry
 {
 }
 

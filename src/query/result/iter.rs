@@ -48,7 +48,7 @@ use core::{iter::FusedIterator, marker::PhantomData};
 /// [`Views`]: crate::query::view::Views
 /// [`World`]: crate::world::World
 pub struct Iter<'a, R, F, FI, V, VI, P, I, Q>
-where    
+where
     R: Registry,
     V: Views<'a>,
 {
@@ -172,6 +172,6 @@ where
 unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Send for Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    V: Views<'a>
+    V: Views<'a>,
 {
 }
