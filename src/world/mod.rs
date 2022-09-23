@@ -744,6 +744,15 @@ mod tests {
     }
 
     #[test]
+    fn extend_from_empty_twice() {
+        let mut world = World::<Registry>::new();
+
+        world.extend(entities!((A(42), B('f')); 100));
+        world.clear();
+        world.extend(entities!((A(1), B('c')); 50));
+    }
+
+    #[test]
     fn query() {
         let mut world = World::<Registry>::new();
 

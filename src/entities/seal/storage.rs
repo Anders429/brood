@@ -31,7 +31,8 @@ where
         // SAFETY: `components` is guaranteed by the safety contract of this method to contain a
         // column for component `C` as its first value.
         let component_column = unsafe { components.get_unchecked_mut(0) };
-        if length == 0 {
+        // Check both length and capacity to ensure nothing is currently allocated.
+        if length == 0 && component_column.1 == 0 {
             let mut v = ManuallyDrop::new(self.0);
             *component_column = (v.as_mut_ptr().cast::<u8>(), v.capacity());
         } else {
