@@ -264,6 +264,16 @@ where
             unsafe { archetype.clear(entity_allocator) };
         }
     }
+
+    /// Decrease the allocated capacity to the smallest amount required for the stored data.
+    ///
+    /// This may not decrease to the most optimal value, as the shrinking is dependent on the
+    /// allocator.
+    pub(crate) fn shrink_to_fit(&mut self) {
+        for archetype in self.iter_mut() {
+            archetype.shrink_to_fit();
+        }
+    }
 }
 
 #[cfg(test)]

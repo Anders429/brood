@@ -678,6 +678,32 @@ where
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    /// Shrinks the allocated capacity of the internal storage as much as possible.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{entities, registry, World};
+    ///
+    /// #[derive(Clone)]
+    /// struct Foo(usize);
+    /// #[derive(Clone)]
+    /// struct Bar(bool);
+    ///
+    /// type Registry = registry!(Foo, Bar);
+    ///
+    /// let mut world = World::<Registry>::new();
+    ///
+    /// world.extend(entities!((Foo(42), Bar(false)); 10));
+    /// world.clear();
+    /// world.extend(entities!((Foo(42), Bar(false)); 3));
+    ///
+    /// // This will reduce the current allocation.
+    /// world.shrink_to_fit();
+    /// ```
+    pub fn shrink_to_fit(&mut self) {
+        self.archetypes.shrink_to_fit();
+    }
 }
 
 #[cfg(test)]
@@ -2015,5 +2041,16 @@ mod tests {
         world.insert(entity!());
 
         assert!(!world.is_empty());
+    }
+
+    #[test]
+    fn shrink_to_fit() {
+        let mut world = World::<Registry>::new();
+
+        world.extend(entities!((A(1), B('a')); 10));
+        world.clear();
+        world.extend(entities!((A(2), B('b')); 3));
+
+        world.shrink_to_fit();
     }
 }
