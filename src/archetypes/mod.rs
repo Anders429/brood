@@ -270,6 +270,8 @@ where
     /// This may not decrease to the most optimal value, as the shrinking is dependent on the
     /// allocator.
     pub(crate) fn shrink_to_fit(&mut self) {
+        self.raw_archetypes
+            .shrink_to(0, Self::make_hasher(&self.hash_builder));
         for archetype in self.iter_mut() {
             archetype.shrink_to_fit();
         }
