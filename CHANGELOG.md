@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+### Added
+- `shrink_to_fit()` method on `World` for shrinking the `World`'s current allocation to the minimum required for the current data.
 ### Changed
 - Removed unnecessary generic bounds on `result::Iter`, `result::ParIter`, and `entities::Batch`.
 ### Fixed
