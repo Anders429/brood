@@ -585,6 +585,38 @@ where
         self.length = 0;
     }
 
+    /// Decrease the allocated capacity for the component columns and entity identifier column.
+    ///
+    /// This may not decrease to the most optimal capacity, as it is dependent on the allocator.
+    pub(crate) fn shrink_to_fit(&mut self) {
+        // SAFETY: `self.components` has the same number of values as there are set bits in
+        // `self.identifier`. Also, each element in `self.components` defines a `Vec<C>` of size
+        // `self.length` for each `C` identified by `self.identifier`.
+        //
+        // The `R` over which `self.identifier` is generic is the same `R` on which this function
+        // is being called.
+        unsafe {
+            R::shrink_components_to_fit(&mut self.components, self.length, self.identifier.iter());
+        }
+
+        let mut entity_identifiers = ManuallyDrop::new(
+            // SAFETY: `self.entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec` of size `self.length`.
+            unsafe {
+                Vec::from_raw_parts(
+                    self.entity_identifiers.0,
+                    self.length,
+                    self.entity_identifiers.1,
+                )
+            },
+        );
+        entity_identifiers.shrink_to_fit();
+        self.entity_identifiers = (
+            entity_identifiers.as_mut_ptr(),
+            entity_identifiers.capacity(),
+        );
+    }
+
     /// # Safety
     /// The `Archetype` must outlive the returned `IdentifierRef`.
     pub(crate) unsafe fn identifier(&self) -> IdentifierRef<R> {
@@ -601,9 +633,11 @@ where
         unsafe { slice::from_raw_parts(self.entity_identifiers.0, self.length) }.iter()
     }
 
-    #[cfg(feature = "serde")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
     pub(crate) fn len(&self) -> usize {
         self.length
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
