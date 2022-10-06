@@ -29,8 +29,7 @@ claims = "0.7.1"
 rustversion = "1.0.9"
 serde_derive = "1.0.144"
 serde_test = "1.0.144"
-# Temporarily use this fork until https://github.com/dtolnay/trybuild/issues/171 is resolved.
-trybuild = {git = "https://github.com/Anders429/trybuild"}
+trybuild = "1.0.69"
 
 [features]
 rayon = ["dep:rayon", "hashbrown/rayon"]
