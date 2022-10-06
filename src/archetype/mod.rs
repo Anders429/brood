@@ -633,9 +633,11 @@ where
         unsafe { slice::from_raw_parts(self.entity_identifiers.0, self.length) }.iter()
     }
 
-    #[cfg(feature = "serde")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
     pub(crate) fn len(&self) -> usize {
         self.length
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }

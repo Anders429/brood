@@ -270,11 +270,24 @@ where
     /// This may not decrease to the most optimal value, as the shrinking is dependent on the
     /// allocator.
     pub(crate) fn shrink_to_fit(&mut self) {
+        // SAFETY: The resulting `RawIter` is guaranteed to not outlive `self.raw_archetypes`.
+        for archetype_bucket in unsafe { self.raw_archetypes.iter() } {
+            // SAFETY: The reference to the archetype stored in this bucket is guaranteed to be
+            // unique.
+            let archetype = unsafe { archetype_bucket.as_mut() };
+            // Only retain non-empty archetypes.
+            if archetype.is_empty() {
+                // SAFETY: `erase()` drops in-place, meaning it is safe to do during iteration.
+                // Additionally, `archetype` is not used again after it is dropped from the table.
+                unsafe {
+                    self.raw_archetypes.erase(archetype_bucket);
+                }
+            } else {
+                archetype.shrink_to_fit();
+            }
+        }
         self.raw_archetypes
             .shrink_to(0, Self::make_hasher(&self.hash_builder));
-        for archetype in self.iter_mut() {
-            archetype.shrink_to_fit();
-        }
     }
 }
 

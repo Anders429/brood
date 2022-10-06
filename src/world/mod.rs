@@ -2053,4 +2053,15 @@ mod tests {
 
         world.shrink_to_fit();
     }
+
+    #[test]
+    fn shrink_to_fit_removes_table() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1)));
+        let entity_identifier = world.insert(entity!(B('a')));
+        world.remove(entity_identifier);
+
+        world.shrink_to_fit();
+    }
 }
