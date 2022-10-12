@@ -280,7 +280,7 @@ where
         // Convert to completed EntityAllocator.
         for (i, slot) in slots.iter().enumerate() {
             if slot.is_none() {
-                return Err(de::Error::custom(format!("missing entity index {}", i)));
+                return Err(de::Error::custom(format!("missing entity index {i}")));
             }
         }
         Ok(Self {
