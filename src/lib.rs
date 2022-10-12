@@ -59,7 +59,10 @@
 //! #
 //! # type Registry = registry!(Position, Velocity);
 //! #
-//! use brood::{entity, World};
+//! use brood::{
+//!     entity,
+//!     World,
+//! };
 //!
 //! let mut world = World::<Registry>::new();
 //!

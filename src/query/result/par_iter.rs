@@ -2,15 +2,33 @@ use crate::{
     archetype::Archetype,
     archetypes,
     query::{
-        filter::{And, Filter, Seal},
-        result::{ParResults, Reshape},
-        view::{ParViews, ParViewsSeal},
+        filter::{
+            And,
+            Filter,
+            Seal,
+        },
+        result::{
+            ParResults,
+            Reshape,
+        },
+        view::{
+            ParViews,
+            ParViewsSeal,
+        },
     },
-    registry::{ContainsParViews, Registry},
+    registry::{
+        ContainsParViews,
+        Registry,
+    },
 };
 use core::marker::PhantomData;
 use rayon::iter::{
-    plumbing::{Consumer, Folder, Reducer, UnindexedConsumer},
+    plumbing::{
+        Consumer,
+        Folder,
+        Reducer,
+        UnindexedConsumer,
+    },
     ParallelIterator,
 };
 
@@ -26,8 +44,14 @@ use rayon::iter::{
 /// ``` rust
 /// use brood::{
 ///     entity,
-///     query::{filter, result, views},
-///     registry, Query, World,
+///     query::{
+///         filter,
+///         result,
+///         views,
+///     },
+///     registry,
+///     Query,
+///     World,
 /// };
 /// use rayon::iter::ParallelIterator;
 ///

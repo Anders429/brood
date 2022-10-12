@@ -1,12 +1,20 @@
 use crate::{
     query::filter::Filter,
-    registry::{ContainsParViews, ContainsViews, Registry},
+    registry::{
+        ContainsParViews,
+        ContainsViews,
+        Registry,
+    },
     system::{
         schedule::{
             sendable::SendableWorld,
-            stage::{Null, Stage},
+            stage::{
+                Null,
+                Stage,
+            },
         },
-        ParSystem, System,
+        ParSystem,
+        System,
     },
     world::World,
 };

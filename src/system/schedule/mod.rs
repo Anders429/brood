@@ -12,9 +12,20 @@
 //!
 //! ``` rust
 //! use brood::{
-//!     query::{filter, filter::Filter, result, views},
-//!     registry::{ContainsViews, Registry},
-//!     system::{Schedule, System},
+//!     query::{
+//!         filter,
+//!         filter::Filter,
+//!         result,
+//!         views,
+//!     },
+//!     registry::{
+//!         ContainsViews,
+//!         Registry,
+//!     },
+//!     system::{
+//!         Schedule,
+//!         System,
+//!     },
 //! };
 //!
 //! // Define components.
@@ -83,7 +94,10 @@ mod builder;
 pub use builder::Builder;
 pub use stage::stages;
 
-use crate::{registry::Registry, world::World};
+use crate::{
+    registry::Registry,
+    world::World,
+};
 use sendable::SendableWorld;
 use stage::Stages;
 
@@ -99,9 +113,20 @@ use stage::Stages;
 ///
 /// ``` rust
 /// use brood::{
-///     query::{filter, filter::Filter, result, views},
-///     registry::{ContainsViews, Registry},
-///     system::{Schedule, System},
+///     query::{
+///         filter,
+///         filter::Filter,
+///         result,
+///         views,
+///     },
+///     registry::{
+///         ContainsViews,
+///         Registry,
+///     },
+///     system::{
+///         Schedule,
+///         System,
+///     },
 /// };
 ///
 /// // Define components.

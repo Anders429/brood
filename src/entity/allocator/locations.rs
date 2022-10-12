@@ -1,4 +1,8 @@
-use crate::{archetype, entity::allocator::Location, registry::Registry};
+use crate::{
+    archetype,
+    entity::allocator::Location,
+    registry::Registry,
+};
 use core::ops::Range;
 
 /// A batch of [`Location`]s, all sharing the same [`archetype::Identifier`].

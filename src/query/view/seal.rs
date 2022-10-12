@@ -1,9 +1,16 @@
 use crate::{
     component::Component,
     entity,
-    query::{claim::Claim, result::Results, view::Null},
+    query::{
+        claim::Claim,
+        result::Results,
+        view::Null,
+    },
 };
-use core::{iter, slice};
+use core::{
+    iter,
+    slice,
+};
 use either::Either;
 
 pub trait ViewSeal<'a>: Claim {

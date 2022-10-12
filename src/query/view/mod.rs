@@ -21,7 +21,10 @@
 //!
 //! # Example
 //! ``` rust
-//! use brood::{entity, query::views};
+//! use brood::{
+//!     entity,
+//!     query::views,
+//! };
 //!
 //! // Define components.
 //! struct Foo(u32);
@@ -51,15 +54,26 @@ mod reshape;
 mod seal;
 
 #[cfg(feature = "rayon")]
-pub use par::{ParView, ParViews};
+pub use par::{
+    ParView,
+    ParViews,
+};
 
 pub(crate) use get::Get;
 #[cfg(feature = "rayon")]
-pub(crate) use par::{ParViewsSeal, RepeatNone};
+pub(crate) use par::{
+    ParViewsSeal,
+    RepeatNone,
+};
 pub(crate) use reshape::Reshape;
 pub(crate) use seal::ViewsSeal;
 
-use crate::{component::Component, doc, entity, hlist::define_null};
+use crate::{
+    component::Component,
+    doc,
+    entity,
+    hlist::define_null,
+};
 use seal::ViewSeal;
 
 /// A view over a single aspect of an entity.

@@ -1,12 +1,31 @@
 use crate::{
     archetype,
-    archetype::{DeserializeColumn, SerializeColumn},
+    archetype::{
+        DeserializeColumn,
+        SerializeColumn,
+    },
     component::Component,
-    registry::{Null, Registry},
+    registry::{
+        Null,
+        Registry,
+    },
 };
-use alloc::{format, string::String, vec::Vec};
-use core::{any::type_name, mem::ManuallyDrop};
-use serde::{de, de::SeqAccess, ser::SerializeTuple, Deserialize, Serialize};
+use alloc::{
+    format,
+    string::String,
+    vec::Vec,
+};
+use core::{
+    any::type_name,
+    mem::ManuallyDrop,
+};
+use serde::{
+    de,
+    de::SeqAccess,
+    ser::SerializeTuple,
+    Deserialize,
+    Serialize,
+};
 
 #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
 pub trait RegistrySerialize: Registry {

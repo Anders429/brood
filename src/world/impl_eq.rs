@@ -1,5 +1,8 @@
 use super::World;
-use crate::registry::{RegistryEq, RegistryPartialEq};
+use crate::registry::{
+    RegistryEq,
+    RegistryPartialEq,
+};
 
 impl<R> PartialEq for World<R>
 where
@@ -17,7 +20,10 @@ impl<R> Eq for World<R> where R: RegistryEq {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{entity, registry};
+    use crate::{
+        entity,
+        registry,
+    };
 
     #[derive(Debug, Eq, PartialEq)]
     struct A(u32);

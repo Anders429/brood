@@ -1,7 +1,14 @@
 use core::marker::PhantomData;
 use rayon::iter::{
-    plumbing::{bridge, Consumer, Producer, ProducerCallback, UnindexedConsumer},
-    IndexedParallelIterator, ParallelIterator,
+    plumbing::{
+        bridge,
+        Consumer,
+        Producer,
+        ProducerCallback,
+        UnindexedConsumer,
+    },
+    IndexedParallelIterator,
+    ParallelIterator,
 };
 
 pub struct RepeatNone<T> {

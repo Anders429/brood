@@ -1,6 +1,13 @@
 use crate::{
-    query::{filter::Filter, result, view::ParViews},
-    registry::{ContainsParViews, Registry},
+    query::{
+        filter::Filter,
+        result,
+        view::ParViews,
+    },
+    registry::{
+        ContainsParViews,
+        Registry,
+    },
     world::World,
 };
 
@@ -13,8 +20,16 @@ use crate::{
 /// # Example
 /// ``` rust
 /// use brood::{
-///     query::{filter, filter::Filter, result, views},
-///     registry::{ContainsParViews, Registry},
+///     query::{
+///         filter,
+///         filter::Filter,
+///         result,
+///         views,
+///     },
+///     registry::{
+///         ContainsParViews,
+///         Registry,
+///     },
 ///     system::ParSystem,
 /// };
 /// use rayon::iter::ParallelIterator;
@@ -70,8 +85,16 @@ pub trait ParSystem<'a> {
     /// # Example
     /// ``` rust
     /// use brood::{
-    ///     query::{filter, filter::Filter, result, views},
-    ///     registry::{ContainsParViews, Registry},
+    ///     query::{
+    ///         filter,
+    ///         filter::Filter,
+    ///         result,
+    ///         views,
+    ///     },
+    ///     registry::{
+    ///         ContainsParViews,
+    ///         Registry,
+    ///     },
     ///     system::ParSystem,
     /// };
     /// use rayon::iter::ParallelIterator;

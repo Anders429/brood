@@ -1,4 +1,7 @@
-use crate::{component::Component, entities::Null};
+use crate::{
+    component::Component,
+    entities::Null,
+};
 use alloc::vec::Vec;
 
 pub trait Length {

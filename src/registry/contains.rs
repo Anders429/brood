@@ -12,21 +12,36 @@ use crate::{
     entity,
     entity::Entity,
     query::{
-        result, view,
-        view::{Views, ViewsSeal},
+        result,
+        view,
+        view::{
+            Views,
+            ViewsSeal,
+        },
     },
     registry,
-    registry::{Canonical, CanonicalViews, Length, Registry},
+    registry::{
+        Canonical,
+        CanonicalViews,
+        Length,
+        Registry,
+    },
 };
 #[cfg(feature = "rayon")]
 use crate::{
-    query::view::{ParViews, ParViewsSeal},
+    query::view::{
+        ParViews,
+        ParViewsSeal,
+    },
     registry::CanonicalParViews,
 };
 use alloc::vec::Vec;
 use core::slice;
 #[cfg(feature = "rayon")]
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use rayon::iter::{
+    IntoParallelRefIterator,
+    ParallelIterator,
+};
 
 /// Type marker for a component contained in an entity.
 ///
@@ -812,7 +827,10 @@ mod component_tests {
 #[cfg(test)]
 mod entity_tests {
     use super::ContainsEntity;
-    use crate::{entity, registry};
+    use crate::{
+        entity,
+        registry,
+    };
 
     #[derive(Debug, Eq, PartialEq)]
     struct A;
@@ -857,7 +875,10 @@ mod entity_tests {
 #[cfg(test)]
 mod entities_tests {
     use super::ContainsEntities;
-    use crate::{entities, registry};
+    use crate::{
+        entities,
+        registry,
+    };
 
     #[derive(Clone, Debug, Eq, PartialEq)]
     struct A;

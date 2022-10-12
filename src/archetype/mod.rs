@@ -8,9 +8,15 @@ mod impl_serde;
 
 pub(crate) mod identifier;
 
-pub(crate) use identifier::{Identifier, IdentifierRef};
+pub(crate) use identifier::{
+    Identifier,
+    IdentifierRef,
+};
 #[cfg(feature = "serde")]
-pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
+pub(crate) use impl_serde::{
+    DeserializeColumn,
+    SerializeColumn,
+};
 
 use crate::{
     component::Component,
@@ -18,15 +24,28 @@ use crate::{
     entities::Entities,
     entity,
     entity::{
-        allocator::{Location, Locations},
+        allocator::{
+            Location,
+            Locations,
+        },
         Entity,
     },
-    query::view::{Views, ViewsSeal},
-    registry::{ContainsComponent, ContainsViews, Registry},
+    query::view::{
+        Views,
+        ViewsSeal,
+    },
+    registry::{
+        ContainsComponent,
+        ContainsViews,
+        Registry,
+    },
 };
 #[cfg(feature = "rayon")]
 use crate::{
-    query::view::{ParViews, ParViewsSeal},
+    query::view::{
+        ParViews,
+        ParViewsSeal,
+    },
     registry::ContainsParViews,
 };
 use alloc::vec::Vec;
@@ -34,7 +53,10 @@ use alloc::vec::Vec;
 use core::slice;
 use core::{
     marker::PhantomData,
-    mem::{ManuallyDrop, MaybeUninit},
+    mem::{
+        ManuallyDrop,
+        MaybeUninit,
+    },
 };
 
 pub(crate) struct Archetype<R>

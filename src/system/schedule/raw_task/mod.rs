@@ -10,7 +10,11 @@ mod seal;
 
 use crate::{
     hlist::define_null,
-    system::{schedule::task::Task, ParSystem, System},
+    system::{
+        schedule::task::Task,
+        ParSystem,
+        System,
+    },
 };
 use seal::Seal;
 

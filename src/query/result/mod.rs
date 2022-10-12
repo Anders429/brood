@@ -18,8 +18,14 @@
 //! ``` rust
 //! use brood::{
 //!     entity,
-//!     query::{filter, result, views},
-//!     registry, Query, World,
+//!     query::{
+//!         filter,
+//!         result,
+//!         views,
+//!     },
+//!     registry,
+//!     Query,
+//!     World,
 //! };
 //!
 //! struct Foo(u32);

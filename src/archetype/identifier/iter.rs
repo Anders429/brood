@@ -103,8 +103,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{archetype::Identifier, registry};
-    use alloc::{vec, vec::Vec};
+    use crate::{
+        archetype::Identifier,
+        registry,
+    };
+    use alloc::{
+        vec,
+        vec::Vec,
+    };
 
     macro_rules! create_components {
         ($( $variants:ident ),*) => {

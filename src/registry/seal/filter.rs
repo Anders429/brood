@@ -3,7 +3,10 @@
 //! This allows archetype identifiers that are generic over this registry to be safely queried for
 //! a component.
 
-use crate::{archetype, registry::Registry};
+use crate::{
+    archetype,
+    registry::Registry,
+};
 
 /// Type marker component's index in registry.
 pub enum Index {}
@@ -47,7 +50,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{archetype, registry};
+    use crate::{
+        archetype,
+        registry,
+    };
     use alloc::vec;
 
     struct A;

@@ -16,8 +16,16 @@ use crate::{
     doc,
     hlist::define_null,
     query::filter::Filter,
-    registry::{ContainsParViews, ContainsViews, Registry},
-    system::{schedule::task::Task, ParSystem, System},
+    registry::{
+        ContainsParViews,
+        ContainsViews,
+        Registry,
+    },
+    system::{
+        schedule::task::Task,
+        ParSystem,
+        System,
+    },
 };
 use seal::Seal;
 

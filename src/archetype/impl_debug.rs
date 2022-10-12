@@ -1,7 +1,15 @@
-use crate::{archetype, archetype::Archetype, entity, registry::RegistryDebug};
+use crate::{
+    archetype,
+    archetype::Archetype,
+    entity,
+    registry::RegistryDebug,
+};
 use alloc::vec::Vec;
 use core::{
-    fmt::{self, Debug},
+    fmt::{
+        self,
+        Debug,
+    },
     mem::ManuallyDrop,
 };
 

@@ -3,11 +3,15 @@ use crate::{
     system::{
         schedule::{
             raw_task,
-            raw_task::{RawTask, RawTasks},
+            raw_task::{
+                RawTask,
+                RawTasks,
+            },
             task::Task,
             Schedule,
         },
-        ParSystem, System,
+        ParSystem,
+        System,
     },
 };
 use fnv::FnvBuildHasher;
@@ -28,9 +32,20 @@ use hashbrown::HashSet;
 ///
 /// ``` rust
 /// use brood::{
-///     query::{filter, filter::Filter, result, views},
-///     registry::{ContainsViews, Registry},
-///     system::{Schedule, System},
+///     query::{
+///         filter,
+///         filter::Filter,
+///         result,
+///         views,
+///     },
+///     registry::{
+///         ContainsViews,
+///         Registry,
+///     },
+///     system::{
+///         Schedule,
+///         System,
+///     },
 /// };
 ///
 /// // Define components.

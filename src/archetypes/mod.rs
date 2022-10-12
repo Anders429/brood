@@ -16,16 +16,29 @@ pub(crate) use par_iter::ParIterMut;
 use crate::{
     archetype,
     archetype::Archetype,
-    entity::{self, Entity},
-    registry::{Canonical, Registry},
+    entity::{
+        self,
+        Entity,
+    },
+    registry::{
+        Canonical,
+        Registry,
+    },
 };
 use core::{
     any::TypeId,
-    hash::{BuildHasher, Hash, Hasher},
+    hash::{
+        BuildHasher,
+        Hash,
+        Hasher,
+    },
     hint::unreachable_unchecked,
 };
 use fnv::FnvBuildHasher;
-use hashbrown::{raw::RawTable, HashMap};
+use hashbrown::{
+    raw::RawTable,
+    HashMap,
+};
 use iter::Iter;
 
 pub(crate) struct Archetypes<R>
@@ -268,7 +281,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{archetype, archetypes::Archetypes, registry};
+    use crate::{
+        archetype,
+        archetypes::Archetypes,
+        registry,
+    };
     use alloc::vec;
 
     macro_rules! create_components {

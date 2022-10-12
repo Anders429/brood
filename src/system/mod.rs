@@ -6,8 +6,16 @@
 //! # Example
 //! ``` rust
 //! use brood::{
-//!     query::{filter, filter::Filter, result, views},
-//!     registry::{ContainsViews, Registry},
+//!     query::{
+//!         filter,
+//!         filter::Filter,
+//!         result,
+//!         views,
+//!     },
+//!     registry::{
+//!         ContainsViews,
+//!         Registry,
+//!     },
 //!     system::System,
 //! };
 //!
@@ -63,8 +71,15 @@ pub use par::ParSystem;
 pub use schedule::Schedule;
 
 use crate::{
-    query::{filter::Filter, result, view::Views},
-    registry::{ContainsViews, Registry},
+    query::{
+        filter::Filter,
+        result,
+        view::Views,
+    },
+    registry::{
+        ContainsViews,
+        Registry,
+    },
     world::World,
 };
 
@@ -82,8 +97,16 @@ use crate::{
 /// # Example
 /// ``` rust
 /// use brood::{
-///     query::{filter, filter::Filter, result, views},
-///     registry::{ContainsViews, Registry},
+///     query::{
+///         filter,
+///         filter::Filter,
+///         result,
+///         views,
+///     },
+///     registry::{
+///         ContainsViews,
+///         Registry,
+///     },
 ///     system::System,
 /// };
 ///
@@ -134,8 +157,16 @@ pub trait System<'a> {
     /// # Example
     /// ``` rust
     /// use brood::{
-    ///     query::{filter, filter::Filter, result, views},
-    ///     registry::{ContainsViews, Registry},
+    ///     query::{
+    ///         filter,
+    ///         filter::Filter,
+    ///         result,
+    ///         views,
+    ///     },
+    ///     registry::{
+    ///         ContainsViews,
+    ///         Registry,
+    ///     },
     ///     system::System,
     /// };
     ///

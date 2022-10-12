@@ -1,4 +1,7 @@
-use crate::{component::Component, entity::Null};
+use crate::{
+    component::Component,
+    entity::Null,
+};
 use alloc::vec::Vec;
 use core::mem::ManuallyDrop;
 

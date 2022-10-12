@@ -6,7 +6,10 @@
 //!
 //! [`Registry`]: crate::registry::Registry
 
-use crate::{component::Component, registry::Null};
+use crate::{
+    component::Component,
+    registry::Null,
+};
 use core::any::TypeId;
 use fnv::FnvBuildHasher;
 use hashbrown::HashSet;

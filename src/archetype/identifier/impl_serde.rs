@@ -1,11 +1,28 @@
-use crate::{archetype::Identifier, registry::Registry};
-use alloc::{format, vec::Vec};
-use core::{fmt, marker::PhantomData, mem::ManuallyDrop};
+use crate::{
+    archetype::Identifier,
+    registry::Registry,
+};
+use alloc::{
+    format,
+    vec::Vec,
+};
+use core::{
+    fmt,
+    marker::PhantomData,
+    mem::ManuallyDrop,
+};
 use serde::{
     de,
-    de::{SeqAccess, Unexpected, Visitor},
+    de::{
+        SeqAccess,
+        Unexpected,
+        Visitor,
+    },
     ser::SerializeTuple,
-    Deserialize, Deserializer, Serialize, Serializer,
+    Deserialize,
+    Deserializer,
+    Serialize,
+    Serializer,
 };
 
 impl<R> Serialize for Identifier<R>
@@ -104,7 +121,11 @@ mod tests {
     use super::*;
     use crate::registry;
     use alloc::vec;
-    use serde_test::{assert_de_tokens_error, assert_tokens, Token};
+    use serde_test::{
+        assert_de_tokens_error,
+        assert_tokens,
+        Token,
+    };
 
     macro_rules! create_components {
         ($( $variants:ident ),*) => {

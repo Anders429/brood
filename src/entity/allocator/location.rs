@@ -1,5 +1,11 @@
-use crate::{archetype, registry::Registry};
-use core::{fmt, fmt::Debug};
+use crate::{
+    archetype,
+    registry::Registry,
+};
+use core::{
+    fmt,
+    fmt::Debug,
+};
 
 /// Defines an entity's location.
 ///
@@ -62,7 +68,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::Location;
-    use crate::{archetype::Identifier, registry};
+    use crate::{
+        archetype::Identifier,
+        registry,
+    };
     use alloc::vec;
 
     macro_rules! create_components {

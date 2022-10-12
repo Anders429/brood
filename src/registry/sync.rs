@@ -1,6 +1,9 @@
 use crate::{
     component::Component,
-    registry::{Null, Registry},
+    registry::{
+        Null,
+        Registry,
+    },
 };
 
 pub trait RegistrySync: Registry {}

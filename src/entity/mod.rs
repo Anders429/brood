@@ -11,7 +11,11 @@
 //!
 //! # Example
 //! ``` rust
-//! use brood::{entity, registry, World};
+//! use brood::{
+//!     entity,
+//!     registry,
+//!     World,
+//! };
 //!
 //! // Define components.
 //! struct Foo(usize);
@@ -48,7 +52,10 @@ pub use identifier::Identifier;
 pub(crate) use allocator::Allocator;
 pub(crate) use get::Get;
 
-use crate::{component::Component, hlist::define_null};
+use crate::{
+    component::Component,
+    hlist::define_null,
+};
 use seal::Seal;
 
 define_null!();

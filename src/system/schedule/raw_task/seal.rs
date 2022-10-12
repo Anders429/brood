@@ -2,11 +2,15 @@ use crate::{
     query::claim::Claim,
     system::{
         schedule::{
-            raw_task::{Null, RawTask},
+            raw_task::{
+                Null,
+                RawTask,
+            },
             stage,
             stage::Stage,
         },
-        ParSystem, System,
+        ParSystem,
+        System,
     },
 };
 use core::any::TypeId;

@@ -3,17 +3,30 @@ use crate::{
     component::Component,
     query::{
         view,
-        view::{ParViews, ParViewsSeal, RepeatNone},
+        view::{
+            ParViews,
+            ParViewsSeal,
+            RepeatNone,
+        },
     },
     registry,
     registry::{
-        contains::{Contained, NotContained, Null},
+        contains::{
+            Contained,
+            NotContained,
+            Null,
+        },
         Registry,
     },
 };
 use rayon::{
     iter,
-    iter::{Either, IntoParallelRefIterator, IntoParallelRefMutIterator, ParallelIterator},
+    iter::{
+        Either,
+        IntoParallelRefIterator,
+        IntoParallelRefMutIterator,
+        ParallelIterator,
+    },
 };
 
 pub trait CanonicalParViews<'a, V, P>

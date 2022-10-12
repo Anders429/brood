@@ -1,11 +1,22 @@
 use crate::{
-    query::{filter, filter::Filter, result, view},
-    registry::{ContainsViews, Registry},
+    query::{
+        filter,
+        filter::Filter,
+        result,
+        view,
+    },
+    registry::{
+        ContainsViews,
+        Registry,
+    },
     system::System,
     world::World,
 };
 #[cfg(feature = "rayon")]
-use crate::{registry::ContainsParViews, system::ParSystem};
+use crate::{
+    registry::ContainsParViews,
+    system::ParSystem,
+};
 use core::hint::unreachable_unchecked;
 
 /// A null system.

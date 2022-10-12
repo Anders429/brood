@@ -22,15 +22,29 @@ use crate::{
     entities::Entities,
     entity,
     entity::Entity,
-    query::{filter::Filter, result, view::Views, Query},
-    registry::{ContainsEntities, ContainsEntity, ContainsViews, Registry},
+    query::{
+        filter::Filter,
+        result,
+        view::Views,
+        Query,
+    },
+    registry::{
+        ContainsEntities,
+        ContainsEntity,
+        ContainsViews,
+        Registry,
+    },
     system::System,
 };
 #[cfg(feature = "rayon")]
 use crate::{
     query::view::ParViews,
     registry::ContainsParViews,
-    system::{schedule::stage::Stages, ParSystem, Schedule},
+    system::{
+        schedule::stage::Stages,
+        ParSystem,
+        Schedule,
+    },
 };
 use alloc::vec::Vec;
 use fnv::FnvBuildHasher;
@@ -44,7 +58,11 @@ use hashbrown::HashSet;
 /// identified using an `entity::Identifier`.
 ///
 /// ``` rust
-/// use brood::{entity, registry, World};
+/// use brood::{
+///     entity,
+///     registry,
+///     World,
+/// };
 ///
 /// // Define components.
 /// struct Foo(u32);
@@ -104,7 +122,10 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{registry, World};
+    /// use brood::{
+    ///     registry,
+    ///     World,
+    /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
@@ -124,7 +145,11 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entity, registry, World};
+    /// use brood::{
+    ///     entity,
+    ///     registry,
+    ///     World,
+    /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
@@ -160,7 +185,11 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entities, registry, World};
+    /// use brood::{
+    ///     entities,
+    ///     registry,
+    ///     World,
+    /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
@@ -206,8 +235,14 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     query::{filter, result, views},
-    ///     registry, Query, World,
+    ///     query::{
+    ///         filter,
+    ///         result,
+    ///         views,
+    ///     },
+    ///     registry,
+    ///     Query,
+    ///     World,
     /// };
     ///
     /// struct Foo(u32);
@@ -261,8 +296,14 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     query::{filter, result, views},
-    ///     registry, Query, World,
+    ///     query::{
+    ///         filter,
+    ///         result,
+    ///         views,
+    ///     },
+    ///     registry,
+    ///     Query,
+    ///     World,
     /// };
     /// use rayon::iter::ParallelIterator;
     ///
@@ -316,9 +357,17 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     query::{filter, filter::Filter, result, views},
+    ///     query::{
+    ///         filter,
+    ///         filter::Filter,
+    ///         result,
+    ///         views,
+    ///     },
     ///     registry,
-    ///     registry::{ContainsViews, Registry},
+    ///     registry::{
+    ///         ContainsViews,
+    ///         Registry,
+    ///     },
     ///     system::System,
     ///     World,
     /// };
@@ -375,9 +424,17 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     query::{filter, filter::Filter, result, views},
+    ///     query::{
+    ///         filter,
+    ///         filter::Filter,
+    ///         result,
+    ///         views,
+    ///     },
     ///     registry,
-    ///     registry::{ContainsParViews, Registry},
+    ///     registry::{
+    ///         ContainsParViews,
+    ///         Registry,
+    ///     },
     ///     system::ParSystem,
     ///     World,
     /// };
@@ -434,10 +491,21 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     query::{filter, filter::Filter, result, views},
+    ///     query::{
+    ///         filter,
+    ///         filter::Filter,
+    ///         result,
+    ///         views,
+    ///     },
     ///     registry,
-    ///     registry::{ContainsViews, Registry},
-    ///     system::{Schedule, System},
+    ///     registry::{
+    ///         ContainsViews,
+    ///         Registry,
+    ///     },
+    ///     system::{
+    ///         Schedule,
+    ///         System,
+    ///     },
     ///     World,
     /// };
     ///
@@ -514,7 +582,11 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entity, registry, World};
+    /// use brood::{
+    ///     entity,
+    ///     registry,
+    ///     World,
+    /// };
     ///
     /// struct Foo(usize);
     /// struct Bar(bool);
@@ -540,7 +612,11 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entity, registry, World};
+    /// use brood::{
+    ///     entity,
+    ///     registry,
+    ///     World,
+    /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
@@ -570,7 +646,11 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entity, registry, World};
+    /// use brood::{
+    ///     entity,
+    ///     registry,
+    ///     World,
+    /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
@@ -611,7 +691,11 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entity, registry, World};
+    /// use brood::{
+    ///     entity,
+    ///     registry,
+    ///     World,
+    /// };
     ///
     /// struct Foo(usize);
     /// struct Bar(bool);
@@ -659,7 +743,11 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entity, registry, World};
+    /// use brood::{
+    ///     entity,
+    ///     registry,
+    ///     World,
+    /// };
     ///
     /// struct Foo(usize);
     /// struct Bar(bool);
@@ -684,12 +772,20 @@ where
 mod tests {
     use super::*;
     use crate::{
-        entities, entity,
-        query::{filter, result, views},
+        entities,
+        entity,
+        query::{
+            filter,
+            result,
+            views,
+        },
         registry,
     };
     use alloc::vec;
-    use claims::{assert_none, assert_some};
+    use claims::{
+        assert_none,
+        assert_some,
+    };
     #[cfg(feature = "rayon")]
     use rayon::iter::ParallelIterator;
 
