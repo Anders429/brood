@@ -2,7 +2,10 @@ use crate::{
     entity,
     query::{
         result::get::Index,
-        view::{View, Views},
+        view::{
+            View,
+            Views,
+        },
     },
 };
 

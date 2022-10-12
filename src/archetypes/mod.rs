@@ -16,16 +16,29 @@ pub(crate) use par_iter::ParIterMut;
 use crate::{
     archetype,
     archetype::Archetype,
-    entity::{self, Entity},
-    registry::{Canonical, Registry},
+    entity::{
+        self,
+        Entity,
+    },
+    registry::{
+        Canonical,
+        Registry,
+    },
 };
 use core::{
     any::TypeId,
-    hash::{BuildHasher, Hash, Hasher},
+    hash::{
+        BuildHasher,
+        Hash,
+        Hasher,
+    },
     hint::unreachable_unchecked,
 };
 use fnv::FnvBuildHasher;
-use hashbrown::{raw::RawTable, HashMap};
+use hashbrown::{
+    raw::RawTable,
+    HashMap,
+};
 use iter::Iter;
 
 pub(crate) struct Archetypes<R>
@@ -70,7 +83,8 @@ where
     fn make_hasher(hash_builder: &FnvBuildHasher) -> impl Fn(&Archetype<R>) -> u64 + '_ {
         move |archetype| {
             Self::make_hash(
-                // SAFETY: The `IdentifierRef` obtained here does not live longer than the `archetype`.
+                // SAFETY: The `IdentifierRef` obtained here does not live longer than the
+                // `archetype`.
                 unsafe { archetype.identifier() },
                 hash_builder,
             )
@@ -293,7 +307,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{archetype, archetypes::Archetypes, registry};
+    use crate::{
+        archetype,
+        archetypes::Archetypes,
+        registry,
+    };
     use alloc::vec;
 
     macro_rules! create_components {

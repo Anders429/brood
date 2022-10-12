@@ -2,7 +2,10 @@
 //!
 //! [`Registry`]: crate::registry::Registry
 
-use crate::{component::Component, registry::Null};
+use crate::{
+    component::Component,
+    registry::Null,
+};
 
 /// Defines a length for the given heterogeneous list.
 pub trait Length {

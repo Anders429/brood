@@ -10,9 +10,15 @@ use alloc::vec::Vec;
 use core::{
     fmt,
     fmt::Debug,
-    hash::{Hash, Hasher},
+    hash::{
+        Hash,
+        Hasher,
+    },
     marker::PhantomData,
-    mem::{drop, ManuallyDrop},
+    mem::{
+        drop,
+        ManuallyDrop,
+    },
     slice,
 };
 
@@ -343,8 +349,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{archetype::Identifier, registry};
-    use alloc::{vec, vec::Vec};
+    use crate::{
+        archetype::Identifier,
+        registry,
+    };
+    use alloc::{
+        vec,
+        vec::Vec,
+    };
     use core::ptr;
     use fnv::FnvBuildHasher;
     use hashbrown::HashSet;

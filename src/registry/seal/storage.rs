@@ -15,14 +15,25 @@
 use crate::{
     archetype,
     component::Component,
-    registry::{Null, Registry},
+    registry::{
+        Null,
+        Registry,
+    },
 };
 use alloc::vec::Vec;
 use core::{
-    any::{type_name, TypeId},
+    any::{
+        type_name,
+        TypeId,
+    },
     fmt::DebugList,
     marker::PhantomData,
-    mem::{drop, size_of, ManuallyDrop, MaybeUninit},
+    mem::{
+        drop,
+        size_of,
+        ManuallyDrop,
+        MaybeUninit,
+    },
     ptr,
 };
 
@@ -1080,11 +1091,21 @@ where
 #[cfg(test)]
 mod tests {
     use super::Storage;
-    use crate::{archetype::Identifier, registry};
-    use alloc::{vec, vec::Vec};
+    use crate::{
+        archetype::Identifier,
+        registry,
+    };
+    use alloc::{
+        vec,
+        vec::Vec,
+    };
     use core::{
         marker::PhantomData,
-        mem::{size_of, ManuallyDrop, MaybeUninit},
+        mem::{
+            size_of,
+            ManuallyDrop,
+            MaybeUninit,
+        },
     };
 
     #[test]

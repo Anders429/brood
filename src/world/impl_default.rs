@@ -1,4 +1,7 @@
-use crate::{registry::Registry, World};
+use crate::{
+    registry::Registry,
+    World,
+};
 
 impl<R> Default for World<R>
 where

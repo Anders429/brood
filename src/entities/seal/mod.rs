@@ -4,7 +4,10 @@ mod storage;
 
 pub(crate) use contains::Contains;
 
-use crate::{component::Component, entities::Null};
+use crate::{
+    component::Component,
+    entities::Null,
+};
 use alloc::vec::Vec;
 use length::Length;
 use storage::Storage;

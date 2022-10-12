@@ -1,13 +1,26 @@
 use crate::{
     archetypes,
     query::{
-        filter::{And, Filter, Seal},
-        result::{Reshape, Results},
+        filter::{
+            And,
+            Filter,
+            Seal,
+        },
+        result::{
+            Reshape,
+            Results,
+        },
         view::Views,
     },
-    registry::{ContainsViews, Registry},
+    registry::{
+        ContainsViews,
+        Registry,
+    },
 };
-use core::{iter::FusedIterator, marker::PhantomData};
+use core::{
+    iter::FusedIterator,
+    marker::PhantomData,
+};
 
 /// An [`Iterator`] over the results of a query.
 ///
@@ -22,8 +35,14 @@ use core::{iter::FusedIterator, marker::PhantomData};
 /// ``` rust
 /// use brood::{
 ///     entity,
-///     query::{filter, result, views},
-///     registry, Query, World,
+///     query::{
+///         filter,
+///         result,
+///         views,
+///     },
+///     registry,
+///     Query,
+///     World,
 /// };
 ///
 /// struct Foo(u32);

@@ -3,10 +3,20 @@ use crate::{
     component::Component,
     entity,
     query::{
-        filter::{And, Filter, Has, None, Not, Or},
+        filter::{
+            And,
+            Filter,
+            Has,
+            None,
+            Not,
+            Or,
+        },
         view,
     },
-    registry::{self, Registry},
+    registry::{
+        self,
+        Registry,
+    },
 };
 
 pub trait Seal<R, I>
@@ -139,7 +149,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{query::views, registry};
+    use crate::{
+        query::views,
+        registry,
+    };
     use alloc::vec;
 
     struct A;

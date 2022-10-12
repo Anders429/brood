@@ -29,7 +29,10 @@ pub(crate) use view::CanonicalViews;
 
 use crate::{
     component::Component,
-    registry::{contains::EntityIdentifierMarker, Null},
+    registry::{
+        contains::EntityIdentifierMarker,
+        Null,
+    },
 };
 use assertions::Assertions;
 use storage::Storage;

@@ -1,6 +1,9 @@
 mod storage;
 
-use crate::{component::Component, entity::Null};
+use crate::{
+    component::Component,
+    entity::Null,
+};
 use storage::Storage;
 
 pub trait Seal: Storage {}

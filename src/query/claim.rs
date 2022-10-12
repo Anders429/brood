@@ -1,4 +1,8 @@
-use crate::{component::Component, entity, query::view};
+use crate::{
+    component::Component,
+    entity,
+    query::view,
+};
 use core::any::TypeId;
 use fnv::FnvBuildHasher;
 use hashbrown::HashSet;

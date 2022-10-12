@@ -1,12 +1,38 @@
-use super::{Allocator, Location, Slot};
-use crate::{archetypes::Archetypes, entity, registry::Registry};
-use alloc::{format, vec, vec::Vec};
-use core::{fmt, marker::PhantomData};
+use super::{
+    Allocator,
+    Location,
+    Slot,
+};
+use crate::{
+    archetypes::Archetypes,
+    entity,
+    registry::Registry,
+};
+use alloc::{
+    format,
+    vec,
+    vec::Vec,
+};
+use core::{
+    fmt,
+    marker::PhantomData,
+};
 use serde::{
     de,
-    de::{DeserializeSeed, MapAccess, SeqAccess, Visitor},
-    ser::{SerializeSeq, SerializeStruct},
-    Deserialize, Deserializer, Serialize, Serializer,
+    de::{
+        DeserializeSeed,
+        MapAccess,
+        SeqAccess,
+        Visitor,
+    },
+    ser::{
+        SerializeSeq,
+        SerializeStruct,
+    },
+    Deserialize,
+    Deserializer,
+    Serialize,
+    Serializer,
 };
 
 struct SerializeFree<'a, R>(&'a Allocator<R>)
@@ -254,7 +280,7 @@ where
         // Convert to completed EntityAllocator.
         for (i, slot) in slots.iter().enumerate() {
             if slot.is_none() {
-                return Err(de::Error::custom(format!("missing entity index {}", i)));
+                return Err(de::Error::custom(format!("missing entity index {i}")));
             }
         }
         Ok(Self {
@@ -279,15 +305,32 @@ mod tests {
     use crate::{
         archetype,
         archetype::Archetype,
-        entity, registry,
+        entity,
+        registry,
         registry::{
-            RegistryDebug, RegistryDeserialize, RegistryEq, RegistryPartialEq, RegistrySerialize,
+            RegistryDebug,
+            RegistryDeserialize,
+            RegistryEq,
+            RegistryPartialEq,
+            RegistrySerialize,
         },
     };
     use claims::assert_ok;
-    use core::{fmt, fmt::Debug, marker::PhantomData};
-    use serde_derive::{Deserialize, Serialize};
-    use serde_test::{assert_de_tokens, assert_de_tokens_error, assert_tokens, Token};
+    use core::{
+        fmt,
+        fmt::Debug,
+        marker::PhantomData,
+    };
+    use serde_derive::{
+        Deserialize,
+        Serialize,
+    };
+    use serde_test::{
+        assert_de_tokens,
+        assert_de_tokens_error,
+        assert_tokens,
+        Token,
+    };
 
     #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
     struct A;

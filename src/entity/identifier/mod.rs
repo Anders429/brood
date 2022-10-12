@@ -10,7 +10,11 @@ mod impl_serde;
 ///
 /// # Example
 /// ``` rust
-/// use brood::{entity, registry, World};
+/// use brood::{
+///     entity,
+///     registry,
+///     World,
+/// };
 ///
 /// // Define components.
 /// struct Foo(usize);

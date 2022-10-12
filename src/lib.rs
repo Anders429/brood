@@ -10,7 +10,8 @@
 //!
 //! # Key Features
 //! - Entities made up of an arbitrary number of components.
-//! - Built-in support for [`serde`](https://crates.io/crates/serde), providing pain-free serialization and deserialization of `World` containers.
+//! - Built-in support for [`serde`](https://crates.io/crates/serde), providing pain-free
+//!   serialization and deserialization of `World` containers.
 //! - Inner- and outer-parallelism using [`rayon`](https://crates.io/crates/rayon).
 //! - Minimal boilerplate.
 //! - `no_std` compatible.
@@ -59,7 +60,10 @@
 //! #
 //! # type Registry = registry!(Position, Velocity);
 //! #
-//! use brood::{entity, World};
+//! use brood::{
+//!     entity,
+//!     World,
+//! };
 //!
 //! let mut world = World::<Registry>::new();
 //!
@@ -97,8 +101,12 @@
 #![no_std]
 #![cfg_attr(doc_cfg, feature(doc_cfg, decl_macro))]
 #![warn(
+    clippy::expect_used,
+    clippy::indexing_slicing,
+    clippy::panic,
     clippy::pedantic,
     clippy::undocumented_unsafe_blocks,
+    clippy::unwrap_used,
     missing_docs,
     unsafe_op_in_unsafe_fn
 )]

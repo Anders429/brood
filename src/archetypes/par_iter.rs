@@ -1,7 +1,14 @@
-use crate::{archetype::Archetype, archetypes::Archetypes, registry::Registry};
+use crate::{
+    archetype::Archetype,
+    archetypes::Archetypes,
+    registry::Registry,
+};
 use core::marker::PhantomData;
 use hashbrown::raw::rayon::RawParIter;
-use rayon::iter::{plumbing::UnindexedConsumer, ParallelIterator};
+use rayon::iter::{
+    plumbing::UnindexedConsumer,
+    ParallelIterator,
+};
 
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub(crate) struct ParIterMut<'a, R>

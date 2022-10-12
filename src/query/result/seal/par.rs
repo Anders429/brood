@@ -1,5 +1,8 @@
 use crate::query::view;
-use rayon::{iter, iter::IndexedParallelIterator};
+use rayon::{
+    iter,
+    iter::IndexedParallelIterator,
+};
 
 pub trait ParResults {
     type View: Send;

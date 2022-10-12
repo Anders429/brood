@@ -11,9 +11,18 @@ pub(crate) use location::Location;
 pub(crate) use locations::Locations;
 pub(crate) use slot::Slot;
 
-use crate::{entity, registry::Registry};
-use alloc::{collections::VecDeque, vec::Vec};
-use core::{fmt, fmt::Debug};
+use crate::{
+    entity,
+    registry::Registry,
+};
+use alloc::{
+    collections::VecDeque,
+    vec::Vec,
+};
+use core::{
+    fmt,
+    fmt::Debug,
+};
 
 pub struct Allocator<R>
 where

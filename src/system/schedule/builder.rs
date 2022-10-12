@@ -3,11 +3,15 @@ use crate::{
     system::{
         schedule::{
             raw_task,
-            raw_task::{RawTask, RawTasks},
+            raw_task::{
+                RawTask,
+                RawTasks,
+            },
             task::Task,
             Schedule,
         },
-        ParSystem, System,
+        ParSystem,
+        System,
     },
 };
 use fnv::FnvBuildHasher;
@@ -28,9 +32,20 @@ use hashbrown::HashSet;
 ///
 /// ``` rust
 /// use brood::{
-///     query::{filter, filter::Filter, result, views},
-///     registry::{ContainsViews, Registry},
-///     system::{Schedule, System},
+///     query::{
+///         filter,
+///         filter::Filter,
+///         result,
+///         views,
+///     },
+///     registry::{
+///         ContainsViews,
+///         Registry,
+///     },
+///     system::{
+///         Schedule,
+///         System,
+///     },
 /// };
 ///
 /// // Define components.
@@ -140,7 +155,8 @@ where
         }
     }
 
-    /// Create a [`Schedule`] containing all [`Stages`] added to the `Builder`, consuming the `Builder`.
+    /// Create a [`Schedule`] containing all [`Stages`] added to the `Builder`, consuming the
+    /// `Builder`.
     ///
     /// [`Schedule`]: crate::system::schedule::Schedule
     /// [`Stages`]: crate::system::schedule::stage::Stages

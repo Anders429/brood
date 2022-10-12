@@ -1,7 +1,12 @@
 //! Provides the `Contains` trait to indicate what entity type is contained in a heterogeneous list
 //! implementing `Entities`.
 
-use crate::{component::Component, entities::Null, entity, entity::Entity};
+use crate::{
+    component::Component,
+    entities::Null,
+    entity,
+    entity::Entity,
+};
 use alloc::vec::Vec;
 
 /// Defines the entity type contained by `Entities`.

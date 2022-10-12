@@ -8,10 +8,17 @@
 use crate::{
     archetype,
     component::Component,
-    entity, registry,
-    registry::{seal::Length, Registry},
+    entity,
+    registry,
+    registry::{
+        seal::Length,
+        Registry,
+    },
 };
-use alloc::{vec, vec::Vec};
+use alloc::{
+    vec,
+    vec::Vec,
+};
 
 /// Type marker for a component contained in an entity.
 pub enum Contained {}
@@ -123,7 +130,11 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{archetype, entity, registry};
+    use crate::{
+        archetype,
+        entity,
+        registry,
+    };
     use alloc::vec::Vec;
 
     struct A;

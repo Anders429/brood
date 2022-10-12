@@ -1,4 +1,8 @@
-use crate::query::{result::reshape::Null, view, view::Get};
+use crate::query::{
+    result::reshape::Null,
+    view,
+    view::Get,
+};
 
 pub trait Reshape<'a, R, I> {
     fn reshape(self) -> R;

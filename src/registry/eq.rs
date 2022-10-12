@@ -11,7 +11,10 @@
 use crate::{
     archetype,
     component::Component,
-    registry::{Null, Registry},
+    registry::{
+        Null,
+        Registry,
+    },
 };
 use alloc::vec::Vec;
 use core::mem::ManuallyDrop;
@@ -173,7 +176,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::RegistryPartialEq;
-    use crate::{archetype::Identifier, registry};
+    use crate::{
+        archetype::Identifier,
+        registry,
+    };
     use alloc::vec;
 
     #[test]

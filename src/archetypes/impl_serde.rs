@@ -1,13 +1,28 @@
 use crate::{
     archetype::Archetype,
     archetypes::Archetypes,
-    registry::{RegistryDeserialize, RegistrySerialize},
+    registry::{
+        RegistryDeserialize,
+        RegistrySerialize,
+    },
 };
-use core::{cmp, fmt, format_args, marker::PhantomData};
+use core::{
+    cmp,
+    fmt,
+    format_args,
+    marker::PhantomData,
+};
 use serde::{
     de,
-    de::{DeserializeSeed, Expected, SeqAccess, Visitor},
-    Deserializer, Serialize, Serializer,
+    de::{
+        DeserializeSeed,
+        Expected,
+        SeqAccess,
+        Visitor,
+    },
+    Deserializer,
+    Serialize,
+    Serializer,
 };
 
 impl<R> Serialize for Archetypes<R>
@@ -97,15 +112,41 @@ mod tests {
     use super::*;
     use crate::{
         archetype::Identifier,
-        entity, registry,
-        registry::{RegistryDebug, RegistryEq, RegistryPartialEq},
+        entity,
+        registry,
+        registry::{
+            RegistryDebug,
+            RegistryEq,
+            RegistryPartialEq,
+        },
     };
-    use alloc::{format, vec};
+    use alloc::{
+        format,
+        vec,
+    };
     use claims::assert_ok;
-    use core::{any::type_name, fmt, fmt::Debug};
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    use serde_derive::{Deserialize, Serialize};
-    use serde_test::{assert_de_tokens_error, assert_tokens, Compact, Configure, Token};
+    use core::{
+        any::type_name,
+        fmt,
+        fmt::Debug,
+    };
+    use serde::{
+        Deserialize,
+        Deserializer,
+        Serialize,
+        Serializer,
+    };
+    use serde_derive::{
+        Deserialize,
+        Serialize,
+    };
+    use serde_test::{
+        assert_de_tokens_error,
+        assert_tokens,
+        Compact,
+        Configure,
+        Token,
+    };
 
     struct SeededArchetypes<R>
     where
@@ -214,7 +255,8 @@ mod tests {
 
         assert_tokens(
             &SeededArchetypes { archetypes, len: 6 }.compact(),
-            // The order here should stay constant, because the fnv hasher uses the same seed every time.
+            // The order here should stay constant, because the fnv hasher uses the same seed every
+            // time.
             &[
                 Token::Seq { len: Some(4) },
                 // B Archetype

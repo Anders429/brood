@@ -1,7 +1,18 @@
 use crate::{
-    query::{filter::Filter, Query},
-    registry::{ContainsParViews, ContainsViews, Registry},
-    system::{schedule::sendable::SendableWorld, ParSystem, System},
+    query::{
+        filter::Filter,
+        Query,
+    },
+    registry::{
+        ContainsParViews,
+        ContainsViews,
+        Registry,
+    },
+    system::{
+        schedule::sendable::SendableWorld,
+        ParSystem,
+        System,
+    },
     world::World,
 };
 

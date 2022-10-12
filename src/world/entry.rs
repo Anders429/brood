@@ -3,14 +3,29 @@ use crate::{
     component::Component,
     entity::allocator::Location,
     query::{
-        filter::{And, Filter, Seal},
-        view::{Reshape, Views},
+        filter::{
+            And,
+            Filter,
+            Seal,
+        },
+        view::{
+            Reshape,
+            Views,
+        },
         Query,
     },
-    registry::{ContainsComponent, ContainsViews, Registry, RegistryDebug},
+    registry::{
+        ContainsComponent,
+        ContainsViews,
+        Registry,
+        RegistryDebug,
+    },
     world::World,
 };
-use core::{fmt, fmt::Debug};
+use core::{
+    fmt,
+    fmt::Debug,
+};
 
 /// A view into a single entity in a [`World`].
 ///
@@ -20,7 +35,11 @@ use core::{fmt, fmt::Debug};
 /// An entry for an entity can be obtained from an [`entity::Identifier`] as follows:
 ///
 /// ``` rust
-/// use brood::{entity, registry, World};
+/// use brood::{
+///     entity,
+///     registry,
+///     World,
+/// };
 ///
 /// struct Foo(u32);
 /// struct Bar(bool);
@@ -58,7 +77,11 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entity, registry, World};
+    /// use brood::{
+    ///     entity,
+    ///     registry,
+    ///     World,
+    /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
@@ -162,7 +185,11 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entity, registry, World};
+    /// use brood::{
+    ///     entity,
+    ///     registry,
+    ///     World,
+    /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
@@ -255,8 +282,14 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     query::{filter, result, views},
-    ///     registry, Query, World,
+    ///     query::{
+    ///         filter,
+    ///         result,
+    ///         views,
+    ///     },
+    ///     registry,
+    ///     Query,
+    ///     World,
     /// };
     ///
     /// struct Foo(u32);

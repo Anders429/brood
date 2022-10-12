@@ -3,17 +3,30 @@ use crate::{
     component::Component,
     query::{
         view,
-        view::{ParViews, ParViewsSeal, RepeatNone},
+        view::{
+            ParViews,
+            ParViewsSeal,
+            RepeatNone,
+        },
     },
     registry,
     registry::{
-        contains::{Contained, NotContained, Null},
+        contains::{
+            Contained,
+            NotContained,
+            Null,
+        },
         Registry,
     },
 };
 use rayon::{
     iter,
-    iter::{Either, IntoParallelRefIterator, IntoParallelRefMutIterator, ParallelIterator},
+    iter::{
+        Either,
+        IntoParallelRefIterator,
+        IntoParallelRefMutIterator,
+        ParallelIterator,
+    },
 };
 
 pub trait CanonicalParViews<'a, V, P>
@@ -134,9 +147,10 @@ where
             if unsafe { archetype_identifier.next().unwrap_unchecked() } {
                 Either::Right(
                     // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of
-                    // size `length`. Since `component_map` contains an entry for the given component
-                    // `C`'s entry in `columns`, then the column obtained here can be interpreted as a
-                    // slice of type `C` of size `length`.
+                    // size `length`. Since `component_map` contains an entry for the given
+                    // component `C`'s entry in `columns`, then the column
+                    // obtained here can be interpreted as a slice of type `C`
+                    // of size `length`.
                     unsafe {
                         core::slice::from_raw_parts(
                             {
@@ -183,9 +197,10 @@ where
             if unsafe { archetype_identifier.next().unwrap_unchecked() } {
                 Either::Right(
                     // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of
-                    // size `length`. Since `component_map` contains an entry for the given component
-                    // `C`'s entry in `columns`, then the column obtained here can be interpreted as a
-                    // slice of type `C` of size `length`.
+                    // size `length`. Since `component_map` contains an entry for the given
+                    // component `C`'s entry in `columns`, then the column
+                    // obtained here can be interpreted as a slice of type `C`
+                    // of size `length`.
                     unsafe {
                         core::slice::from_raw_parts_mut(
                             {

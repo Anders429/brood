@@ -15,7 +15,11 @@
 //!
 //! # Example
 //! ``` rust
-//! use brood::{entities, registry, World};
+//! use brood::{
+//!     entities,
+//!     registry,
+//!     World,
+//! };
 //!
 //! // Define components.
 //! struct Foo(usize);
@@ -41,7 +45,10 @@ mod seal;
 pub(crate) use get::Get;
 pub(crate) use seal::Contains;
 
-use crate::{component::Component, hlist::define_null};
+use crate::{
+    component::Component,
+    hlist::define_null,
+};
 use alloc::vec::Vec;
 use seal::Seal;
 
@@ -128,7 +135,10 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entities, entities::Batch};
+    /// use brood::{
+    ///     entities,
+    ///     entities::Batch,
+    /// };
     ///
     /// // Define components.
     /// struct Foo(usize);
@@ -160,7 +170,10 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entities, entities::Batch};
+    /// use brood::{
+    ///     entities,
+    ///     entities::Batch,
+    /// };
     ///
     /// // Define components.
     /// struct Foo(usize);

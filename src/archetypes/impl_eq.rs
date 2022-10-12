@@ -1,6 +1,9 @@
 use crate::{
     archetypes::Archetypes,
-    registry::{RegistryEq, RegistryPartialEq},
+    registry::{
+        RegistryEq,
+        RegistryPartialEq,
+    },
 };
 
 impl<R> PartialEq for Archetypes<R>

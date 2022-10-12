@@ -1,9 +1,17 @@
 use super::Identifier;
 use core::fmt;
 use serde::{
-    de::{self, MapAccess, SeqAccess, Visitor},
+    de::{
+        self,
+        MapAccess,
+        SeqAccess,
+        Visitor,
+    },
     ser::SerializeStruct,
-    Deserialize, Deserializer, Serialize, Serializer,
+    Deserialize,
+    Deserializer,
+    Serialize,
+    Serializer,
 };
 
 impl Serialize for Identifier {
@@ -117,7 +125,12 @@ impl<'de> Deserialize<'de> for Identifier {
 #[cfg(test)]
 mod tests {
     use crate::entity::Identifier;
-    use serde_test::{assert_de_tokens, assert_de_tokens_error, assert_tokens, Token};
+    use serde_test::{
+        assert_de_tokens,
+        assert_de_tokens_error,
+        assert_tokens,
+        Token,
+    };
 
     #[test]
     fn serialize_deserialize() {

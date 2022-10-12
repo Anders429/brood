@@ -18,7 +18,13 @@ mod seal;
 
 pub(crate) use seal::Seal;
 
-use crate::{component::Component, entity, query::view, registry, registry::Registry};
+use crate::{
+    component::Component,
+    entity,
+    query::view,
+    registry,
+    registry::Registry,
+};
 use core::marker::PhantomData;
 
 /// A filter for entities.

@@ -1,11 +1,28 @@
-use crate::{archetype::Identifier, registry::Registry};
-use alloc::{format, vec::Vec};
-use core::{fmt, marker::PhantomData, mem::ManuallyDrop};
+use crate::{
+    archetype::Identifier,
+    registry::Registry,
+};
+use alloc::{
+    format,
+    vec::Vec,
+};
+use core::{
+    fmt,
+    marker::PhantomData,
+    mem::ManuallyDrop,
+};
 use serde::{
     de,
-    de::{SeqAccess, Unexpected, Visitor},
+    de::{
+        SeqAccess,
+        Unexpected,
+        Visitor,
+    },
     ser::SerializeTuple,
-    Deserialize, Deserializer, Serialize, Serializer,
+    Deserialize,
+    Deserializer,
+    Serialize,
+    Serializer,
 };
 
 impl<R> Serialize for Identifier<R>
@@ -67,8 +84,8 @@ where
 
                 // Check that trailing bits are not set.
                 if R::LEN != 0 {
-                    // SAFETY: `buffer` is guaranteed to have `(R::LEN + 7) / 8` elements, so this will
-                    // always be within the bounds of `buffer.`
+                    // SAFETY: `buffer` is guaranteed to have `(R::LEN + 7) / 8` elements, so this
+                    // will always be within the bounds of `buffer.`
                     let byte = unsafe { buffer.get_unchecked((R::LEN + 7) / 8 - 1) };
                     let bit = R::LEN % 8;
                     if bit != 0 && byte & (255 << bit) != 0 {
@@ -104,7 +121,11 @@ mod tests {
     use super::*;
     use crate::registry;
     use alloc::vec;
-    use serde_test::{assert_de_tokens_error, assert_tokens, Token};
+    use serde_test::{
+        assert_de_tokens_error,
+        assert_tokens,
+        Token,
+    };
 
     macro_rules! create_components {
         ($( $variants:ident ),*) => {

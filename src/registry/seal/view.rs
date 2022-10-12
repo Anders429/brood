@@ -3,15 +3,25 @@ use crate::{
     component::Component,
     query::{
         view,
-        view::{Views, ViewsSeal},
+        view::{
+            Views,
+            ViewsSeal,
+        },
     },
     registry,
     registry::{
-        contains::{Contained, NotContained, Null},
+        contains::{
+            Contained,
+            NotContained,
+            Null,
+        },
         Registry,
     },
 };
-use core::{iter, slice};
+use core::{
+    iter,
+    slice,
+};
 use either::Either;
 
 pub trait CanonicalViews<'a, V, P>

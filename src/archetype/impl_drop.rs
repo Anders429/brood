@@ -1,4 +1,7 @@
-use crate::{archetype::Archetype, registry::Registry};
+use crate::{
+    archetype::Archetype,
+    registry::Registry,
+};
 use alloc::vec::Vec;
 use core::mem::drop;
 
