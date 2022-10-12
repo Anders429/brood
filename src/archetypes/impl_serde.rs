@@ -255,7 +255,8 @@ mod tests {
 
         assert_tokens(
             &SeededArchetypes { archetypes, len: 6 }.compact(),
-            // The order here should stay constant, because the fnv hasher uses the same seed every time.
+            // The order here should stay constant, because the fnv hasher uses the same seed every
+            // time.
             &[
                 Token::Seq { len: Some(4) },
                 // B Archetype

@@ -181,7 +181,8 @@ where
         }
     }
 
-    /// Insert multiple entities made from the same components, returning a [`Vec`] of [`entity::Identifier`]s.
+    /// Insert multiple entities made from the same components, returning a [`Vec`] of
+    /// [`entity::Identifier`]s.
     ///
     /// # Example
     /// ``` rust

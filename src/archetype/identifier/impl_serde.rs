@@ -84,8 +84,8 @@ where
 
                 // Check that trailing bits are not set.
                 if R::LEN != 0 {
-                    // SAFETY: `buffer` is guaranteed to have `(R::LEN + 7) / 8` elements, so this will
-                    // always be within the bounds of `buffer.`
+                    // SAFETY: `buffer` is guaranteed to have `(R::LEN + 7) / 8` elements, so this
+                    // will always be within the bounds of `buffer.`
                     let byte = unsafe { buffer.get_unchecked((R::LEN + 7) / 8 - 1) };
                     let bit = R::LEN % 8;
                     if bit != 0 && byte & (255 << bit) != 0 {

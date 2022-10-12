@@ -10,7 +10,8 @@
 //!
 //! # Key Features
 //! - Entities made up of an arbitrary number of components.
-//! - Built-in support for [`serde`](https://crates.io/crates/serde), providing pain-free serialization and deserialization of `World` containers.
+//! - Built-in support for [`serde`](https://crates.io/crates/serde), providing pain-free
+//!   serialization and deserialization of `World` containers.
 //! - Inner- and outer-parallelism using [`rayon`](https://crates.io/crates/rayon).
 //! - Minimal boilerplate.
 //! - `no_std` compatible.

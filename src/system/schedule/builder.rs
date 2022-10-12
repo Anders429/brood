@@ -155,7 +155,8 @@ where
         }
     }
 
-    /// Create a [`Schedule`] containing all [`Stages`] added to the `Builder`, consuming the `Builder`.
+    /// Create a [`Schedule`] containing all [`Stages`] added to the `Builder`, consuming the
+    /// `Builder`.
     ///
     /// [`Schedule`]: crate::system::schedule::Schedule
     /// [`Stages`]: crate::system::schedule::stage::Stages

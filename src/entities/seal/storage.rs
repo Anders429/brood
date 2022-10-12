@@ -42,8 +42,8 @@ where
             let mut v = ManuallyDrop::new(
                 // SAFETY: The `component_column` extracted from `components` is guaranteed to,
                 // together with `length`, define a valid `Vec<C>` for the current `C`, because the
-                // `component_column` extracted is guaranteed by the safety contract to correspond to
-                // the column for component `C`.
+                // `component_column` extracted is guaranteed by the safety contract to correspond
+                // to the column for component `C`.
                 unsafe {
                     Vec::<C>::from_raw_parts(
                         component_column.0.cast::<C>(),

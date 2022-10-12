@@ -83,7 +83,8 @@ where
     fn make_hasher(hash_builder: &FnvBuildHasher) -> impl Fn(&Archetype<R>) -> u64 + '_ {
         move |archetype| {
             Self::make_hash(
-                // SAFETY: The `IdentifierRef` obtained here does not live longer than the `archetype`.
+                // SAFETY: The `IdentifierRef` obtained here does not live longer than the
+                // `archetype`.
                 unsafe { archetype.identifier() },
                 hash_builder,
             )
