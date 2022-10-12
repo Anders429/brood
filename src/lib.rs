@@ -101,8 +101,12 @@
 #![no_std]
 #![cfg_attr(doc_cfg, feature(doc_cfg, decl_macro))]
 #![warn(
+    clippy::expect_used,
+    clippy::indexing_slicing,
+    clippy::panic,
     clippy::pedantic,
     clippy::undocumented_unsafe_blocks,
+    clippy::unwrap_used,
     missing_docs,
     unsafe_op_in_unsafe_fn
 )]
