@@ -29,6 +29,7 @@ use crate::{
         Query,
     },
     registry::{
+        contains,
         ContainsEntities,
         ContainsEntity,
         ContainsViews,
@@ -176,7 +177,7 @@ where
         // `self.entity_allocator` is guaranteed to live as long as the archetype.
         unsafe {
             self.archetypes
-                .get_mut_or_insert_new_for_entity::<<R as ContainsEntity<E, P, Q, I>>::Canonical, Q>()
+                .get_mut_or_insert_new_for_entity::<<R as contains::entity::Sealed<E, P, Q, I>>::Canonical, Q>()
                 .push(canonical_entity, &mut self.entity_allocator)
         }
     }
@@ -221,7 +222,7 @@ where
         // `self.entity_allocator` is guaranteed to live as long as the archetype.
         unsafe {
             self.archetypes
-                .get_mut_or_insert_new_for_entity::<<<R as ContainsEntities<E, P, Q, I>>::Canonical as entities::Contains>::Entity, Q>()
+                .get_mut_or_insert_new_for_entity::<<<R as contains::entities::Sealed<E, P, Q, I>>::Canonical as entities::Contains>::Entity, Q>()
                 .extend(canonical_entities, &mut self.entity_allocator)
         }
     }

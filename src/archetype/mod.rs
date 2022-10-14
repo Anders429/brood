@@ -40,6 +40,7 @@ use crate::{
         Registry,
     },
 };
+use crate::registry::contains::views::Sealed as ContainsViewsSealed;
 #[cfg(feature = "rayon")]
 use crate::{
     query::view::{
@@ -48,6 +49,8 @@ use crate::{
     },
     registry::ContainsParViews,
 };
+#[cfg(feature = "rayon")]
+use crate::registry::contains::par_views::Sealed as ContainsParViewsSealed;
 use alloc::vec::Vec;
 #[cfg(feature = "serde")]
 use core::slice;
@@ -228,7 +231,7 @@ where
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
     pub(crate) unsafe fn view<'a, V, P, I, Q>(
         &mut self,
-    ) -> <<R::Viewable as ContainsViews<'a, V, P, I, Q>>::Canonical as ViewsSeal<'a>>::Results
+    ) -> <<R::Viewable as ContainsViewsSealed<'a, V, P, I, Q>>::Canonical as ViewsSeal<'a>>::Results
     where
         V: Views<'a>,
         R::Viewable: ContainsViews<'a, V, P, I, Q>,
@@ -253,7 +256,7 @@ where
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub(crate) unsafe fn par_view<'a, V, P, I, Q>(&mut self) -> <<R::Viewable as ContainsParViews<'a, V, P, I, Q>>::Canonical as ParViewsSeal<'a>>::ParResults
+    pub(crate) unsafe fn par_view<'a, V, P, I, Q>(&mut self) -> <<R::Viewable as ContainsParViewsSealed<'a, V, P, I, Q>>::Canonical as ParViewsSeal<'a>>::ParResults
     where
         V: ParViews<'a>,
         R::Viewable: ContainsParViews<'a, V, P, I, Q>,
@@ -286,7 +289,7 @@ where
     pub(crate) unsafe fn view_row_unchecked<'a, V, P, I, Q>(
         &mut self,
         index: usize,
-    ) -> <R::Viewable as ContainsViews<'a, V, P, I, Q>>::Canonical
+    ) -> <R::Viewable as ContainsViewsSealed<'a, V, P, I, Q>>::Canonical
     where
         V: Views<'a>,
         R::Viewable: ContainsViews<'a, V, P, I, Q>,
