@@ -1,6 +1,9 @@
 mod sealed;
 
-pub(crate) use sealed::Sealed;
+pub(crate) use sealed::{
+    ContainsViewsOuter,
+    Sealed,
+};
 
 use crate::query::view::Views;
 
@@ -8,7 +11,15 @@ use crate::query::view::Views;
 ///
 /// This allows reordering the components viewed into a canonical form, as well as reordering the
 /// results back to the originally requested form.
-pub trait ContainsViews<'a, V, P, I, Q>: Sealed<'a, V, P, I, Q> where V: Views<'a>,
-{}
+pub trait ContainsViews<'a, V, P, I, Q>: Sealed<'a, V, P, I, Q>
+where
+    V: Views<'a>,
+{
+}
 
-impl<'a, T, V, P, I, Q> ContainsViews<'a, V, P, I, Q> for T where T: Sealed<'a, V, P, I, Q>, V: Views<'a> {}
+impl<'a, T, V, P, I, Q> ContainsViews<'a, V, P, I, Q> for T
+where
+    T: Sealed<'a, V, P, I, Q>,
+    V: Views<'a>,
+{
+}

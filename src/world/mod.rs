@@ -282,7 +282,7 @@ where
     where
         V: Views<'a> + Filter<R, VI>,
         F: Filter<R, FI>,
-        R::Viewable: ContainsViews<'a, V, P, I, Q>,
+        R: ContainsViews<'a, V, P, I, Q>,
     {
         result::Iter::new(self.archetypes.iter_mut())
     }
@@ -348,7 +348,7 @@ where
     where
         V: ParViews<'a> + Filter<R, VI>,
         F: Filter<R, FI>,
-        R::Viewable: ContainsParViews<'a, V, P, I, Q>,
+        R: ContainsParViews<'a, V, P, I, Q>,
     {
         result::ParIter::new(self.archetypes.par_iter_mut())
     }
@@ -392,7 +392,7 @@ where
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ///     ) where
     ///         R: Registry + 'a,
-    ///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+    ///         R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>,
     ///     {
@@ -415,7 +415,7 @@ where
         S: System<'a>,
         S::Filter: Filter<R, FI>,
         S::Views: Filter<R, VI>,
-        R::Viewable: ContainsViews<'a, S::Views, P, I, Q>,
+        R: ContainsViews<'a, S::Views, P, I, Q>,
     {
         system.run(self.query(Query::<S::Views, S::Filter>::new()));
     }
@@ -460,7 +460,7 @@ where
     ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ///     ) where
     ///         R: Registry + 'a,
-    ///         R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+    ///         R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>,
     ///     {
@@ -482,7 +482,7 @@ where
         S: ParSystem<'a>,
         S::Filter: Filter<R, FI>,
         S::Views: Filter<R, VI>,
-        R::Viewable: ContainsParViews<'a, S::Views, P, I, Q>,
+        R: ContainsParViews<'a, S::Views, P, I, Q>,
     {
         par_system.run(self.par_query(Query::<S::Views, S::Filter>::new()));
     }
@@ -530,7 +530,7 @@ where
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ///     ) where
     ///         R: Registry + 'a,
-    ///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+    ///         R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>,
     ///     {
@@ -549,7 +549,7 @@ where
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ///     ) where
     ///         R: Registry + 'a,
-    ///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+    ///         R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>,
     ///     {
@@ -1221,8 +1221,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+                R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1254,8 +1253,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+                R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1287,8 +1285,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+                R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1322,8 +1319,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+                R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1359,8 +1355,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+                R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1393,8 +1388,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+                R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1425,8 +1419,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+                R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1457,8 +1450,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+                R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1489,8 +1481,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+                R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1523,8 +1514,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+                R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1557,8 +1547,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+                R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1591,8 +1580,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+                R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1627,8 +1615,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+                R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1665,8 +1652,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+                R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1700,8 +1686,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+                R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1733,8 +1718,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+                R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1766,8 +1750,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+                R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1799,8 +1782,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+                R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1833,8 +1815,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+                R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {
@@ -1854,8 +1835,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: crate::registry::Registry + 'a,
-                R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+                R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
                 Self::Filter: Filter<R, FI>,
                 Self::Views: Filter<R, VI>,
             {

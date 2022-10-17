@@ -133,7 +133,7 @@ where
     R: Registry + 'a,
     F: Filter<R, FI>,
     V: ParViews<'a> + Filter<R, VI>,
-    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
+    R: ContainsParViews<'a, V, P, I, Q>,
 {
     type Item = <<V as ParViewsSeal<'a>>::ParResults as ParResults>::View;
 
@@ -189,7 +189,7 @@ where
     R: Registry,
     F: Filter<R, FI>,
     V: ParViews<'a> + Filter<R, VI>,
-    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
+    R: ContainsParViews<'a, V, P, I, Q>,
 {
     type Folder = ResultsFolder<C, C::Result, F, FI, V, VI, P, I, Q>;
     type Reducer = C::Reducer;
@@ -231,7 +231,7 @@ where
     R: Registry,
     F: Filter<R, FI>,
     V: ParViews<'a> + Filter<R, VI>,
-    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
+    R: ContainsParViews<'a, V, P, I, Q>,
 {
     fn split_off_left(&self) -> Self {
         ResultsConsumer::new(self.base.split_off_left())
@@ -260,7 +260,7 @@ impl<'a, C, R, F, FI, V, VI, P, I, Q> Folder<&'a mut Archetype<R>>
 where
     C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
     R: Registry,
-    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
+    R: ContainsParViews<'a, V, P, I, Q>,
     F: Filter<R, FI>,
     V: ParViews<'a> + Filter<R, VI>,
 {

@@ -1,5 +1,5 @@
 //! Traits indicating that a [`Registry`] contains a specific type.
-//! 
+//!
 //! Being able to prove that a registry contains a specific component means that the component's
 //! presence can be verified at compile-time. Additionally, being able to prove that a registry
 //! contains a heterogeneous list of components allows transforming that list into a canonical form

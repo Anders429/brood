@@ -29,10 +29,7 @@ pub(crate) use view::CanonicalViews;
 
 use crate::{
     component::Component,
-    registry::{
-        contains::EntityIdentifierMarker,
-        Null,
-    },
+    registry::Null,
 };
 use assertions::Assertions;
 use storage::Storage;
@@ -46,18 +43,13 @@ use storage::Storage;
 /// While this trait specifically does not have any functions implemented, the traits it relies on
 /// do. See the modules where they are defined for more details on the internal functionality
 /// defined through these sealed traits.
-pub trait Seal: Assertions + Length + Storage {
-    type Viewable;
-}
+pub trait Seal: Assertions + Length + Storage {}
 
-impl Seal for Null {
-    type Viewable = (EntityIdentifierMarker, Null);
-}
+impl Seal for Null {}
 
 impl<C, R> Seal for (C, R)
 where
     C: Component,
     R: Seal,
 {
-    type Viewable = (EntityIdentifierMarker, (C, R));
 }

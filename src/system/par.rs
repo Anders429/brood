@@ -49,8 +49,7 @@ use crate::{
 ///         &mut self,
 ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
-///         R: Registry + 'a,
-///         R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+///         R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
 ///         Self::Filter: Filter<R, FI>,
 ///         Self::Views: Filter<R, VI>,
 ///     {
@@ -114,8 +113,7 @@ pub trait ParSystem<'a> {
     ///         &mut self,
     ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ///     ) where
-    ///         R: Registry + 'a,
-    ///         R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+    ///         R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>,
     ///     {
@@ -134,8 +132,7 @@ pub trait ParSystem<'a> {
         &mut self,
         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ) where
-        R: Registry + 'a,
-        R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+        R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
         Self::Filter: Filter<R, FI>,
         Self::Views: Filter<R, VI>;
 
@@ -169,8 +166,7 @@ pub trait ParSystem<'a> {
     ///
     ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     ///     where
-    ///         R: Registry + 'a,
-    ///         R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+    ///         R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>,
     ///     {

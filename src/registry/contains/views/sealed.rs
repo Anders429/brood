@@ -24,11 +24,27 @@ use crate::{
 };
 use core::slice;
 
+pub trait Sealed<'a, V, P, I, Q>: Registry
+where
+    V: Views<'a>,
+{
+    type Viewable: ContainsViewsOuter<'a, V, P, I, Q>;
+}
+
+impl<'a, T, V, P, I, Q> Sealed<'a, V, P, I, Q> for T
+where
+    T: Registry,
+    V: Views<'a>,
+    (EntityIdentifierMarker, T): ContainsViewsOuter<'a, V, P, I, Q>,
+{
+    type Viewable = (EntityIdentifierMarker, Self);
+}
+
 /// Indicates that all of the components viewed are contained in a registry.
 ///
 /// This allows reordering the components viewed into a canonical form, as well as reordering the
 /// results back to the originally requested form.
-pub trait Sealed<'a, V, P, I, Q>
+pub trait ContainsViewsOuter<'a, V, P, I, Q>
 where
     V: Views<'a>,
 {
@@ -76,7 +92,7 @@ where
         R: Registry;
 }
 
-impl<'a, I, IS, P, V, R, Q> Sealed<'a, V, (Contained, P), (I, IS), Q>
+impl<'a, I, IS, P, V, R, Q> ContainsViewsOuter<'a, V, (Contained, P), (I, IS), Q>
     for (EntityIdentifierMarker, R)
 where
     R: CanonicalViews<
@@ -170,7 +186,7 @@ where
     }
 }
 
-impl<'a, I, P, R, V, Q> Sealed<'a, V, (NotContained, P), I, Q>
+impl<'a, I, P, R, V, Q> ContainsViewsOuter<'a, V, (NotContained, P), I, Q>
     for (EntityIdentifierMarker, R)
 where
     R: CanonicalViews<'a, <R as ContainsViewsInner<'a, V, P, I>>::Canonical, P>

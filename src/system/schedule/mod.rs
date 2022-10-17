@@ -43,8 +43,7 @@
 //!         &mut self,
 //!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 //!     ) where
-//!         R: Registry + 'a,
-//!         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+//!         R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
 //!         Self::Filter: Filter<R, FI>,
 //!         Self::Views: Filter<R, VI>,
 //!     {
@@ -64,8 +63,7 @@
 //!         &mut self,
 //!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 //!     ) where
-//!         R: Registry + 'a,
-//!         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+//!         R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
 //!         Self::Filter: Filter<R, FI>,
 //!         Self::Views: Filter<R, VI>,
 //!     {
@@ -144,8 +142,7 @@ use stage::Stages;
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
-///         R: Registry + 'a,
-///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+///         R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
 ///         Self::Filter: Filter<R, FI>,
 ///         Self::Views: Filter<R, VI>,
 ///     {
@@ -165,8 +162,7 @@ use stage::Stages;
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
-///         R: Registry + 'a,
-///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+///         R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
 ///         Self::Filter: Filter<R, FI>,
 ///         Self::Views: Filter<R, VI>,
 ///     {

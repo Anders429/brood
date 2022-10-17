@@ -30,9 +30,9 @@ where
         &mut self,
         world: SendableWorld<R>,
     ) where
-        R: Registry + 'a,
-        R::Viewable:
-            ContainsViews<'a, S::Views, SP, SI, SQ> + ContainsParViews<'a, P::Views, PP, PI, PQ>,
+        R: ContainsViews<'a, S::Views, SP, SI, SQ>
+            + ContainsParViews<'a, P::Views, PP, PI, PQ>
+            + 'a,
         S::Filter: Filter<R, SFI>,
         S::Views: Filter<R, SVI>,
         P::Filter: Filter<R, PFI>,

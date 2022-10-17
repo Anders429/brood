@@ -314,7 +314,7 @@ where
     where
         V: Views<'a> + Filter<R, VI>,
         F: Filter<R, FI>,
-        R::Viewable: ContainsViews<'a, V, P, I, Q>,
+        R: ContainsViews<'a, V, P, I, Q>,
     {
         if And::<V, F>::filter(self.location.identifier) {
             Some(

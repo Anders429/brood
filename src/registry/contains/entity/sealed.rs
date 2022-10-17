@@ -4,12 +4,12 @@ use crate::{
     entity::Entity,
     registry,
     registry::{
-        Canonical,
         contains::{
             Contained,
             NotContained,
             Null,
         },
+        Canonical,
     },
 };
 
@@ -118,4 +118,3 @@ mod entity_tests {
         );
     }
 }
-

@@ -18,6 +18,8 @@ pub(crate) use impl_serde::{
     SerializeColumn,
 };
 
+#[cfg(feature = "rayon")]
+use crate::registry::contains::par_views::Sealed as ContainsParViewsSealed;
 use crate::{
     component::Component,
     entities,
@@ -35,22 +37,26 @@ use crate::{
         ViewsSeal,
     },
     registry::{
+        contains::views::{
+            ContainsViewsOuter,
+            Sealed as ContainsViewsSealed,
+        },
         ContainsComponent,
         ContainsViews,
         Registry,
     },
 };
-use crate::registry::contains::views::Sealed as ContainsViewsSealed;
 #[cfg(feature = "rayon")]
 use crate::{
     query::view::{
         ParViews,
         ParViewsSeal,
     },
-    registry::ContainsParViews,
+    registry::{
+        contains::par_views::ContainsParViewsOuter,
+        ContainsParViews,
+    },
 };
-#[cfg(feature = "rayon")]
-use crate::registry::contains::par_views::Sealed as ContainsParViewsSealed;
 use alloc::vec::Vec;
 #[cfg(feature = "serde")]
 use core::slice;
@@ -231,10 +237,16 @@ where
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
     pub(crate) unsafe fn view<'a, V, P, I, Q>(
         &mut self,
-    ) -> <<R::Viewable as ContainsViewsSealed<'a, V, P, I, Q>>::Canonical as ViewsSeal<'a>>::Results
+    ) -> <<<R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable as ContainsViewsOuter<
+        'a,
+        V,
+        P,
+        I,
+        Q,
+    >>::Canonical as ViewsSeal<'a>>::Results
     where
         V: Views<'a>,
-        R::Viewable: ContainsViews<'a, V, P, I, Q>,
+        R: ContainsViews<'a, V, P, I, Q>,
     {
         // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`
         // for each component `C` identified in `self.identifier` in the canonical order defined by
@@ -243,7 +255,7 @@ where
         // `self.entity_identifiers` also contains the raw parts for a valid
         // `Vec<entity::Identifier>` of size `self.length`.
         unsafe {
-            R::Viewable::view(
+            <R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable::view(
                 &self.components,
                 self.entity_identifiers,
                 self.length,
@@ -256,10 +268,18 @@ where
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub(crate) unsafe fn par_view<'a, V, P, I, Q>(&mut self) -> <<R::Viewable as ContainsParViewsSealed<'a, V, P, I, Q>>::Canonical as ParViewsSeal<'a>>::ParResults
+    pub(crate) unsafe fn par_view<'a, V, P, I, Q>(
+        &mut self,
+    ) -> <<<R as ContainsParViewsSealed<'a, V, P, I, Q>>::Viewable as ContainsParViewsOuter<
+        'a,
+        V,
+        P,
+        I,
+        Q,
+    >>::Canonical as ParViewsSeal<'a>>::ParResults
     where
         V: ParViews<'a>,
-        R::Viewable: ContainsParViews<'a, V, P, I, Q>,
+        R: ContainsParViews<'a, V, P, I, Q>,
     {
         // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`,
         // where each `C` is a component for which the entry in `component_map` corresponds to the
@@ -271,7 +291,7 @@ where
         // Since each component viewed by `V` is also identified by this archetype's `Identifier`,
         // `self.component` will contain an entry for every viewed component.
         unsafe {
-            R::Viewable::par_view(
+            <R as ContainsParViewsSealed<'a, V, P, I, Q>>::Viewable::par_view(
                 &self.components,
                 self.entity_identifiers,
                 self.length,
@@ -289,10 +309,16 @@ where
     pub(crate) unsafe fn view_row_unchecked<'a, V, P, I, Q>(
         &mut self,
         index: usize,
-    ) -> <R::Viewable as ContainsViewsSealed<'a, V, P, I, Q>>::Canonical
+    ) -> <<R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable as ContainsViewsOuter<
+        'a,
+        V,
+        P,
+        I,
+        Q,
+    >>::Canonical
     where
         V: Views<'a>,
-        R::Viewable: ContainsViews<'a, V, P, I, Q>,
+        R: ContainsViews<'a, V, P, I, Q>,
     {
         // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`
         // for each component `C` identified in `self.identifier` in the canonical order defined by
@@ -305,7 +331,7 @@ where
         // this archetype, and therefore within the bounds of each column and the entity
         // identifiers of this archetype.
         unsafe {
-            R::Viewable::view_one(
+            <R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable::view_one(
                 index,
                 &self.components,
                 self.entity_identifiers,

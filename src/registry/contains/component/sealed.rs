@@ -1,7 +1,7 @@
-use crate::registry::contains::Contained;
 use crate::{
     archetype,
     registry::{
+        contains::Contained,
         Length,
         Registry,
     },

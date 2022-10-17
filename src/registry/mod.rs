@@ -39,7 +39,12 @@ mod sync;
 
 #[cfg(feature = "rayon")]
 pub use contains::ContainsParViews;
-pub use contains::{ContainsComponent, ContainsEntities, ContainsEntity, ContainsViews};
+pub use contains::{
+    ContainsComponent,
+    ContainsEntities,
+    ContainsEntity,
+    ContainsViews,
+};
 
 #[cfg(feature = "serde")]
 pub(crate) use self::serde::{

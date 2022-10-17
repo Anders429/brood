@@ -91,9 +91,7 @@ impl<
         (PQ, PQS),
     > for (Stage<S, P>, L)
 where
-    R: Registry + 'a,
-    R::Viewable:
-        ContainsViews<'a, S::Views, SP, SI, SQ> + ContainsParViews<'a, P::Views, PP, PI, PQ>,
+    R: ContainsViews<'a, S::Views, SP, SI, SQ> + ContainsParViews<'a, P::Views, PP, PI, PQ> + 'a,
     S: System<'a> + Send,
     S::Filter: Filter<R, SFI>,
     S::Views: Filter<R, SVI>,

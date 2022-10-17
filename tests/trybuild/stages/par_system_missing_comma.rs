@@ -1,4 +1,4 @@
-use brood::{query::{filter, filter::Filter, result, views}, registry::{ContainsParViews, Registry}, system::{schedule::stages, ParSystem}};
+use brood::{query::{filter, filter::Filter, result, views}, registry::ContainsParViews, system::{schedule::stages, ParSystem}};
 
 struct MySystem;
 
@@ -8,8 +8,7 @@ impl<'a> ParSystem<'a> for MySystem {
 
     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     where
-        R: Registry + 'a,
-        R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+        R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
         Self::Filter: Filter<R, FI>,
         Self::Views: Filter<R, VI>, {}
 }

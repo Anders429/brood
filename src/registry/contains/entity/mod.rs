@@ -1,5 +1,5 @@
 //! Provides a `ContainsEntity` trait to indicate that a registry contains an entity.
-//! 
+//!
 //! This containment relationship directly implies that a canonical version of an entity, with
 //! respect to the registry, can be derived. That canonical form is obtainable through this trait.
 

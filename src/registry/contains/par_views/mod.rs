@@ -1,6 +1,9 @@
 mod sealed;
 
-pub(crate) use sealed::Sealed;
+pub(crate) use sealed::{
+    ContainsParViewsOuter,
+    Sealed,
+};
 
 use crate::query::view::ParViews;
 
@@ -12,6 +15,12 @@ use crate::query::view::ParViews;
 pub trait ContainsParViews<'a, V, P, I, Q>: Sealed<'a, V, P, I, Q>
 where
     V: ParViews<'a>,
-{}
+{
+}
 
-impl<'a, T, V, P, I, Q> ContainsParViews<'a, V, P, I, Q> for T where T: Sealed<'a, V, P, I, Q>, V: ParViews<'a> {}
+impl<'a, T, V, P, I, Q> ContainsParViews<'a, V, P, I, Q> for T
+where
+    T: Sealed<'a, V, P, I, Q>,
+    V: ParViews<'a>,
+{
+}

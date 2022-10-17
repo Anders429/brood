@@ -103,9 +103,7 @@ impl<
         (PQ, PQS),
     > for (Stage<S, P>, L)
 where
-    R: Registry + 'a,
-    R::Viewable:
-        ContainsViews<'a, S::Views, SP, SI, SQ> + ContainsParViews<'a, P::Views, PP, PI, PQ>,
+    R: ContainsViews<'a, S::Views, SP, SI, SQ> + ContainsParViews<'a, P::Views, PP, PI, PQ> + 'a,
     S: System<'a> + Send,
     S::Filter: Filter<R, SFI>,
     S::Views: Filter<R, SVI>,
@@ -148,8 +146,7 @@ doc::non_root_macro! {
     ///
     ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     ///     where
-    ///         R: Registry + 'a,
-    ///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
+    ///         R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>,
     ///     {
@@ -165,8 +162,7 @@ doc::non_root_macro! {
     ///
     ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     ///     where
-    ///         R: Registry + 'a,
-    ///         R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
+    ///         R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
     ///         Self::Filter: Filter<R, FI>,
     ///         Self::Views: Filter<R, VI>,
     ///     {

@@ -4,12 +4,12 @@ use crate::{
     entities::Entities,
     registry,
     registry::{
-        Canonical,
         contains::{
             Contained,
             NotContained,
             Null,
         },
+        Canonical,
     },
 };
 use alloc::vec::Vec;
@@ -76,10 +76,7 @@ where
 
 impl<C, E, I, P, Q, QS, R> Sealed<E, (NotContained, P), (Q, QS), I> for (C, R)
 where
-    Self: Canonical<
-        <<R as Sealed<E, P, QS, I>>::Canonical as entities::Contains>::Entity,
-        (Q, QS),
-    >,
+    Self: Canonical<<<R as Sealed<E, P, QS, I>>::Canonical as entities::Contains>::Entity, (Q, QS)>,
     R: Sealed<E, P, QS, I>,
 {
     type Canonical = <R as Sealed<E, P, QS, I>>::Canonical;

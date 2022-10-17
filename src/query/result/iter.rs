@@ -109,7 +109,7 @@ where
     R: Registry + 'a,
     F: Filter<R, FI>,
     V: Views<'a> + Filter<R, VI>,
-    R::Viewable: ContainsViews<'a, V, P, I, Q>,
+    R: ContainsViews<'a, V, P, I, Q>,
 {
     type Item = V;
 
@@ -182,7 +182,7 @@ where
     R: Registry + 'a,
     F: Filter<R, FI>,
     V: Views<'a> + Filter<R, VI>,
-    R::Viewable: ContainsViews<'a, V, P, I, Q>,
+    R: ContainsViews<'a, V, P, I, Q>,
 {
 }
 
