@@ -110,7 +110,14 @@
     missing_docs,
     unsafe_op_in_unsafe_fn
 )]
-#![allow(clippy::module_name_repetitions)]
+#![allow(
+    // This is at odds with some of the naming schemes used to make the public docs easier.
+    clippy::module_name_repetitions,
+
+    // This is more trouble than it's worth. Creating an alias is more confusing than just letting
+    // rustfmt format the type definition nicely.
+    clippy::type_complexity,
+)]
 
 extern crate alloc;
 

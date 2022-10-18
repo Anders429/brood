@@ -13,7 +13,6 @@
 
 mod assertions;
 mod canonical;
-mod filter;
 mod length;
 #[cfg(feature = "rayon")]
 mod par_view;
@@ -21,7 +20,6 @@ mod storage;
 mod view;
 
 pub(crate) use canonical::Canonical;
-pub(crate) use filter::Filter;
 pub(crate) use length::Length;
 #[cfg(feature = "rayon")]
 pub(crate) use par_view::CanonicalParViews;

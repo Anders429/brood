@@ -1,9 +1,7 @@
 use crate::{
-    query::{
-        filter::Filter,
-        Query,
-    },
+    query::Query,
     registry::{
+        ContainsFilter,
         ContainsParViews,
         ContainsViews,
         Registry,
@@ -32,11 +30,11 @@ where
     ) where
         R: ContainsViews<'a, S::Views, SP, SI, SQ>
             + ContainsParViews<'a, P::Views, PP, PI, PQ>
+            + ContainsFilter<S::Filter, SFI>
+            + ContainsFilter<S::Views, SVI>
+            + ContainsFilter<P::Filter, PFI>
+            + ContainsFilter<P::Views, PVI>
             + 'a,
-        S::Filter: Filter<R, SFI>,
-        S::Views: Filter<R, SVI>,
-        P::Filter: Filter<R, PFI>,
-        P::Views: Filter<R, PVI>,
     {
         match self {
             Task::Seq(system) => {

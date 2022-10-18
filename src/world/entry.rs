@@ -6,7 +6,6 @@ use crate::{
         filter::{
             And,
             Filter,
-            Seal,
         },
         view::{
             Reshape,
@@ -15,7 +14,9 @@ use crate::{
         Query,
     },
     registry::{
+        contains::filter::Sealed as ContainsFilterSealed,
         ContainsComponent,
+        ContainsFilter,
         ContainsViews,
         Registry,
         RegistryDebug,
@@ -312,11 +313,15 @@ where
         #[allow(unused_variables)] query: Query<V, F>,
     ) -> Option<V>
     where
-        V: Views<'a> + Filter<R, VI>,
-        F: Filter<R, FI>,
-        R: ContainsViews<'a, V, P, I, Q>,
+        V: Views<'a> + Filter,
+        F: Filter,
+        R: ContainsViews<'a, V, P, I, Q> + ContainsFilter<F, FI> + ContainsFilter<V, VI>,
     {
-        if And::<V, F>::filter(self.location.identifier) {
+        // SAFETY: The `R` on which `filter()` is called is the same `R` over which the identifier
+        // is generic over.
+        if unsafe {
+            <R as ContainsFilterSealed<And<F, V>, And<FI, VI>>>::filter(self.location.identifier)
+        } {
             Some(
                 // SAFETY: Since the archetype wasn't filtered out by the views, then each
                 // component viewed by `V` is also identified by the archetype's identifier.

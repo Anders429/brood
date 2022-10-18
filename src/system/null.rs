@@ -1,11 +1,11 @@
 use crate::{
     query::{
         filter,
-        filter::Filter,
         result,
         view,
     },
     registry::{
+        ContainsFilter,
         ContainsViews,
         Registry,
     },
@@ -36,9 +36,10 @@ impl<'a> System<'a> for Null {
         &mut self,
         _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ) where
-        R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
-        Self::Filter: Filter<R, FI>,
-        Self::Views: Filter<R, VI>,
+        R: ContainsViews<'a, Self::Views, P, I, Q>
+            + ContainsFilter<Self::Filter, FI>
+            + ContainsFilter<Self::Views, VI>
+            + 'a,
     {
         // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }
@@ -62,9 +63,10 @@ impl<'a> ParSystem<'a> for Null {
         &mut self,
         _query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ) where
-        R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
-        Self::Filter: Filter<R, FI>,
-        Self::Views: Filter<R, VI>,
+        R: ContainsParViews<'a, Self::Views, P, I, Q>
+            + ContainsFilter<Self::Filter, FI>
+            + ContainsFilter<Self::Views, VI>
+            + 'a,
     {
         // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }

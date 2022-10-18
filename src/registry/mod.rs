@@ -43,6 +43,7 @@ pub use contains::{
     ContainsComponent,
     ContainsEntities,
     ContainsEntity,
+    ContainsFilter,
     ContainsViews,
 };
 
@@ -61,7 +62,6 @@ pub(crate) use seal::CanonicalParViews;
 pub(crate) use seal::{
     Canonical,
     CanonicalViews,
-    Filter,
     Length,
 };
 pub(crate) use send::RegistrySend;

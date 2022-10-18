@@ -15,8 +15,8 @@ mod seal;
 use crate::{
     doc,
     hlist::define_null,
-    query::filter::Filter,
     registry::{
+        ContainsFilter,
         ContainsParViews,
         ContainsViews,
         Registry,
@@ -103,12 +103,14 @@ impl<
         (PQ, PQS),
     > for (Stage<S, P>, L)
 where
-    R: ContainsViews<'a, S::Views, SP, SI, SQ> + ContainsParViews<'a, P::Views, PP, PI, PQ> + 'a,
+    R: ContainsViews<'a, S::Views, SP, SI, SQ>
+        + ContainsParViews<'a, P::Views, PP, PI, PQ>
+        + ContainsFilter<S::Filter, SFI>
+        + ContainsFilter<S::Views, SVI>
+        + ContainsFilter<P::Filter, PFI>
+        + ContainsFilter<P::Views, PVI>
+        + 'a,
     S: System<'a> + Send,
-    S::Filter: Filter<R, SFI>,
-    S::Views: Filter<R, SVI>,
-    P::Filter: Filter<R, PFI>,
-    P::Views: Filter<R, PVI>,
     P: ParSystem<'a> + Send,
     L: Stages<'a, R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS, PQS>,
 {
@@ -131,7 +133,7 @@ doc::non_root_macro! {
     /// These can be provided to the macro to generate the correct type annotations, like so:
     ///
     /// ``` rust
-    /// use brood::{query::{filter, filter::Filter, result, views}, registry::{ContainsParViews, ContainsViews, Registry}, system::{schedule::stages, System, ParSystem}};
+    /// use brood::{query::{filter, filter::Filter, result, views}, registry::{ContainsFilter, ContainsParViews, ContainsViews, Registry}, system::{schedule::stages, System, ParSystem}};
     ///
     /// // Define components.
     /// struct A;
@@ -146,9 +148,7 @@ doc::non_root_macro! {
     ///
     ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     ///     where
-    ///         R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
-    ///         Self::Filter: Filter<R, FI>,
-    ///         Self::Views: Filter<R, VI>,
+    ///         R: ContainsViews<'a, Self::Views, P, I, Q> + ContainsFilter<Self::Filter, FI> + ContainsFilter<Self::Views, VI> + 'a
     ///     {
     ///         // Operate on result here.
     ///     }
@@ -162,9 +162,7 @@ doc::non_root_macro! {
     ///
     ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     ///     where
-    ///         R: ContainsParViews<'a, Self::Views, P, I, Q> + 'a,
-    ///         Self::Filter: Filter<R, FI>,
-    ///         Self::Views: Filter<R, VI>,
+    ///         R: ContainsParViews<'a, Self::Views, P, I, Q> + ContainsFilter<Self::Filter, FI> + ContainsFilter<Self::Views, VI> + 'a
     ///     {
     ///         // Operate on result here.
     ///     }

@@ -19,6 +19,7 @@
 //!         views,
 //!     },
 //!     registry::{
+//!         ContainsFilter,
 //!         ContainsViews,
 //!         Registry,
 //!     },
@@ -43,9 +44,10 @@
 //!         &mut self,
 //!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 //!     ) where
-//!         R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
-//!         Self::Filter: Filter<R, FI>,
-//!         Self::Views: Filter<R, VI>,
+//!         R: ContainsViews<'a, Self::Views, P, I, Q>
+//!             + ContainsFilter<Self::Filter, FI>
+//!             + ContainsFilter<Self::Views, VI>
+//!             + 'a,
 //!     {
 //!         for result!(foo, bar) in query_results {
 //!             // Do something...
@@ -63,9 +65,10 @@
 //!         &mut self,
 //!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 //!     ) where
-//!         R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
-//!         Self::Filter: Filter<R, FI>,
-//!         Self::Views: Filter<R, VI>,
+//!         R: ContainsViews<'a, Self::Views, P, I, Q>
+//!             + ContainsFilter<Self::Filter, FI>
+//!             + ContainsFilter<Self::Views, VI>
+//!             + 'a,
 //!     {
 //!         for result!(baz, bar) in query_results {
 //!             // Do something...
@@ -118,6 +121,7 @@ use stage::Stages;
 ///         views,
 ///     },
 ///     registry::{
+///         ContainsFilter,
 ///         ContainsViews,
 ///         Registry,
 ///     },
@@ -142,9 +146,10 @@ use stage::Stages;
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
-///         R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
-///         Self::Filter: Filter<R, FI>,
-///         Self::Views: Filter<R, VI>,
+///         R: ContainsViews<'a, Self::Views, P, I, Q>
+///             + ContainsFilter<Self::Filter, FI>
+///             + ContainsFilter<Self::Views, VI>
+///             + 'a,
 ///     {
 ///         for result!(foo, bar) in query_results {
 ///             // Do something...
@@ -162,9 +167,10 @@ use stage::Stages;
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
-///         R: ContainsViews<'a, Self::Views, P, I, Q> + 'a,
-///         Self::Filter: Filter<R, FI>,
-///         Self::Views: Filter<R, VI>,
+///         R: ContainsViews<'a, Self::Views, P, I, Q>
+///             + ContainsFilter<Self::Filter, FI>
+///             + ContainsFilter<Self::Views, VI>
+///             + 'a,
 ///     {
 ///         for result!(baz, bar) in query_results {
 ///             // Do something...
