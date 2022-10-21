@@ -7,7 +7,7 @@ use crate::{
         view,
         view::{
             Views,
-            ViewsSeal,
+            ViewsSealed,
         },
     },
     registry,
@@ -50,7 +50,7 @@ where
 {
     /// The canonical form of the views `V`.
     type Canonical: Views<'a>
-        + ViewsSeal<'a, Results = Self::CanonicalResults>
+        + ViewsSealed<'a, Results = Self::CanonicalResults>
         + view::Reshape<'a, V, Q>;
     /// The canonical form of the results of the views `V`. Equivalent to
     /// `Self::Canonical::Results`.
@@ -114,7 +114,7 @@ where
             P,
             IS,
         >>::Canonical,
-    ) as ViewsSeal<'a>>::Results: result::Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+    ) as ViewsSealed<'a>>::Results: result::Reshape<<V as ViewsSealed<'a>>::Results, Q>,
     (
         entity::Identifier,
         <R as ContainsViewsInner<
@@ -134,7 +134,7 @@ where
             IS,
         >>::Canonical,
     );
-    type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+    type CanonicalResults = <Self::Canonical as ViewsSealed<'a>>::Results;
 
     unsafe fn view<R_>(
         columns: &[(*mut u8, usize)],
@@ -191,13 +191,13 @@ impl<'a, I, P, R, V, Q> ContainsViewsOuter<'a, V, (NotContained, P), I, Q>
 where
     R: CanonicalViews<'a, <R as ContainsViewsInner<'a, V, P, I>>::Canonical, P>
         + ContainsViewsInner<'a, V, P, I>,
-    <<R as ContainsViewsInner<'a, V, P, I>>::Canonical as ViewsSeal<'a>>::Results:
-        result::Reshape<<V as ViewsSeal<'a>>::Results, Q>,
+    <<R as ContainsViewsInner<'a, V, P, I>>::Canonical as ViewsSealed<'a>>::Results:
+        result::Reshape<<V as ViewsSealed<'a>>::Results, Q>,
     <R as ContainsViewsInner<'a, V, P, I>>::Canonical: view::Reshape<'a, V, Q>,
     V: Views<'a>,
 {
     type Canonical = <R as ContainsViewsInner<'a, V, P, I>>::Canonical;
-    type CanonicalResults = <Self::Canonical as ViewsSeal<'a>>::Results;
+    type CanonicalResults = <Self::Canonical as ViewsSealed<'a>>::Results;
 
     unsafe fn view<R_>(
         columns: &[(*mut u8, usize)],

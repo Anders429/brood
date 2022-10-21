@@ -34,7 +34,7 @@ use crate::{
     },
     query::view::{
         Views,
-        ViewsSeal,
+        ViewsSealed,
     },
     registry::{
         contains::views::{
@@ -243,7 +243,7 @@ where
         P,
         I,
         Q,
-    >>::Canonical as ViewsSeal<'a>>::Results
+    >>::Canonical as ViewsSealed<'a>>::Results
     where
         V: Views<'a>,
         R: ContainsViews<'a, V, P, I, Q>,

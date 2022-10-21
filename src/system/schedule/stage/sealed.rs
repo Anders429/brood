@@ -18,7 +18,7 @@ use crate::{
     world::World,
 };
 
-pub trait Seal<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>: Send
+pub trait Sealed<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>: Send
 where
     R: Registry + 'a,
 {
@@ -33,7 +33,7 @@ where
     fn flush(&mut self, world: SendableWorld<R>);
 }
 
-impl<'a, R> Seal<'a, R, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null
+impl<'a, R> Sealed<'a, R, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null
 where
     R: Registry + 'a,
 {
@@ -75,7 +75,7 @@ impl<
         PQ,
         PQS,
     >
-    Seal<
+    Sealed<
         'a,
         R,
         (SFI, SFIS),
@@ -95,7 +95,7 @@ where
         + 'a,
     S: System<'a> + Send,
     P: ParSystem<'a> + Send,
-    L: Seal<'a, R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS, PQS>,
+    L: Sealed<'a, R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS, PQS>,
 {
     fn run(&mut self, world: SendableWorld<R>) {
         self.defer(world);

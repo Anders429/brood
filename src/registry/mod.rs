@@ -31,7 +31,7 @@ pub(crate) mod contains;
 
 mod debug;
 mod eq;
-mod seal;
+mod sealed;
 mod send;
 #[cfg(feature = "serde")]
 mod serde;
@@ -60,8 +60,8 @@ pub(crate) use eq::{
     RegistryPartialEq,
 };
 #[cfg(feature = "rayon")]
-pub(crate) use seal::CanonicalParViews;
-pub(crate) use seal::{
+pub(crate) use sealed::CanonicalParViews;
+pub(crate) use sealed::{
     Canonical,
     CanonicalViews,
     Length,
@@ -73,7 +73,7 @@ use crate::{
     component::Component,
     hlist::define_null_uninstantiable,
 };
-use seal::Seal;
+use sealed::Sealed;
 
 define_null_uninstantiable!();
 
@@ -101,7 +101,7 @@ define_null_uninstantiable!();
 ///
 /// [`Component`]: crate::component::Component
 /// [`World`]: crate::World
-pub trait Registry: Seal {}
+pub trait Registry: Sealed {}
 
 impl Registry for Null {}
 

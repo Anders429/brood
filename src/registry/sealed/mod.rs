@@ -41,13 +41,13 @@ use storage::Storage;
 /// While this trait specifically does not have any functions implemented, the traits it relies on
 /// do. See the modules where they are defined for more details on the internal functionality
 /// defined through these sealed traits.
-pub trait Seal: Assertions + Length + Storage {}
+pub trait Sealed: Assertions + Length + Storage {}
 
-impl Seal for Null {}
+impl Sealed for Null {}
 
-impl<C, R> Seal for (C, R)
+impl<C, R> Sealed for (C, R)
 where
     C: Component,
-    R: Seal,
+    R: Sealed,
 {
 }

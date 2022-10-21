@@ -45,7 +45,7 @@ pub(crate) mod allocator;
 
 mod get;
 mod identifier;
-mod seal;
+mod sealed;
 
 pub use identifier::Identifier;
 
@@ -56,7 +56,7 @@ use crate::{
     component::Component,
     hlist::define_null,
 };
-use seal::Seal;
+use sealed::Sealed;
 
 define_null!();
 
@@ -83,7 +83,7 @@ define_null!();
 /// [`Component`]: crate::component::Component
 /// [`Registry`]: crate::registry::Registry
 /// [`World`]: crate::world::World
-pub trait Entity: Seal + 'static {}
+pub trait Entity: Sealed + 'static {}
 
 impl Entity for Null {}
 

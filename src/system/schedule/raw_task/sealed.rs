@@ -17,7 +17,7 @@ use core::any::TypeId;
 use fnv::FnvBuildHasher;
 use hashbrown::HashSet;
 
-pub trait Seal<'a> {
+pub trait Sealed<'a> {
     type Stages;
 
     fn into_stages(
@@ -29,7 +29,7 @@ pub trait Seal<'a> {
     ) -> Self::Stages;
 }
 
-impl<'a> Seal<'a> for Null {
+impl<'a> Sealed<'a> for Null {
     type Stages = stage::Null;
 
     fn into_stages(
@@ -43,11 +43,11 @@ impl<'a> Seal<'a> for Null {
     }
 }
 
-impl<'a, S, P, T> Seal<'a> for (RawTask<S, P>, T)
+impl<'a, S, P, T> Sealed<'a> for (RawTask<S, P>, T)
 where
     S: System<'a> + Send,
     P: ParSystem<'a> + Send,
-    T: Seal<'a>,
+    T: Sealed<'a>,
 {
     type Stages = (Stage<S, P>, T::Stages);
 

@@ -13,25 +13,25 @@ use core::{
 };
 use either::Either;
 
-pub trait ViewSeal<'a>: Claim {
+pub trait ViewSealed<'a>: Claim {
     type Result: Iterator<Item = Self>;
 }
 
-impl<'a, C> ViewSeal<'a> for &'a C
+impl<'a, C> ViewSealed<'a> for &'a C
 where
     C: Component,
 {
     type Result = slice::Iter<'a, C>;
 }
 
-impl<'a, C> ViewSeal<'a> for &'a mut C
+impl<'a, C> ViewSealed<'a> for &'a mut C
 where
     C: Component,
 {
     type Result = slice::IterMut<'a, C>;
 }
 
-impl<'a, C> ViewSeal<'a> for Option<&'a C>
+impl<'a, C> ViewSealed<'a> for Option<&'a C>
 where
     C: Component,
 {
@@ -41,7 +41,7 @@ where
     >;
 }
 
-impl<'a, C> ViewSeal<'a> for Option<&'a mut C>
+impl<'a, C> ViewSealed<'a> for Option<&'a mut C>
 where
     C: Component,
 {
@@ -51,22 +51,22 @@ where
     >;
 }
 
-impl<'a> ViewSeal<'a> for entity::Identifier {
+impl<'a> ViewSealed<'a> for entity::Identifier {
     type Result = iter::Copied<slice::Iter<'a, Self>>;
 }
 
-pub trait ViewsSeal<'a>: Claim {
+pub trait ViewsSealed<'a>: Claim {
     type Results: Results<View = Self>;
 }
 
-impl<'a> ViewsSeal<'a> for Null {
+impl<'a> ViewsSealed<'a> for Null {
     type Results = iter::Repeat<Null>;
 }
 
-impl<'a, V, W> ViewsSeal<'a> for (V, W)
+impl<'a, V, W> ViewsSealed<'a> for (V, W)
 where
-    V: ViewSeal<'a>,
-    W: ViewsSeal<'a>,
+    V: ViewSealed<'a>,
+    W: ViewsSealed<'a>,
 {
     type Results = (V::Result, W::Results);
 }

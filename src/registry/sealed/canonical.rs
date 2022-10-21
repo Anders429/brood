@@ -11,7 +11,7 @@ use crate::{
     entity,
     registry,
     registry::{
-        seal::Length,
+        sealed::Length,
         Registry,
     },
 };

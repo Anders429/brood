@@ -14,9 +14,9 @@
 //! [`Views`]: crate::query::view::Views
 //! [`World`]: crate::world::World
 
-mod seal;
+mod sealed;
 
-pub(crate) use seal::Seal;
+pub(crate) use sealed::Sealed;
 
 use crate::{
     component::Component,
@@ -40,7 +40,7 @@ use core::marker::PhantomData;
 /// [`Has<C>`]: crate::query::filter::Has
 /// [`Views`]: crate::query::view::Views
 /// [`World`]: crate::world::World
-pub trait Filter: Seal {}
+pub trait Filter: Sealed {}
 
 /// An empty filter.
 ///

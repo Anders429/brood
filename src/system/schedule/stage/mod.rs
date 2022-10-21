@@ -10,7 +10,7 @@
 //! [`stages!`]: crate::system::schedule::stages!
 //! [`System`]: crate::system::System
 
-mod seal;
+mod sealed;
 
 use crate::{
     doc,
@@ -26,7 +26,7 @@ use crate::{
         System,
     },
 };
-use seal::Seal;
+use sealed::Sealed;
 
 /// A single step in a stage.
 ///
@@ -47,7 +47,7 @@ pub enum Stage<S, P> {
 /// stages are defined inside-out, with the last of the heterogeneous list being the beginning of
 /// the list of stages.
 pub trait Stages<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>:
-    Seal<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>
+    Sealed<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>
 where
     R: Registry + 'a,
 {
