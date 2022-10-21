@@ -4,6 +4,8 @@
 //! presence can be verified at compile-time. Additionally, being able to prove that a registry
 //! contains a heterogeneous list of components allows transforming that list into a canonical form
 //! at compile-time, paving the way for storage optimizations.
+//! 
+//! [`Registry`]: crate::registry::Registry
 
 pub(crate) mod entities;
 pub(crate) mod entity;
