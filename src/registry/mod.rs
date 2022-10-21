@@ -38,13 +38,12 @@ mod serde;
 mod sync;
 
 #[cfg(feature = "rayon")]
-pub use contains::ContainsParViews;
+pub use contains::ContainsParQuery;
 pub use contains::{
     ContainsComponent,
     ContainsEntities,
     ContainsEntity,
-    ContainsFilter,
-    ContainsViews,
+    ContainsQuery,
 };
 
 #[cfg(feature = "serde")]
@@ -52,6 +51,9 @@ pub(crate) use self::serde::{
     RegistryDeserialize,
     RegistrySerialize,
 };
+#[cfg(feature = "rayon")]
+pub(crate) use contains::ContainsParViews;
+pub(crate) use contains::ContainsViews;
 pub(crate) use debug::RegistryDebug;
 pub(crate) use eq::{
     RegistryEq,

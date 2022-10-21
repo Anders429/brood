@@ -16,8 +16,7 @@ use crate::{
     registry::{
         contains::filter::Sealed as ContainsFilterSealed,
         ContainsComponent,
-        ContainsFilter,
-        ContainsViews,
+        ContainsQuery,
         Registry,
         RegistryDebug,
     },
@@ -315,7 +314,7 @@ where
     where
         V: Views<'a> + Filter,
         F: Filter,
-        R: ContainsViews<'a, V, P, I, Q> + ContainsFilter<F, FI> + ContainsFilter<V, VI>,
+        R: ContainsQuery<'a, F, FI, V, VI, P, I, Q>,
     {
         // SAFETY: The `R` on which `filter()` is called is the same `R` over which the identifier
         // is generic over.

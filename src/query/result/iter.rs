@@ -13,8 +13,7 @@ use crate::{
     },
     registry::{
         contains::filter::Sealed as ContainsFilterSealed,
-        ContainsFilter,
-        ContainsViews,
+        ContainsQuery,
         Registry,
     },
 };
@@ -109,7 +108,7 @@ impl<'a, R, F, FI, V, VI, P, I, Q> Iterator for Iter<'a, R, F, FI, V, VI, P, I, 
 where
     F: Filter,
     V: Views<'a> + Filter,
-    R: ContainsViews<'a, V, P, I, Q> + ContainsFilter<F, FI> + ContainsFilter<V, VI> + 'a,
+    R: ContainsQuery<'a, F, FI, V, VI, P, I, Q> + 'a,
 {
     type Item = V;
 
@@ -187,7 +186,7 @@ impl<'a, R, F, FI, V, VI, P, I, Q> FusedIterator for Iter<'a, R, F, FI, V, VI, P
 where
     F: Filter,
     V: Views<'a> + Filter,
-    R: ContainsViews<'a, V, P, I, Q> + ContainsFilter<F, FI> + ContainsFilter<V, VI> + 'a,
+    R: ContainsQuery<'a, F, FI, V, VI, P, I, Q> + 'a,
 {
 }
 

@@ -16,9 +16,8 @@ use crate::{
     doc,
     hlist::define_null,
     registry::{
-        ContainsFilter,
-        ContainsParViews,
-        ContainsViews,
+        ContainsParQuery,
+        ContainsQuery,
         Registry,
     },
     system::{
@@ -103,12 +102,8 @@ impl<
         (PQ, PQS),
     > for (Stage<S, P>, L)
 where
-    R: ContainsViews<'a, S::Views, SP, SI, SQ>
-        + ContainsParViews<'a, P::Views, PP, PI, PQ>
-        + ContainsFilter<S::Filter, SFI>
-        + ContainsFilter<S::Views, SVI>
-        + ContainsFilter<P::Filter, PFI>
-        + ContainsFilter<P::Views, PVI>
+    R: ContainsQuery<'a, S::Filter, SFI, S::Views, SVI, SP, SI, SQ>
+        + ContainsParQuery<'a, P::Filter, PFI, P::Views, PVI, PP, PI, PQ>
         + 'a,
     S: System<'a> + Send,
     P: ParSystem<'a> + Send,
@@ -133,7 +128,7 @@ doc::non_root_macro! {
     /// These can be provided to the macro to generate the correct type annotations, like so:
     ///
     /// ``` rust
-    /// use brood::{query::{filter, filter::Filter, result, views}, registry::{ContainsFilter, ContainsParViews, ContainsViews, Registry}, system::{schedule::stages, System, ParSystem}};
+    /// use brood::{query::{filter, filter::Filter, result, views}, registry::{ContainsParQuery, ContainsQuery}, system::{schedule::stages, System, ParSystem}};
     ///
     /// // Define components.
     /// struct A;
@@ -148,7 +143,7 @@ doc::non_root_macro! {
     ///
     ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     ///     where
-    ///         R: ContainsViews<'a, Self::Views, P, I, Q> + ContainsFilter<Self::Filter, FI> + ContainsFilter<Self::Views, VI> + 'a
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     ///     {
     ///         // Operate on result here.
     ///     }
@@ -162,7 +157,7 @@ doc::non_root_macro! {
     ///
     ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     ///     where
-    ///         R: ContainsParViews<'a, Self::Views, P, I, Q> + ContainsFilter<Self::Filter, FI> + ContainsFilter<Self::Views, VI> + 'a
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     ///     {
     ///         // Operate on result here.
     ///     }

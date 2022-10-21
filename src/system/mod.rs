@@ -12,11 +12,7 @@
 //!         result,
 //!         views,
 //!     },
-//!     registry::{
-//!         ContainsFilter,
-//!         ContainsViews,
-//!         Registry,
-//!     },
+//!     registry::ContainsQuery,
 //!     system::System,
 //! };
 //!
@@ -35,10 +31,7 @@
 //!         &mut self,
 //!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 //!     ) where
-//!         R: ContainsViews<'a, Self::Views, P, I, Q>
-//!             + ContainsFilter<Self::Filter, FI>
-//!             + ContainsFilter<Self::Views, VI>
-//!             + 'a,
+//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
 //!     {
 //!         for result!(foo, bar) in query_results {
 //!             if bar.0 {
@@ -78,8 +71,7 @@ use crate::{
         view::Views,
     },
     registry::{
-        ContainsFilter,
-        ContainsViews,
+        ContainsQuery,
         Registry,
     },
     world::World,
@@ -105,11 +97,7 @@ use crate::{
 ///         result,
 ///         views,
 ///     },
-///     registry::{
-///         ContainsFilter,
-///         ContainsViews,
-///         Registry,
-///     },
+///     registry::ContainsQuery,
 ///     system::System,
 /// };
 ///
@@ -128,10 +116,7 @@ use crate::{
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
-///         R: ContainsViews<'a, Self::Views, P, I, Q>
-///             + ContainsFilter<Self::Filter, FI>
-///             + ContainsFilter<Self::Views, VI>
-///             + 'a,
+///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
 ///     {
 ///         for result!(foo, bar) in query_results {
 ///             if bar.0 {
@@ -166,11 +151,7 @@ pub trait System<'a> {
     ///         result,
     ///         views,
     ///     },
-    ///     registry::{
-    ///         ContainsFilter,
-    ///         ContainsViews,
-    ///         Registry,
-    ///     },
+    ///     registry::ContainsQuery,
     ///     system::System,
     /// };
     ///
@@ -189,10 +170,7 @@ pub trait System<'a> {
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ///     ) where
-    ///         R: ContainsViews<'a, Self::Views, P, I, Q>
-    ///             + ContainsFilter<Self::Filter, FI>
-    ///             + ContainsFilter<Self::Views, VI>
-    ///             + 'a,
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     ///     {
     ///         for result!(foo, bar) in query_results {
     ///             if bar.0 {
@@ -209,10 +187,7 @@ pub trait System<'a> {
         &mut self,
         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ) where
-        R: ContainsViews<'a, Self::Views, P, I, Q>
-            + ContainsFilter<Self::Filter, FI>
-            + ContainsFilter<Self::Views, VI>
-            + 'a;
+        R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a;
 
     /// Logic to be run after processing.
     ///
@@ -225,7 +200,7 @@ pub trait System<'a> {
     /// executes the removal during post processing.
     ///
     /// ``` rust
-    /// use brood::{entity, query::{filter, filter::Filter, result, views}, registry::{ContainsFilter, ContainsViews, Registry}, system::System, World};
+    /// use brood::{entity, query::{filter, filter::Filter, result, views}, registry::{ContainsQuery, Registry}, system::System, World};
     ///
     /// // Define components.
     /// struct Foo(usize);
@@ -243,7 +218,8 @@ pub trait System<'a> {
     ///
     ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     ///     where
-    ///         R: ContainsViews<'a, Self::Views, P, I, Q> + ContainsFilter<Self::Filter, FI> + ContainsFilter<Self::Views, VI> + 'a {
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a
+    ///     {
     ///         for result!(foo, bar, entity_identifier) in query_results {
     ///             // If `bar` is true, increment `foo`. Otherwise, remove the entity in post processing.
     ///             if bar.0 {

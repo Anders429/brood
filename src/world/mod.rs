@@ -14,7 +14,6 @@ mod impl_send;
 mod impl_serde;
 mod impl_sync;
 
-use contains::ContainsFilter;
 pub use entry::Entry;
 
 use crate::{
@@ -33,7 +32,7 @@ use crate::{
         contains,
         ContainsEntities,
         ContainsEntity,
-        ContainsViews,
+        ContainsQuery,
         Registry,
     },
     system::System,
@@ -41,7 +40,7 @@ use crate::{
 #[cfg(feature = "rayon")]
 use crate::{
     query::view::ParViews,
-    registry::ContainsParViews,
+    registry::ContainsParQuery,
     system::{
         schedule::stage::Stages,
         ParSystem,
@@ -283,7 +282,7 @@ where
     where
         V: Views<'a> + Filter,
         F: Filter,
-        R: ContainsViews<'a, V, P, I, Q> + ContainsFilter<F, FI> + ContainsFilter<V, VI>,
+        R: ContainsQuery<'a, F, FI, V, VI, P, I, Q>,
     {
         result::Iter::new(self.archetypes.iter_mut())
     }
@@ -349,7 +348,7 @@ where
     where
         V: ParViews<'a> + Filter,
         F: Filter,
-        R: ContainsParViews<'a, V, P, I, Q> + ContainsFilter<F, FI> + ContainsFilter<V, VI>,
+        R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>,
     {
         result::ParIter::new(self.archetypes.par_iter_mut())
     }
@@ -367,11 +366,7 @@ where
     ///         views,
     ///     },
     ///     registry,
-    ///     registry::{
-    ///         ContainsFilter,
-    ///         ContainsViews,
-    ///         Registry,
-    ///     },
+    ///     registry::ContainsQuery,
     ///     system::System,
     ///     World,
     /// };
@@ -393,11 +388,7 @@ where
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ///     ) where
-    ///         R: Registry + 'a,
-    ///         R: ContainsViews<'a, Self::Views, P, I, Q>
-    ///             + ContainsFilter<Self::Filter, FI>
-    ///             + ContainsFilter<Self::Views, VI>
-    ///             + 'a,
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     ///     {
     ///         for result!(foo, bar) in query_results {
     ///             // Increment `Foo` by `Bar`.
@@ -416,11 +407,7 @@ where
     pub fn run_system<'a, S, FI, VI, P, I, Q>(&'a mut self, system: &mut S)
     where
         S: System<'a>,
-        S::Filter: Filter,
-        S::Views: Filter,
-        R: ContainsViews<'a, S::Views, P, I, Q>
-            + ContainsFilter<S::Filter, FI>
-            + ContainsFilter<S::Views, VI>,
+        R: ContainsQuery<'a, S::Filter, FI, S::Views, VI, P, I, Q>,
     {
         system.run(self.query(Query::<S::Views, S::Filter>::new()));
     }
@@ -438,11 +425,7 @@ where
     ///         views,
     ///     },
     ///     registry,
-    ///     registry::{
-    ///         ContainsFilter,
-    ///         ContainsParViews,
-    ///         Registry,
-    ///     },
+    ///     registry::ContainsParQuery,
     ///     system::ParSystem,
     ///     World,
     /// };
@@ -465,11 +448,7 @@ where
     ///         &mut self,
     ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ///     ) where
-    ///         R: Registry + 'a,
-    ///         R: ContainsParViews<'a, Self::Views, P, I, Q>
-    ///             + ContainsFilter<Self::Filter, FI>
-    ///             + ContainsFilter<Self::Views, VI>
-    ///             + 'a,
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     ///     {
     ///         query_results.for_each(|result!(foo, bar)| foo.0 += bar.0);
     ///     }
@@ -487,11 +466,7 @@ where
     pub fn run_par_system<'a, S, FI, VI, P, I, Q>(&'a mut self, par_system: &mut S)
     where
         S: ParSystem<'a>,
-        S::Filter: Filter,
-        S::Views: Filter,
-        R: ContainsParViews<'a, S::Views, P, I, Q>
-            + ContainsFilter<S::Filter, FI>
-            + ContainsFilter<S::Views, VI>,
+        R: ContainsParQuery<'a, S::Filter, FI, S::Views, VI, P, I, Q>,
     {
         par_system.run(self.par_query(Query::<S::Views, S::Filter>::new()));
     }
@@ -509,11 +484,7 @@ where
     ///         views,
     ///     },
     ///     registry,
-    ///     registry::{
-    ///         ContainsFilter,
-    ///         ContainsViews,
-    ///         Registry,
-    ///     },
+    ///     registry::ContainsQuery,
     ///     system::{
     ///         Schedule,
     ///         System,
@@ -539,11 +510,7 @@ where
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ///     ) where
-    ///         R: Registry + 'a,
-    ///         R: ContainsViews<'a, Self::Views, P, I, Q>
-    ///             + ContainsFilter<Self::Filter, FI>
-    ///             + ContainsFilter<Self::Views, VI>
-    ///             + 'a,
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     ///     {
     ///         for result!(foo) in query_results {
     ///             foo.0 += 1;
@@ -559,11 +526,7 @@ where
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ///     ) where
-    ///         R: Registry + 'a,
-    ///         R: ContainsViews<'a, Self::Views, P, I, Q>
-    ///             + ContainsFilter<Self::Filter, FI>
-    ///             + ContainsFilter<Self::Views, VI>
-    ///             + 'a,
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     ///     {
     ///         for result!(bar) in query_results {
     ///             bar.0 += 1;
@@ -1233,10 +1196,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 result.sort();
@@ -1266,10 +1226,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(b)| b.0).collect::<Vec<_>>();
                 result.sort();
@@ -1299,10 +1256,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results
                     .map(|result!(a)| a.map(|a| a.0))
@@ -1334,10 +1288,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results
                     .map(|result!(b)| b.map(|b| b.0))
@@ -1371,10 +1322,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let result = query_results
                     .map(|result!(entity_identifier)| entity_identifier)
@@ -1405,10 +1353,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![1]);
@@ -1437,10 +1382,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![2]);
@@ -1469,10 +1411,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![1]);
@@ -1501,10 +1440,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 result.sort();
@@ -1535,10 +1471,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsParViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 result.sort();
@@ -1569,10 +1502,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsParViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(b)| b.0).collect::<Vec<_>>();
                 result.sort();
@@ -1603,10 +1533,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsParViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results
                     .map(|result!(a)| a.map(|a| a.0))
@@ -1639,10 +1566,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsParViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results
                     .map(|result!(b)| b.map(|b| b.0))
@@ -1677,10 +1601,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsParViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let result = query_results
                     .map(|result!(entity_identifier)| entity_identifier)
@@ -1712,10 +1633,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsParViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![1]);
@@ -1745,10 +1663,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsParViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![2]);
@@ -1778,10 +1693,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsParViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![1]);
@@ -1811,10 +1723,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsParViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 result.sort();
@@ -1845,10 +1754,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 result.sort();
@@ -1866,10 +1772,7 @@ mod tests {
                 &mut self,
                 query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
             ) where
-                R: ContainsParViews<'a, Self::Views, P, I, Q>
-                    + ContainsFilter<Self::Filter, FI>
-                    + ContainsFilter<Self::Views, VI>
-                    + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(b)| b.0).collect::<Vec<_>>();
                 result.sort();

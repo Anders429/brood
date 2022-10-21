@@ -5,8 +5,7 @@ use crate::{
         view,
     },
     registry::{
-        ContainsFilter,
-        ContainsViews,
+        ContainsQuery,
         Registry,
     },
     system::System,
@@ -14,7 +13,7 @@ use crate::{
 };
 #[cfg(feature = "rayon")]
 use crate::{
-    registry::ContainsParViews,
+    registry::ContainsParQuery,
     system::ParSystem,
 };
 use core::hint::unreachable_unchecked;
@@ -36,10 +35,7 @@ impl<'a> System<'a> for Null {
         &mut self,
         _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ) where
-        R: ContainsViews<'a, Self::Views, P, I, Q>
-            + ContainsFilter<Self::Filter, FI>
-            + ContainsFilter<Self::Views, VI>
-            + 'a,
+        R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     {
         // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }
@@ -63,10 +59,7 @@ impl<'a> ParSystem<'a> for Null {
         &mut self,
         _query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ) where
-        R: ContainsParViews<'a, Self::Views, P, I, Q>
-            + ContainsFilter<Self::Filter, FI>
-            + ContainsFilter<Self::Views, VI>
-            + 'a,
+        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     {
         // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }

@@ -9,18 +9,28 @@ pub(crate) mod entities;
 pub(crate) mod entity;
 pub(crate) mod filter;
 #[cfg(feature = "rayon")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub(crate) mod par_views;
 pub(crate) mod views;
 
 mod component;
+#[cfg(feature = "rayon")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+mod par_query;
+mod query;
 
 pub use component::ContainsComponent;
 pub use entities::ContainsEntities;
 pub use entity::ContainsEntity;
-pub use filter::ContainsFilter;
 #[cfg(feature = "rayon")]
-pub use par_views::ContainsParViews;
-pub use views::ContainsViews;
+pub use par_query::ContainsParQuery;
+pub use query::ContainsQuery;
+
+#[cfg(feature = "rayon")]
+pub(crate) use par_views::ContainsParViews;
+pub(crate) use views::ContainsViews;
+
+use filter::ContainsFilter;
 
 /// Type marker for a component contained in an entity.
 pub enum Contained {}

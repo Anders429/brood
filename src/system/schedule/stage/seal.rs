@@ -1,8 +1,7 @@
 use crate::{
     registry::{
-        ContainsFilter,
-        ContainsParViews,
-        ContainsViews,
+        ContainsParQuery,
+        ContainsQuery,
         Registry,
     },
     system::{
@@ -91,12 +90,8 @@ impl<
         (PQ, PQS),
     > for (Stage<S, P>, L)
 where
-    R: ContainsViews<'a, S::Views, SP, SI, SQ>
-        + ContainsParViews<'a, P::Views, PP, PI, PQ>
-        + ContainsFilter<S::Filter, SFI>
-        + ContainsFilter<S::Views, SVI>
-        + ContainsFilter<P::Filter, PFI>
-        + ContainsFilter<P::Views, PVI>
+    R: ContainsQuery<'a, S::Filter, SFI, S::Views, SVI, SP, SI, SQ>
+        + ContainsParQuery<'a, P::Filter, PFI, P::Views, PVI, PP, PI, PQ>
         + 'a,
     S: System<'a> + Send,
     P: ParSystem<'a> + Send,

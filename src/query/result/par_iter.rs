@@ -14,8 +14,7 @@ use crate::{
     },
     registry::{
         contains::filter::Sealed as ContainsFilterSealed,
-        ContainsFilter,
-        ContainsParViews,
+        ContainsParQuery,
         Registry,
     },
 };
@@ -129,7 +128,7 @@ unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Sync for ParIter<'a, R, F, FI, V, VI, 
 impl<'a, R, F, FI, V, VI, P, I, Q> ParallelIterator for ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     V: ParViews<'a>,
-    R: ContainsParViews<'a, V, P, I, Q> + ContainsFilter<F, FI> + ContainsFilter<V, VI> + 'a,
+    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q> + 'a,
 {
     type Item = <<V as ParViewsSeal<'a>>::ParResults as ParResults>::View;
 
@@ -183,7 +182,7 @@ impl<'a, C, R, F, FI, V, VI, P, I, Q> Consumer<&'a mut Archetype<R>>
 where
     C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
     V: ParViews<'a>,
-    R: ContainsParViews<'a, V, P, I, Q> + ContainsFilter<F, FI> + ContainsFilter<V, VI>,
+    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>,
 {
     type Folder = ResultsFolder<C, C::Result, F, FI, V, VI, P, I, Q>;
     type Reducer = C::Reducer;
@@ -223,7 +222,7 @@ impl<'a, C, R, F, FI, V, VI, P, I, Q> UnindexedConsumer<&'a mut Archetype<R>>
 where
     C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
     V: ParViews<'a>,
-    R: ContainsParViews<'a, V, P, I, Q> + ContainsFilter<F, FI> + ContainsFilter<V, VI>,
+    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>,
 {
     fn split_off_left(&self) -> Self {
         ResultsConsumer::new(self.base.split_off_left())
@@ -251,7 +250,7 @@ impl<'a, C, R, F, FI, V, VI, P, I, Q> Folder<&'a mut Archetype<R>>
     for ResultsFolder<C, C::Result, F, FI, V, VI, P, I, Q>
 where
     C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
-    R: ContainsParViews<'a, V, P, I, Q> + ContainsFilter<F, FI> + ContainsFilter<V, VI>,
+    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>,
     V: ParViews<'a>,
 {
     type Result = C::Result;

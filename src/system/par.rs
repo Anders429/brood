@@ -5,8 +5,7 @@ use crate::{
         view::ParViews,
     },
     registry::{
-        ContainsFilter,
-        ContainsParViews,
+        ContainsParQuery,
         Registry,
     },
     world::World,
@@ -27,11 +26,7 @@ use crate::{
 ///         result,
 ///         views,
 ///     },
-///     registry::{
-///         ContainsFilter,
-///         ContainsParViews,
-///         Registry,
-///     },
+///     registry::ContainsParQuery,
 ///     system::ParSystem,
 /// };
 /// use rayon::iter::ParallelIterator;
@@ -51,10 +46,7 @@ use crate::{
 ///         &mut self,
 ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
-///         R: ContainsParViews<'a, Self::Views, P, I, Q>
-///             + ContainsFilter<Self::Filter, FI>
-///             + ContainsFilter<Self::Views, VI>
-///             + 'a,
+///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
 ///     {
 ///         query_results.for_each(|result!(foo, bar)| {
 ///             if bar.0 {
@@ -93,11 +85,7 @@ pub trait ParSystem<'a> {
     ///         result,
     ///         views,
     ///     },
-    ///     registry::{
-    ///         ContainsFilter,
-    ///         ContainsParViews,
-    ///         Registry,
-    ///     },
+    ///     registry::ContainsParQuery,
     ///     system::ParSystem,
     /// };
     /// use rayon::iter::ParallelIterator;
@@ -117,10 +105,7 @@ pub trait ParSystem<'a> {
     ///         &mut self,
     ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ///     ) where
-    ///         R: ContainsParViews<'a, Self::Views, P, I, Q>
-    ///             + ContainsFilter<Self::Filter, FI>
-    ///             + ContainsFilter<Self::Views, VI>
-    ///             + 'a,
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     ///     {
     ///         query_results.for_each(|result!(foo, bar)| {
     ///             if bar.0 {
@@ -137,10 +122,7 @@ pub trait ParSystem<'a> {
         &mut self,
         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ) where
-        R: ContainsParViews<'a, Self::Views, P, I, Q>
-            + ContainsFilter<Self::Filter, FI>
-            + ContainsFilter<Self::Views, VI>
-            + 'a;
+        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a;
 
     /// Logic to be run after processing.
     ///
@@ -153,7 +135,7 @@ pub trait ParSystem<'a> {
     /// executes the removal during post processing.
     ///
     /// ``` rust
-    /// use brood::{entity, query::{filter, filter::Filter, result, views}, registry::{ContainsFilter, ContainsParViews, Registry}, system::ParSystem, World};
+    /// use brood::{entity, query::{filter, filter::Filter, result, views}, registry::{ContainsParQuery, Registry}, system::ParSystem, World};
     /// use rayon::iter::ParallelIterator;
     ///
     /// // Define components.
@@ -172,7 +154,7 @@ pub trait ParSystem<'a> {
     ///
     ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     ///     where
-    ///         R: ContainsParViews<'a, Self::Views, P, I, Q> + ContainsFilter<Self::Filter, FI> + ContainsFilter<Self::Views, VI> + 'a
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     ///     {
     ///         self.entities_to_remove = query_results.filter_map(|result!(foo, bar, entity_identifier)| {
     ///             // If `bar` is true, increment `foo`. Otherwise, remove the entity in post processing.
