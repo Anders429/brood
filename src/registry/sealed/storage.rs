@@ -294,6 +294,31 @@ pub trait Storage {
     ) where
         R: Registry;
 
+    /// Shrink the component columns to the smallest required allocation.
+    ///
+    /// This isn't guaranteed to shrink to the most optimal allocation, as it is dependent on the
+    /// allocator. The logic here relies on the implementation of `Vec::shrink_to_fit()`.
+    ///
+    /// # Safety
+    /// `components` must contain the same number of values as there are set bits in the
+    /// `identifier_iter`.
+    ///
+    /// Each `(*mut u8, usize)` in `components` must be the pointer and capacity respectively of a
+    /// `Vec<C>` of length `length`, where `C` is the component corresponding to the set bit in
+    /// `identifier_iter`.
+    ///
+    /// When called externally, the `Registry` `R` provided to the method must by the same as the
+    /// `Registry` on which this method is being called.
+    ///
+    /// When called internally, the `identifier_iter` must have the same amount of bits left as
+    /// there are components remaining.
+    unsafe fn shrink_components_to_fit<R>(
+        components: &mut [(*mut u8, usize)],
+        length: usize,
+        identifier_iter: archetype::identifier::Iter<R>,
+    ) where
+        R: Registry;
+
     /// Populate a [`DebugList`] with string forms of the names of every component type identified
     /// by `identifier_iter`.
     ///
@@ -398,6 +423,15 @@ impl Storage for Null {
     }
 
     unsafe fn clear_components<R>(
+        _components: &mut [(*mut u8, usize)],
+        _length: usize,
+        _identifier_iter: archetype::identifier::Iter<R>,
+    ) where
+        R: Registry,
+    {
+    }
+
+    unsafe fn shrink_components_to_fit<R>(
         _components: &mut [(*mut u8, usize)],
         _length: usize,
         _identifier_iter: archetype::identifier::Iter<R>,
@@ -976,6 +1010,62 @@ where
         // than `(C, R)`, and since `identifier_iter` has had one bit consumed, it still has the
         // same number of bits remaining as `R` has components remaining.
         unsafe { R::clear_components(components, length, identifier_iter) };
+    }
+
+    unsafe fn shrink_components_to_fit<R_>(
+        mut components: &mut [(*mut u8, usize)],
+        length: usize,
+        mut identifier_iter: archetype::identifier::Iter<R_>,
+    ) where
+        R_: Registry,
+    {
+        if
+        // SAFETY: `identifier_iter` is guaranteed by the safety contract of this method to
+        // return a value for every component within the registry.
+        unsafe { identifier_iter.next().unwrap_unchecked() } {
+            let component_column =
+                // SAFETY: `components` is guaranteed to have the same number of values as there
+                // set bits in `identifier_iter`. Since a bit must have been set to enter this
+                // block, there must be at least one component column.
+                unsafe { components.get_unchecked_mut(0) };
+            let mut v = ManuallyDrop::new(
+                // SAFETY: The pointer, capacity, and length are guaranteed by the safety
+                // contract of this method to define a valid `Vec<C>`.
+                unsafe {
+                    Vec::<C>::from_raw_parts(
+                        component_column.0.cast::<C>(),
+                        length,
+                        component_column.1,
+                    )
+                },
+            );
+            v.shrink_to_fit();
+            *component_column = (v.as_mut_ptr().cast::<u8>(), v.capacity());
+            components =
+                // SAFETY: `components` is guaranteed to have the same number of values as there
+                // set bits in `identifier_iter`. Since a bit must have been set to enter this
+                // block, there must be at least one component column.
+                unsafe { components.get_unchecked_mut(1..) };
+        }
+
+        // SAFETY: At this point, one bit of `identifier_iter` has been consumed. There are two
+        // possibilities here: either the bit was set or it was not.
+        //
+        // If the bit was set, then the `components` slice will no longer include the first value,
+        // which means the slice will still contain up to the number of pointer and capacity tuples
+        // as there are set bits in `identifier_iter`. Additionally, since the first value was
+        // removed from the slice, which corresponded to the component identified by the consumed
+        // bit, all remaining component values will still correspond to valid `Vec<C>`s identified
+        // by the remaining set bits in `identifier_iter`.
+        //
+        // If the bit was not set, then `components` is unaltered, and there are still up to the
+        // same number of elements as there are set bits in `identifier_iter`, which still make
+        // valid `Vec<C>`s for each `C` identified by the remaining set bits in `identifier_iter`.
+        //
+        // Furthermore, regardless of whether the bit was set or not, `R` is one component smaller
+        // than `(C, R)`, and since `identifier_iter` has had one bit consumed, it still has the
+        // same number of bits remaining as `R` has components remaining.
+        unsafe { R::shrink_components_to_fit(components, length, identifier_iter) }
     }
 
     unsafe fn debug_identifier<R_>(
@@ -1772,5 +1862,141 @@ mod tests {
         };
         assert!(new_a_column.is_empty());
         assert!(new_c_column.is_empty());
+    }
+
+    #[test]
+    fn shrink_components_to_fit_empty_registry() {
+        type Registry = registry!();
+        let identifier = unsafe { Identifier::<Registry>::new(Vec::new()) };
+        let mut components = Vec::new();
+
+        unsafe { Registry::shrink_components_to_fit(&mut components, 0, identifier.iter()) };
+
+        assert!(components.is_empty());
+    }
+
+    #[test]
+    fn shrink_components_to_fit_all() {
+        struct A(usize);
+        struct B(bool);
+        struct C;
+        type Registry = registry!(A, B, C);
+        let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
+        let mut a_column = ManuallyDrop::new(vec![
+            A(0),
+            A(1),
+            A(2),
+            A(10),
+            A(10),
+            A(10),
+            A(10),
+            A(10),
+            A(10),
+            A(10),
+        ]);
+        a_column.clear();
+        a_column.extend(vec![A(0), A(1), A(2)]);
+        let mut b_column = ManuallyDrop::new(vec![
+            B(false),
+            B(true),
+            B(true),
+            B(true),
+            B(true),
+            B(true),
+            B(true),
+            B(true),
+            B(true),
+            B(true),
+        ]);
+        b_column.clear();
+        b_column.extend(vec![B(false), B(true), B(true)]);
+        let mut c_column = ManuallyDrop::new(vec![C, C, C, C, C, C, C, C, C, C]);
+        c_column.clear();
+        c_column.extend(vec![C, C, C]);
+        let mut components = vec![
+            (a_column.as_mut_ptr().cast::<u8>(), a_column.capacity()),
+            (b_column.as_mut_ptr().cast::<u8>(), b_column.capacity()),
+            (c_column.as_mut_ptr().cast::<u8>(), c_column.capacity()),
+        ];
+
+        unsafe { Registry::shrink_components_to_fit(&mut components, 3, identifier.iter()) };
+
+        // Only check columns A and B, because C is zero-sized.
+        let new_a_column = unsafe {
+            Vec::from_raw_parts(
+                components.get(0).unwrap().0.cast::<A>(),
+                0,
+                components.get(0).unwrap().1,
+            )
+        };
+        let new_b_column = unsafe {
+            Vec::from_raw_parts(
+                components.get(1).unwrap().0.cast::<B>(),
+                0,
+                components.get(1).unwrap().1,
+            )
+        };
+        assert_eq!(new_a_column.capacity(), 3);
+        assert_eq!(new_b_column.capacity(), 3);
+    }
+
+    #[test]
+    fn shrink_components_to_fit_some() {
+        struct A(usize);
+        struct B(bool);
+        struct C;
+        type Registry = registry!(A, B, C);
+        let identifier = unsafe { Identifier::<Registry>::new(vec![3]) };
+        let mut a_column = ManuallyDrop::new(vec![
+            A(0),
+            A(1),
+            A(2),
+            A(10),
+            A(10),
+            A(10),
+            A(10),
+            A(10),
+            A(10),
+            A(10),
+        ]);
+        a_column.clear();
+        a_column.extend(vec![A(0), A(1), A(2)]);
+        let mut b_column = ManuallyDrop::new(vec![
+            B(false),
+            B(true),
+            B(true),
+            B(true),
+            B(true),
+            B(true),
+            B(true),
+            B(true),
+            B(true),
+            B(true),
+        ]);
+        b_column.clear();
+        b_column.extend(vec![B(false), B(true), B(true)]);
+        let mut components = vec![
+            (a_column.as_mut_ptr().cast::<u8>(), a_column.capacity()),
+            (b_column.as_mut_ptr().cast::<u8>(), b_column.capacity()),
+        ];
+
+        unsafe { Registry::shrink_components_to_fit(&mut components, 3, identifier.iter()) };
+
+        let new_a_column = unsafe {
+            Vec::from_raw_parts(
+                components.get(0).unwrap().0.cast::<A>(),
+                0,
+                components.get(0).unwrap().1,
+            )
+        };
+        let new_b_column = unsafe {
+            Vec::from_raw_parts(
+                components.get(1).unwrap().0.cast::<B>(),
+                0,
+                components.get(1).unwrap().1,
+            )
+        };
+        assert_eq!(new_a_column.capacity(), 3);
+        assert_eq!(new_b_column.capacity(), 3);
     }
 }

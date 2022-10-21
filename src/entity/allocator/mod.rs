@@ -171,6 +171,17 @@ where
         }
         .index = index;
     }
+
+    /// Decrease the allocated capacity to the smallest amount required for the stored data.
+    ///
+    /// This may not decrease to the most optimal value, as the shrinking is dependent on the
+    /// allocator.
+    ///
+    /// Note that this only affects the list of currently free indexes. Slots are never removed, so
+    /// there is no need to shrink them.
+    pub(crate) fn shrink_to_fit(&mut self) {
+        self.free.shrink_to_fit();
+    }
 }
 
 impl<R> Debug for Allocator<R>
