@@ -10,15 +10,14 @@
 //! [`stages!`]: crate::system::schedule::stages!
 //! [`System`]: crate::system::System
 
-mod seal;
+mod sealed;
 
 use crate::{
     doc,
     hlist::define_null,
-    query::filter::Filter,
     registry::{
-        ContainsParViews,
-        ContainsViews,
+        ContainsParQuery,
+        ContainsQuery,
         Registry,
     },
     system::{
@@ -27,7 +26,7 @@ use crate::{
         System,
     },
 };
-use seal::Seal;
+use sealed::Sealed;
 
 /// A single step in a stage.
 ///
@@ -48,7 +47,7 @@ pub enum Stage<S, P> {
 /// stages are defined inside-out, with the last of the heterogeneous list being the beginning of
 /// the list of stages.
 pub trait Stages<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>:
-    Seal<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>
+    Sealed<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>
 where
     R: Registry + 'a,
 {
@@ -103,14 +102,10 @@ impl<
         (PQ, PQS),
     > for (Stage<S, P>, L)
 where
-    R: Registry + 'a,
-    R::Viewable:
-        ContainsViews<'a, S::Views, SP, SI, SQ> + ContainsParViews<'a, P::Views, PP, PI, PQ>,
+    R: ContainsQuery<'a, S::Filter, SFI, S::Views, SVI, SP, SI, SQ>
+        + ContainsParQuery<'a, P::Filter, PFI, P::Views, PVI, PP, PI, PQ>
+        + 'a,
     S: System<'a> + Send,
-    S::Filter: Filter<R, SFI>,
-    S::Views: Filter<R, SVI>,
-    P::Filter: Filter<R, PFI>,
-    P::Views: Filter<R, PVI>,
     P: ParSystem<'a> + Send,
     L: Stages<'a, R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS, PQS>,
 {
@@ -133,7 +128,7 @@ doc::non_root_macro! {
     /// These can be provided to the macro to generate the correct type annotations, like so:
     ///
     /// ``` rust
-    /// use brood::{query::{filter, filter::Filter, result, views}, registry::{ContainsParViews, ContainsViews, Registry}, system::{schedule::stages, System, ParSystem}};
+    /// use brood::{query::{filter, filter::Filter, result, views}, registry::{ContainsParQuery, ContainsQuery}, system::{schedule::stages, System, ParSystem}};
     ///
     /// // Define components.
     /// struct A;
@@ -148,10 +143,7 @@ doc::non_root_macro! {
     ///
     ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     ///     where
-    ///         R: Registry + 'a,
-    ///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
-    ///         Self::Filter: Filter<R, FI>,
-    ///         Self::Views: Filter<R, VI>,
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     ///     {
     ///         // Operate on result here.
     ///     }
@@ -165,10 +157,7 @@ doc::non_root_macro! {
     ///
     ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     ///     where
-    ///         R: Registry + 'a,
-    ///         R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
-    ///         Self::Filter: Filter<R, FI>,
-    ///         Self::Views: Filter<R, VI>,
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     ///     {
     ///         // Operate on result here.
     ///     }

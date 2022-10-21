@@ -3,10 +3,14 @@
 ## Unreleased
 ### Added
 - `shrink_to_fit()` method on `World` for shrinking the `World`'s current allocation to the minimum required for the current data.
+- `ContainsComponent`, `ContainsEntities`, `ContainsEntity`, `ContainsParQuery`, and `ContainsQuery` traits to indicate more specific bounds on registries.
 ### Changed
 - Removed unnecessary generic bounds on `result::Iter`, `result::ParIter`, and `entities::Batch`.
+- Simplified trait bounds on `System::run()` and `ParSystem::run()`, improving usability for users implementing these traits.
+- Renamed `Seal` traits to `Sealed` to match common convention.
 ### Fixed
 - Memory is no longer leaked after clearing a populated `World` and then extending a previously populated archetype.
+- Traits with bounds on internal traits are now properly sealed.
 
 ## 0.2.0 - 2022-09-18
 ### Added

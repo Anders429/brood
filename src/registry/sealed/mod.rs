@@ -13,7 +13,6 @@
 
 mod assertions;
 mod canonical;
-mod filter;
 mod length;
 #[cfg(feature = "rayon")]
 mod par_view;
@@ -21,7 +20,6 @@ mod storage;
 mod view;
 
 pub(crate) use canonical::Canonical;
-pub(crate) use filter::Filter;
 pub(crate) use length::Length;
 #[cfg(feature = "rayon")]
 pub(crate) use par_view::CanonicalParViews;
@@ -29,10 +27,7 @@ pub(crate) use view::CanonicalViews;
 
 use crate::{
     component::Component,
-    registry::{
-        contains::EntityIdentifierMarker,
-        Null,
-    },
+    registry::Null,
 };
 use assertions::Assertions;
 use storage::Storage;
@@ -46,18 +41,13 @@ use storage::Storage;
 /// While this trait specifically does not have any functions implemented, the traits it relies on
 /// do. See the modules where they are defined for more details on the internal functionality
 /// defined through these sealed traits.
-pub trait Seal: Assertions + Length + Storage {
-    type Viewable;
-}
+pub trait Sealed: Assertions + Length + Storage {}
 
-impl Seal for Null {
-    type Viewable = (EntityIdentifierMarker, Null);
-}
+impl Sealed for Null {}
 
-impl<C, R> Seal for (C, R)
+impl<C, R> Sealed for (C, R)
 where
     C: Component,
-    R: Seal,
+    R: Sealed,
 {
-    type Viewable = (EntityIdentifierMarker, (C, R));
 }

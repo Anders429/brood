@@ -12,13 +12,13 @@ use alloc::vec::Vec;
 use length::Length;
 use storage::Storage;
 
-pub trait Seal: Contains + Length + Storage {}
+pub trait Sealed: Contains + Length + Storage {}
 
-impl Seal for Null {}
+impl Sealed for Null {}
 
-impl<C, E> Seal for (Vec<C>, E)
+impl<C, E> Sealed for (Vec<C>, E)
 where
     C: Component,
-    E: Seal,
+    E: Sealed,
 {
 }

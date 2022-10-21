@@ -5,7 +5,7 @@ use crate::{
         view,
         view::{
             Views,
-            ViewsSeal,
+            ViewsSealed,
         },
     },
     registry,
@@ -61,7 +61,7 @@ impl<'a> CanonicalViews<'a, view::Null, Null> for registry::Null {
         _columns: &[(*mut u8, usize)],
         _length: usize,
         _archetype_identifier: archetype::identifier::Iter<R>,
-    ) -> <view::Null as ViewsSeal<'a>>::Results
+    ) -> <view::Null as ViewsSealed<'a>>::Results
     where
         R: Registry,
     {
@@ -91,7 +91,7 @@ where
         columns: &[(*mut u8, usize)],
         length: usize,
         mut archetype_identifier: archetype::identifier::Iter<R_>,
-    ) -> <(&'a C, V) as ViewsSeal<'a>>::Results
+    ) -> <(&'a C, V) as ViewsSealed<'a>>::Results
     where
         R_: Registry,
     {
@@ -154,7 +154,7 @@ where
         columns: &[(*mut u8, usize)],
         length: usize,
         mut archetype_identifier: archetype::identifier::Iter<R_>,
-    ) -> <(&'a mut C, V) as ViewsSeal<'a>>::Results
+    ) -> <(&'a mut C, V) as ViewsSealed<'a>>::Results
     where
         R_: Registry,
     {
@@ -222,7 +222,7 @@ where
         mut columns: &[(*mut u8, usize)],
         length: usize,
         mut archetype_identifier: archetype::identifier::Iter<R_>,
-    ) -> <(Option<&'a C>, V) as ViewsSeal<'a>>::Results
+    ) -> <(Option<&'a C>, V) as ViewsSealed<'a>>::Results
     where
         R_: Registry,
     {
@@ -305,7 +305,7 @@ where
         mut columns: &[(*mut u8, usize)],
         length: usize,
         mut archetype_identifier: archetype::identifier::Iter<R_>,
-    ) -> <(Option<&'a mut C>, V) as ViewsSeal<'a>>::Results
+    ) -> <(Option<&'a mut C>, V) as ViewsSealed<'a>>::Results
     where
         R_: Registry,
     {

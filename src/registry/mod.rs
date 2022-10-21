@@ -27,40 +27,43 @@
 //! [`registry!`]: crate::registry!
 //! [`World`]: crate::world::World
 
-mod contains;
+pub(crate) mod contains;
+
 mod debug;
 mod eq;
-mod seal;
+mod sealed;
 mod send;
 #[cfg(feature = "serde")]
 mod serde;
 mod sync;
 
 #[cfg(feature = "rayon")]
-pub use contains::ContainsParViews;
-pub use contains::ContainsViews;
+pub use contains::ContainsParQuery;
+pub use contains::{
+    ContainsComponent,
+    ContainsEntities,
+    ContainsEntity,
+    ContainsQuery,
+};
 
 #[cfg(feature = "serde")]
 pub(crate) use self::serde::{
     RegistryDeserialize,
     RegistrySerialize,
 };
-pub(crate) use contains::{
-    ContainsComponent,
-    ContainsEntities,
-    ContainsEntity,
-};
+#[cfg(feature = "rayon")]
+pub(crate) use contains::ContainsParViews;
+pub(crate) use contains::ContainsViews;
 pub(crate) use debug::RegistryDebug;
 pub(crate) use eq::{
     RegistryEq,
     RegistryPartialEq,
 };
 #[cfg(feature = "rayon")]
-pub(crate) use seal::CanonicalParViews;
-pub(crate) use seal::{
+pub(crate) use sealed::CanonicalParViews;
+pub(crate) use sealed::{
     Canonical,
     CanonicalViews,
-    Filter,
     Length,
 };
 pub(crate) use send::RegistrySend;
@@ -70,7 +73,7 @@ use crate::{
     component::Component,
     hlist::define_null_uninstantiable,
 };
-use seal::Seal;
+use sealed::Sealed;
 
 define_null_uninstantiable!();
 
@@ -98,7 +101,7 @@ define_null_uninstantiable!();
 ///
 /// [`Component`]: crate::component::Component
 /// [`World`]: crate::World
-pub trait Registry: Seal {}
+pub trait Registry: Sealed {}
 
 impl Registry for Null {}
 

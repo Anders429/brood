@@ -4,7 +4,6 @@ use crate::{
         filter::{
             And,
             Filter,
-            Seal,
         },
         result::{
             Reshape,
@@ -13,7 +12,8 @@ use crate::{
         view::Views,
     },
     registry::{
-        ContainsViews,
+        contains::filter::Sealed as ContainsFilterSealed,
+        ContainsQuery,
         Registry,
     },
 };
@@ -106,10 +106,9 @@ where
 
 impl<'a, R, F, FI, V, VI, P, I, Q> Iterator for Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
-    R: Registry + 'a,
-    F: Filter<R, FI>,
-    V: Views<'a> + Filter<R, VI>,
-    R::Viewable: ContainsViews<'a, V, P, I, Q>,
+    F: Filter,
+    V: Views<'a> + Filter,
+    R: ContainsQuery<'a, F, FI, V, VI, P, I, Q> + 'a,
 {
     type Item = V;
 
@@ -122,10 +121,14 @@ where
                 }
             }
             let archetype = self.archetypes_iter.find(|archetype| {
-                And::<V, F>::filter(
-                    // SAFETY: This identifier reference will not outlive `archetype`.
-                    unsafe { archetype.identifier() },
-                )
+                // SAFETY: The `R` on which `filter()` is called is the same `R` over which the
+                // identifier is generic over. Additionally, the identifier reference created here
+                // will not outlive `archetype`.
+                unsafe {
+                    <R as ContainsFilterSealed<And<V, F>, And<VI, FI>>>::filter(
+                        archetype.identifier(),
+                    )
+                }
             })?;
             self.current_results_iter = Some(
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`,
@@ -160,10 +163,12 @@ where
         }
 
         self.archetypes_iter.fold(init, |acc, archetype| {
-            if And::<V, F>::filter(
-                // SAFETY: This identifier reference will not outlive `archetype`.
-                unsafe { archetype.identifier() },
-            ) {
+            // SAFETY: The `R` on which `filter()` is called is the same `R` over which the
+            // identifier is generic over. Additionally, the identifier reference created here will
+            // not outlive `archetype`.
+            if unsafe {
+                <R as ContainsFilterSealed<And<V, F>, And<VI, FI>>>::filter(archetype.identifier())
+            } {
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`
                 // since the `filter` function in the if-statement returned `true`.
                 unsafe { archetype.view::<V, P, I, Q>() }
@@ -179,10 +184,9 @@ where
 
 impl<'a, R, F, FI, V, VI, P, I, Q> FusedIterator for Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
-    R: Registry + 'a,
-    F: Filter<R, FI>,
-    V: Views<'a> + Filter<R, VI>,
-    R::Viewable: ContainsViews<'a, V, P, I, Q>,
+    F: Filter,
+    V: Views<'a> + Filter,
+    R: ContainsQuery<'a, F, FI, V, VI, P, I, Q> + 'a,
 {
 }
 

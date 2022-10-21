@@ -6,13 +6,13 @@ use crate::{
 };
 use storage::Storage;
 
-pub trait Seal: Storage {}
+pub trait Sealed: Storage {}
 
-impl Seal for Null {}
+impl Sealed for Null {}
 
-impl<C, E> Seal for (C, E)
+impl<C, E> Sealed for (C, E)
 where
     C: Component,
-    E: Seal,
+    E: Sealed,
 {
 }

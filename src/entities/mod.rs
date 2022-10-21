@@ -40,17 +40,17 @@
 //! [`World`]: crate::world::World
 
 mod get;
-mod seal;
+mod sealed;
 
 pub(crate) use get::Get;
-pub(crate) use seal::Contains;
+pub(crate) use sealed::Contains;
 
 use crate::{
     component::Component,
     hlist::define_null,
 };
 use alloc::vec::Vec;
-use seal::Seal;
+use sealed::Sealed;
 
 define_null!();
 
@@ -82,7 +82,7 @@ define_null!();
 /// [`Component`]: crate::component::Component
 /// [`Registry`]: crate::registry::Registry
 /// [`World`]: crate::world::World
-pub trait Entities: Seal {}
+pub trait Entities: Sealed {}
 
 impl Entities for Null {}
 
