@@ -242,7 +242,7 @@ macro_rules! stages_internal {
     // Match a system type without a trailing comma. This will only match at the end of the token
     // tree.
     (@system $processed:ty; (: $system:ty) $copy:tt) => {
-        $crate::stages_internal(@task ($crate::system::schedule::stage::Stage<$system, $crate::system::Null>, $processed); () ())
+        $crate::stages_internal!(@task ($crate::system::schedule::stage::Stage<$system, $crate::system::Null>, $processed); () ())
     };
 
     // Match a system type with a trailing comma.
@@ -333,4 +333,92 @@ macro_rules! stages_internal {
     (@flush $processed:ty; ($($rest:tt)*) $copy:tt) => (
         $crate::unexpected!($($rest)*)
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::stages;
+    use crate::{
+        query::{
+            filter,
+            result,
+            views,
+        },
+        registry,
+        registry::ContainsQuery,
+        system::System,
+    };
+
+    #[test]
+    fn no_trailing_comma() {
+        #[derive(Clone)]
+        struct A(f32);
+        #[derive(Clone)]
+        struct B(f32);
+        #[derive(Clone)]
+        struct C(f32);
+        #[derive(Clone)]
+        struct D(f32);
+        #[derive(Clone)]
+        struct E(f32);
+
+        type Registry = registry!(A, B, C, D, E);
+
+        struct AB;
+
+        impl<'a> System<'a> for AB {
+            type Views = views!(&'a mut A, &'a mut B);
+            type Filter = filter::None;
+
+            fn run<R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+            {
+                for result!(a, b) in query_results {
+                    core::mem::swap(&mut a.0, &mut b.0);
+                }
+            }
+        }
+
+        struct CD;
+
+        impl<'a> System<'a> for CD {
+            type Views = views!(&'a mut C, &'a mut D);
+            type Filter = filter::None;
+
+            fn run<R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+            {
+                for result!(c, d) in query_results {
+                    core::mem::swap(&mut c.0, &mut d.0);
+                }
+            }
+        }
+
+        struct CE;
+
+        impl<'a> System<'a> for CE {
+            type Views = views!(&'a mut C, &'a mut E);
+            type Filter = filter::None;
+
+            fn run<R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+            {
+                for result!(c, e) in query_results {
+                    core::mem::swap(&mut c.0, &mut e.0);
+                }
+            }
+        }
+
+        // Lack of trailing comma here should not fail.
+        type Stages = stages!(system: AB, system: CD, system: CE);
+    }
 }
