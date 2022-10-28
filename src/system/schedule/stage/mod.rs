@@ -338,8 +338,16 @@ macro_rules! stages_internal {
 #[cfg(test)]
 mod tests {
     use super::stages;
-    use crate::{registry, registry::ContainsQuery, system::System};
-    use crate::query::{filter, views, result};
+    use crate::{
+        query::{
+            filter,
+            result,
+            views,
+        },
+        registry,
+        registry::ContainsQuery,
+        system::System,
+    };
 
     #[test]
     fn no_trailing_comma() {
@@ -411,10 +419,6 @@ mod tests {
         }
 
         // Lack of trailing comma here should not fail.
-        type Stages = stages!(
-            system: AB,
-            system: CD,
-            system: CE
-        );
+        type Stages = stages!(system: AB, system: CD, system: CE);
     }
 }
