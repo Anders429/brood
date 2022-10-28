@@ -11,6 +11,7 @@
 ### Fixed
 - Memory is no longer leaked after clearing a populated `World` and then extending a previously populated archetype.
 - Traits with bounds on internal traits are now properly sealed.
+- `stages!` macro now correctly parses `system` command with no trailing comma.
 
 ## 0.2.0 - 2022-09-18
 ### Added
