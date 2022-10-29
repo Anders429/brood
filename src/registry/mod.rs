@@ -32,7 +32,6 @@ pub(crate) mod contains;
 mod debug;
 mod eq;
 mod sealed;
-mod send;
 #[cfg(feature = "serde")]
 mod serde;
 mod sync;
@@ -66,7 +65,6 @@ pub(crate) use sealed::{
     CanonicalViews,
     Length,
 };
-pub(crate) use send::RegistrySend;
 pub(crate) use sync::RegistrySync;
 
 use crate::{
