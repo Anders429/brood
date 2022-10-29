@@ -1,6 +1,6 @@
 [package]
 name = "brood"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Anders Evensen"]
 edition = "2021"
 rust-version = "1.60.0"
@@ -29,8 +29,7 @@ claims = "0.7.1"
 rustversion = "1.0.9"
 serde_derive = "1.0.144"
 serde_test = "1.0.144"
-# Temporarily use this fork until https://github.com/dtolnay/trybuild/issues/171 is resolved.
-trybuild = {git = "https://github.com/Anders429/trybuild"}
+trybuild = "1.0.69"
 
 [features]
 rayon = ["dep:rayon", "hashbrown/rayon"]

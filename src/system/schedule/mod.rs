@@ -12,9 +12,17 @@
 //!
 //! ``` rust
 //! use brood::{
-//!     query::{filter, filter::Filter, result, views},
-//!     registry::{ContainsViews, Registry},
-//!     system::{Schedule, System},
+//!     query::{
+//!         filter,
+//!         filter::Filter,
+//!         result,
+//!         views,
+//!     },
+//!     registry::ContainsQuery,
+//!     system::{
+//!         Schedule,
+//!         System,
+//!     },
 //! };
 //!
 //! // Define components.
@@ -32,10 +40,7 @@
 //!         &mut self,
 //!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 //!     ) where
-//!         R: Registry + 'a,
-//!         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
-//!         Self::Filter: Filter<R, FI>,
-//!         Self::Views: Filter<R, VI>,
+//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
 //!     {
 //!         for result!(foo, bar) in query_results {
 //!             // Do something...
@@ -53,10 +58,7 @@
 //!         &mut self,
 //!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 //!     ) where
-//!         R: Registry + 'a,
-//!         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
-//!         Self::Filter: Filter<R, FI>,
-//!         Self::Views: Filter<R, VI>,
+//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
 //!     {
 //!         for result!(baz, bar) in query_results {
 //!             // Do something...
@@ -83,7 +85,10 @@ mod builder;
 pub use builder::Builder;
 pub use stage::stages;
 
-use crate::{registry::Registry, world::World};
+use crate::{
+    registry::Registry,
+    world::World,
+};
 use sendable::SendableWorld;
 use stage::Stages;
 
@@ -99,9 +104,17 @@ use stage::Stages;
 ///
 /// ``` rust
 /// use brood::{
-///     query::{filter, filter::Filter, result, views},
-///     registry::{ContainsViews, Registry},
-///     system::{Schedule, System},
+///     query::{
+///         filter,
+///         filter::Filter,
+///         result,
+///         views,
+///     },
+///     registry::ContainsQuery,
+///     system::{
+///         Schedule,
+///         System,
+///     },
 /// };
 ///
 /// // Define components.
@@ -119,10 +132,7 @@ use stage::Stages;
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
-///         R: Registry + 'a,
-///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
-///         Self::Filter: Filter<R, FI>,
-///         Self::Views: Filter<R, VI>,
+///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
 ///     {
 ///         for result!(foo, bar) in query_results {
 ///             // Do something...
@@ -140,10 +150,7 @@ use stage::Stages;
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
-///         R: Registry + 'a,
-///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
-///         Self::Filter: Filter<R, FI>,
-///         Self::Views: Filter<R, VI>,
+///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
 ///     {
 ///         for result!(baz, bar) in query_results {
 ///             // Do something...

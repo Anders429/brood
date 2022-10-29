@@ -15,7 +15,11 @@
 //!
 //! # Example
 //! ``` rust
-//! use brood::{entities, registry, World};
+//! use brood::{
+//!     entities,
+//!     registry,
+//!     World,
+//! };
 //!
 //! // Define components.
 //! struct Foo(usize);
@@ -36,14 +40,17 @@
 //! [`World`]: crate::world::World
 
 mod get;
-mod seal;
+mod sealed;
 
 pub(crate) use get::Get;
-pub(crate) use seal::Contains;
+pub(crate) use sealed::Contains;
 
-use crate::{component::Component, hlist::define_null};
+use crate::{
+    component::Component,
+    hlist::define_null,
+};
 use alloc::vec::Vec;
-use seal::Seal;
+use sealed::Sealed;
 
 define_null!();
 
@@ -75,7 +82,7 @@ define_null!();
 /// [`Component`]: crate::component::Component
 /// [`Registry`]: crate::registry::Registry
 /// [`World`]: crate::world::World
-pub trait Entities: Seal {}
+pub trait Entities: Sealed {}
 
 impl Entities for Null {}
 
@@ -109,10 +116,7 @@ where
 /// [`Entities`]: crate::entities::Entities
 /// [`entities!`]: crate::entities!
 #[derive(Debug, Eq, PartialEq)]
-pub struct Batch<E>
-where
-    E: Entities,
-{
+pub struct Batch<E> {
     pub(crate) entities: E,
     len: usize,
 }
@@ -131,7 +135,10 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entities, entities::Batch};
+    /// use brood::{
+    ///     entities,
+    ///     entities::Batch,
+    /// };
     ///
     /// // Define components.
     /// struct Foo(usize);
@@ -163,7 +170,10 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entities, entities::Batch};
+    /// use brood::{
+    ///     entities,
+    ///     entities::Batch,
+    /// };
     ///
     /// // Define components.
     /// struct Foo(usize);

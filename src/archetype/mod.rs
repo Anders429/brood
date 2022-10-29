@@ -8,33 +8,64 @@ mod impl_serde;
 
 pub(crate) mod identifier;
 
-pub(crate) use identifier::{Identifier, IdentifierRef};
+pub(crate) use identifier::{
+    Identifier,
+    IdentifierRef,
+};
 #[cfg(feature = "serde")]
-pub(crate) use impl_serde::{DeserializeColumn, SerializeColumn};
+pub(crate) use impl_serde::{
+    DeserializeColumn,
+    SerializeColumn,
+};
 
+#[cfg(feature = "rayon")]
+use crate::registry::contains::par_views::Sealed as ContainsParViewsSealed;
 use crate::{
     component::Component,
     entities,
     entities::Entities,
     entity,
     entity::{
-        allocator::{Location, Locations},
+        allocator::{
+            Location,
+            Locations,
+        },
         Entity,
     },
-    query::view::{Views, ViewsSeal},
-    registry::{ContainsComponent, ContainsViews, Registry},
+    query::view::{
+        Views,
+        ViewsSealed,
+    },
+    registry::{
+        contains::views::{
+            ContainsViewsOuter,
+            Sealed as ContainsViewsSealed,
+        },
+        ContainsComponent,
+        ContainsViews,
+        Registry,
+    },
 };
 #[cfg(feature = "rayon")]
 use crate::{
-    query::view::{ParViews, ParViewsSeal},
-    registry::ContainsParViews,
+    query::view::{
+        ParViews,
+        ParViewsSeal,
+    },
+    registry::{
+        contains::par_views::ContainsParViewsOuter,
+        ContainsParViews,
+    },
 };
 use alloc::vec::Vec;
 #[cfg(feature = "serde")]
 use core::slice;
 use core::{
     marker::PhantomData,
-    mem::{ManuallyDrop, MaybeUninit},
+    mem::{
+        ManuallyDrop,
+        MaybeUninit,
+    },
 };
 
 pub(crate) struct Archetype<R>
@@ -206,10 +237,16 @@ where
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
     pub(crate) unsafe fn view<'a, V, P, I, Q>(
         &mut self,
-    ) -> <<R::Viewable as ContainsViews<'a, V, P, I, Q>>::Canonical as ViewsSeal<'a>>::Results
+    ) -> <<<R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable as ContainsViewsOuter<
+        'a,
+        V,
+        P,
+        I,
+        Q,
+    >>::Canonical as ViewsSealed<'a>>::Results
     where
         V: Views<'a>,
-        R::Viewable: ContainsViews<'a, V, P, I, Q>,
+        R: ContainsViews<'a, V, P, I, Q>,
     {
         // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`
         // for each component `C` identified in `self.identifier` in the canonical order defined by
@@ -218,7 +255,7 @@ where
         // `self.entity_identifiers` also contains the raw parts for a valid
         // `Vec<entity::Identifier>` of size `self.length`.
         unsafe {
-            R::Viewable::view(
+            <R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable::view(
                 &self.components,
                 self.entity_identifiers,
                 self.length,
@@ -231,10 +268,18 @@ where
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub(crate) unsafe fn par_view<'a, V, P, I, Q>(&mut self) -> <<R::Viewable as ContainsParViews<'a, V, P, I, Q>>::Canonical as ParViewsSeal<'a>>::ParResults
+    pub(crate) unsafe fn par_view<'a, V, P, I, Q>(
+        &mut self,
+    ) -> <<<R as ContainsParViewsSealed<'a, V, P, I, Q>>::Viewable as ContainsParViewsOuter<
+        'a,
+        V,
+        P,
+        I,
+        Q,
+    >>::Canonical as ParViewsSeal<'a>>::ParResults
     where
         V: ParViews<'a>,
-        R::Viewable: ContainsParViews<'a, V, P, I, Q>,
+        R: ContainsParViews<'a, V, P, I, Q>,
     {
         // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`,
         // where each `C` is a component for which the entry in `component_map` corresponds to the
@@ -246,7 +291,7 @@ where
         // Since each component viewed by `V` is also identified by this archetype's `Identifier`,
         // `self.component` will contain an entry for every viewed component.
         unsafe {
-            R::Viewable::par_view(
+            <R as ContainsParViewsSealed<'a, V, P, I, Q>>::Viewable::par_view(
                 &self.components,
                 self.entity_identifiers,
                 self.length,
@@ -264,10 +309,16 @@ where
     pub(crate) unsafe fn view_row_unchecked<'a, V, P, I, Q>(
         &mut self,
         index: usize,
-    ) -> <R::Viewable as ContainsViews<'a, V, P, I, Q>>::Canonical
+    ) -> <<R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable as ContainsViewsOuter<
+        'a,
+        V,
+        P,
+        I,
+        Q,
+    >>::Canonical
     where
         V: Views<'a>,
-        R::Viewable: ContainsViews<'a, V, P, I, Q>,
+        R: ContainsViews<'a, V, P, I, Q>,
     {
         // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`
         // for each component `C` identified in `self.identifier` in the canonical order defined by
@@ -280,7 +331,7 @@ where
         // this archetype, and therefore within the bounds of each column and the entity
         // identifiers of this archetype.
         unsafe {
-            R::Viewable::view_one(
+            <R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable::view_one(
                 index,
                 &self.components,
                 self.entity_identifiers,
@@ -585,6 +636,38 @@ where
         self.length = 0;
     }
 
+    /// Decrease the allocated capacity for the component columns and entity identifier column.
+    ///
+    /// This may not decrease to the most optimal capacity, as it is dependent on the allocator.
+    pub(crate) fn shrink_to_fit(&mut self) {
+        // SAFETY: `self.components` has the same number of values as there are set bits in
+        // `self.identifier`. Also, each element in `self.components` defines a `Vec<C>` of size
+        // `self.length` for each `C` identified by `self.identifier`.
+        //
+        // The `R` over which `self.identifier` is generic is the same `R` on which this function
+        // is being called.
+        unsafe {
+            R::shrink_components_to_fit(&mut self.components, self.length, self.identifier.iter());
+        }
+
+        let mut entity_identifiers = ManuallyDrop::new(
+            // SAFETY: `self.entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec` of size `self.length`.
+            unsafe {
+                Vec::from_raw_parts(
+                    self.entity_identifiers.0,
+                    self.length,
+                    self.entity_identifiers.1,
+                )
+            },
+        );
+        entity_identifiers.shrink_to_fit();
+        self.entity_identifiers = (
+            entity_identifiers.as_mut_ptr(),
+            entity_identifiers.capacity(),
+        );
+    }
+
     /// # Safety
     /// The `Archetype` must outlive the returned `IdentifierRef`.
     pub(crate) unsafe fn identifier(&self) -> IdentifierRef<R> {
@@ -601,9 +684,11 @@ where
         unsafe { slice::from_raw_parts(self.entity_identifiers.0, self.length) }.iter()
     }
 
-    #[cfg(feature = "serde")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
     pub(crate) fn len(&self) -> usize {
         self.length
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }

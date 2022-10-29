@@ -1,7 +1,15 @@
 use crate::{
-    query::{filter::Filter, Query},
-    registry::{ContainsParViews, ContainsViews, Registry},
-    system::{schedule::sendable::SendableWorld, ParSystem, System},
+    query::Query,
+    registry::{
+        ContainsParQuery,
+        ContainsQuery,
+        Registry,
+    },
+    system::{
+        schedule::sendable::SendableWorld,
+        ParSystem,
+        System,
+    },
     world::World,
 };
 
@@ -19,13 +27,9 @@ where
         &mut self,
         world: SendableWorld<R>,
     ) where
-        R: Registry + 'a,
-        R::Viewable:
-            ContainsViews<'a, S::Views, SP, SI, SQ> + ContainsParViews<'a, P::Views, PP, PI, PQ>,
-        S::Filter: Filter<R, SFI>,
-        S::Views: Filter<R, SVI>,
-        P::Filter: Filter<R, PFI>,
-        P::Views: Filter<R, PVI>,
+        R: ContainsQuery<'a, S::Filter, SFI, S::Views, SVI, SP, SI, SQ>
+            + ContainsParQuery<'a, P::Filter, PFI, P::Views, PVI, PP, PI, PQ>
+            + 'a,
     {
         match self {
             Task::Seq(system) => {

@@ -1,5 +1,5 @@
 error: no rules expected the token `flush`
-  --> tests/trybuild/stages/par_system_missing_comma.rs:19:5
+  --> tests/trybuild/stages/par_system_missing_comma.rs:17:5
    |
-19 |     flush
+17 |     flush
    |     ^^^^^ no rules expected this token in macro call

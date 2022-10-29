@@ -1,4 +1,7 @@
-use crate::{registry::Registry, world::World};
+use crate::{
+    registry::Registry,
+    world::World,
+};
 
 pub struct SendableWorld<R>(*mut World<R>)
 where

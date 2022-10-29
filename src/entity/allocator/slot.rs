@@ -1,5 +1,11 @@
-use crate::{entity::allocator::Location, registry::Registry};
-use core::{fmt, fmt::Debug};
+use crate::{
+    entity::allocator::Location,
+    registry::Registry,
+};
+use core::{
+    fmt,
+    fmt::Debug,
+};
 
 /// An entry for a possibly allocated entity.
 ///
@@ -93,9 +99,15 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{archetype::Identifier, registry};
+    use crate::{
+        archetype::Identifier,
+        registry,
+    };
     use alloc::vec;
-    use claims::{assert_none, assert_some_eq};
+    use claims::{
+        assert_none,
+        assert_some_eq,
+    };
 
     macro_rules! create_components {
         ($( $variants:ident ),*) => {

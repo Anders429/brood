@@ -1,15 +1,27 @@
 use crate::{
     archetypes::DeserializeArchetypes,
     entity::allocator::DeserializeAllocator,
-    registry::{RegistryDeserialize, RegistrySerialize},
+    registry::{
+        RegistryDeserialize,
+        RegistrySerialize,
+    },
     World,
 };
-use core::{fmt, marker::PhantomData};
+use core::{
+    fmt,
+    marker::PhantomData,
+};
 use serde::{
     de,
-    de::{SeqAccess, Visitor},
+    de::{
+        SeqAccess,
+        Visitor,
+    },
     ser::SerializeTuple,
-    Deserialize, Deserializer, Serialize, Serializer,
+    Deserialize,
+    Deserializer,
+    Serialize,
+    Serializer,
 };
 
 impl<R> Serialize for World<R>
@@ -79,9 +91,21 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{entity, registry};
-    use serde_derive::{Deserialize, Serialize};
-    use serde_test::{assert_de_tokens_error, assert_tokens, Compact, Configure, Token};
+    use crate::{
+        entity,
+        registry,
+    };
+    use serde_derive::{
+        Deserialize,
+        Serialize,
+    };
+    use serde_test::{
+        assert_de_tokens_error,
+        assert_tokens,
+        Compact,
+        Configure,
+        Token,
+    };
 
     #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
     struct A(u32);

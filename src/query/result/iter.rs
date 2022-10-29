@@ -1,13 +1,26 @@
 use crate::{
     archetypes,
     query::{
-        filter::{And, Filter, Seal},
-        result::{Reshape, Results},
+        filter::{
+            And,
+            Filter,
+        },
+        result::{
+            Reshape,
+            Results,
+        },
         view::Views,
     },
-    registry::{ContainsViews, Registry},
+    registry::{
+        contains::filter::Sealed as ContainsFilterSealed,
+        ContainsQuery,
+        Registry,
+    },
 };
-use core::{iter::FusedIterator, marker::PhantomData};
+use core::{
+    iter::FusedIterator,
+    marker::PhantomData,
+};
 
 /// An [`Iterator`] over the results of a query.
 ///
@@ -22,8 +35,14 @@ use core::{iter::FusedIterator, marker::PhantomData};
 /// ``` rust
 /// use brood::{
 ///     entity,
-///     query::{filter, result, views},
-///     registry, Query, World,
+///     query::{
+///         filter,
+///         result,
+///         views,
+///     },
+///     registry,
+///     Query,
+///     World,
 /// };
 ///
 /// struct Foo(u32);
@@ -50,8 +69,7 @@ use core::{iter::FusedIterator, marker::PhantomData};
 pub struct Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    F: Filter<R, FI>,
-    V: Views<'a> + Filter<R, VI>,
+    V: Views<'a>,
 {
     archetypes_iter: archetypes::IterMut<'a, R>,
 
@@ -68,8 +86,7 @@ where
 impl<'a, R, F, FI, V, VI, P, I, Q> Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    F: Filter<R, FI>,
-    V: Views<'a> + Filter<R, VI>,
+    V: Views<'a>,
 {
     pub(crate) fn new(archetypes_iter: archetypes::IterMut<'a, R>) -> Self {
         Self {
@@ -89,10 +106,9 @@ where
 
 impl<'a, R, F, FI, V, VI, P, I, Q> Iterator for Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
-    R: Registry + 'a,
-    F: Filter<R, FI>,
-    V: Views<'a> + Filter<R, VI>,
-    R::Viewable: ContainsViews<'a, V, P, I, Q>,
+    F: Filter,
+    V: Views<'a> + Filter,
+    R: ContainsQuery<'a, F, FI, V, VI, P, I, Q> + 'a,
 {
     type Item = V;
 
@@ -105,10 +121,14 @@ where
                 }
             }
             let archetype = self.archetypes_iter.find(|archetype| {
-                And::<V, F>::filter(
-                    // SAFETY: This identifier reference will not outlive `archetype`.
-                    unsafe { archetype.identifier() },
-                )
+                // SAFETY: The `R` on which `filter()` is called is the same `R` over which the
+                // identifier is generic over. Additionally, the identifier reference created here
+                // will not outlive `archetype`.
+                unsafe {
+                    <R as ContainsFilterSealed<And<V, F>, And<VI, FI>>>::filter(
+                        archetype.identifier(),
+                    )
+                }
             })?;
             self.current_results_iter = Some(
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`,
@@ -143,10 +163,12 @@ where
         }
 
         self.archetypes_iter.fold(init, |acc, archetype| {
-            if And::<V, F>::filter(
-                // SAFETY: This identifier reference will not outlive `archetype`.
-                unsafe { archetype.identifier() },
-            ) {
+            // SAFETY: The `R` on which `filter()` is called is the same `R` over which the
+            // identifier is generic over. Additionally, the identifier reference created here will
+            // not outlive `archetype`.
+            if unsafe {
+                <R as ContainsFilterSealed<And<V, F>, And<VI, FI>>>::filter(archetype.identifier())
+            } {
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`
                 // since the `filter` function in the if-statement returned `true`.
                 unsafe { archetype.view::<V, P, I, Q>() }
@@ -162,10 +184,9 @@ where
 
 impl<'a, R, F, FI, V, VI, P, I, Q> FusedIterator for Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
-    R: Registry + 'a,
-    F: Filter<R, FI>,
-    V: Views<'a> + Filter<R, VI>,
-    R::Viewable: ContainsViews<'a, V, P, I, Q>,
+    F: Filter,
+    V: Views<'a> + Filter,
+    R: ContainsQuery<'a, F, FI, V, VI, P, I, Q> + 'a,
 {
 }
 
@@ -173,8 +194,7 @@ where
 // exclusive.
 unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Send for Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
-    R: Registry + 'a,
-    F: Filter<R, FI>,
-    V: Views<'a> + Filter<R, VI>,
+    R: Registry,
+    V: Views<'a>,
 {
 }

@@ -15,8 +15,14 @@
 //! ``` rust
 //! use brood::{
 //!     entity,
-//!     query::{filter, result, views},
-//!     registry, Query, World,
+//!     query::{
+//!         filter,
+//!         result,
+//!         views,
+//!     },
+//!     registry,
+//!     Query,
+//!     World,
 //! };
 //!
 //! // Define components.
@@ -63,8 +69,14 @@ use core::marker::PhantomData;
 /// ``` rust
 /// use brood::{
 ///     entity,
-///     query::{filter, result, views},
-///     registry, Query, World,
+///     query::{
+///         filter,
+///         result,
+///         views,
+///     },
+///     registry,
+///     Query,
+///     World,
 /// };
 ///
 /// // Define components.

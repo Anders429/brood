@@ -16,16 +16,29 @@ pub(crate) use par_iter::ParIterMut;
 use crate::{
     archetype,
     archetype::Archetype,
-    entity::{self, Entity},
-    registry::{Canonical, Registry},
+    entity::{
+        self,
+        Entity,
+    },
+    registry::{
+        Canonical,
+        Registry,
+    },
 };
 use core::{
     any::TypeId,
-    hash::{BuildHasher, Hash, Hasher},
+    hash::{
+        BuildHasher,
+        Hash,
+        Hasher,
+    },
     hint::unreachable_unchecked,
 };
 use fnv::FnvBuildHasher;
-use hashbrown::{raw::RawTable, HashMap};
+use hashbrown::{
+    raw::RawTable,
+    HashMap,
+};
 use iter::Iter;
 
 pub(crate) struct Archetypes<R>
@@ -70,7 +83,8 @@ where
     fn make_hasher(hash_builder: &FnvBuildHasher) -> impl Fn(&Archetype<R>) -> u64 + '_ {
         move |archetype| {
             Self::make_hash(
-                // SAFETY: The `IdentifierRef` obtained here does not live longer than the `archetype`.
+                // SAFETY: The `IdentifierRef` obtained here does not live longer than the
+                // `archetype`.
                 unsafe { archetype.identifier() },
                 hash_builder,
             )
@@ -264,11 +278,40 @@ where
             unsafe { archetype.clear(entity_allocator) };
         }
     }
+
+    /// Decrease the allocated capacity to the smallest amount required for the stored data.
+    ///
+    /// This may not decrease to the most optimal value, as the shrinking is dependent on the
+    /// allocator.
+    pub(crate) fn shrink_to_fit(&mut self) {
+        // SAFETY: The resulting `RawIter` is guaranteed to not outlive `self.raw_archetypes`.
+        for archetype_bucket in unsafe { self.raw_archetypes.iter() } {
+            // SAFETY: The reference to the archetype stored in this bucket is guaranteed to be
+            // unique.
+            let archetype = unsafe { archetype_bucket.as_mut() };
+            // Only retain non-empty archetypes.
+            if archetype.is_empty() {
+                // SAFETY: `erase()` drops in-place, meaning it is safe to do during iteration.
+                // Additionally, `archetype` is not used again after it is dropped from the table.
+                unsafe {
+                    self.raw_archetypes.erase(archetype_bucket);
+                }
+            } else {
+                archetype.shrink_to_fit();
+            }
+        }
+        self.raw_archetypes
+            .shrink_to(0, Self::make_hasher(&self.hash_builder));
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{archetype, archetypes::Archetypes, registry};
+    use crate::{
+        archetype,
+        archetypes::Archetypes,
+        registry,
+    };
     use alloc::vec;
 
     macro_rules! create_components {

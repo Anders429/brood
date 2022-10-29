@@ -8,12 +8,18 @@
 use crate::{
     archetype,
     component::Component,
-    registry::{Null, Registry},
+    registry::{
+        Null,
+        Registry,
+    },
 };
 use alloc::vec::Vec;
 use core::{
     any::type_name,
-    fmt::{Debug, DebugMap},
+    fmt::{
+        Debug,
+        DebugMap,
+    },
     mem::size_of,
 };
 

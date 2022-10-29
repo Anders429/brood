@@ -14,11 +14,15 @@
 //! [`Views`]: crate::query::view::Views
 //! [`World`]: crate::world::World
 
-mod seal;
+mod sealed;
 
-pub(crate) use seal::Seal;
+pub(crate) use sealed::Sealed;
 
-use crate::{component::Component, entity, query::view, registry, registry::Registry};
+use crate::{
+    component::Component,
+    entity,
+    query::view,
+};
 use core::marker::PhantomData;
 
 /// A filter for entities.
@@ -36,11 +40,7 @@ use core::marker::PhantomData;
 /// [`Has<C>`]: crate::query::filter::Has
 /// [`Views`]: crate::query::view::Views
 /// [`World`]: crate::world::World
-pub trait Filter<R, I>: Seal<R, I>
-where
-    R: Registry,
-{
-}
+pub trait Filter: Sealed {}
 
 /// An empty filter.
 ///
@@ -58,7 +58,7 @@ where
 /// [`Views`]: crate::query::view::Views
 pub enum None {}
 
-impl<R> Filter<R, None> for None where R: Registry {}
+impl Filter for None {}
 
 /// Filter based on whether a [`Component`] is present in an entity.
 ///
@@ -84,12 +84,7 @@ where
     component: PhantomData<C>,
 }
 
-impl<C, I, R> Filter<R, I> for Has<C>
-where
-    C: Component,
-    R: Registry + registry::Filter<C, I>,
-{
-}
+impl<C> Filter for Has<C> where C: Component {}
 
 /// Filter using the logical inverse of another [`Filter`].
 ///
@@ -114,12 +109,7 @@ pub struct Not<F> {
     filter: PhantomData<F>,
 }
 
-impl<F, I, R> Filter<R, Not<I>> for Not<F>
-where
-    F: Filter<R, I>,
-    R: Registry,
-{
-}
+impl<F> Filter for Not<F> where F: Filter {}
 
 /// Filter entities which are filtered by two [`Filter`]s.
 ///
@@ -148,11 +138,10 @@ pub struct And<F1, F2> {
     filter_2: PhantomData<F2>,
 }
 
-impl<F1, F2, I, J, R> Filter<R, And<I, J>> for And<F1, F2>
+impl<F1, F2> Filter for And<F1, F2>
 where
-    F1: Filter<R, I>,
-    F2: Filter<R, J>,
-    R: Registry,
+    F1: Filter,
+    F2: Filter,
 {
 }
 
@@ -183,50 +172,28 @@ pub struct Or<F1, F2> {
     filter_2: PhantomData<F2>,
 }
 
-impl<F1, F2, I, J, R> Filter<R, Or<I, J>> for Or<F1, F2>
+impl<F1, F2> Filter for Or<F1, F2>
 where
-    F1: Filter<R, I>,
-    F2: Filter<R, J>,
-    R: Registry,
+    F1: Filter,
+    F2: Filter,
 {
 }
 
-impl<C, I, R> Filter<R, I> for &C
+impl<C> Filter for &C where C: Component {}
+
+impl<C> Filter for &mut C where C: Component {}
+
+impl<C> Filter for Option<&C> where C: Component {}
+
+impl<C> Filter for Option<&mut C> where C: Component {}
+
+impl Filter for entity::Identifier {}
+
+impl Filter for view::Null {}
+
+impl<V, W> Filter for (V, W)
 where
-    C: Component,
-    R: Registry + registry::Filter<C, I>,
-{
-}
-
-impl<C, I, R> Filter<R, I> for &mut C
-where
-    C: Component,
-    R: Registry + registry::Filter<C, I>,
-{
-}
-
-impl<C, R> Filter<R, None> for Option<&C>
-where
-    C: Component,
-    R: Registry,
-{
-}
-
-impl<C, R> Filter<R, None> for Option<&mut C>
-where
-    C: Component,
-    R: Registry,
-{
-}
-
-impl<R> Filter<R, None> for entity::Identifier where R: Registry {}
-
-impl<R> Filter<R, None> for view::Null where R: Registry {}
-
-impl<I, J, R, V, W> Filter<R, And<I, J>> for (V, W)
-where
-    R: Registry,
-    V: Filter<R, I>,
-    W: Filter<R, J>,
+    V: Filter,
+    W: Filter,
 {
 }

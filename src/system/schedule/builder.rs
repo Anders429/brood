@@ -3,11 +3,15 @@ use crate::{
     system::{
         schedule::{
             raw_task,
-            raw_task::{RawTask, RawTasks},
+            raw_task::{
+                RawTask,
+                RawTasks,
+            },
             task::Task,
             Schedule,
         },
-        ParSystem, System,
+        ParSystem,
+        System,
     },
 };
 use fnv::FnvBuildHasher;
@@ -28,9 +32,17 @@ use hashbrown::HashSet;
 ///
 /// ``` rust
 /// use brood::{
-///     query::{filter, filter::Filter, result, views},
-///     registry::{ContainsViews, Registry},
-///     system::{Schedule, System},
+///     query::{
+///         filter,
+///         filter::Filter,
+///         result,
+///         views,
+///     },
+///     registry::ContainsQuery,
+///     system::{
+///         Schedule,
+///         System,
+///     },
 /// };
 ///
 /// // Define components.
@@ -48,10 +60,7 @@ use hashbrown::HashSet;
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
-///         R: Registry + 'a,
-///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
-///         Self::Filter: Filter<R, FI>,
-///         Self::Views: Filter<R, VI>,
+///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
 ///     {
 ///         for result!(foo, bar) in query_results {
 ///             // Do something...
@@ -69,10 +78,7 @@ use hashbrown::HashSet;
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
-///         R: Registry + 'a,
-///         R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
-///         Self::Filter: Filter<R, FI>,
-///         Self::Views: Filter<R, VI>,
+///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
 ///     {
 ///         for result!(baz, bar) in query_results {
 ///             // Do something...
@@ -140,7 +146,8 @@ where
         }
     }
 
-    /// Create a [`Schedule`] containing all [`Stages`] added to the `Builder`, consuming the `Builder`.
+    /// Create a [`Schedule`] containing all [`Stages`] added to the `Builder`, consuming the
+    /// `Builder`.
     ///
     /// [`Schedule`]: crate::system::schedule::Schedule
     /// [`Stages`]: crate::system::schedule::stage::Stages

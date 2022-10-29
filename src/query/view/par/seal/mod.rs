@@ -7,12 +7,19 @@ use crate::{
     entity,
     query::{
         result::ParResults,
-        view::{Null, View, Views},
+        view::{
+            Null,
+            View,
+            Views,
+        },
     },
 };
 use rayon::{
     iter,
-    iter::{Either, IndexedParallelIterator},
+    iter::{
+        Either,
+        IndexedParallelIterator,
+    },
     slice,
 };
 

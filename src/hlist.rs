@@ -14,7 +14,14 @@ macro_rules! define_null {
         mod impl_serde {
             use super::Null;
             use core::fmt;
-            use serde::{de, de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
+            use serde::{
+                de,
+                de::Visitor,
+                Deserialize,
+                Deserializer,
+                Serialize,
+                Serializer,
+            };
 
             impl Serialize for Null {
                 fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -75,7 +82,12 @@ pub(crate) use define_null_uninstantiable;
 mod tests {
     use super::*;
     #[cfg(feature = "serde")]
-    use serde_test::{assert_de_tokens, assert_de_tokens_error, assert_tokens, Token};
+    use serde_test::{
+        assert_de_tokens,
+        assert_de_tokens_error,
+        assert_tokens,
+        Token,
+    };
 
     define_null!();
 

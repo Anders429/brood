@@ -1,6 +1,13 @@
 use crate::{
-    query::{filter::Filter, result, view::ParViews},
-    registry::{ContainsParViews, Registry},
+    query::{
+        filter::Filter,
+        result,
+        view::ParViews,
+    },
+    registry::{
+        ContainsParQuery,
+        Registry,
+    },
     world::World,
 };
 
@@ -13,8 +20,13 @@ use crate::{
 /// # Example
 /// ``` rust
 /// use brood::{
-///     query::{filter, filter::Filter, result, views},
-///     registry::{ContainsParViews, Registry},
+///     query::{
+///         filter,
+///         filter::Filter,
+///         result,
+///         views,
+///     },
+///     registry::ContainsParQuery,
 ///     system::ParSystem,
 /// };
 /// use rayon::iter::ParallelIterator;
@@ -34,10 +46,7 @@ use crate::{
 ///         &mut self,
 ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
 ///     ) where
-///         R: Registry + 'a,
-///         R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
-///         Self::Filter: Filter<R, FI>,
-///         Self::Views: Filter<R, VI>,
+///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
 ///     {
 ///         query_results.for_each(|result!(foo, bar)| {
 ///             if bar.0 {
@@ -57,9 +66,9 @@ use crate::{
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub trait ParSystem<'a> {
     /// The filter to apply to queries run by this system.
-    type Filter;
+    type Filter: Filter;
     /// The views on components this system should operate on.
-    type Views: ParViews<'a>;
+    type Views: ParViews<'a> + Filter;
 
     /// Logic to be run over the parallel query result.
     ///
@@ -70,8 +79,13 @@ pub trait ParSystem<'a> {
     /// # Example
     /// ``` rust
     /// use brood::{
-    ///     query::{filter, filter::Filter, result, views},
-    ///     registry::{ContainsParViews, Registry},
+    ///     query::{
+    ///         filter,
+    ///         filter::Filter,
+    ///         result,
+    ///         views,
+    ///     },
+    ///     registry::ContainsParQuery,
     ///     system::ParSystem,
     /// };
     /// use rayon::iter::ParallelIterator;
@@ -91,10 +105,7 @@ pub trait ParSystem<'a> {
     ///         &mut self,
     ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ///     ) where
-    ///         R: Registry + 'a,
-    ///         R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
-    ///         Self::Filter: Filter<R, FI>,
-    ///         Self::Views: Filter<R, VI>,
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     ///     {
     ///         query_results.for_each(|result!(foo, bar)| {
     ///             if bar.0 {
@@ -111,10 +122,7 @@ pub trait ParSystem<'a> {
         &mut self,
         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
     ) where
-        R: Registry + 'a,
-        R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
-        Self::Filter: Filter<R, FI>,
-        Self::Views: Filter<R, VI>;
+        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a;
 
     /// Logic to be run after processing.
     ///
@@ -127,7 +135,7 @@ pub trait ParSystem<'a> {
     /// executes the removal during post processing.
     ///
     /// ``` rust
-    /// use brood::{entity, query::{filter, filter::Filter, result, views}, registry::{ContainsParViews, Registry}, system::ParSystem, World};
+    /// use brood::{entity, query::{filter, filter::Filter, result, views}, registry::{ContainsParQuery, Registry}, system::ParSystem, World};
     /// use rayon::iter::ParallelIterator;
     ///
     /// // Define components.
@@ -146,10 +154,7 @@ pub trait ParSystem<'a> {
     ///
     ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     ///     where
-    ///         R: Registry + 'a,
-    ///         R::Viewable: ContainsParViews<'a, Self::Views, P, I, Q>,
-    ///         Self::Filter: Filter<R, FI>,
-    ///         Self::Views: Filter<R, VI>,
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
     ///     {
     ///         self.entities_to_remove = query_results.filter_map(|result!(foo, bar, entity_identifier)| {
     ///             // If `bar` is true, increment `foo`. Otherwise, remove the entity in post processing.

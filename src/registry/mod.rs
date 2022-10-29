@@ -8,7 +8,10 @@
 //!
 //! # Example
 //! ``` rust
-//! use brood::{registry, World};
+//! use brood::{
+//!     registry,
+//!     World,
+//! };
 //!
 //! // Define components.
 //! struct Foo(usize);
@@ -24,32 +27,53 @@
 //! [`registry!`]: crate::registry!
 //! [`World`]: crate::world::World
 
-mod contains;
+pub(crate) mod contains;
+
 mod debug;
 mod eq;
-mod seal;
+mod sealed;
 mod send;
 #[cfg(feature = "serde")]
 mod serde;
 mod sync;
 
 #[cfg(feature = "rayon")]
-pub use contains::ContainsParViews;
-pub use contains::ContainsViews;
+pub use contains::ContainsParQuery;
+pub use contains::{
+    ContainsComponent,
+    ContainsEntities,
+    ContainsEntity,
+    ContainsQuery,
+};
 
 #[cfg(feature = "serde")]
-pub(crate) use self::serde::{RegistryDeserialize, RegistrySerialize};
-pub(crate) use contains::{ContainsComponent, ContainsEntities, ContainsEntity};
-pub(crate) use debug::RegistryDebug;
-pub(crate) use eq::{RegistryEq, RegistryPartialEq};
+pub(crate) use self::serde::{
+    RegistryDeserialize,
+    RegistrySerialize,
+};
 #[cfg(feature = "rayon")]
-pub(crate) use seal::CanonicalParViews;
-pub(crate) use seal::{Canonical, CanonicalViews, Filter, Length};
+pub(crate) use contains::ContainsParViews;
+pub(crate) use contains::ContainsViews;
+pub(crate) use debug::RegistryDebug;
+pub(crate) use eq::{
+    RegistryEq,
+    RegistryPartialEq,
+};
+#[cfg(feature = "rayon")]
+pub(crate) use sealed::CanonicalParViews;
+pub(crate) use sealed::{
+    Canonical,
+    CanonicalViews,
+    Length,
+};
 pub(crate) use send::RegistrySend;
 pub(crate) use sync::RegistrySync;
 
-use crate::{component::Component, hlist::define_null_uninstantiable};
-use seal::Seal;
+use crate::{
+    component::Component,
+    hlist::define_null_uninstantiable,
+};
+use sealed::Sealed;
 
 define_null_uninstantiable!();
 
@@ -77,7 +101,7 @@ define_null_uninstantiable!();
 ///
 /// [`Component`]: crate::component::Component
 /// [`World`]: crate::World
-pub trait Registry: Seal {}
+pub trait Registry: Sealed {}
 
 impl Registry for Null {}
 
@@ -99,7 +123,10 @@ where
 ///
 /// # Example
 /// ``` rust
-/// use brood::{registry, World};
+/// use brood::{
+///     registry,
+///     World,
+/// };
 ///
 /// // Define components `Foo` and `Bar`.
 /// struct Foo(u16);

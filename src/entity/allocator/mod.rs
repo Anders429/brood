@@ -11,9 +11,18 @@ pub(crate) use location::Location;
 pub(crate) use locations::Locations;
 pub(crate) use slot::Slot;
 
-use crate::{entity, registry::Registry};
-use alloc::{collections::VecDeque, vec::Vec};
-use core::{fmt, fmt::Debug};
+use crate::{
+    entity,
+    registry::Registry,
+};
+use alloc::{
+    collections::VecDeque,
+    vec::Vec,
+};
+use core::{
+    fmt,
+    fmt::Debug,
+};
 
 pub struct Allocator<R>
 where
@@ -161,6 +170,17 @@ where
                 .unwrap_unchecked()
         }
         .index = index;
+    }
+
+    /// Decrease the allocated capacity to the smallest amount required for the stored data.
+    ///
+    /// This may not decrease to the most optimal value, as the shrinking is dependent on the
+    /// allocator.
+    ///
+    /// Note that this only affects the list of currently free indexes. Slots are never removed, so
+    /// there is no need to shrink them.
+    pub(crate) fn shrink_to_fit(&mut self) {
+        self.free.shrink_to_fit();
     }
 }
 

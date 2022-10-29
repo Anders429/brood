@@ -2,15 +2,30 @@ use crate::{
     archetype::Archetype,
     archetypes,
     query::{
-        filter::{And, Filter, Seal},
-        result::{ParResults, Reshape},
-        view::{ParViews, ParViewsSeal},
+        filter::And,
+        result::{
+            ParResults,
+            Reshape,
+        },
+        view::{
+            ParViews,
+            ParViewsSeal,
+        },
     },
-    registry::{ContainsParViews, Registry},
+    registry::{
+        contains::filter::Sealed as ContainsFilterSealed,
+        ContainsParQuery,
+        Registry,
+    },
 };
 use core::marker::PhantomData;
 use rayon::iter::{
-    plumbing::{Consumer, Folder, Reducer, UnindexedConsumer},
+    plumbing::{
+        Consumer,
+        Folder,
+        Reducer,
+        UnindexedConsumer,
+    },
     ParallelIterator,
 };
 
@@ -26,8 +41,14 @@ use rayon::iter::{
 /// ``` rust
 /// use brood::{
 ///     entity,
-///     query::{filter, result, views},
-///     registry, Query, World,
+///     query::{
+///         filter,
+///         result,
+///         views,
+///     },
+///     registry,
+///     Query,
+///     World,
 /// };
 /// use rayon::iter::ParallelIterator;
 ///
@@ -59,8 +80,6 @@ use rayon::iter::{
 pub struct ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    F: Filter<R, FI>,
-    V: ParViews<'a> + Filter<R, VI>,
 {
     archetypes_iter: archetypes::ParIterMut<'a, R>,
 
@@ -76,8 +95,6 @@ where
 impl<'a, R, F, FI, V, VI, P, I, Q> ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
-    F: Filter<R, FI>,
-    V: ParViews<'a> + Filter<R, VI>,
 {
     pub(crate) fn new(archetypes_iter: archetypes::ParIterMut<'a, R>) -> Self {
         Self {
@@ -96,30 +113,22 @@ where
 
 // SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Send for ParIter<'a, R, F, FI, V, VI, P, I, Q>
-where
-    R: Registry,
-    F: Filter<R, FI>,
-    V: ParViews<'a> + Filter<R, VI>,
+unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Send for ParIter<'a, R, F, FI, V, VI, P, I, Q> where
+    R: Registry
 {
 }
 
 // SAFETY: This type is safe to share between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Sync for ParIter<'a, R, F, FI, V, VI, P, I, Q>
-where
-    R: Registry,
-    F: Filter<R, FI>,
-    V: ParViews<'a> + Filter<R, VI>,
+unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Sync for ParIter<'a, R, F, FI, V, VI, P, I, Q> where
+    R: Registry
 {
 }
 
 impl<'a, R, F, FI, V, VI, P, I, Q> ParallelIterator for ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
-    R: Registry + 'a,
-    F: Filter<R, FI>,
-    V: ParViews<'a> + Filter<R, VI>,
-    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
+    V: ParViews<'a>,
+    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q> + 'a,
 {
     type Item = <<V as ParViewsSeal<'a>>::ParResults as ParResults>::View;
 
@@ -172,10 +181,8 @@ impl<'a, C, R, F, FI, V, VI, P, I, Q> Consumer<&'a mut Archetype<R>>
     for ResultsConsumer<C, F, FI, V, VI, P, I, Q>
 where
     C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
-    R: Registry,
-    F: Filter<R, FI>,
-    V: ParViews<'a> + Filter<R, VI>,
-    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
+    V: ParViews<'a>,
+    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>,
 {
     type Folder = ResultsFolder<C, C::Result, F, FI, V, VI, P, I, Q>;
     type Reducer = C::Reducer;
@@ -214,10 +221,8 @@ impl<'a, C, R, F, FI, V, VI, P, I, Q> UnindexedConsumer<&'a mut Archetype<R>>
     for ResultsConsumer<C, F, FI, V, VI, P, I, Q>
 where
     C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
-    R: Registry,
-    F: Filter<R, FI>,
-    V: ParViews<'a> + Filter<R, VI>,
-    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
+    V: ParViews<'a>,
+    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>,
 {
     fn split_off_left(&self) -> Self {
         ResultsConsumer::new(self.base.split_off_left())
@@ -245,18 +250,18 @@ impl<'a, C, R, F, FI, V, VI, P, I, Q> Folder<&'a mut Archetype<R>>
     for ResultsFolder<C, C::Result, F, FI, V, VI, P, I, Q>
 where
     C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
-    R: Registry,
-    R::Viewable: ContainsParViews<'a, V, P, I, Q>,
-    F: Filter<R, FI>,
-    V: ParViews<'a> + Filter<R, VI>,
+    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>,
+    V: ParViews<'a>,
 {
     type Result = C::Result;
 
     fn consume(self, archetype: &'a mut Archetype<R>) -> Self {
-        if And::<V, F>::filter(
-            // SAFETY: This identifier reference will not outlive `archetype`.
-            unsafe { archetype.identifier() },
-        ) {
+        // SAFETY: The `R` on which `filter()` is called is the same `R` over which the identifier
+        // is generic over. Additionally, the identifier reference created here will not outlive
+        // `archetype`.
+        if unsafe {
+            <R as ContainsFilterSealed<And<V, F>, And<VI, FI>>>::filter(archetype.identifier())
+        } {
             let consumer = self.base.split_off_left();
             let result =
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`

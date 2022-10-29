@@ -3,14 +3,29 @@ use crate::{
     component::Component,
     entity::allocator::Location,
     query::{
-        filter::{And, Filter, Seal},
-        view::{Reshape, Views},
+        filter::{
+            And,
+            Filter,
+        },
+        view::{
+            Reshape,
+            Views,
+        },
         Query,
     },
-    registry::{ContainsComponent, ContainsViews, Registry, RegistryDebug},
+    registry::{
+        contains::filter::Sealed as ContainsFilterSealed,
+        ContainsComponent,
+        ContainsQuery,
+        Registry,
+        RegistryDebug,
+    },
     world::World,
 };
-use core::{fmt, fmt::Debug};
+use core::{
+    fmt,
+    fmt::Debug,
+};
 
 /// A view into a single entity in a [`World`].
 ///
@@ -20,7 +35,11 @@ use core::{fmt, fmt::Debug};
 /// An entry for an entity can be obtained from an [`entity::Identifier`] as follows:
 ///
 /// ``` rust
-/// use brood::{entity, registry, World};
+/// use brood::{
+///     entity,
+///     registry,
+///     World,
+/// };
 ///
 /// struct Foo(u32);
 /// struct Bar(bool);
@@ -58,7 +77,11 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entity, registry, World};
+    /// use brood::{
+    ///     entity,
+    ///     registry,
+    ///     World,
+    /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
@@ -162,7 +185,11 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entity, registry, World};
+    /// use brood::{
+    ///     entity,
+    ///     registry,
+    ///     World,
+    /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
@@ -255,8 +282,14 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     query::{filter, result, views},
-    ///     registry, Query, World,
+    ///     query::{
+    ///         filter,
+    ///         result,
+    ///         views,
+    ///     },
+    ///     registry,
+    ///     Query,
+    ///     World,
     /// };
     ///
     /// struct Foo(u32);
@@ -279,11 +312,15 @@ where
         #[allow(unused_variables)] query: Query<V, F>,
     ) -> Option<V>
     where
-        V: Views<'a> + Filter<R, VI>,
-        F: Filter<R, FI>,
-        R::Viewable: ContainsViews<'a, V, P, I, Q>,
+        V: Views<'a> + Filter,
+        F: Filter,
+        R: ContainsQuery<'a, F, FI, V, VI, P, I, Q>,
     {
-        if And::<V, F>::filter(self.location.identifier) {
+        // SAFETY: The `R` on which `filter()` is called is the same `R` over which the identifier
+        // is generic over.
+        if unsafe {
+            <R as ContainsFilterSealed<And<F, V>, And<FI, VI>>>::filter(self.location.identifier)
+        } {
             Some(
                 // SAFETY: Since the archetype wasn't filtered out by the views, then each
                 // component viewed by `V` is also identified by the archetype's identifier.

@@ -1,6 +1,9 @@
 use super::World;
 use crate::registry::RegistryDebug;
-use core::fmt::{self, Debug};
+use core::fmt::{
+    self,
+    Debug,
+};
 
 impl<R> Debug for World<R>
 where

@@ -1,4 +1,4 @@
-use brood::{query::{filter, filter::Filter, result, views}, registry::{ContainsViews, Registry}, system::{schedule::stages, System}};
+use brood::{query::{filter, result, views}, registry::ContainsQuery, system::{schedule::stages, System}};
 
 struct MySystem;
 
@@ -8,10 +8,8 @@ impl<'a> System<'a> for MySystem {
 
     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
     where
-        R: Registry + 'a,
-        R::Viewable: ContainsViews<'a, Self::Views, P, I, Q>,
-        Self::Filter: Filter<R, FI>,
-        Self::Views: Filter<R, VI>, {}
+        R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+    {}
 }
 
 type Stages = stages!{

@@ -3,20 +3,37 @@ use crate::{
     archetype::Archetype,
     component::Component,
     entity,
-    registry::{RegistryDeserialize, RegistrySerialize},
+    registry::{
+        RegistryDeserialize,
+        RegistrySerialize,
+    },
 };
-use alloc::{string::String, vec::Vec};
+use alloc::{
+    string::String,
+    vec::Vec,
+};
 use core::{
     any::type_name,
     fmt,
     marker::PhantomData,
-    mem::{drop, ManuallyDrop},
+    mem::{
+        drop,
+        ManuallyDrop,
+    },
     write,
 };
 use serde::{
-    de::{self, DeserializeSeed, SeqAccess, Visitor},
+    de::{
+        self,
+        DeserializeSeed,
+        SeqAccess,
+        Visitor,
+    },
     ser::SerializeTuple,
-    Deserialize, Deserializer, Serialize, Serializer,
+    Deserialize,
+    Deserializer,
+    Serialize,
+    Serializer,
 };
 
 #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
@@ -819,11 +836,28 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{archetype::Identifier, entity, registry};
-    use alloc::{format, vec};
+    use crate::{
+        archetype::Identifier,
+        entity,
+        registry,
+    };
+    use alloc::{
+        format,
+        vec,
+    };
     use core::any::type_name;
-    use serde_derive::{Deserialize, Serialize};
-    use serde_test::{assert_de_tokens_error, assert_tokens, Compact, Configure, Readable, Token};
+    use serde_derive::{
+        Deserialize,
+        Serialize,
+    };
+    use serde_test::{
+        assert_de_tokens_error,
+        assert_tokens,
+        Compact,
+        Configure,
+        Readable,
+        Token,
+    };
 
     #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
     struct A(u32);

@@ -18,8 +18,14 @@
 //! ``` rust
 //! use brood::{
 //!     entity,
-//!     query::{filter, result, views},
-//!     registry, Query, World,
+//!     query::{
+//!         filter,
+//!         result,
+//!         views,
+//!     },
+//!     registry,
+//!     Query,
+//!     World,
 //! };
 //!
 //! struct Foo(u32);
@@ -49,7 +55,7 @@ pub(crate) mod reshape;
 mod iter;
 #[cfg(feature = "rayon")]
 mod par_iter;
-mod seal;
+mod sealed;
 
 pub use iter::Iter;
 #[cfg(feature = "rayon")]
@@ -58,8 +64,8 @@ pub use par_iter::ParIter;
 pub(crate) use get::Get;
 pub(crate) use reshape::Reshape;
 #[cfg(feature = "rayon")]
-pub(crate) use seal::ParResults;
-pub(crate) use seal::Results;
+pub(crate) use sealed::ParResults;
+pub(crate) use sealed::Results;
 
 use crate::doc;
 

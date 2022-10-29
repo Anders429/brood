@@ -6,13 +6,17 @@
 //! [`Schedule`]: crate::system::schedule::Schedule
 //! [`Stages`]: crate::system::schedule::stage::Stages
 
-mod seal;
+mod sealed;
 
 use crate::{
     hlist::define_null,
-    system::{schedule::task::Task, ParSystem, System},
+    system::{
+        schedule::task::Task,
+        ParSystem,
+        System,
+    },
 };
-use seal::Seal;
+use sealed::Sealed;
 
 /// A single task waiting to be scheduled.
 ///
@@ -30,7 +34,7 @@ pub enum RawTask<S, P> {
 define_null!();
 
 /// A heterogeneous list of [`RawTask`]s.
-pub trait RawTasks<'a>: Seal<'a> {}
+pub trait RawTasks<'a>: Sealed<'a> {}
 
 impl<'a> RawTasks<'a> for Null {}
 

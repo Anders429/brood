@@ -21,7 +21,10 @@
 //!
 //! # Example
 //! ``` rust
-//! use brood::{entity, query::views};
+//! use brood::{
+//!     entity,
+//!     query::views,
+//! };
 //!
 //! // Define components.
 //! struct Foo(u32);
@@ -48,19 +51,30 @@ mod get;
 #[cfg(feature = "rayon")]
 mod par;
 mod reshape;
-mod seal;
+mod sealed;
 
 #[cfg(feature = "rayon")]
-pub use par::{ParView, ParViews};
+pub use par::{
+    ParView,
+    ParViews,
+};
 
 pub(crate) use get::Get;
 #[cfg(feature = "rayon")]
-pub(crate) use par::{ParViewsSeal, RepeatNone};
+pub(crate) use par::{
+    ParViewsSeal,
+    RepeatNone,
+};
 pub(crate) use reshape::Reshape;
-pub(crate) use seal::ViewsSeal;
+pub(crate) use sealed::ViewsSealed;
 
-use crate::{component::Component, doc, entity, hlist::define_null};
-use seal::ViewSeal;
+use crate::{
+    component::Component,
+    doc,
+    entity,
+    hlist::define_null,
+};
+use sealed::ViewSealed;
 
 /// A view over a single aspect of an entity.
 ///
@@ -106,7 +120,7 @@ use seal::ViewSeal;
 /// [`Views`]: crate::query::view::Views
 /// [`views!`]: crate::query::views!
 /// [`World`]: crate::world::World
-pub trait View<'a>: ViewSeal<'a> {}
+pub trait View<'a>: ViewSealed<'a> {}
 
 impl<'a, C> View<'a> for &'a C where C: Component {}
 
@@ -149,7 +163,7 @@ define_null!();
 /// [`View`]: crate::query::view::View
 /// [`views!`]: crate::query::views!
 /// [`World`]: crate::world::World
-pub trait Views<'a>: ViewsSeal<'a> {}
+pub trait Views<'a>: ViewsSealed<'a> {}
 
 impl<'a> Views<'a> for Null {}
 
