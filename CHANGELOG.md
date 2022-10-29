@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.3.0 - 2022-10-28
 ### Added
 - `shrink_to_fit()` method on `World` for shrinking the `World`'s current allocation to the minimum required for the current data.
 - `ContainsComponent`, `ContainsEntities`, `ContainsEntity`, `ContainsParQuery`, and `ContainsQuery` traits to indicate more specific bounds on registries.
