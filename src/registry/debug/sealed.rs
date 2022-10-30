@@ -1,6 +1,6 @@
 //! Functions for the `Debug` implementation of `Archetype`.
 //!
-//! The `RegistryDebug` trait is implemented on any `Registry` where each `Component` implements
+//! The `Sealed` trait is implemented on any `Registry` where each `Component` implements
 //! `Debug`. It is a "public-in-private" trait, so external users can't implement it. These methods
 //! should not be considered a part of the public API. The methods are used in the implementation
 //! of `Debug` on `Archetype`.
@@ -26,7 +26,7 @@ use core::{
 /// Functions for the `Debug` implementation of `Archetype`.
 ///
 /// These functions are for performing row-wise debug formatting.
-pub trait RegistryDebug: Registry {
+pub trait Sealed: Registry {
     /// Returns pointers to the components stored at the given index.
     ///
     /// This function handles the offset arithmetic required to obtain each component and stores a
@@ -84,7 +84,7 @@ pub trait RegistryDebug: Registry {
         R: Registry;
 }
 
-impl RegistryDebug for Null {
+impl Sealed for Null {
     unsafe fn extract_component_pointers<R>(
         _index: usize,
         _components: &[(*mut u8, usize)],
@@ -105,10 +105,10 @@ impl RegistryDebug for Null {
     }
 }
 
-impl<C, R> RegistryDebug for (C, R)
+impl<C, R> Sealed for (C, R)
 where
     C: Component + Debug,
-    R: RegistryDebug,
+    R: Sealed,
 {
     unsafe fn extract_component_pointers<R_>(
         index: usize,

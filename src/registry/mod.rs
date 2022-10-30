@@ -43,6 +43,7 @@ pub use contains::{
     ContainsEntity,
     ContainsQuery,
 };
+pub use debug::Debug;
 
 #[cfg(feature = "serde")]
 pub(crate) use self::serde::{
@@ -52,7 +53,6 @@ pub(crate) use self::serde::{
 #[cfg(feature = "rayon")]
 pub(crate) use contains::ContainsParViews;
 pub(crate) use contains::ContainsViews;
-pub(crate) use debug::RegistryDebug;
 pub(crate) use eq::{
     RegistryEq,
     RegistryPartialEq,

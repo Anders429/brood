@@ -308,7 +308,6 @@ mod tests {
         entity,
         registry,
         registry::{
-            RegistryDebug,
             RegistryDeserialize,
             RegistryEq,
             RegistryPartialEq,
@@ -372,7 +371,7 @@ mod tests {
 
     impl<R, S> Debug for SeededAllocator<R, S>
     where
-        R: RegistryDebug,
+        R: registry::Debug,
     {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             self.0.fmt(f)

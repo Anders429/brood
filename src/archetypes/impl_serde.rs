@@ -115,7 +115,6 @@ mod tests {
         entity,
         registry,
         registry::{
-            RegistryDebug,
             RegistryEq,
             RegistryPartialEq,
         },
@@ -169,7 +168,7 @@ mod tests {
 
     impl<R> Debug for SeededArchetypes<R>
     where
-        R: RegistryDebug,
+        R: registry::Debug,
     {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             f.debug_struct("SeededArchetypes")

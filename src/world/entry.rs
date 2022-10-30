@@ -13,18 +13,17 @@ use crate::{
         },
         Query,
     },
+    registry,
     registry::{
         contains::filter::Sealed as ContainsFilterSealed,
         ContainsComponent,
         ContainsQuery,
         Registry,
-        RegistryDebug,
     },
     world::World,
 };
 use core::{
     fmt,
-    fmt::Debug,
 };
 
 /// A view into a single entity in a [`World`].
@@ -343,9 +342,9 @@ where
     }
 }
 
-impl<'a, R> Debug for Entry<'a, R>
+impl<'a, R> fmt::Debug for Entry<'a, R>
 where
-    R: RegistryDebug,
+    R: registry::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Entry")

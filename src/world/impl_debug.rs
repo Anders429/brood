@@ -1,13 +1,10 @@
 use super::World;
-use crate::registry::RegistryDebug;
-use core::fmt::{
-    self,
-    Debug,
-};
+use crate::registry;
+use core::fmt;
 
-impl<R> Debug for World<R>
+impl<R> fmt::Debug for World<R>
 where
-    R: RegistryDebug,
+    R: registry::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("World")

@@ -71,6 +71,7 @@ macro_rules! define_null_uninstantiable {
         /// the end of the list.
         ///
         /// Since this is an empty enum, it is not able to be instantiated.
+        #[derive(Debug)]
         pub enum Null {}
     };
 }
