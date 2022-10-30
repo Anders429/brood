@@ -34,7 +34,6 @@ mod eq;
 mod sealed;
 #[cfg(feature = "serde")]
 mod serde;
-mod sync;
 
 #[cfg(feature = "rayon")]
 pub use contains::ContainsParQuery;
@@ -65,7 +64,6 @@ pub(crate) use sealed::{
     CanonicalViews,
     Length,
 };
-pub(crate) use sync::RegistrySync;
 
 use crate::{
     component::Component,
