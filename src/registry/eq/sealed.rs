@@ -25,7 +25,7 @@ use core::mem::ManuallyDrop;
 ///
 /// This trait is similar to `PartialEq`, but the implementation specifically allows for recursive
 /// equality evaluation of each component column within an archetype table.
-pub trait RegistryPartialEq: Registry {
+pub trait Sealed: Registry {
     /// Returns whether the components in `components_a` are equal to the components in
     /// `components_b`, where `components_a` and `components_b` are lists of pointer-capacity
     /// tuples defining `Vec<C>`s of length `length` for each `C` component type identified by the
@@ -57,7 +57,7 @@ pub trait RegistryPartialEq: Registry {
         R: Registry;
 }
 
-impl RegistryPartialEq for Null {
+impl Sealed for Null {
     unsafe fn component_eq<R>(
         _components_a: &[(*mut u8, usize)],
         _components_b: &[(*mut u8, usize)],
@@ -71,10 +71,10 @@ impl RegistryPartialEq for Null {
     }
 }
 
-impl<C, R> RegistryPartialEq for (C, R)
+impl<C, R> Sealed for (C, R)
 where
     C: Component + PartialEq,
-    R: RegistryPartialEq,
+    R: Sealed,
 {
     unsafe fn component_eq<R_>(
         mut components_a: &[(*mut u8, usize)],
@@ -158,24 +158,9 @@ where
     }
 }
 
-/// This trait indicates that all components within a registry implement `Eq`.
-///
-/// This is needed to indicate whether an archetype can implement `Eq`, since it is generic over
-/// a heterogeneous list of components.
-pub trait RegistryEq: RegistryPartialEq {}
-
-impl RegistryEq for Null {}
-
-impl<C, R> RegistryEq for (C, R)
-where
-    C: Component + Eq,
-    R: RegistryEq,
-{
-}
-
 #[cfg(test)]
 mod tests {
-    use super::RegistryPartialEq;
+    use super::Sealed;
     use crate::{
         archetype::Identifier,
         registry,

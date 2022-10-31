@@ -1,10 +1,7 @@
 use crate::{
     archetypes::DeserializeArchetypes,
     entity::allocator::DeserializeAllocator,
-    registry::{
-        RegistryDeserialize,
-        RegistrySerialize,
-    },
+    registry,
     World,
 };
 use core::{
@@ -18,15 +15,13 @@ use serde::{
         Visitor,
     },
     ser::SerializeTuple,
-    Deserialize,
     Deserializer,
-    Serialize,
     Serializer,
 };
 
-impl<R> Serialize for World<R>
+impl<R> serde::Serialize for World<R>
 where
-    R: RegistrySerialize,
+    R: registry::Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -39,9 +34,9 @@ where
     }
 }
 
-impl<'de, R> Deserialize<'de> for World<R>
+impl<'de, R> serde::Deserialize<'de> for World<R>
 where
-    R: RegistryDeserialize<'de>,
+    R: registry::Deserialize<'de>,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -49,14 +44,14 @@ where
     {
         struct WorldVisitor<'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             registry: PhantomData<&'de R>,
         }
 
         impl<'de, R> Visitor<'de> for WorldVisitor<'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             type Value = World<R>;
 

@@ -1,10 +1,7 @@
 use crate::{
     archetype::Archetype,
     archetypes::Archetypes,
-    registry::{
-        RegistryDeserialize,
-        RegistrySerialize,
-    },
+    registry,
 };
 use core::{
     cmp,
@@ -27,7 +24,7 @@ use serde::{
 
 impl<R> Serialize for Archetypes<R>
 where
-    R: RegistrySerialize,
+    R: registry::Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -53,7 +50,7 @@ impl<'a, R> DeserializeArchetypes<'a, R> {
 
 impl<'a, 'de, R> DeserializeSeed<'de> for DeserializeArchetypes<'a, R>
 where
-    R: RegistryDeserialize<'de>,
+    R: registry::Deserialize<'de>,
 {
     type Value = Archetypes<R>;
 
@@ -63,7 +60,7 @@ where
     {
         struct ArchetypesVisitor<'a, 'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             len: &'a mut usize,
             registry: PhantomData<&'de R>,
@@ -71,7 +68,7 @@ where
 
         impl<'a, 'de, R> Visitor<'de> for ArchetypesVisitor<'a, 'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             type Value = Archetypes<R>;
 
@@ -114,11 +111,6 @@ mod tests {
         archetype::Identifier,
         entity,
         registry,
-        registry::{
-            RegistryDebug,
-            RegistryEq,
-            RegistryPartialEq,
-        },
     };
     use alloc::{
         format,
@@ -158,18 +150,18 @@ mod tests {
 
     impl<R> PartialEq for SeededArchetypes<R>
     where
-        R: RegistryPartialEq,
+        R: registry::PartialEq,
     {
         fn eq(&self, other: &Self) -> bool {
             self.archetypes == other.archetypes && self.len == other.len
         }
     }
 
-    impl<R> Eq for SeededArchetypes<R> where R: RegistryEq {}
+    impl<R> Eq for SeededArchetypes<R> where R: registry::Eq {}
 
     impl<R> Debug for SeededArchetypes<R>
     where
-        R: RegistryDebug,
+        R: registry::Debug,
     {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             f.debug_struct("SeededArchetypes")
@@ -181,7 +173,7 @@ mod tests {
 
     impl<R> Serialize for SeededArchetypes<R>
     where
-        R: RegistrySerialize,
+        R: registry::Serialize,
     {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
@@ -193,7 +185,7 @@ mod tests {
 
     impl<'de, R> Deserialize<'de> for SeededArchetypes<R>
     where
-        R: RegistryDeserialize<'de>,
+        R: registry::Deserialize<'de>,
     {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where

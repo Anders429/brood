@@ -32,11 +32,14 @@ pub(crate) mod contains;
 mod debug;
 mod eq;
 mod sealed;
-mod send;
 #[cfg(feature = "serde")]
 mod serde;
-mod sync;
 
+#[cfg(feature = "serde")]
+pub use self::serde::{
+    Deserialize,
+    Serialize,
+};
 #[cfg(feature = "rayon")]
 pub use contains::ContainsParQuery;
 pub use contains::{
@@ -45,20 +48,15 @@ pub use contains::{
     ContainsEntity,
     ContainsQuery,
 };
-
-#[cfg(feature = "serde")]
-pub(crate) use self::serde::{
-    RegistryDeserialize,
-    RegistrySerialize,
+pub use debug::Debug;
+pub use eq::{
+    Eq,
+    PartialEq,
 };
+
 #[cfg(feature = "rayon")]
 pub(crate) use contains::ContainsParViews;
 pub(crate) use contains::ContainsViews;
-pub(crate) use debug::RegistryDebug;
-pub(crate) use eq::{
-    RegistryEq,
-    RegistryPartialEq,
-};
 #[cfg(feature = "rayon")]
 pub(crate) use sealed::CanonicalParViews;
 pub(crate) use sealed::{
@@ -66,8 +64,6 @@ pub(crate) use sealed::{
     CanonicalViews,
     Length,
 };
-pub(crate) use send::RegistrySend;
-pub(crate) use sync::RegistrySync;
 
 use crate::{
     component::Component,

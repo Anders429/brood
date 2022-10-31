@@ -307,13 +307,6 @@ mod tests {
         archetype::Archetype,
         entity,
         registry,
-        registry::{
-            RegistryDebug,
-            RegistryDeserialize,
-            RegistryEq,
-            RegistryPartialEq,
-            RegistrySerialize,
-        },
     };
     use claims::assert_ok;
     use core::{
@@ -361,18 +354,18 @@ mod tests {
 
     impl<R, S> PartialEq for SeededAllocator<R, S>
     where
-        R: RegistryPartialEq,
+        R: registry::PartialEq,
     {
         fn eq(&self, other: &Self) -> bool {
             self.0 == other.0
         }
     }
 
-    impl<R, S> Eq for SeededAllocator<R, S> where R: RegistryEq {}
+    impl<R, S> Eq for SeededAllocator<R, S> where R: registry::Eq {}
 
     impl<R, S> Debug for SeededAllocator<R, S>
     where
-        R: RegistryDebug,
+        R: registry::Debug,
     {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             self.0.fmt(f)
@@ -381,7 +374,7 @@ mod tests {
 
     impl<R, S> Serialize for SeededAllocator<R, S>
     where
-        R: RegistrySerialize,
+        R: registry::Serialize,
     {
         fn serialize<T>(&self, serializer: T) -> Result<T::Ok, T::Error>
         where
@@ -393,7 +386,7 @@ mod tests {
 
     impl<'de, R, S> Deserialize<'de> for SeededAllocator<R, S>
     where
-        R: RegistryDeserialize<'de>,
+        R: registry::Deserialize<'de>,
         S: Seed<R>,
     {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
