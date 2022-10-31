@@ -1,10 +1,7 @@
 use crate::{
     archetype::Archetype,
     archetypes::Archetypes,
-    registry::{
-        RegistryDeserialize,
-        RegistrySerialize,
-    },
+    registry,
 };
 use core::{
     cmp,
@@ -27,7 +24,7 @@ use serde::{
 
 impl<R> Serialize for Archetypes<R>
 where
-    R: RegistrySerialize,
+    R: registry::Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -53,7 +50,7 @@ impl<'a, R> DeserializeArchetypes<'a, R> {
 
 impl<'a, 'de, R> DeserializeSeed<'de> for DeserializeArchetypes<'a, R>
 where
-    R: RegistryDeserialize<'de>,
+    R: registry::Deserialize<'de>,
 {
     type Value = Archetypes<R>;
 
@@ -63,7 +60,7 @@ where
     {
         struct ArchetypesVisitor<'a, 'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             len: &'a mut usize,
             registry: PhantomData<&'de R>,
@@ -71,7 +68,7 @@ where
 
         impl<'a, 'de, R> Visitor<'de> for ArchetypesVisitor<'a, 'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             type Value = Archetypes<R>;
 
@@ -176,7 +173,7 @@ mod tests {
 
     impl<R> Serialize for SeededArchetypes<R>
     where
-        R: RegistrySerialize,
+        R: registry::Serialize,
     {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
@@ -188,7 +185,7 @@ mod tests {
 
     impl<'de, R> Deserialize<'de> for SeededArchetypes<R>
     where
-        R: RegistryDeserialize<'de>,
+        R: registry::Deserialize<'de>,
     {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where

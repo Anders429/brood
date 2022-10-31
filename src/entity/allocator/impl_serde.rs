@@ -307,10 +307,6 @@ mod tests {
         archetype::Archetype,
         entity,
         registry,
-        registry::{
-            RegistryDeserialize,
-            RegistrySerialize,
-        },
     };
     use claims::assert_ok;
     use core::{
@@ -378,7 +374,7 @@ mod tests {
 
     impl<R, S> Serialize for SeededAllocator<R, S>
     where
-        R: RegistrySerialize,
+        R: registry::Serialize,
     {
         fn serialize<T>(&self, serializer: T) -> Result<T::Ok, T::Error>
         where
@@ -390,7 +386,7 @@ mod tests {
 
     impl<'de, R, S> Deserialize<'de> for SeededAllocator<R, S>
     where
-        R: RegistryDeserialize<'de>,
+        R: registry::Deserialize<'de>,
         S: Seed<R>,
     {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>

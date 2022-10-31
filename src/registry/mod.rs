@@ -35,6 +35,11 @@ mod sealed;
 #[cfg(feature = "serde")]
 mod serde;
 
+#[cfg(feature = "serde")]
+pub use self::serde::{
+    Deserialize,
+    Serialize,
+};
 #[cfg(feature = "rayon")]
 pub use contains::ContainsParQuery;
 pub use contains::{
@@ -49,11 +54,6 @@ pub use eq::{
     PartialEq,
 };
 
-#[cfg(feature = "serde")]
-pub(crate) use self::serde::{
-    RegistryDeserialize,
-    RegistrySerialize,
-};
 #[cfg(feature = "rayon")]
 pub(crate) use contains::ContainsParViews;
 pub(crate) use contains::ContainsViews;
