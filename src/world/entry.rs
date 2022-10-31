@@ -22,9 +22,7 @@ use crate::{
     },
     world::World,
 };
-use core::{
-    fmt,
-};
+use core::fmt;
 
 /// A view into a single entity in a [`World`].
 ///

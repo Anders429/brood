@@ -114,10 +114,6 @@ mod tests {
         archetype::Identifier,
         entity,
         registry,
-        registry::{
-            RegistryEq,
-            RegistryPartialEq,
-        },
     };
     use alloc::{
         format,
@@ -157,14 +153,14 @@ mod tests {
 
     impl<R> PartialEq for SeededArchetypes<R>
     where
-        R: RegistryPartialEq,
+        R: registry::PartialEq,
     {
         fn eq(&self, other: &Self) -> bool {
             self.archetypes == other.archetypes && self.len == other.len
         }
     }
 
-    impl<R> Eq for SeededArchetypes<R> where R: RegistryEq {}
+    impl<R> Eq for SeededArchetypes<R> where R: registry::Eq {}
 
     impl<R> Debug for SeededArchetypes<R>
     where

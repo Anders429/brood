@@ -1,16 +1,16 @@
 use crate::{
     archetype::Archetype,
-    registry::{
-        RegistryEq,
-        RegistryPartialEq,
-    },
+    registry,
 };
 use alloc::vec::Vec;
-use core::mem::ManuallyDrop;
+use core::{
+    cmp,
+    mem::ManuallyDrop,
+};
 
-impl<R> PartialEq for Archetype<R>
+impl<R> cmp::PartialEq for Archetype<R>
 where
-    R: RegistryPartialEq,
+    R: registry::PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
         self.length == other.length
@@ -55,4 +55,4 @@ where
     }
 }
 
-impl<R> Eq for Archetype<R> where R: RegistryEq {}
+impl<R> cmp::Eq for Archetype<R> where R: registry::Eq {}

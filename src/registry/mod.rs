@@ -44,6 +44,10 @@ pub use contains::{
     ContainsQuery,
 };
 pub use debug::Debug;
+pub use eq::{
+    Eq,
+    PartialEq,
+};
 
 #[cfg(feature = "serde")]
 pub(crate) use self::serde::{
@@ -53,10 +57,6 @@ pub(crate) use self::serde::{
 #[cfg(feature = "rayon")]
 pub(crate) use contains::ContainsParViews;
 pub(crate) use contains::ContainsViews;
-pub(crate) use eq::{
-    RegistryEq,
-    RegistryPartialEq,
-};
 #[cfg(feature = "rayon")]
 pub(crate) use sealed::CanonicalParViews;
 pub(crate) use sealed::{

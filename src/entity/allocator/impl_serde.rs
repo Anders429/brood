@@ -309,8 +309,6 @@ mod tests {
         registry,
         registry::{
             RegistryDeserialize,
-            RegistryEq,
-            RegistryPartialEq,
             RegistrySerialize,
         },
     };
@@ -360,14 +358,14 @@ mod tests {
 
     impl<R, S> PartialEq for SeededAllocator<R, S>
     where
-        R: RegistryPartialEq,
+        R: registry::PartialEq,
     {
         fn eq(&self, other: &Self) -> bool {
             self.0 == other.0
         }
     }
 
-    impl<R, S> Eq for SeededAllocator<R, S> where R: RegistryEq {}
+    impl<R, S> Eq for SeededAllocator<R, S> where R: registry::Eq {}
 
     impl<R, S> Debug for SeededAllocator<R, S>
     where

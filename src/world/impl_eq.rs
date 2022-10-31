@@ -1,12 +1,10 @@
 use super::World;
-use crate::registry::{
-    RegistryEq,
-    RegistryPartialEq,
-};
+use crate::registry;
+use core::cmp;
 
-impl<R> PartialEq for World<R>
+impl<R> cmp::PartialEq for World<R>
 where
-    R: RegistryPartialEq,
+    R: registry::PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
         self.len == other.len
@@ -15,7 +13,7 @@ where
     }
 }
 
-impl<R> Eq for World<R> where R: RegistryEq {}
+impl<R> cmp::Eq for World<R> where R: registry::Eq {}
 
 #[cfg(test)]
 mod tests {
