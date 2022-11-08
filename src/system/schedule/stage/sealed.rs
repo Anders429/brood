@@ -90,11 +90,11 @@ impl<
         (PQ, PQS),
     > for (Stage<S, P>, L)
 where
-    R: ContainsQuery<'a, S::Filter, SFI, S::Views, SVI, SP, SI, SQ>
-        + ContainsParQuery<'a, P::Filter, PFI, P::Views, PVI, PP, PI, PQ>
+    R: ContainsQuery<'a, S::Filter, SFI, S::Views<'a>, SVI, SP, SI, SQ>
+        + ContainsParQuery<'a, P::Filter, PFI, P::Views<'a>, PVI, PP, PI, PQ>
         + 'a,
-    S: System<'a> + Send,
-    P: ParSystem<'a> + Send,
+    S: System + Send,
+    P: ParSystem + Send,
     L: Sealed<'a, R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS, PQS>,
 {
     fn run(&mut self, world: SendableWorld<R>) {

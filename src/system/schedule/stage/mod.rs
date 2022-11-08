@@ -102,11 +102,11 @@ impl<
         (PQ, PQS),
     > for (Stage<S, P>, L)
 where
-    R: ContainsQuery<'a, S::Filter, SFI, S::Views, SVI, SP, SI, SQ>
-        + ContainsParQuery<'a, P::Filter, PFI, P::Views, PVI, PP, PI, PQ>
+    R: ContainsQuery<'a, S::Filter, SFI, S::Views<'a>, SVI, SP, SI, SQ>
+        + ContainsParQuery<'a, P::Filter, PFI, P::Views<'a>, PVI, PP, PI, PQ>
         + 'a,
-    S: System<'a> + Send,
-    P: ParSystem<'a> + Send,
+    S: System + Send,
+    P: ParSystem + Send,
     L: Stages<'a, R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS, PQS>,
 {
 }
@@ -137,13 +137,13 @@ doc::non_root_macro! {
     ///
     /// // Define a System.
     /// struct Foo;
-    /// impl<'a> System<'a> for Foo {
+    /// impl System for Foo {
     ///     type Filter = filter::None;
-    ///     type Views = views!(&'a mut A, &'a B);
+    ///     type Views<'a> = views!(&'a mut A, &'a B);
     ///
-    ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
+    ///     fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     ///     where
-    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
     ///     {
     ///         // Operate on result here.
     ///     }
@@ -151,13 +151,13 @@ doc::non_root_macro! {
     ///
     /// // Define a Parallel System.
     /// struct Bar;
-    /// impl<'a> ParSystem<'a> for Bar {
+    /// impl ParSystem for Bar {
     ///     type Filter = filter::None;
-    ///     type Views = views!(&'a B, &'a mut C);
+    ///     type Views<'a> = views!(&'a B, &'a mut C);
     ///
-    ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
+    ///     fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     ///     where
-    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
     ///     {
     ///         // Operate on result here.
     ///     }
@@ -366,15 +366,15 @@ mod tests {
 
         struct AB;
 
-        impl<'a> System<'a> for AB {
-            type Views = views!(&'a mut A, &'a mut B);
+        impl System for AB {
+            type Views<'a> = views!(&'a mut A, &'a mut B);
             type Filter = filter::None;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 for result!(a, b) in query_results {
                     core::mem::swap(&mut a.0, &mut b.0);
@@ -384,15 +384,15 @@ mod tests {
 
         struct CD;
 
-        impl<'a> System<'a> for CD {
-            type Views = views!(&'a mut C, &'a mut D);
+        impl System for CD {
+            type Views<'a> = views!(&'a mut C, &'a mut D);
             type Filter = filter::None;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 for result!(c, d) in query_results {
                     core::mem::swap(&mut c.0, &mut d.0);
@@ -402,15 +402,15 @@ mod tests {
 
         struct CE;
 
-        impl<'a> System<'a> for CE {
-            type Views = views!(&'a mut C, &'a mut E);
+        impl System for CE {
+            type Views<'a> = views!(&'a mut C, &'a mut E);
             type Filter = filter::None;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 for result!(c, e) in query_results {
                     core::mem::swap(&mut c.0, &mut e.0);

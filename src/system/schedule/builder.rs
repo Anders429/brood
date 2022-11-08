@@ -52,15 +52,15 @@ use hashbrown::HashSet;
 ///
 /// struct SystemA;
 ///
-/// impl<'a> System<'a> for SystemA {
-///     type Views = views!(&'a mut Foo, &'a Bar);
+/// impl System for SystemA {
+///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R, FI, VI, P, I, Q>(
+///     fn run<'a, R, FI, VI, P, I, Q>(
 ///         &mut self,
-///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     ) where
-///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
 ///     {
 ///         for result!(foo, bar) in query_results {
 ///             // Do something...
@@ -70,15 +70,15 @@ use hashbrown::HashSet;
 ///
 /// struct SystemB;
 ///
-/// impl<'a> System<'a> for SystemB {
-///     type Views = views!(&'a mut Baz, &'a Bar);
+/// impl System for SystemB {
+///     type Views<'a> = views!(&'a mut Baz, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R, FI, VI, P, I, Q>(
+///     fn run<'a, R, FI, VI, P, I, Q>(
 ///         &mut self,
-///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     ) where
-///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
 ///     {
 ///         for result!(baz, bar) in query_results {
 ///             // Do something...
@@ -115,8 +115,8 @@ where
     /// [`System`]: crate::system::System
     pub fn system<S>(self, system: S) -> Builder<(RawTask<S, system::Null>, T)>
     where
-        S: System<'a>,
-        S::Views: Send,
+        S: System,
+        S::Views<'a>: Send,
     {
         Builder::<(RawTask<S, system::Null>, T)> {
             raw_tasks: (RawTask::Task(Task::Seq(system)), self.raw_tasks),
@@ -129,7 +129,7 @@ where
     /// [`Schedule`]: crate::system::schedule::Schedule
     pub fn par_system<S>(self, par_system: S) -> Builder<(RawTask<system::Null, S>, T)>
     where
-        S: ParSystem<'a>,
+        S: ParSystem,
     {
         Builder::<(RawTask<system::Null, S>, T)> {
             raw_tasks: (RawTask::Task(Task::Par(par_system)), self.raw_tasks),

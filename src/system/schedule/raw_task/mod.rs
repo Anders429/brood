@@ -40,8 +40,8 @@ impl<'a> RawTasks<'a> for Null {}
 
 impl<'a, S, P, T> RawTasks<'a> for (RawTask<S, P>, T)
 where
-    S: System<'a> + Send,
-    P: ParSystem<'a> + Send,
+    S: System + Send,
+    P: ParSystem + Send,
     T: RawTasks<'a>,
 {
 }

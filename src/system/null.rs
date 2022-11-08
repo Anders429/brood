@@ -27,15 +27,15 @@ use core::hint::unreachable_unchecked;
 /// [`Stage`]: crate::system::schedule::stage::Stage
 pub enum Null {}
 
-impl<'a> System<'a> for Null {
+impl System for Null {
     type Filter = filter::None;
-    type Views = view::Null;
+    type Views<'a> = view::Null;
 
-    fn run<R, FI, VI, P, I, Q>(
+    fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
-        _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+        _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ) where
-        R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
     {
         // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }
@@ -51,15 +51,15 @@ impl<'a> System<'a> for Null {
 }
 
 #[cfg(feature = "rayon")]
-impl<'a> ParSystem<'a> for Null {
+impl ParSystem for Null {
     type Filter = filter::None;
-    type Views = view::Null;
+    type Views<'a> = view::Null;
 
-    fn run<R, FI, VI, P, I, Q>(
+    fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
-        _query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+        _query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ) where
-        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
     {
         // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }
