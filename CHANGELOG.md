@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+### Added
+- `Debug`, `Eq`, `PartialEq`, `Serialize`, and `Deserialize` traits are added to the `registry` module.
+### Changed
+- `Send` and `Sync` implementations of `World` now only require the registry to implement `Registry + Send` and `Registry + Sync` respectively.
 
 ## 0.3.0 - 2022-10-28
 ### Added
