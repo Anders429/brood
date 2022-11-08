@@ -4,7 +4,7 @@
 [![codecov.io](https://img.shields.io/codecov/c/gh/Anders429/brood)](https://codecov.io/gh/Anders429/brood)
 [![crates.io](https://img.shields.io/crates/v/brood)](https://crates.io/crates/brood)
 [![docs.rs](https://docs.rs/brood/badge.svg)](https://docs.rs/brood)
-[![MSRV](https://img.shields.io/badge/rustc-1.60.0+-yellow.svg)](#minimum-supported-rust-version)
+[![MSRV](https://img.shields.io/badge/rustc-1.65.0+-yellow.svg)](#minimum-supported-rust-version)
 [![License](https://img.shields.io/crates/l/brood)](#license)
 
 A fast and flexible [entity component system](https://en.wikipedia.org/wiki/Entity_component_system) library.
@@ -281,7 +281,7 @@ world.run_schedule(&mut schedule);
 Note that stages are determined by the `Views` of each `System`. `System`s whose `Views` do not contain conflicting mutable borrows of components are grouped together into a single stage.
 
 ## Minimum Supported Rust Version
-This crate is guaranteed to compile on stable `rustc 1.60.0` and up.
+This crate is guaranteed to compile on stable `rustc 1.65.0` and up.
 
 ## License
 This project is licensed under either of
