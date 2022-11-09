@@ -29,7 +29,7 @@ where
 
 impl<'a, R> Iterator for Iter<'a, R>
 where
-    R: Registry + 'a,
+    R: Registry,
 {
     type Item = &'a Archetype<R>;
 
@@ -70,7 +70,7 @@ where
 
 impl<'a, R> Iterator for IterMut<'a, R>
 where
-    R: Registry + 'a,
+    R: Registry,
 {
     type Item = &'a mut Archetype<R>;
 

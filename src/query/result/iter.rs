@@ -108,7 +108,7 @@ impl<'a, R, F, FI, V, VI, P, I, Q> Iterator for Iter<'a, R, F, FI, V, VI, P, I, 
 where
     F: Filter,
     V: Views<'a> + Filter,
-    R: ContainsQuery<'a, F, FI, V, VI, P, I, Q> + 'a,
+    R: ContainsQuery<'a, F, FI, V, VI, P, I, Q>,
 {
     type Item = V;
 
@@ -186,7 +186,7 @@ impl<'a, R, F, FI, V, VI, P, I, Q> FusedIterator for Iter<'a, R, F, FI, V, VI, P
 where
     F: Filter,
     V: Views<'a> + Filter,
-    R: ContainsQuery<'a, F, FI, V, VI, P, I, Q> + 'a,
+    R: ContainsQuery<'a, F, FI, V, VI, P, I, Q>,
 {
 }
 
