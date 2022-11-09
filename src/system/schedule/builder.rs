@@ -105,15 +105,15 @@ impl Builder<raw_task::Null> {
     }
 }
 
-impl<'a, T> Builder<T>
+impl<T> Builder<T>
 where
-    T: RawTasks<'a>,
+    T: RawTasks,
 {
     /// Add a [`System`] to the [`Schedule`].
     ///
     /// [`Schedule`]: crate::system::schedule::Schedule
     /// [`System`]: crate::system::System
-    pub fn system<S>(self, system: S) -> Builder<(RawTask<S, system::Null>, T)>
+    pub fn system<'a, S>(self, system: S) -> Builder<(RawTask<S, system::Null>, T)>
     where
         S: System,
         S::Views<'a>: Send,

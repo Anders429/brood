@@ -34,14 +34,14 @@ pub enum RawTask<S, P> {
 define_null!();
 
 /// A heterogeneous list of [`RawTask`]s.
-pub trait RawTasks<'a>: Sealed<'a> {}
+pub trait RawTasks: Sealed {}
 
-impl<'a> RawTasks<'a> for Null {}
+impl RawTasks for Null {}
 
-impl<'a, S, P, T> RawTasks<'a> for (RawTask<S, P>, T)
+impl<S, P, T> RawTasks for (RawTask<S, P>, T)
 where
     S: System + Send,
     P: ParSystem + Send,
-    T: RawTasks<'a>,
+    T: RawTasks,
 {
 }
