@@ -55,7 +55,7 @@ where
 
 define_null!();
 
-impl<'a, R> Stages<R, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null where
+impl<R> Stages<R, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null where
     R: Registry
 {
 }

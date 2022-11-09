@@ -33,7 +33,7 @@ where
     fn flush(&mut self, world: SendableWorld<R>);
 }
 
-impl<'a, R> Sealed<R, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null
+impl<R> Sealed<R, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null
 where
     R: Registry,
 {
