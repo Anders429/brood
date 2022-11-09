@@ -1,6 +1,12 @@
 # Changelog
 
 ## Unreleased
+### Added
+- `Debug`, `Eq`, `PartialEq`, `Serialize`, and `Deserialize` traits are added to the `registry` module.
+### Changed
+- `Send` and `Sync` implementations of `World` now only require the registry to implement `Registry + Send` and `Registry + Sync` respectively.
+- Lifetime in `System` and `ParSystem` traits has been moved to the `Views` associated type.
+- The generic lifetimes on the `system::schedule::RawTask` and `system::Stages` traits have been removed.
 
 ## 0.3.0 - 2022-10-28
 ### Added

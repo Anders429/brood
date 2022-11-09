@@ -4,7 +4,7 @@
 [![codecov.io](https://img.shields.io/codecov/c/gh/Anders429/brood)](https://codecov.io/gh/Anders429/brood)
 [![crates.io](https://img.shields.io/crates/v/brood)](https://crates.io/crates/brood)
 [![docs.rs](https://docs.rs/brood/badge.svg)](https://docs.rs/brood)
-[![MSRV](https://img.shields.io/badge/rustc-1.60.0+-yellow.svg)](#minimum-supported-rust-version)
+[![MSRV](https://img.shields.io/badge/rustc-1.65.0+-yellow.svg)](#minimum-supported-rust-version)
 [![License](https://img.shields.io/crates/l/brood)](#license)
 
 A fast and flexible [entity component system](https://en.wikipedia.org/wiki/Entity_component_system) library.
@@ -79,13 +79,13 @@ use brood::{query::{filter, result, views}, registry::ContainsQuery, system::Sys
 
 struct UpdatePosition;
 
-impl<'a> System<'a> for UpdatePosition {
+impl System for UpdatePosition {
     type Filter: filter::None;
-    type Views: views!(&'a mut Position, &'a Velocity);
+    type Views<'a>: views!(&'a mut Position, &'a Velocity);
 
-    fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
+    fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     where
-        R: ContainsQuery<Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+        R: ContainsQuery<Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
     {
         for result!(position, velocity) in query_results {
             position.x += velocity.x;
@@ -185,13 +185,13 @@ world.insert(entity!(position, velocity));
 
 struct UpdatePosition;
 
-impl<'a> ParSystem<'a> for UpdatePosition {
+impl ParSystem for UpdatePosition {
     type Filter: filter::None;
-    type Views: views!(&'a mut Position, &'a Velocity);
+    type Views<'a>: views!(&'a mut Position, &'a Velocity);
 
-    fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
+    fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     where
-        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
     {
         query_results.for_each(|result!(position, velocity)| {
             position.x += velocity.x;
@@ -242,13 +242,13 @@ world.insert(entity!(position, velocity, IsMoving(false)));
 
 struct UpdatePosition;
 
-impl<'a> System<'a> for UpdatePosition {
+impl System for UpdatePosition {
     type Filter: filter::None;
-    type Views: views!(&'a mut Position, &'a Velocity);
+    type Views<'a>: views!(&'a mut Position, &'a Velocity);
 
-    fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
+    fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     where
-        R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
     {
         for result!(position, velocity) in query_results {
             position.x += velocity.x;
@@ -259,13 +259,13 @@ impl<'a> System<'a> for UpdatePosition {
 
 struct UpdateIsMoving;
 
-impl<'a> System<'a> for UpdateIsMoving {
+impl System for UpdateIsMoving {
     type Filter: filter::None;
-    type Views: views!(&'a Velocity, &'a mut IsMoving);
+    type Views<'a>: views!(&'a Velocity, &'a mut IsMoving);
 
-    fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
+    fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     where
-        R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
     {
         for result!(velocity, is_moving) in query_results {
             is_moving.0 = velocity.x != 0.0 || velocity.y != 0.0;
@@ -281,7 +281,7 @@ world.run_schedule(&mut schedule);
 Note that stages are determined by the `Views` of each `System`. `System`s whose `Views` do not contain conflicting mutable borrows of components are grouped together into a single stage.
 
 ## Minimum Supported Rust Version
-This crate is guaranteed to compile on stable `rustc 1.60.0` and up.
+This crate is guaranteed to compile on stable `rustc 1.65.0` and up.
 
 ## License
 This project is licensed under either of

@@ -32,15 +32,15 @@
 //!
 //! struct SystemA;
 //!
-//! impl<'a> System<'a> for SystemA {
-//!     type Views = views!(&'a mut Foo, &'a Bar);
+//! impl System for SystemA {
+//!     type Views<'a> = views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
 //!
-//!     fn run<R, FI, VI, P, I, Q>(
+//!     fn run<'a, R, FI, VI, P, I, Q>(
 //!         &mut self,
-//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 //!     ) where
-//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
 //!     {
 //!         for result!(foo, bar) in query_results {
 //!             // Do something...
@@ -50,15 +50,15 @@
 //!
 //! struct SystemB;
 //!
-//! impl<'a> System<'a> for SystemB {
-//!     type Views = views!(&'a mut Baz, &'a Bar);
+//! impl System for SystemB {
+//!     type Views<'a> = views!(&'a mut Baz, &'a Bar);
 //!     type Filter = filter::None;
 //!
-//!     fn run<R, FI, VI, P, I, Q>(
+//!     fn run<'a, R, FI, VI, P, I, Q>(
 //!         &mut self,
-//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 //!     ) where
-//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
 //!     {
 //!         for result!(baz, bar) in query_results {
 //!             // Do something...
@@ -124,15 +124,15 @@ use stage::Stages;
 ///
 /// struct SystemA;
 ///
-/// impl<'a> System<'a> for SystemA {
-///     type Views = views!(&'a mut Foo, &'a Bar);
+/// impl System for SystemA {
+///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R, FI, VI, P, I, Q>(
+///     fn run<'a, R, FI, VI, P, I, Q>(
 ///         &mut self,
-///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     ) where
-///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
 ///     {
 ///         for result!(foo, bar) in query_results {
 ///             // Do something...
@@ -142,15 +142,15 @@ use stage::Stages;
 ///
 /// struct SystemB;
 ///
-/// impl<'a> System<'a> for SystemB {
-///     type Views = views!(&'a mut Baz, &'a Bar);
+/// impl System for SystemB {
+///     type Views<'a> = views!(&'a mut Baz, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R, FI, VI, P, I, Q>(
+///     fn run<'a, R, FI, VI, P, I, Q>(
 ///         &mut self,
-///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     ) where
-///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
 ///     {
 ///         for result!(baz, bar) in query_results {
 ///             // Do something...
@@ -188,13 +188,13 @@ impl Schedule<stage::Null> {
     }
 }
 
-impl<'a, S> Schedule<S> {
+impl<S> Schedule<S> {
     pub(crate) fn run<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>(
         &mut self,
-        world: &'a mut World<R>,
+        world: &mut World<R>,
     ) where
         R: Registry,
-        S: Stages<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>,
+        S: Stages<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>,
     {
         self.stages.run(
             // SAFETY: The pointer provided here is unique, being created from a mutable reference.

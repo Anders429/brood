@@ -18,17 +18,17 @@ pub enum Task<S, P> {
     Par(P),
 }
 
-impl<'a, S, P> Task<S, P>
+impl<S, P> Task<S, P>
 where
-    S: System<'a>,
-    P: ParSystem<'a>,
+    S: System,
+    P: ParSystem,
 {
-    pub(crate) fn run<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>(
+    pub(crate) fn run<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>(
         &mut self,
         world: SendableWorld<R>,
     ) where
-        R: ContainsQuery<'a, S::Filter, SFI, S::Views, SVI, SP, SI, SQ>
-            + ContainsParQuery<'a, P::Filter, PFI, P::Views, PVI, PP, PI, PQ>
+        R: ContainsQuery<'a, S::Filter, SFI, S::Views<'a>, SVI, SP, SI, SQ>
+            + ContainsParQuery<'a, P::Filter, PFI, P::Views<'a>, PVI, PP, PI, PQ>
             + 'a,
     {
         match self {
@@ -36,7 +36,7 @@ where
                 // Query world using system.
                 let result =
                     // SAFETY: The access to the world's components follows Rust's borrowing rules.
-                    unsafe { (*world.get()).query(Query::<S::Views, S::Filter>::new()) };
+                    unsafe { (*world.get()).query(Query::<S::Views<'a>, S::Filter>::new()) };
                 // Run system using the query result.
                 system.run(result);
             }
@@ -44,7 +44,7 @@ where
                 // Query world using system.
                 let result =
                     // SAFETY: The access to the world's components follows Rust's borrowing rules.
-                    unsafe { (*world.get()).par_query(Query::<P::Views, P::Filter>::new()) };
+                    unsafe { (*world.get()).par_query(Query::<P::Views<'a>, P::Filter>::new()) };
                 // Run system using the query result.
                 system.run(result);
             }

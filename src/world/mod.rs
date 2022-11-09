@@ -380,15 +380,15 @@ where
     /// // Define system.
     /// struct MySystem;
     ///
-    /// impl<'a> System<'a> for MySystem {
-    ///     type Views = views!(&'a mut Foo, &'a Bar);
+    /// impl System for MySystem {
+    ///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R, FI, VI, P, I, Q>(
+    ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
-    ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+    ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     ) where
-    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
     ///     {
     ///         for result!(foo, bar) in query_results {
     ///             // Increment `Foo` by `Bar`.
@@ -406,10 +406,10 @@ where
     /// [`System`]: crate::system::System
     pub fn run_system<'a, S, FI, VI, P, I, Q>(&'a mut self, system: &mut S)
     where
-        S: System<'a>,
-        R: ContainsQuery<'a, S::Filter, FI, S::Views, VI, P, I, Q>,
+        S: System,
+        R: ContainsQuery<'a, S::Filter, FI, S::Views<'a>, VI, P, I, Q>,
     {
-        system.run(self.query(Query::<S::Views, S::Filter>::new()));
+        system.run(self.query(Query::<S::Views<'a>, S::Filter>::new()));
     }
 
     /// Run a [`ParSystem`] over the entities in this `World`.
@@ -440,15 +440,15 @@ where
     /// // Define system.
     /// struct MySystem;
     ///
-    /// impl<'a> ParSystem<'a> for MySystem {
-    ///     type Views = views!(&'a mut Foo, &'a Bar);
+    /// impl ParSystem for MySystem {
+    ///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R, FI, VI, P, I, Q>(
+    ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
-    ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+    ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     ) where
-    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
     ///     {
     ///         query_results.for_each(|result!(foo, bar)| foo.0 += bar.0);
     ///     }
@@ -465,10 +465,10 @@ where
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub fn run_par_system<'a, S, FI, VI, P, I, Q>(&'a mut self, par_system: &mut S)
     where
-        S: ParSystem<'a>,
-        R: ContainsParQuery<'a, S::Filter, FI, S::Views, VI, P, I, Q>,
+        S: ParSystem,
+        R: ContainsParQuery<'a, S::Filter, FI, S::Views<'a>, VI, P, I, Q>,
     {
-        par_system.run(self.par_query(Query::<S::Views, S::Filter>::new()));
+        par_system.run(self.par_query(Query::<S::Views<'a>, S::Filter>::new()));
     }
 
     /// Run a [`Schedule`] over the entities in this `World`.
@@ -502,15 +502,15 @@ where
     /// struct SystemA;
     /// struct SystemB;
     ///
-    /// impl<'a> System<'a> for SystemA {
-    ///     type Views = views!(&'a mut Foo);
+    /// impl System for SystemA {
+    ///     type Views<'a> = views!(&'a mut Foo);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R, FI, VI, P, I, Q>(
+    ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
-    ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+    ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     ) where
-    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
     ///     {
     ///         for result!(foo) in query_results {
     ///             foo.0 += 1;
@@ -518,15 +518,15 @@ where
     ///     }
     /// }
     ///
-    /// impl<'a> System<'a> for SystemB {
-    ///     type Views = views!(&'a mut Bar);
+    /// impl System for SystemB {
+    ///     type Views<'a> = views!(&'a mut Bar);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R, FI, VI, P, I, Q>(
+    ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
-    ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+    ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     ) where
-    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
     ///     {
     ///         for result!(bar) in query_results {
     ///             bar.0 += 1;
@@ -546,11 +546,11 @@ where
     /// [`Schedule`]: crate::system::Schedule
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub fn run_schedule<'a, S, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>(
-        &'a mut self,
+    pub fn run_schedule<S, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>(
+        &mut self,
         schedule: &mut Schedule<S>,
     ) where
-        S: Stages<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>,
+        S: Stages<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>,
     {
         schedule.run(self);
     }
@@ -1215,15 +1215,15 @@ mod tests {
     fn system_refs() {
         struct TestSystem;
 
-        impl<'a> System<'a> for TestSystem {
-            type Views = views!(&'a A);
+        impl System for TestSystem {
+            type Views<'a> = views!(&'a A);
             type Filter = filter::None;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 result.sort();
@@ -1245,15 +1245,15 @@ mod tests {
     fn system_mut_refs() {
         struct TestSystem;
 
-        impl<'a> System<'a> for TestSystem {
-            type Views = views!(&'a mut B);
+        impl System for TestSystem {
+            type Views<'a> = views!(&'a mut B);
             type Filter = filter::None;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(b)| b.0).collect::<Vec<_>>();
                 result.sort();
@@ -1275,15 +1275,15 @@ mod tests {
     fn system_option_refs() {
         struct TestSystem;
 
-        impl<'a> System<'a> for TestSystem {
-            type Views = views!(Option<&'a A>);
+        impl System for TestSystem {
+            type Views<'a> = views!(Option<&'a A>);
             type Filter = filter::None;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results
                     .map(|result!(a)| a.map(|a| a.0))
@@ -1307,15 +1307,15 @@ mod tests {
     fn system_option_mut_refs() {
         struct TestSystem;
 
-        impl<'a> System<'a> for TestSystem {
-            type Views = views!(Option<&'a mut B>);
+        impl System for TestSystem {
+            type Views<'a> = views!(Option<&'a mut B>);
             type Filter = filter::None;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results
                     .map(|result!(b)| b.map(|b| b.0))
@@ -1341,15 +1341,15 @@ mod tests {
             entity_identifier: entity::Identifier,
         }
 
-        impl<'a> System<'a> for TestSystem {
-            type Views = views!(entity::Identifier);
+        impl System for TestSystem {
+            type Views<'a> = views!(entity::Identifier);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let result = query_results
                     .map(|result!(entity_identifier)| entity_identifier)
@@ -1372,15 +1372,15 @@ mod tests {
     fn system_has_filter() {
         struct TestSystem;
 
-        impl<'a> System<'a> for TestSystem {
-            type Views = views!(&'a A);
+        impl System for TestSystem {
+            type Views<'a> = views!(&'a A);
             type Filter = filter::Has<B>;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![1]);
@@ -1401,15 +1401,15 @@ mod tests {
     fn system_not_filter() {
         struct TestSystem;
 
-        impl<'a> System<'a> for TestSystem {
-            type Views = views!(&'a A);
+        impl System for TestSystem {
+            type Views<'a> = views!(&'a A);
             type Filter = filter::Not<filter::Has<B>>;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![2]);
@@ -1430,15 +1430,15 @@ mod tests {
     fn system_and_filter() {
         struct TestSystem;
 
-        impl<'a> System<'a> for TestSystem {
-            type Views = views!(&'a A);
+        impl System for TestSystem {
+            type Views<'a> = views!(&'a A);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![1]);
@@ -1459,15 +1459,15 @@ mod tests {
     fn system_or_filter() {
         struct TestSystem;
 
-        impl<'a> System<'a> for TestSystem {
-            type Views = views!(&'a A);
+        impl System for TestSystem {
+            type Views<'a> = views!(&'a A);
             type Filter = filter::Or<filter::Has<A>, filter::Has<B>>;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 result.sort();
@@ -1490,15 +1490,25 @@ mod tests {
     fn par_system_refs() {
         struct TestSystem;
 
-        impl<'a> ParSystem<'a> for TestSystem {
-            type Views = views!(&'a A);
+        impl ParSystem for TestSystem {
+            type Views<'a> = views!(&'a A);
             type Filter = filter::None;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 result.sort();
@@ -1521,15 +1531,25 @@ mod tests {
     fn par_system_mut_refs() {
         struct TestSystem;
 
-        impl<'a> ParSystem<'a> for TestSystem {
-            type Views = views!(&'a mut B);
+        impl ParSystem for TestSystem {
+            type Views<'a> = views!(&'a mut B);
             type Filter = filter::None;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(b)| b.0).collect::<Vec<_>>();
                 result.sort();
@@ -1552,15 +1572,25 @@ mod tests {
     fn par_system_option_refs() {
         struct TestSystem;
 
-        impl<'a> ParSystem<'a> for TestSystem {
-            type Views = views!(Option<&'a A>);
+        impl ParSystem for TestSystem {
+            type Views<'a> = views!(Option<&'a A>);
             type Filter = filter::None;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results
                     .map(|result!(a)| a.map(|a| a.0))
@@ -1585,15 +1615,25 @@ mod tests {
     fn par_system_option_mut_refs() {
         struct TestSystem;
 
-        impl<'a> ParSystem<'a> for TestSystem {
-            type Views = views!(Option<&'a mut B>);
+        impl ParSystem for TestSystem {
+            type Views<'a> = views!(Option<&'a mut B>);
             type Filter = filter::None;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results
                     .map(|result!(b)| b.map(|b| b.0))
@@ -1620,15 +1660,25 @@ mod tests {
             entity_identifier: entity::Identifier,
         }
 
-        impl<'a> ParSystem<'a> for TestSystem {
-            type Views = views!(entity::Identifier);
+        impl ParSystem for TestSystem {
+            type Views<'a> = views!(entity::Identifier);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let result = query_results
                     .map(|result!(entity_identifier)| entity_identifier)
@@ -1652,15 +1702,25 @@ mod tests {
     fn par_system_has_filter() {
         struct TestSystem;
 
-        impl<'a> ParSystem<'a> for TestSystem {
-            type Views = views!(&'a A);
+        impl ParSystem for TestSystem {
+            type Views<'a> = views!(&'a A);
             type Filter = filter::Has<B>;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![1]);
@@ -1682,15 +1742,25 @@ mod tests {
     fn par_system_not_filter() {
         struct TestSystem;
 
-        impl<'a> ParSystem<'a> for TestSystem {
-            type Views = views!(&'a A);
+        impl ParSystem for TestSystem {
+            type Views<'a> = views!(&'a A);
             type Filter = filter::Not<filter::Has<B>>;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![2]);
@@ -1712,15 +1782,25 @@ mod tests {
     fn par_system_and_filter() {
         struct TestSystem;
 
-        impl<'a> ParSystem<'a> for TestSystem {
-            type Views = views!(&'a A);
+        impl ParSystem for TestSystem {
+            type Views<'a> = views!(&'a A);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![1]);
@@ -1742,15 +1822,25 @@ mod tests {
     fn par_system_or_filter() {
         struct TestSystem;
 
-        impl<'a> ParSystem<'a> for TestSystem {
-            type Views = views!(&'a A);
+        impl ParSystem for TestSystem {
+            type Views<'a> = views!(&'a A);
             type Filter = filter::Or<filter::Has<A>, filter::Has<B>>;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 result.sort();
@@ -1773,15 +1863,15 @@ mod tests {
     fn schedule() {
         struct TestSystem;
 
-        impl<'a> System<'a> for TestSystem {
-            type Views = views!(&'a A);
+        impl System for TestSystem {
+            type Views<'a> = views!(&'a A);
             type Filter = filter::None;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
                 result.sort();
@@ -1791,15 +1881,25 @@ mod tests {
 
         struct TestParSystem;
 
-        impl<'a> ParSystem<'a> for TestParSystem {
-            type Views = views!(&'a mut B);
+        impl ParSystem for TestParSystem {
+            type Views<'a> = views!(&'a mut B);
             type Filter = filter::None;
 
-            fn run<R, FI, VI, P, I, Q>(
+            fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+                query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
             {
                 let mut result = query_results.map(|result!(b)| b.0).collect::<Vec<_>>();
                 result.sort();

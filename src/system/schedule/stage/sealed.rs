@@ -18,9 +18,9 @@ use crate::{
     world::World,
 };
 
-pub trait Sealed<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>: Send
+pub trait Sealed<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>: Send
 where
-    R: Registry + 'a,
+    R: Registry,
 {
     fn run(&mut self, world: SendableWorld<R>);
 
@@ -33,7 +33,7 @@ where
     fn flush(&mut self, world: SendableWorld<R>);
 }
 
-impl<'a, R> Sealed<'a, R, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null
+impl<'a, R> Sealed<R, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null
 where
     R: Registry + 'a,
 {
@@ -76,7 +76,6 @@ impl<
         PQS,
     >
     Sealed<
-        'a,
         R,
         (SFI, SFIS),
         (SVI, SVIS),
@@ -90,12 +89,12 @@ impl<
         (PQ, PQS),
     > for (Stage<S, P>, L)
 where
-    R: ContainsQuery<'a, S::Filter, SFI, S::Views, SVI, SP, SI, SQ>
-        + ContainsParQuery<'a, P::Filter, PFI, P::Views, PVI, PP, PI, PQ>
+    R: ContainsQuery<'a, S::Filter, SFI, S::Views<'a>, SVI, SP, SI, SQ>
+        + ContainsParQuery<'a, P::Filter, PFI, P::Views<'a>, PVI, PP, PI, PQ>
         + 'a,
-    S: System<'a> + Send,
-    P: ParSystem<'a> + Send,
-    L: Sealed<'a, R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS, PQS>,
+    S: System + Send,
+    P: ParSystem + Send,
+    L: Sealed<R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS, PQS>,
 {
     fn run(&mut self, world: SendableWorld<R>) {
         self.defer(world);
