@@ -85,7 +85,7 @@ impl System for UpdatePosition {
 
     fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     where
-        R: ContainsQuery<Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+        R: ContainsQuery<Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     {
         for result!(position, velocity) in query_results {
             position.x += velocity.x;
@@ -191,7 +191,7 @@ impl ParSystem for UpdatePosition {
 
     fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     where
-        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     {
         query_results.for_each(|result!(position, velocity)| {
             position.x += velocity.x;
@@ -248,7 +248,7 @@ impl System for UpdatePosition {
 
     fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     where
-        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     {
         for result!(position, velocity) in query_results {
             position.x += velocity.x;
@@ -265,7 +265,7 @@ impl System for UpdateIsMoving {
 
     fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     where
-        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     {
         for result!(velocity, is_moving) in query_results {
             is_moving.0 = velocity.x != 0.0 || velocity.y != 0.0;
