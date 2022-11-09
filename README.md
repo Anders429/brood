@@ -83,8 +83,10 @@ impl System for UpdatePosition {
     type Filter: filter::None;
     type Views<'a>: views!(&'a mut Position, &'a Velocity);
 
-    fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
-    where
+    fn run<'a, R, FI, VI, P, I, Q>(
+        &mut self,
+        query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
+    ) where
         R: ContainsQuery<Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     {
         for result!(position, velocity) in query_results {
@@ -189,8 +191,10 @@ impl ParSystem for UpdatePosition {
     type Filter: filter::None;
     type Views<'a>: views!(&'a mut Position, &'a Velocity);
 
-    fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
-    where
+    fn run<'a, R, FI, VI, P, I, Q>(
+        &mut self,
+        query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
+    ) where
         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     {
         query_results.for_each(|result!(position, velocity)| {
@@ -246,8 +250,10 @@ impl System for UpdatePosition {
     type Filter: filter::None;
     type Views<'a>: views!(&'a mut Position, &'a Velocity);
 
-    fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
-    where
+    fn run<'a, R, FI, VI, P, I, Q>(
+        &mut self,
+        query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
+    ) where
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     {
         for result!(position, velocity) in query_results {
@@ -263,8 +269,10 @@ impl System for UpdateIsMoving {
     type Filter: filter::None;
     type Views<'a>: views!(&'a Velocity, &'a mut IsMoving);
 
-    fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
-    where
+    fn run<'a, R, FI, VI, P, I, Q>(
+        &mut self,
+        query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
+    ) where
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     {
         for result!(velocity, is_moving) in query_results {
