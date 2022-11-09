@@ -33,9 +33,9 @@ where
     fn flush(&mut self, world: SendableWorld<R>);
 }
 
-impl<'a, R> Sealed<R, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null
+impl<R> Sealed<R, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null
 where
-    R: Registry + 'a,
+    R: Registry,
 {
     fn run(&mut self, _world: SendableWorld<R>) {}
 
@@ -90,8 +90,7 @@ impl<
     > for (Stage<S, P>, L)
 where
     R: ContainsQuery<'a, S::Filter, SFI, S::Views<'a>, SVI, SP, SI, SQ>
-        + ContainsParQuery<'a, P::Filter, PFI, P::Views<'a>, PVI, PP, PI, PQ>
-        + 'a,
+        + ContainsParQuery<'a, P::Filter, PFI, P::Views<'a>, PVI, PP, PI, PQ>,
     S: System + Send,
     P: ParSystem + Send,
     L: Sealed<R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS, PQS>,

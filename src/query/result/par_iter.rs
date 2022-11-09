@@ -128,7 +128,7 @@ unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Sync for ParIter<'a, R, F, FI, V, VI, 
 impl<'a, R, F, FI, V, VI, P, I, Q> ParallelIterator for ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     V: ParViews<'a>,
-    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q> + 'a,
+    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>,
 {
     type Item = <<V as ParViewsSeal<'a>>::ParResults as ParResults>::View;
 

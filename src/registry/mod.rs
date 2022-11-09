@@ -97,7 +97,7 @@ define_null_uninstantiable!();
 ///
 /// [`Component`]: crate::component::Component
 /// [`World`]: crate::World
-pub trait Registry: Sealed {}
+pub trait Registry: Sealed + 'static {}
 
 impl Registry for Null {}
 

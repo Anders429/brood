@@ -35,7 +35,7 @@ impl System for Null {
         &mut self,
         _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ) where
-        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     {
         // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }
@@ -59,7 +59,7 @@ impl ParSystem for Null {
         &mut self,
         _query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ) where
-        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     {
         // SAFETY: This type can never be instantiated. Therefore, this method can never be called.
         unsafe { unreachable_unchecked() }

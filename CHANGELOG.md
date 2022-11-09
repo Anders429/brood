@@ -7,6 +7,8 @@
 - `Send` and `Sync` implementations of `World` now only require the registry to implement `Registry + Send` and `Registry + Sync` respectively.
 - Lifetime in `System` and `ParSystem` traits has been moved to the `Views` associated type.
 - The generic lifetimes on the `system::schedule::RawTask` and `system::Stages` traits have been removed.
+- `Registry` is now explicitly bound to the `static` lifetime. This was previously only implicit, with `Registry`s being made of `Component`s which were bound to `'static`.
+- Both `System` and `ParSystem` no longer require a lifetime bound on the `Registry` `R` in their `run()` methods.
 
 ## 0.3.0 - 2022-10-28
 ### Added
