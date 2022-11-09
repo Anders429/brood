@@ -29,7 +29,7 @@ pub trait Sealed {
     ) -> Self::Stages;
 }
 
-impl<'a> Sealed for Null {
+impl Sealed for Null {
     type Stages = stage::Null;
 
     fn into_stages(
