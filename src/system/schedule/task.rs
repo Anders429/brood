@@ -28,8 +28,7 @@ where
         world: SendableWorld<R>,
     ) where
         R: ContainsQuery<'a, S::Filter, SFI, S::Views<'a>, SVI, SP, SI, SQ>
-            + ContainsParQuery<'a, P::Filter, PFI, P::Views<'a>, PVI, PP, PI, PQ>
-            + 'a,
+            + ContainsParQuery<'a, P::Filter, PFI, P::Views<'a>, PVI, PP, PI, PQ>,
     {
         match self {
             Task::Seq(system) => {

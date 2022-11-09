@@ -46,7 +46,7 @@ use crate::{
 ///         &mut self,
 ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     ) where
-///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     {
 ///         query_results.for_each(|result!(foo, bar)| {
 ///             if bar.0 {
@@ -105,7 +105,7 @@ pub trait ParSystem {
     ///         &mut self,
     ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     ) where
-    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
     ///         query_results.for_each(|result!(foo, bar)| {
     ///             if bar.0 {
@@ -122,7 +122,7 @@ pub trait ParSystem {
         &mut self,
         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ) where
-        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a;
+        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>;
 
     /// Logic to be run after processing.
     ///
@@ -154,7 +154,7 @@ pub trait ParSystem {
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     ///     where
-    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
     ///         self.entities_to_remove = query_results.filter_map(|result!(foo, bar, entity_identifier)| {
     ///             // If `bar` is true, increment `foo`. Otherwise, remove the entity in post processing.

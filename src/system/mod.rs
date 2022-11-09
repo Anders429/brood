@@ -31,7 +31,7 @@
 //!         &mut self,
 //!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 //!     ) where
-//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 //!     {
 //!         for result!(foo, bar) in query_results {
 //!             if bar.0 {
@@ -116,7 +116,7 @@ use crate::{
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     ) where
-///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     {
 ///         for result!(foo, bar) in query_results {
 ///             if bar.0 {
@@ -170,7 +170,7 @@ pub trait System {
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     ) where
-    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
     ///         for result!(foo, bar) in query_results {
     ///             if bar.0 {
@@ -187,7 +187,7 @@ pub trait System {
         &mut self,
         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ) where
-        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a;
+        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>;
 
     /// Logic to be run after processing.
     ///

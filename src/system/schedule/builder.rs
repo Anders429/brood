@@ -60,7 +60,7 @@ use hashbrown::HashSet;
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     ) where
-///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     {
 ///         for result!(foo, bar) in query_results {
 ///             // Do something...
@@ -78,7 +78,7 @@ use hashbrown::HashSet;
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     ) where
-///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     {
 ///         for result!(baz, bar) in query_results {
 ///             // Do something...

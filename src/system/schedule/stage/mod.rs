@@ -56,7 +56,7 @@ where
 define_null!();
 
 impl<'a, R> Stages<R, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null where
-    R: Registry + 'a
+    R: Registry
 {
 }
 
@@ -102,8 +102,7 @@ impl<
     > for (Stage<S, P>, L)
 where
     R: ContainsQuery<'a, S::Filter, SFI, S::Views<'a>, SVI, SP, SI, SQ>
-        + ContainsParQuery<'a, P::Filter, PFI, P::Views<'a>, PVI, PP, PI, PQ>
-        + 'a,
+        + ContainsParQuery<'a, P::Filter, PFI, P::Views<'a>, PVI, PP, PI, PQ>,
     S: System + Send,
     P: ParSystem + Send,
     L: Stages<R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS, PQS>,
@@ -142,7 +141,7 @@ doc::non_root_macro! {
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     ///     where
-    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
     ///         // Operate on result here.
     ///     }
@@ -156,7 +155,7 @@ doc::non_root_macro! {
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     ///     where
-    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
     ///         // Operate on result here.
     ///     }
@@ -373,7 +372,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
                 for result!(a, b) in query_results {
                     core::mem::swap(&mut a.0, &mut b.0);
@@ -391,7 +390,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
                 for result!(c, d) in query_results {
                     core::mem::swap(&mut c.0, &mut d.0);
@@ -409,7 +408,7 @@ mod tests {
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> + 'a,
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
                 for result!(c, e) in query_results {
                     core::mem::swap(&mut c.0, &mut e.0);
