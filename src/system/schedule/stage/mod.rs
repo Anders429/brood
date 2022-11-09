@@ -46,16 +46,16 @@ pub enum Stage<S, P> {
 /// The ordered `Stage`s provided here define the actual stages of the schedule. Note that the
 /// stages are defined inside-out, with the last of the heterogeneous list being the beginning of
 /// the list of stages.
-pub trait Stages<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>:
-    Sealed<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>
+pub trait Stages<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>:
+    Sealed<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>
 where
-    R: Registry + 'a,
+    R: Registry,
 {
 }
 
 define_null!();
 
-impl<'a, R> Stages<'a, R, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null where
+impl<'a, R> Stages<R, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null> for Null where
     R: Registry + 'a
 {
 }
@@ -88,7 +88,6 @@ impl<
         PQS,
     >
     Stages<
-        'a,
         R,
         (SFI, SFIS),
         (SVI, SVIS),
@@ -107,7 +106,7 @@ where
         + 'a,
     S: System + Send,
     P: ParSystem + Send,
-    L: Stages<'a, R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS, PQS>,
+    L: Stages<R, SFIS, SVIS, PFIS, PVIS, SPS, SIS, SQS, PPS, PIS, PQS>,
 {
 }
 

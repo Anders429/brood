@@ -546,11 +546,11 @@ where
     /// [`Schedule`]: crate::system::Schedule
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub fn run_schedule<'a, S, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>(
-        &'a mut self,
+    pub fn run_schedule<S, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>(
+        &mut self,
         schedule: &mut Schedule<S>,
     ) where
-        S: Stages<'a, R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>,
+        S: Stages<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>,
     {
         schedule.run(self);
     }
