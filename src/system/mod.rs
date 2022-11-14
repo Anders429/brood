@@ -52,6 +52,9 @@
 #[cfg(feature = "rayon")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub mod schedule;
+#[cfg(feature = "rayon")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+pub mod schedule2;
 
 mod null;
 #[cfg(feature = "rayon")]
