@@ -1,20 +1,30 @@
 use crate::{
     hlist::define_null,
-    system::schedule::{Task, sendable::SendableWorld},
     registry::Registry,
+    system::schedule::{
+        sendable::SendableWorld,
+        Task,
+    },
 };
 
 define_null!();
 
-pub trait Stage<'a, R, FI, VI, P, I, Q>: Send where R: Registry {
+pub trait Stage<'a, R, FI, VI, P, I, Q>: Send
+where
+    R: Registry,
+{
     fn run(&mut self, world: SendableWorld<R>);
 }
 
-impl<R> Stage<'_, R, Null, Null, Null, Null, Null> for Null where R: Registry {
+impl<R> Stage<'_, R, Null, Null, Null, Null, Null> for Null
+where
+    R: Registry,
+{
     fn run(&mut self, world: SendableWorld<R>) {}
 }
 
-impl<'a, R, T, U, FI, FIS, VI, VIS, P, PS, I, IS, Q, QS> Stage<'a, R, (FI, FIS), (VI, VIS), (P, PS), (I, IS), (Q, QS)> for (&mut T, U)
+impl<'a, R, T, U, FI, FIS, VI, VIS, P, PS, I, IS, Q, QS>
+    Stage<'a, R, (FI, FIS), (VI, VIS), (P, PS), (I, IS), (Q, QS)> for (&mut T, U)
 where
     R: Registry,
     T: Task<'a, R, FI, VI, P, I, Q> + Send,
@@ -22,10 +32,11 @@ where
 {
     fn run(&mut self, world: SendableWorld<R>) {
         rayon::join(
-            // Continue scheduling tasks. Note that the first closure is executed on the current thread.
-            || {self.1.run(world)},
+            // Continue scheduling tasks. Note that the first closure is executed on the current
+            // thread.
+            || self.1.run(world),
             // Execute the current task.
-            || {self.0.run(world)},
+            || self.0.run(world),
         );
     }
 }
