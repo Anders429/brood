@@ -43,6 +43,7 @@ use crate::{
     registry::ContainsParQuery,
     system::{
         schedule::stage::Stages,
+        schedule2::Stages as Stages2,
         ParSystem,
         Schedule,
     },
@@ -553,6 +554,15 @@ where
         S: Stages<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>,
     {
         schedule.run(self);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    pub fn run_schedule2<'a, S, I, P, RI, SFI, SVI, SP, SI, SQ>(&mut self, schedule: &'a mut S)
+    where
+        S: crate::system::schedule2::Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>,
+    {
+        schedule.as_stages().run(self);
     }
 
     /// Returns `true` if the world contains an entity identified by `entity_identifier`.

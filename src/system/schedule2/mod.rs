@@ -5,26 +5,28 @@ pub mod task;
 mod claim;
 mod scheduler;
 mod sealed;
+mod sendable;
 mod stager;
 
+#[doc(inline)]
+pub use stage::Stage;
+#[doc(inline)]
+pub use stages::Stages;
+#[doc(inline)]
+pub use task::Task;
+
+use crate::registry::Registry;
 use scheduler::Scheduler;
 use sealed::Sealed;
 use stager::Stager;
 
-pub trait Schedule<'a, R, I, P, RI>: Sealed<'a, R, I, P, RI> {
-    type Stages;
-}
+pub trait Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>: Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ> where R: Registry {}
 
-impl<'a, R, T, I, P, RI> Schedule<'a, R, I, P, RI> for T
-where
-    T: Sealed<'a, R, I, P, RI>,
-{
-    type Stages = <T as Sealed<'a, R, I, P, RI>>::Stages;
-}
+impl<'a, R, T, I, P, RI, SFI, SVI, SP, SI, SQ> Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ> for T where R: Registry, T: Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ> {}
 
 #[cfg(test)]
 mod tests {
-    use super::Schedule;
+    use super::Sealed as Schedule;
     use crate::{
         query::{
             filter,
@@ -116,7 +118,7 @@ mod tests {
             <(
                 task::System<AB>,
                 (task::System<CD>, (task::System<CE>, task::Null))
-            ) as Schedule<'_, Registry, _, _, _>>::Stages,
+            ) as Schedule<'_, Registry, _, _, _, _, _, _, _, _>>::Stages,
         >());
         // MyTasks::stages(Null);
 
