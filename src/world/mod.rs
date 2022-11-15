@@ -778,9 +778,9 @@ where
 mod tests {
     use super::*;
     #[cfg(feature = "rayon")]
-    use crate::system::schedule::{
+    use crate::system::{
         schedule,
-        task,
+        schedule::task,
     };
     use crate::{
         entities,

@@ -60,7 +60,10 @@ mod par;
 pub use par::ParSystem;
 #[cfg(feature = "rayon")]
 #[doc(inline)]
-pub use schedule::Schedule;
+pub use schedule::{
+    schedule,
+    Schedule,
+};
 
 use crate::{
     query::{
