@@ -42,8 +42,7 @@ use crate::{
     query::view::ParViews,
     registry::ContainsParQuery,
     system::{
-        schedule::stage::Stages,
-        schedule2::Stages as Stages2,
+        schedule2::Stages,
         ParSystem,
         Schedule,
     },
@@ -487,6 +486,10 @@ where
     ///     registry,
     ///     registry::ContainsQuery,
     ///     system::{
+    ///         schedule2::{
+    ///             schedule,
+    ///             task,
+    ///         },
     ///         Schedule,
     ///         System,
     ///     },
@@ -536,7 +539,7 @@ where
     /// }
     ///
     /// // Define schedule.
-    /// let mut schedule = Schedule::builder().system(SystemA).system(SystemB).build();
+    /// let mut schedule = schedule!(task::System(SystemA), task::System(SystemB));
     ///
     /// let mut world = World::<MyRegistry>::new();
     /// world.insert(entity!(Foo(42), Bar(100)));
@@ -547,18 +550,7 @@ where
     /// [`Schedule`]: crate::system::Schedule
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub fn run_schedule<S, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>(
-        &mut self,
-        schedule: &mut Schedule<S>,
-    ) where
-        S: Stages<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>,
-    {
-        schedule.run(self);
-    }
-
-    #[cfg(feature = "rayon")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub fn run_schedule2<'a, S, I, P, RI, SFI, SVI, SP, SI, SQ>(&mut self, schedule: &'a mut S)
+    pub fn run_schedule<'a, S, I, P, RI, SFI, SVI, SP, SI, SQ>(&mut self, schedule: &'a mut S)
     where
         S: crate::system::schedule2::Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>,
     {
@@ -795,6 +787,8 @@ mod tests {
         },
         registry,
     };
+    #[cfg(feature = "rayon")]
+    use crate::system::schedule2::{task, schedule};
     use alloc::vec;
     use claims::{
         assert_none,
@@ -1924,10 +1918,7 @@ mod tests {
         world.insert(entity!(B('b')));
         world.insert(entity!());
 
-        let mut schedule = Schedule::builder()
-            .system(TestSystem)
-            .par_system(TestParSystem)
-            .build();
+        let mut schedule = schedule!(task::System(TestSystem), task::ParSystem(TestParSystem));
 
         world.run_schedule(&mut schedule);
     }

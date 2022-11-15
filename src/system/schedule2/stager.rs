@@ -20,7 +20,7 @@ use crate::{
 define_null!();
 
 pub trait Stager<'a, R, C, I, P, RI, SFI, SVI, SP, SI, SQ> where R: Registry {
-    type Stage: Stage<R, SFI, SVI, SP, SI, SQ>;
+    type Stage: Stage<'a, R, SFI, SVI, SP, SI, SQ>;
     type Remainder;
 
     fn extract_stage(&'a mut self) -> (Self::Stage, &'a mut Self::Remainder);
@@ -149,7 +149,7 @@ where
 }
 
 pub trait Cutoff<'a, R, D, C, I, P, RI, SFI, SVI, SP, SI, SQ> where R: Registry {
-    type Stage: Stage<R, SFI, SVI, SP, SI, SQ>;
+    type Stage: Stage<'a, R, SFI, SVI, SP, SI, SQ>;
     type Remainder;
 
     fn cutoff_stage(&'a mut self) -> (Self::Stage, &'a mut Self::Remainder);
@@ -172,7 +172,7 @@ where
 impl<'a, R, T, U, C, I, P, RI, SFI, SFIS, SVI, SVIS, SP, SPS, SI, SIS, SQ, SQS> Cutoff<'a, R, decision::Append, C, I, P, RI, (SFI, SFIS), (SVI, SVIS), (SP, SPS), (SI, SIS), (SQ, SQS)> for (T, U)
 where
     R: Registry,
-    T: Task<R, SFI, SVI, SP, SI, SQ> + Send + 'a,
+    T: Task<'a, R, SFI, SVI, SP, SI, SQ> + Send + 'a,
     U: Stager<'a, R, C, I, P, RI, SFIS, SVIS, SPS, SIS, SQS>,
 {
     type Stage = (&'a mut T, <U as Stager<'a, R, C, I, P, RI, SFIS, SVIS, SPS, SIS, SQS>>::Stage);

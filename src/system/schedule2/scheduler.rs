@@ -13,7 +13,7 @@ use crate::{
 define_null!();
 
 pub trait Scheduler<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ> where R: Registry {
-    type Stages: Stages<R, SFI, SVI, SP, SI, SQ>;
+    type Stages: Stages<'a, R, SFI, SVI, SP, SI, SQ>;
 
     fn as_stages(&'a mut self) -> Self::Stages;
 }

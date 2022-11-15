@@ -7,19 +7,19 @@ use crate::{
 
 define_null!();
 
-pub trait Stages<R, FI, VI, P, I, Q> where R: Registry {
+pub trait Stages<'a, R, FI, VI, P, I, Q> where R: Registry {
     fn run(&mut self, world: &mut World<R>);
 }
 
-impl<R> Stages<R, Null, Null, Null, Null, Null> for Null where R: Registry {
+impl<R> Stages<'_, R, Null, Null, Null, Null, Null> for Null where R: Registry {
     fn run(&mut self, _world: &mut World<R>) {}
 }
 
-impl<R, T, U, FI, FIS, VI, VIS, P, PS, I, IS, Q, QS> Stages<R, (FI, FIS), (VI, VIS), (P, PS), (I, IS), (Q, QS)> for (T, U)
+impl<'a, R, T, U, FI, FIS, VI, VIS, P, PS, I, IS, Q, QS> Stages<'a, R, (FI, FIS), (VI, VIS), (P, PS), (I, IS), (Q, QS)> for (T, U)
 where
     R: Registry,
-    T: Stage<R, FI, VI, P, I, Q>,
-    U: Stages<R, FIS, VIS, PS, IS, QS>,
+    T: Stage<'a, R, FI, VI, P, I, Q>,
+    U: Stages<'a, R, FIS, VIS, PS, IS, QS>,
 {
     fn run(&mut self, world: &mut World<R>) {
         // Each stage is run sequentially. The tasks within a stage are parallelized.
