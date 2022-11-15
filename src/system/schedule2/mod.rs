@@ -15,7 +15,7 @@ pub use stages::Stages;
 #[doc(inline)]
 pub use task::Task;
 
-use crate::registry::Registry;
+use crate::{doc, registry::Registry};
 use scheduler::Scheduler;
 use sealed::Sealed;
 use stager::Stager;
@@ -23,6 +23,17 @@ use stager::Stager;
 pub trait Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>: Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ> where R: Registry {}
 
 impl<'a, R, T, I, P, RI, SFI, SVI, SP, SI, SQ> Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ> for T where R: Registry, T: Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ> {}
+
+doc::non_root_macro! {
+    macro_rules! schedule {
+        ($task:expr $(,$tasks:expr)* $(,)?) => (
+            ($task, $crate::system::schedule2::schedule!($($tasks,)*))
+        );
+        () => (
+            $crate::system::schedule2::task::Null
+        );
+    }
+}
 
 #[cfg(test)]
 mod tests {
