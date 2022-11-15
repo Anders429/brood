@@ -2,7 +2,7 @@ use crate::{
     entity,
     hlist::define_null,
     query::view,
-    system::schedule2::claim::{
+    system::schedule::claim::{
         decision,
         get::{
             registry,

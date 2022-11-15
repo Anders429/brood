@@ -1,9 +1,15 @@
-use crate::{registry::Registry, system::schedule2::{
-    Scheduler,
-    Stages,
-}};
+use crate::{
+    registry::Registry,
+    system::schedule::{
+        Scheduler,
+        Stages,
+    },
+};
 
-pub trait Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ> where R: Registry {
+pub trait Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>
+where
+    R: Registry,
+{
     type Stages: Stages<'a, R, SFI, SVI, SP, SI, SQ>;
 
     fn as_stages(&'a mut self) -> Self::Stages;

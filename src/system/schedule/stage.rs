@@ -1,6 +1,6 @@
 use crate::{
     hlist::define_null,
-    system::schedule2::{Task, sendable::SendableWorld},
+    system::schedule::{Task, sendable::SendableWorld},
     registry::Registry,
 };
 

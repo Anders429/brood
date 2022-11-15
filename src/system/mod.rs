@@ -52,15 +52,10 @@
 #[cfg(feature = "rayon")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub mod schedule;
-#[cfg(feature = "rayon")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-pub mod schedule2;
 
-mod null;
 #[cfg(feature = "rayon")]
 mod par;
 
-pub use null::Null;
 #[cfg(feature = "rayon")]
 pub use par::ParSystem;
 #[cfg(feature = "rayon")]

@@ -42,7 +42,7 @@ use crate::{
     query::view::ParViews,
     registry::ContainsParQuery,
     system::{
-        schedule2::Stages,
+        schedule::Stages,
         ParSystem,
         Schedule,
     },
@@ -552,7 +552,7 @@ where
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub fn run_schedule<'a, S, I, P, RI, SFI, SVI, SP, SI, SQ>(&mut self, schedule: &'a mut S)
     where
-        S: crate::system::schedule2::Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>,
+        S: Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>,
     {
         schedule.as_stages().run(self);
     }
@@ -777,6 +777,11 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "rayon")]
+    use crate::system::schedule::{
+        schedule,
+        task,
+    };
     use crate::{
         entities,
         entity,
@@ -787,8 +792,6 @@ mod tests {
         },
         registry,
     };
-    #[cfg(feature = "rayon")]
-    use crate::system::schedule2::{task, schedule};
     use alloc::vec;
     use claims::{
         assert_none,
