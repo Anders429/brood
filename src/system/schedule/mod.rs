@@ -1,19 +1,14 @@
-pub mod stage;
-pub mod stages;
 pub mod task;
 
 mod claim;
 mod scheduler;
 mod sealed;
 mod sendable;
+mod stage;
 mod stager;
+mod stages;
 
-#[doc(inline)]
-pub use stage::Stage;
-#[doc(inline)]
-pub use stages::Stages;
-#[doc(inline)]
-pub use task::Task;
+pub(crate) use stages::Stages;
 
 use crate::{
     doc,
@@ -21,7 +16,9 @@ use crate::{
 };
 use scheduler::Scheduler;
 use sealed::Sealed;
+use stage::Stage;
 use stager::Stager;
+use task::Task;
 
 pub trait Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>:
     Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>

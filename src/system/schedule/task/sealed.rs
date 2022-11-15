@@ -1,5 +1,8 @@
+use super::{
+    ParSystem,
+    System,
+};
 use crate::{
-    hlist::define_null,
     query::Query,
     registry::{
         ContainsParQuery,
@@ -10,16 +13,12 @@ use crate::{
     system::schedule::sendable::SendableWorld,
 };
 
-define_null!();
-
 pub trait Task<'a, R, SFI, SVI, SP, SI, SQ>
 where
     R: Registry,
 {
     fn run(&mut self, world: SendableWorld<R>);
 }
-
-pub struct System<S>(pub S);
 
 impl<'a, R, S, SFI, SVI, SP, SI, SQ> Task<'a, R, SFI, SVI, SP, SI, SQ> for System<S>
 where
@@ -35,8 +34,6 @@ where
         self.0.run(result);
     }
 }
-
-pub struct ParSystem<P>(pub P);
 
 impl<'a, P, R, SFI, SVI, SP, SI, SQ> Task<'a, R, SFI, SVI, SP, SI, SQ> for ParSystem<P>
 where

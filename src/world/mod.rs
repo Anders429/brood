@@ -486,10 +486,8 @@ where
     ///     registry,
     ///     registry::ContainsQuery,
     ///     system::{
-    ///         schedule2::{
-    ///             schedule,
-    ///             task,
-    ///         },
+    ///         schedule,
+    ///         schedule::task,
     ///         Schedule,
     ///         System,
     ///     },
