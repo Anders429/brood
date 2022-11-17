@@ -62,7 +62,7 @@ where
     (T, U): Stager<'a, R, claim::Null, I, P, RI, SFI, SVI, SP, SI, SQ>,
     <(T, U) as Stager<'a, R, claim::Null, I, P, RI, SFI, SVI, SP, SI, SQ>>::Remainder:
         Scheduler<'a, R, IS, PS, RIS, SFIS, SVIS, SPS, SIS, SQS>,
-    R: 'a,
+    R: Registry + 'a,
     I: 'a,
     P: 'a,
     RI: 'a,
@@ -71,7 +71,6 @@ where
     SP: 'a,
     SI: 'a,
     SQ: 'a,
-    R: Registry,
 {
     type Stages = (
         <(T, U) as Stager<'a, R, claim::Null, I, P, RI, SFI, SVI, SP, SI, SQ>>::Stage,

@@ -20,7 +20,7 @@ impl<R> Stage<'_, R, Null, Null, Null, Null, Null> for Null
 where
     R: Registry,
 {
-    fn run(&mut self, world: SendableWorld<R>) {}
+    fn run(&mut self, _world: SendableWorld<R>) {}
 }
 
 impl<'a, R, T, U, FI, FIS, VI, VIS, P, PS, I, IS, Q, QS>

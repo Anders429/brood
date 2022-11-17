@@ -1,5 +1,3 @@
-use crate::registry;
-
 pub struct Index;
 
 pub trait Get<T, I> {
