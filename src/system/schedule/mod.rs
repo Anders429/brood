@@ -95,6 +95,18 @@ use stage::Stage;
 use stager::Stager;
 use task::Task;
 
+/// A list of tasks, scheduled to run in stages.
+/// 
+/// This is a heterogeneous list of [`System`]s and [`ParSystem`]s. Stages are created at compile
+/// time based on the [`Views`] of each system, ensuring the borrows will follow Rust's borrowing
+/// rules.
+/// 
+/// The easiest way to create a `Schedule` is by using the [`schedule!`] macro.
+/// 
+/// [`ParSystem`]: crate::system::ParSystem
+/// [`schedule!`]: crate::system::schedule!
+/// [`System`]: crate::system::System
+/// [`Views`]: crate::query::Views
 pub trait Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>:
     Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>
 where
@@ -110,6 +122,74 @@ where
 }
 
 doc::non_root_macro! {
+    /// Macro for defining a heterogeneous list of tasks.
+    /// 
+    /// Note that this is a list of tasks, not systems. Specifically, this is a list of
+    /// [`task::System`]s and [`task::ParSystem`]s.
+    /// 
+    /// # Example
+    /// ``` rust
+    /// use brood::{
+    ///     query::{
+    ///         filter,
+    ///         filter::Filter,
+    ///         result,
+    ///         views,
+    ///     },
+    ///     registry::{
+    ///         ContainsParQuery,
+    ///         ContainsQuery,
+    ///     },
+    ///     system::{
+    ///         schedule,
+    ///         schedule::task,
+    ///         ParSystem,
+    ///         System,
+    ///     },
+    /// };
+    ///
+    /// // Define components.
+    /// struct Foo(usize);
+    /// struct Bar(bool);
+    /// struct Baz(f64);
+    ///
+    /// struct SystemA;
+    ///
+    /// impl System for SystemA {
+    ///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
+    ///     type Filter = filter::None;
+    ///
+    ///     fn run<'a, R, FI, VI, P, I, Q>(
+    ///         &mut self,
+    ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///     ) where
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///     {
+    ///         // Do something..
+    ///     }
+    /// }
+    ///
+    /// struct SystemB;
+    ///
+    /// impl ParSystem for SystemB {
+    ///     type Views<'a> = views!(&'a mut Baz, &'a Bar);
+    ///     type Filter = filter::None;
+    ///
+    ///     fn run<'a, R, FI, VI, P, I, Q>(
+    ///         &mut self,
+    ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///     ) where
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///     {
+    ///         // Do something..
+    ///     }
+    /// }
+    ///
+    /// let schedule = schedule!(task::System(SystemA), task::System(SystemB));
+    /// ```
+    /// 
+    /// [`task::ParSystem`]: crate::system::schedule::task::ParSystem
+    /// [`task::System`]: crate::system::schedule::task::System
     macro_rules! schedule {
         ($task:expr $(,$tasks:expr)* $(,)?) => (
             ($task, $crate::system::schedule::schedule!($($tasks,)*))
