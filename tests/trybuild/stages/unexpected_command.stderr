@@ -1,5 +1,0 @@
-error: no rules expected the token `unexpected`
- --> tests/trybuild/stages/unexpected_command.rs:4:5
-  |
-4 |     unexpected,
-  |     ^^^^^^^^^^ no rules expected this token in macro call

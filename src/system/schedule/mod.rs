@@ -1,14 +1,12 @@
-//! A list of [`System`]s to be run in stages.
+//! A list of [`System`]s and [`ParSystem`]s to be run in stages.
 //!
-//! [`Schedule`]s are created using a builder pattern. `System`s are provided in the desired order
-//! they are to be run, and the stages in which those `System`s are run is automatically derived.
-//!
-//! The advantage of defining a `Schedule` is that `System`s are allowed to be run in parallel as
-//! long as their [`Views`] can be borrowed simultaneously.
+//! Stages are scheduled depending on the order in which the `System`s are provided. A [`Schedule`]
+//! will proceed through its tasks in order and run as many of them as possible in parallel.
+//! `System`s can run in parallel as long as their [`Views`] can be borrowed simulatenously.
 //!
 //! # Example
-//! The below example will execute both `SystemA` and `SystemB` in parallel, since their views can
-//! be borrowed simultaneously.
+//! The below example will define a schedule that will execute both `SystemA` and `SystemB` in
+//! parallel, since their views can be borrowed simultaneously.
 //!
 //! ``` rust
 //! use brood::{
@@ -20,7 +18,8 @@
 //!     },
 //!     registry::ContainsQuery,
 //!     system::{
-//!         Schedule,
+//!         schedule,
+//!         schedule::task,
 //!         System,
 //!     },
 //! };
@@ -66,139 +65,678 @@
 //!     }
 //! }
 //!
-//! let schedule = Schedule::builder().system(SystemA).system(SystemB).build();
+//! let schedule = schedule!(task::System(SystemA), task::System(SystemB));
 //! ```
 //!
-//! [`Schedule`]: crate::system::schedule::Schedule
+//! [`ParSystem`]: crate::system::ParSystem
+//! [`Schedule`]: crate::system::Schedule
 //! [`System`]: crate::system::System
 //! [`Views`]: crate::query::view::Views
 
-pub mod raw_task;
-pub mod stage;
+pub mod task;
 
-pub(crate) mod task;
-
+mod claim;
+mod scheduler;
+mod sealed;
 mod sendable;
+mod stage;
+mod stager;
+mod stages;
 
-mod builder;
-
-pub use builder::Builder;
-pub use stage::stages;
+pub(crate) use stages::Stages;
 
 use crate::{
+    doc,
     registry::Registry,
-    world::World,
 };
-use sendable::SendableWorld;
-use stage::Stages;
+use scheduler::Scheduler;
+use sealed::Sealed;
+use stage::Stage;
+use stager::Stager;
+use task::Task;
 
-/// A list of [`System`]s to be run in stages.
+/// A list of tasks, scheduled to run in stages.
 ///
-/// The `System`s that make up a `Schedule` are organized into [`Stages`] on creation. `System`s
-/// that can be run in parallel are done so. See the documentation for the [`schedule::Builder`]
-/// for more information about creating a `Schedule`.
+/// This is a heterogeneous list of [`System`]s and [`ParSystem`]s. Stages are created at compile
+/// time based on the [`Views`] of each system, ensuring the borrows will follow Rust's borrowing
+/// rules.
 ///
-/// # Example
-/// The below example will execute both `SystemA` and `SystemB` in parallel, since their views can
-/// be borrowed simultaneously.
+/// The easiest way to create a `Schedule` is by using the [`schedule!`] macro.
 ///
-/// ``` rust
-/// use brood::{
-///     query::{
-///         filter,
-///         filter::Filter,
-///         result,
-///         views,
-///     },
-///     registry::ContainsQuery,
-///     system::{
-///         Schedule,
-///         System,
-///     },
-/// };
-///
-/// // Define components.
-/// struct Foo(usize);
-/// struct Bar(bool);
-/// struct Baz(f64);
-///
-/// struct SystemA;
-///
-/// impl System for SystemA {
-///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
-///     type Filter = filter::None;
-///
-///     fn run<'a, R, FI, VI, P, I, Q>(
-///         &mut self,
-///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-///     ) where
-///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-///     {
-///         for result!(foo, bar) in query_results {
-///             // Do something...
-///         }
-///     }
-/// }
-///
-/// struct SystemB;
-///
-/// impl System for SystemB {
-///     type Views<'a> = views!(&'a mut Baz, &'a Bar);
-///     type Filter = filter::None;
-///
-///     fn run<'a, R, FI, VI, P, I, Q>(
-///         &mut self,
-///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-///     ) where
-///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-///     {
-///         for result!(baz, bar) in query_results {
-///             // Do something...
-///         }
-///     }
-/// }
-///
-/// let schedule = Schedule::builder().system(SystemA).system(SystemB).build();
-/// ```
-///
-/// [`schedule::Builder`]: crate::system::schedule::Builder
-/// [`Stages`]: crate::system::schedule::stage::Stages
+/// [`ParSystem`]: crate::system::ParSystem
+/// [`schedule!`]: crate::system::schedule!
 /// [`System`]: crate::system::System
-#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-pub struct Schedule<S> {
-    stages: S,
+/// [`Views`]: crate::query::view::Views
+pub trait Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>:
+    Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>
+where
+    R: Registry,
+{
 }
 
-impl Schedule<stage::Null> {
-    /// Creates a [`schedule::Builder`] to construct a new `Schedule`.
+impl<'a, R, T, I, P, RI, SFI, SVI, SP, SI, SQ> Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ> for T
+where
+    R: Registry,
+    T: Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>,
+{
+}
+
+doc::non_root_macro! {
+    /// Macro for defining a heterogeneous list of tasks.
+    ///
+    /// Note that this is a list of tasks, not systems. Specifically, this is a list of
+    /// [`task::System`]s and [`task::ParSystem`]s.
     ///
     /// # Example
     /// ``` rust
-    /// use brood::system::Schedule;
+    /// use brood::{
+    ///     query::{
+    ///         filter,
+    ///         filter::Filter,
+    ///         result,
+    ///         views,
+    ///     },
+    ///     registry::{
+    ///         ContainsParQuery,
+    ///         ContainsQuery,
+    ///     },
+    ///     system::{
+    ///         schedule,
+    ///         schedule::task,
+    ///         ParSystem,
+    ///         System,
+    ///     },
+    /// };
     ///
-    /// let builder = Schedule::builder();
-    /// // Add systems to the builder.
-    /// let schedule = builder.build();
+    /// // Define components.
+    /// struct Foo(usize);
+    /// struct Bar(bool);
+    /// struct Baz(f64);
+    ///
+    /// struct SystemA;
+    ///
+    /// impl System for SystemA {
+    ///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
+    ///     type Filter = filter::None;
+    ///
+    ///     fn run<'a, R, FI, VI, P, I, Q>(
+    ///         &mut self,
+    ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///     ) where
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///     {
+    ///         // Do something..
+    ///     }
+    /// }
+    ///
+    /// struct SystemB;
+    ///
+    /// impl ParSystem for SystemB {
+    ///     type Views<'a> = views!(&'a mut Baz, &'a Bar);
+    ///     type Filter = filter::None;
+    ///
+    ///     fn run<'a, R, FI, VI, P, I, Q>(
+    ///         &mut self,
+    ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///     ) where
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///     {
+    ///         // Do something..
+    ///     }
+    /// }
+    ///
+    /// let schedule = schedule!(task::System(SystemA), task::System(SystemB));
     /// ```
     ///
-    /// [`schedule::Builder`]: crate::system::schedule::Builder
-    #[must_use]
-    pub fn builder() -> Builder<raw_task::Null> {
-        Builder::new()
+    /// [`task::ParSystem`]: crate::system::schedule::task::ParSystem
+    /// [`task::System`]: crate::system::schedule::task::System
+    macro_rules! schedule {
+        ($task:expr $(,$tasks:expr)* $(,)?) => (
+            ($task, $crate::system::schedule::schedule!($($tasks,)*))
+        );
+        () => (
+            $crate::system::schedule::task::Null
+        );
     }
 }
 
-impl<S> Schedule<S> {
-    pub(crate) fn run<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>(
-        &mut self,
-        world: &mut World<R>,
-    ) where
-        R: Registry,
-        S: Stages<R, SFI, SVI, PFI, PVI, SP, SI, SQ, PP, PI, PQ>,
-    {
-        self.stages.run(
-            // SAFETY: The pointer provided here is unique, being created from a mutable reference.
-            unsafe { SendableWorld::new(world) },
+#[cfg(test)]
+mod tests {
+    use super::Sealed as Schedule;
+    use crate::{
+        entity,
+        query::{
+            filter,
+            result,
+            views,
+        },
+        registry,
+        registry::{
+            ContainsParQuery,
+            ContainsQuery,
+        },
+        system,
+        system::{
+            schedule::{
+                stage,
+                stages,
+                task,
+            },
+            ParSystem,
+            System,
+        },
+    };
+    use core::any::TypeId;
+
+    struct A;
+    struct B;
+    struct C;
+    struct D;
+    struct E;
+
+    type Registry = registry!(A, B, C, D, E);
+
+    #[test]
+    fn null() {
+        assert_eq!(
+            TypeId::of::<<task::Null as Schedule<'_, Registry, _, _, _, _, _, _, _, _>>::Stages>(),
+            TypeId::of::<stages::Null>()
+        );
+    }
+
+    #[test]
+    fn single_system_immut_a() {
+        struct ImmutA;
+
+        impl System for ImmutA {
+            type Views<'a> = views!(&'a A);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unreachable!()
+            }
+        }
+
+        assert_eq!(
+            TypeId::of::<
+                <(task::System<ImmutA>, task::Null) as Schedule<
+                    '_,
+                    Registry,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<((&mut task::System<ImmutA>, stage::Null), stages::Null)>()
+        );
+    }
+
+    #[test]
+    fn single_system_mut_a() {
+        struct MutA;
+
+        impl System for MutA {
+            type Views<'a> = views!(&'a mut A);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unreachable!()
+            }
+        }
+
+        assert_eq!(
+            TypeId::of::<
+                <(task::System<MutA>, task::Null) as Schedule<
+                    '_,
+                    Registry,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<((&mut task::System<MutA>, stage::Null), stages::Null)>()
+        );
+    }
+
+    #[test]
+    fn single_system_option_immut_a() {
+        struct OptionImmutA;
+
+        impl System for OptionImmutA {
+            type Views<'a> = views!(Option<&'a A>);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unreachable!()
+            }
+        }
+
+        assert_eq!(
+            TypeId::of::<
+                <(task::System<OptionImmutA>, task::Null) as Schedule<
+                    '_,
+                    Registry,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<((&mut task::System<OptionImmutA>, stage::Null), stages::Null)>()
+        );
+    }
+
+    #[test]
+    fn single_system_option_mut_a() {
+        struct OptionMutA;
+
+        impl System for OptionMutA {
+            type Views<'a> = views!(Option<&'a mut A>);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unreachable!()
+            }
+        }
+
+        assert_eq!(
+            TypeId::of::<
+                <(task::System<OptionMutA>, task::Null) as Schedule<
+                    '_,
+                    Registry,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<((&mut task::System<OptionMutA>, stage::Null), stages::Null)>()
+        );
+    }
+
+    #[test]
+    fn single_system_entity_identifier() {
+        struct EntityIdentifier;
+
+        impl System for EntityIdentifier {
+            type Views<'a> = views!(entity::Identifier);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unreachable!()
+            }
+        }
+
+        assert_eq!(
+            TypeId::of::<
+                <(task::System<EntityIdentifier>, task::Null) as Schedule<
+                    '_,
+                    Registry,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<(
+                (&mut task::System<EntityIdentifier>, stage::Null),
+                stages::Null
+            )>()
+        );
+    }
+
+    #[test]
+    fn single_par_system_immut_a() {
+        struct ImmutA;
+
+        impl ParSystem for ImmutA {
+            type Views<'a> = views!(&'a A);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
+            ) where
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unreachable!()
+            }
+        }
+
+        assert_eq!(
+            TypeId::of::<
+                <(task::ParSystem<ImmutA>, task::Null) as Schedule<
+                    '_,
+                    Registry,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<((&mut task::ParSystem<ImmutA>, stage::Null), stages::Null)>()
+        );
+    }
+
+    #[test]
+    fn single_par_system_mut_a() {
+        struct MutA;
+
+        impl ParSystem for MutA {
+            type Views<'a> = views!(&'a mut A);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
+            ) where
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unreachable!()
+            }
+        }
+
+        assert_eq!(
+            TypeId::of::<
+                <(task::ParSystem<MutA>, task::Null) as Schedule<
+                    '_,
+                    Registry,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<((&mut task::ParSystem<MutA>, stage::Null), stages::Null)>()
+        );
+    }
+
+    #[test]
+    fn single_par_system_option_immut_a() {
+        struct OptionImmutA;
+
+        impl ParSystem for OptionImmutA {
+            type Views<'a> = views!(Option<&'a A>);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
+            ) where
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unreachable!()
+            }
+        }
+
+        assert_eq!(
+            TypeId::of::<
+                <(task::ParSystem<OptionImmutA>, task::Null) as Schedule<
+                    '_,
+                    Registry,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<(
+                (&mut task::ParSystem<OptionImmutA>, stage::Null),
+                stages::Null
+            )>()
+        );
+    }
+
+    #[test]
+    fn single_par_system_option_mut_a() {
+        struct OptionMutA;
+
+        impl ParSystem for OptionMutA {
+            type Views<'a> = views!(Option<&'a mut A>);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
+            ) where
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unreachable!()
+            }
+        }
+
+        assert_eq!(
+            TypeId::of::<
+                <(task::ParSystem<OptionMutA>, task::Null) as Schedule<
+                    '_,
+                    Registry,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<(
+                (&mut task::ParSystem<OptionMutA>, stage::Null),
+                stages::Null
+            )>()
+        );
+    }
+
+    #[test]
+    fn single_par_system_entity_identifier() {
+        struct EntityIdentifier;
+
+        impl ParSystem for EntityIdentifier {
+            type Views<'a> = views!(entity::Identifier);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
+            ) where
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unreachable!()
+            }
+        }
+
+        assert_eq!(
+            TypeId::of::<
+                <(task::ParSystem<EntityIdentifier>, task::Null) as Schedule<
+                    '_,
+                    Registry,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<(
+                (&mut task::ParSystem<EntityIdentifier>, stage::Null),
+                stages::Null
+            )>()
+        );
+    }
+
+    #[test]
+    fn multiple_stages() {
+        struct AB;
+
+        impl System for AB {
+            type Views<'a> = views!(&'a mut A, &'a mut B);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unimplemented!()
+            }
+        }
+
+        struct CD;
+
+        impl System for CD {
+            type Views<'a> = views!(&'a mut C, &'a mut D);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unimplemented!()
+            }
+        }
+
+        struct CE;
+
+        impl System for CE {
+            type Views<'a> = views!(&'a mut C, &'a mut E);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unimplemented!()
+            }
+        }
+
+        assert_eq!(
+            TypeId::of::<
+                <(
+                    task::System<AB>,
+                    (task::System<CD>, (task::System<CE>, task::Null))
+                ) as Schedule<'_, Registry, _, _, _, _, _, _, _, _>>::Stages,
+            >(),
+            TypeId::of::<(
+                (&mut task::System<AB>, (&mut task::System<CD>, stage::Null)),
+                ((&mut task::System<CE>, stage::Null), stages::Null)
+            )>()
         );
     }
 }

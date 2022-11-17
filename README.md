@@ -215,7 +215,7 @@ Multiple `System`s and `ParSystem`s can be run in parallel as well by defining a
 Define and run a `Schedule` that contains multiple `System`s as follows:
 
 ``` rust
-use brood::{entity, query::{filter, result, views}, registry, registry::ContainsQuery, World, system::{Schedule, System}};
+use brood::{entity, query::{filter, result, views}, registry, registry::ContainsQuery, World, system::{schedule, schedule::task, System}};
 
 struct Position {
     x: f32,
@@ -281,7 +281,7 @@ impl System for UpdateIsMoving {
     }
 }
 
-let mut schedule = Schedule::builder().system(UpdatePosition).system(UpdateIsMoving).build();
+let mut schedule = schedule!(task::System(UpdatePosition), task::System(UpdateIsMoving));
 
 world.run_schedule(&mut schedule);
 ```

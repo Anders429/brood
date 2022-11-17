@@ -53,16 +53,17 @@
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub mod schedule;
 
-mod null;
 #[cfg(feature = "rayon")]
 mod par;
 
-pub use null::Null;
 #[cfg(feature = "rayon")]
 pub use par::ParSystem;
 #[cfg(feature = "rayon")]
 #[doc(inline)]
-pub use schedule::Schedule;
+pub use schedule::{
+    schedule,
+    Schedule,
+};
 
 use crate::{
     query::{

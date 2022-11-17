@@ -1,5 +1,0 @@
-error: no rules expected the token `:`
- --> tests/trybuild/stages/colon_alone.rs:4:5
-  |
-4 |     :
-  |     ^ no rules expected this token in macro call
