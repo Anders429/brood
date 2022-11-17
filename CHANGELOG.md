@@ -9,6 +9,9 @@
 - The generic lifetimes on the `system::schedule::RawTask` and `system::Stages` traits have been removed.
 - `Registry` is now explicitly bound to the `static` lifetime. This was previously only implicit, with `Registry`s being made of `Component`s which were bound to `'static`.
 - Both `System` and `ParSystem` no longer require a lifetime bound on the `Registry` `R` in their `run()` methods.
+- `schedule` module has been overhauled. A builder API is no longer required to create a `Schedule`. Instead, a `Schedule` is defined as a heterogeneous list of tasks using the `schedule!` macro. Stages are defined at compile time using type-level recursion.
+### Removed
+- `system::Null` is removed, since it is no longer needed for defining a `Schedule`.
 
 ## 0.3.0 - 2022-10-28
 ### Added
