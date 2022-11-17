@@ -1,3 +1,78 @@
+//! A list of [`System`]s and [`ParSystem`]s to be run in stages.
+//! 
+//! Stages are scheduled depending on the order in which the `System`s are provided. A [`Schedule`]
+//! will proceed through its tasks in order and run as many of them as possible in parallel.
+//! `System`s can run in parallel as long as their [`Views`] can be borrowed simulatenously.
+//! 
+//! # Example
+//! The below example will define a schedule that will execute both `SystemA` and `SystemB` in
+//! parallel, since their views can be borrowed simultaneously.
+//!
+//! ``` rust
+//! use brood::{
+//!     query::{
+//!         filter,
+//!         filter::Filter,
+//!         result,
+//!         views,
+//!     },
+//!     registry::ContainsQuery,
+//!     system::{
+//!         schedule,
+//!         schedule::task,
+//!         System,
+//!     },
+//! };
+//!
+//! // Define components.
+//! struct Foo(usize);
+//! struct Bar(bool);
+//! struct Baz(f64);
+//!
+//! struct SystemA;
+//!
+//! impl System for SystemA {
+//!     type Views<'a> = views!(&'a mut Foo, &'a Bar);
+//!     type Filter = filter::None;
+//!
+//!     fn run<'a, R, FI, VI, P, I, Q>(
+//!         &mut self,
+//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!     ) where
+//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!     {
+//!         for result!(foo, bar) in query_results {
+//!             // Do something...
+//!         }
+//!     }
+//! }
+//!
+//! struct SystemB;
+//!
+//! impl System for SystemB {
+//!     type Views<'a> = views!(&'a mut Baz, &'a Bar);
+//!     type Filter = filter::None;
+//!
+//!     fn run<'a, R, FI, VI, P, I, Q>(
+//!         &mut self,
+//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!     ) where
+//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!     {
+//!         for result!(baz, bar) in query_results {
+//!             // Do something...
+//!         }
+//!     }
+//! }
+//!
+//! let schedule = schedule!(task::System(SystemA), task::System(SystemB));
+//! ```
+//! 
+//! [`ParSystem`]: crate::system::ParSystem
+//! [`Schedule`]: crate::system::Schedule
+//! [`System`]: crate::sytem::System
+//! [`Views`]: crate::query::view::Views
+
 pub mod task;
 
 mod claim;
