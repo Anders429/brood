@@ -3,3 +3,9 @@ error: no rules expected the token `+`
   |
 7 | type Registry = registry!(A, + B,);
   |                              ^ no rules expected this token in macro call
+  |
+note: while trying to match meta-variable `$components:ty`
+ --> src/registry/mod.rs
+  |
+  |     ($component:ty $(,$components:ty)* $(,)?) => {
+  |                       ^^^^^^^^^^^^^^

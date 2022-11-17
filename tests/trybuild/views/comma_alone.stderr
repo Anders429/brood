@@ -3,3 +3,9 @@ error: no rules expected the token `,`
   |
 3 | type Views = views!(,);
   |                     ^ no rules expected this token in macro call
+  |
+note: while trying to match meta-variable `$view:ty`
+ --> src/query/view/mod.rs
+  |
+  |         ($view:ty $(,$views:ty)* $(,)?) => (
+  |          ^^^^^^^^
