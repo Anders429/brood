@@ -1,9 +1,9 @@
 //! A list of [`System`]s and [`ParSystem`]s to be run in stages.
-//! 
+//!
 //! Stages are scheduled depending on the order in which the `System`s are provided. A [`Schedule`]
 //! will proceed through its tasks in order and run as many of them as possible in parallel.
 //! `System`s can run in parallel as long as their [`Views`] can be borrowed simulatenously.
-//! 
+//!
 //! # Example
 //! The below example will define a schedule that will execute both `SystemA` and `SystemB` in
 //! parallel, since their views can be borrowed simultaneously.
@@ -67,7 +67,7 @@
 //!
 //! let schedule = schedule!(task::System(SystemA), task::System(SystemB));
 //! ```
-//! 
+//!
 //! [`ParSystem`]: crate::system::ParSystem
 //! [`Schedule`]: crate::system::Schedule
 //! [`System`]: crate::system::System
@@ -96,13 +96,13 @@ use stager::Stager;
 use task::Task;
 
 /// A list of tasks, scheduled to run in stages.
-/// 
+///
 /// This is a heterogeneous list of [`System`]s and [`ParSystem`]s. Stages are created at compile
 /// time based on the [`Views`] of each system, ensuring the borrows will follow Rust's borrowing
 /// rules.
-/// 
+///
 /// The easiest way to create a `Schedule` is by using the [`schedule!`] macro.
-/// 
+///
 /// [`ParSystem`]: crate::system::ParSystem
 /// [`schedule!`]: crate::system::schedule!
 /// [`System`]: crate::system::System
@@ -123,10 +123,10 @@ where
 
 doc::non_root_macro! {
     /// Macro for defining a heterogeneous list of tasks.
-    /// 
+    ///
     /// Note that this is a list of tasks, not systems. Specifically, this is a list of
     /// [`task::System`]s and [`task::ParSystem`]s.
-    /// 
+    ///
     /// # Example
     /// ``` rust
     /// use brood::{
@@ -187,7 +187,7 @@ doc::non_root_macro! {
     ///
     /// let schedule = schedule!(task::System(SystemA), task::System(SystemB));
     /// ```
-    /// 
+    ///
     /// [`task::ParSystem`]: crate::system::schedule::task::ParSystem
     /// [`task::System`]: crate::system::schedule::task::System
     macro_rules! schedule {
@@ -211,7 +211,10 @@ mod tests {
             views,
         },
         registry,
-        registry::{ContainsParQuery, ContainsQuery},
+        registry::{
+            ContainsParQuery,
+            ContainsQuery,
+        },
         system,
         system::{
             schedule::{
@@ -224,7 +227,7 @@ mod tests {
         },
     };
     use core::any::TypeId;
-    
+
     struct A;
     struct B;
     struct C;
@@ -422,7 +425,10 @@ mod tests {
                     _,
                 >>::Stages,
             >(),
-            TypeId::of::<((&mut task::System<EntityIdentifier>, stage::Null), stages::Null)>()
+            TypeId::of::<(
+                (&mut task::System<EntityIdentifier>, stage::Null),
+                stages::Null
+            )>()
         );
     }
 
@@ -436,7 +442,17 @@ mod tests {
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                _query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -473,7 +489,17 @@ mod tests {
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                _query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -510,7 +536,17 @@ mod tests {
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                _query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -533,7 +569,10 @@ mod tests {
                     _,
                 >>::Stages,
             >(),
-            TypeId::of::<((&mut task::ParSystem<OptionImmutA>, stage::Null), stages::Null)>()
+            TypeId::of::<(
+                (&mut task::ParSystem<OptionImmutA>, stage::Null),
+                stages::Null
+            )>()
         );
     }
 
@@ -547,7 +586,17 @@ mod tests {
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                _query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -570,7 +619,10 @@ mod tests {
                     _,
                 >>::Stages,
             >(),
-            TypeId::of::<((&mut task::ParSystem<OptionMutA>, stage::Null), stages::Null)>()
+            TypeId::of::<(
+                (&mut task::ParSystem<OptionMutA>, stage::Null),
+                stages::Null
+            )>()
         );
     }
 
@@ -584,7 +636,17 @@ mod tests {
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
-                _query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -607,7 +669,10 @@ mod tests {
                     _,
                 >>::Stages,
             >(),
-            TypeId::of::<((&mut task::ParSystem<EntityIdentifier>, stage::Null), stages::Null)>()
+            TypeId::of::<(
+                (&mut task::ParSystem<EntityIdentifier>, stage::Null),
+                stages::Null
+            )>()
         );
     }
 
@@ -666,20 +731,12 @@ mod tests {
                 <(
                     task::System<AB>,
                     (task::System<CD>, (task::System<CE>, task::Null))
-                ) as Schedule<
-                    '_,
-                    Registry,
-                    _,
-                    _,
-                    _,
-                    _,
-                    _,
-                    _,
-                    _,
-                    _,
-                >>::Stages,
+                ) as Schedule<'_, Registry, _, _, _, _, _, _, _, _>>::Stages,
             >(),
-            TypeId::of::<((&mut task::System<AB>, (&mut task::System<CD>, stage::Null)), ((&mut task::System<CE>, stage::Null), stages::Null))>()
+            TypeId::of::<(
+                (&mut task::System<AB>, (&mut task::System<CD>, stage::Null)),
+                ((&mut task::System<CE>, stage::Null), stages::Null)
+            )>()
         );
     }
 }

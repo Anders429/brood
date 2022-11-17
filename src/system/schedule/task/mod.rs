@@ -1,5 +1,5 @@
 //! Tasks that are used to define a [`Schedule`].
-//! 
+//!
 //! [`Schedule`]: crate::system::Schedule
 
 mod sealed;
