@@ -12,6 +12,8 @@
 - `schedule` module has been overhauled. A builder API is no longer required to create a `Schedule`. Instead, a `Schedule` is defined as a heterogeneous list of tasks using the `schedule!` macro. Stages are defined at compile time using type-level recursion.
 ### Removed
 - `system::Null` is removed, since it is no longer needed for defining a `Schedule`.
+### Fixed
+- Mitigated potential bug regarding the way non-root macros are exported when compiling documentation. Previously, a change in Rust's experimental `macro` syntax could have potentially broken usage of the library for all users. Now, a change in the syntax will only break building of the documentation (using `--cfg doc_cfg`), which is acceptable.
 
 ## 0.3.0 - 2022-10-28
 ### Added
