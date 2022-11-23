@@ -37,7 +37,6 @@ macro_rules! non_root_macro {
             );*
         }
 
-        $(#[$m])*
         #[cfg(not(doc_cfg))]
         pub use $name;
 
