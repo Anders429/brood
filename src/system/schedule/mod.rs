@@ -204,11 +204,11 @@ doc::non_root_macro! {
 mod inner {
     use crate::doc;
 
-    doc::non_root_macro!{
+    doc::non_root_macro! {
         /// Macro for defining the type of a schedule.
-        /// 
+        ///
         /// This macro is used to define the type of a schedule made up of a list of tasks.
-        /// 
+        ///
         /// # Example
         /// ``` rust
         /// use brood::{
