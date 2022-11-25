@@ -1,6 +1,6 @@
 //! Tasks that are used to define a [`Schedule`].
 //!
-//! [`Schedule`]: crate::system::Schedule
+//! [`Schedule`]: trait@crate::system::Schedule
 
 mod sealed;
 

@@ -913,11 +913,8 @@ where
         // SAFETY: `identifier_iter` is guaranteed by the safety contract of this method to
         // return a value for every component within the registry.
         unsafe { identifier_iter.next().unwrap_unchecked() } {
-            let component_column = match components.get(0) {
-                Some(component_column) => component_column,
-                None => {
-                    return;
-                }
+            let Some(component_column) = components.get(0) else {
+                return;
             };
             drop(
                 // SAFETY: The pointer, capacity, and length are guaranteed by the safety

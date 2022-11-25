@@ -1,0 +1,11 @@
+error: no rules expected the token `,`
+ --> tests/trybuild/schedule/type_comma_alone.rs:3:29
+  |
+3 | type MySchedule = Schedule!(,);
+  |                             ^ no rules expected this token in macro call
+  |
+note: while trying to match meta-variable `$task:ty`
+ --> src/system/schedule/mod.rs
+  |
+  |             ($task:ty $(,$tasks:ty)* $(,)?) => (
+  |              ^^^^^^^^

@@ -69,7 +69,7 @@
 //! ```
 //!
 //! [`ParSystem`]: crate::system::ParSystem
-//! [`Schedule`]: crate::system::Schedule
+//! [`Schedule`]: trait@crate::system::Schedule
 //! [`System`]: crate::system::System
 //! [`Views`]: crate::query::view::Views
 
@@ -200,6 +200,88 @@ doc::non_root_macro! {
     }
 }
 
+/// Nesting this macro definition in a module is necessary to unambiguate the import of the macro.
+mod inner {
+    use crate::doc;
+
+    doc::non_root_macro! {
+        /// Macro for defining the type of a schedule.
+        ///
+        /// This macro is used to define the type of a schedule made up of a list of tasks.
+        ///
+        /// # Example
+        /// ``` rust
+        /// use brood::{
+        ///     query::{
+        ///         filter,
+        ///         filter::Filter,
+        ///         result,
+        ///         views,
+        ///     },
+        ///     registry::{
+        ///         ContainsParQuery,
+        ///         ContainsQuery,
+        ///     },
+        ///     system::{
+        ///         schedule::task,
+        ///         ParSystem,
+        ///         Schedule,
+        ///         System,
+        ///     },
+        /// };
+        ///
+        /// // Define components.
+        /// struct Foo(usize);
+        /// struct Bar(bool);
+        /// struct Baz(f64);
+        ///
+        /// struct SystemA;
+        ///
+        /// impl System for SystemA {
+        ///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
+        ///     type Filter = filter::None;
+        ///
+        ///     fn run<'a, R, FI, VI, P, I, Q>(
+        ///         &mut self,
+        ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        ///     ) where
+        ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        ///     {
+        ///         // Do something..
+        ///     }
+        /// }
+        ///
+        /// struct SystemB;
+        ///
+        /// impl ParSystem for SystemB {
+        ///     type Views<'a> = views!(&'a mut Baz, &'a Bar);
+        ///     type Filter = filter::None;
+        ///
+        ///     fn run<'a, R, FI, VI, P, I, Q>(
+        ///         &mut self,
+        ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        ///     ) where
+        ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        ///     {
+        ///         // Do something..
+        ///     }
+        /// }
+        ///
+        /// type MySchedule = Schedule!(task::System<SystemA>, task::System<SystemB>);
+        /// ```
+        macro_rules! Schedule {
+            ($task:ty $(,$tasks:ty)* $(,)?) => (
+                ($task, $crate::system::schedule::Schedule!($($tasks,)*))
+            );
+            () => (
+                $crate::system::schedule::task::Null
+            );
+        }
+    }
+}
+
+pub use inner::Schedule;
+
 #[cfg(test)]
 mod tests {
     use super::Sealed as Schedule;
@@ -215,7 +297,6 @@ mod tests {
             ContainsParQuery,
             ContainsQuery,
         },
-        system,
         system::{
             schedule::{
                 stage,

@@ -45,7 +45,7 @@
 //! Defining `System`s allows for reuse of querying logic in multiple places, as well as combining
 //! `System`s together within a `Schedule` to allow them to be run in parallel.
 //!
-//! [`Schedule`]: crate::system::schedule::Schedule
+//! [`Schedule`]: trait@crate::system::schedule::Schedule
 //! [`System`]: crate::system::System
 //! [`World`]: crate::world::World
 
