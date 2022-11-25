@@ -1,11 +1,11 @@
 error: no rules expected the token `,`
- --> tests/trybuild/views/comma_alone.rs:3:21
+ --> tests/trybuild/views/comma_alone.rs:3:23
   |
-3 | type Views = views!(,);
-  |                     ^ no rules expected this token in macro call
+3 | type MyViews = Views!(,);
+  |                       ^ no rules expected this token in macro call
   |
 note: while trying to match meta-variable `$view:ty`
  --> src/query/view/mod.rs
   |
-  |         ($view:ty $(,$views:ty)* $(,)?) => (
-  |          ^^^^^^^^
+  |             ($view:ty $(,$views:ty)* $(,)?) => (
+  |              ^^^^^^^^

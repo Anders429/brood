@@ -282,7 +282,7 @@ where
     ///     query::{
     ///         filter,
     ///         result,
-    ///         views,
+    ///         Views,
     ///     },
     ///     Query,
     ///     Registry,
@@ -298,7 +298,7 @@ where
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
     /// let mut entry = world.entry(entity_identifier).unwrap();
     ///
-    /// let result = entry.query(Query::<views!(&Foo, &Bar), filter::None>::new());
+    /// let result = entry.query(Query::<Views!(&Foo, &Bar), filter::None>::new());
     /// assert!(result.is_some());
     /// let result!(foo, bar) = result.unwrap();
     /// assert_eq!(foo.0, 42);

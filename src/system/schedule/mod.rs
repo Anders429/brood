@@ -14,7 +14,7 @@
 //!         filter,
 //!         filter::Filter,
 //!         result,
-//!         views,
+//!         Views,
 //!     },
 //!     registry::ContainsQuery,
 //!     system::{
@@ -32,7 +32,7 @@
 //! struct SystemA;
 //!
 //! impl System for SystemA {
-//!     type Views<'a> = views!(&'a mut Foo, &'a Bar);
+//!     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
 //!
 //!     fn run<'a, R, FI, VI, P, I, Q>(
@@ -50,7 +50,7 @@
 //! struct SystemB;
 //!
 //! impl System for SystemB {
-//!     type Views<'a> = views!(&'a mut Baz, &'a Bar);
+//!     type Views<'a> = Views!(&'a mut Baz, &'a Bar);
 //!     type Filter = filter::None;
 //!
 //!     fn run<'a, R, FI, VI, P, I, Q>(
@@ -134,7 +134,7 @@ doc::non_root_macro! {
     ///         filter,
     ///         filter::Filter,
     ///         result,
-    ///         views,
+    ///         Views,
     ///     },
     ///     registry::{
     ///         ContainsParQuery,
@@ -156,7 +156,7 @@ doc::non_root_macro! {
     /// struct SystemA;
     ///
     /// impl System for SystemA {
-    ///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
+    ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
@@ -172,7 +172,7 @@ doc::non_root_macro! {
     /// struct SystemB;
     ///
     /// impl ParSystem for SystemB {
-    ///     type Views<'a> = views!(&'a mut Baz, &'a Bar);
+    ///     type Views<'a> = Views!(&'a mut Baz, &'a Bar);
     ///     type Filter = filter::None;
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
@@ -216,7 +216,7 @@ mod inner {
         ///         filter,
         ///         filter::Filter,
         ///         result,
-        ///         views,
+        ///         Views,
         ///     },
         ///     registry::{
         ///         ContainsParQuery,
@@ -238,7 +238,7 @@ mod inner {
         /// struct SystemA;
         ///
         /// impl System for SystemA {
-        ///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
+        ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
         ///     type Filter = filter::None;
         ///
         ///     fn run<'a, R, FI, VI, P, I, Q>(
@@ -254,7 +254,7 @@ mod inner {
         /// struct SystemB;
         ///
         /// impl ParSystem for SystemB {
-        ///     type Views<'a> = views!(&'a mut Baz, &'a Bar);
+        ///     type Views<'a> = Views!(&'a mut Baz, &'a Bar);
         ///     type Filter = filter::None;
         ///
         ///     fn run<'a, R, FI, VI, P, I, Q>(
@@ -290,7 +290,7 @@ mod tests {
         query::{
             filter,
             result,
-            views,
+            Views,
         },
         registry::{
             ContainsParQuery,
@@ -330,7 +330,7 @@ mod tests {
         struct ImmutA;
 
         impl System for ImmutA {
-            type Views<'a> = views!(&'a A);
+            type Views<'a> = Views!(&'a A);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -367,7 +367,7 @@ mod tests {
         struct MutA;
 
         impl System for MutA {
-            type Views<'a> = views!(&'a mut A);
+            type Views<'a> = Views!(&'a mut A);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -404,7 +404,7 @@ mod tests {
         struct OptionImmutA;
 
         impl System for OptionImmutA {
-            type Views<'a> = views!(Option<&'a A>);
+            type Views<'a> = Views!(Option<&'a A>);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -441,7 +441,7 @@ mod tests {
         struct OptionMutA;
 
         impl System for OptionMutA {
-            type Views<'a> = views!(Option<&'a mut A>);
+            type Views<'a> = Views!(Option<&'a mut A>);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -478,7 +478,7 @@ mod tests {
         struct EntityIdentifier;
 
         impl System for EntityIdentifier {
-            type Views<'a> = views!(entity::Identifier);
+            type Views<'a> = Views!(entity::Identifier);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -518,7 +518,7 @@ mod tests {
         struct ImmutA;
 
         impl ParSystem for ImmutA {
-            type Views<'a> = views!(&'a A);
+            type Views<'a> = Views!(&'a A);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -565,7 +565,7 @@ mod tests {
         struct MutA;
 
         impl ParSystem for MutA {
-            type Views<'a> = views!(&'a mut A);
+            type Views<'a> = Views!(&'a mut A);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -612,7 +612,7 @@ mod tests {
         struct OptionImmutA;
 
         impl ParSystem for OptionImmutA {
-            type Views<'a> = views!(Option<&'a A>);
+            type Views<'a> = Views!(Option<&'a A>);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -662,7 +662,7 @@ mod tests {
         struct OptionMutA;
 
         impl ParSystem for OptionMutA {
-            type Views<'a> = views!(Option<&'a mut A>);
+            type Views<'a> = Views!(Option<&'a mut A>);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -712,7 +712,7 @@ mod tests {
         struct EntityIdentifier;
 
         impl ParSystem for EntityIdentifier {
-            type Views<'a> = views!(entity::Identifier);
+            type Views<'a> = Views!(entity::Identifier);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -762,7 +762,7 @@ mod tests {
         struct AB;
 
         impl System for AB {
-            type Views<'a> = views!(&'a mut A, &'a mut B);
+            type Views<'a> = Views!(&'a mut A, &'a mut B);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -778,7 +778,7 @@ mod tests {
         struct CD;
 
         impl System for CD {
-            type Views<'a> = views!(&'a mut C, &'a mut D);
+            type Views<'a> = Views!(&'a mut C, &'a mut D);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -794,7 +794,7 @@ mod tests {
         struct CE;
 
         impl System for CE {
-            type Views<'a> = views!(&'a mut C, &'a mut E);
+            type Views<'a> = Views!(&'a mut C, &'a mut E);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(

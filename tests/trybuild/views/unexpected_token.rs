@@ -1,9 +1,9 @@
-use brood::query::views;
+use brood::query::Views;
 
 // Define components.
 struct A;
 struct B;
 
-type Views = views!(&A, + &B,);
+type MyViews = Views!(&A, + &B,);
 
 fn main() {}

@@ -245,7 +245,7 @@ where
 mod tests {
     use super::*;
     use crate::{
-        query::views,
+        query::Views,
         Registry,
     };
     use alloc::vec;
@@ -402,7 +402,7 @@ mod tests {
     #[test]
     fn views_true() {
         assert!(unsafe {
-            <Registry as Sealed<views!(&mut A), _>>::filter(
+            <Registry as Sealed<Views!(&mut A), _>>::filter(
                 archetype::Identifier::<Registry>::new(vec![1]).as_ref(),
             )
         });
@@ -411,7 +411,7 @@ mod tests {
     #[test]
     fn views_false() {
         assert!(!unsafe {
-            <Registry as Sealed<views!(&mut A, &B), _>>::filter(
+            <Registry as Sealed<Views!(&mut A, &B), _>>::filter(
                 archetype::Identifier::<Registry>::new(vec![1]).as_ref(),
             )
         });

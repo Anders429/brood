@@ -10,7 +10,7 @@
 //!         filter,
 //!         filter::Filter,
 //!         result,
-//!         views,
+//!         Views,
 //!     },
 //!     registry::ContainsQuery,
 //!     system::System,
@@ -24,7 +24,7 @@
 //! struct MySystem;
 //!
 //! impl System for MySystem {
-//!     type Views<'a> = views!(&'a mut Foo, &'a Bar);
+//!     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
 //!
 //!     fn run<'a, R, FI, VI, P, I, Q>(
@@ -96,7 +96,7 @@ use crate::{
 ///         filter,
 ///         filter::Filter,
 ///         result,
-///         views,
+///         Views,
 ///     },
 ///     registry::ContainsQuery,
 ///     system::System,
@@ -110,7 +110,7 @@ use crate::{
 /// struct MySystem;
 ///
 /// impl System for MySystem {
-///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
+///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
 ///     fn run<'a, R, FI, VI, P, I, Q>(
@@ -150,7 +150,7 @@ pub trait System {
     ///         filter,
     ///         filter::Filter,
     ///         result,
-    ///         views,
+    ///         Views,
     ///     },
     ///     registry::ContainsQuery,
     ///     system::System,
@@ -164,7 +164,7 @@ pub trait System {
     /// struct MySystem;
     ///
     /// impl System for MySystem {
-    ///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
+    ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
@@ -201,7 +201,7 @@ pub trait System {
     /// executes the removal during post processing.
     ///
     /// ``` rust
-    /// use brood::{entity, query::{filter, filter::Filter, result, views}, registry::{ContainsQuery, Registry}, system::System, World};
+    /// use brood::{entity, query::{filter, filter::Filter, result, Views}, registry::{ContainsQuery, Registry}, system::System, World};
     ///
     /// // Define components.
     /// struct Foo(usize);
@@ -214,7 +214,7 @@ pub trait System {
     /// }
     ///
     /// impl System for MySystem {
-    ///     type Views<'a> = views!(&'a mut Foo, &'a Bar, entity::Identifier);
+    ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar, entity::Identifier);
     ///     type Filter = filter::None;
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)

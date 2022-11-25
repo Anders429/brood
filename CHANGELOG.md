@@ -15,6 +15,7 @@
 - `Schedule` has been changed from a `struct` to a `trait`.
 - Schedules now have their stages defined at compile-time.
 - `registry!` macro has been renamed to `Registry!` to indicate that it is intended to be a type-level macro.
+- `views!` macro has been renamed to `Views!` to indicate that it is intended to be a type-level macro.
 ### Removed
 - `system::Null` is removed, since it is no longer needed for defining a `Schedule`.
 - `schedule::Builder` is removed, since it is no longer needed for defining a `Schedule`.

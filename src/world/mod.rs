@@ -240,7 +240,7 @@ where
     ///     query::{
     ///         filter,
     ///         result,
-    ///         views,
+    ///         Views,
     ///     },
     ///     Query,
     ///     Registry,
@@ -258,7 +258,7 @@ where
     ///
     /// // Note that the views provide implicit filters.
     /// for result!(foo, baz, entity_identifier) in world.query(Query::<
-    ///     views!(&mut Foo, &Baz, entity::Identifier),
+    ///     Views!(&mut Foo, &Baz, entity::Identifier),
     ///     filter::Has<Bar>,
     /// >::new())
     /// {
@@ -301,7 +301,7 @@ where
     ///     query::{
     ///         filter,
     ///         result,
-    ///         views,
+    ///         Views,
     ///     },
     ///     Query,
     ///     Registry,
@@ -321,7 +321,7 @@ where
     /// // Note that the views provide implicit filters.
     /// world
     ///     .par_query(Query::<
-    ///         views!(&mut Foo, &Baz, entity::Identifier),
+    ///         Views!(&mut Foo, &Baz, entity::Identifier),
     ///         filter::Has<Bar>,
     ///     >::new())
     ///     .for_each(|result!(foo, baz, entity_identifier)| {
@@ -363,7 +363,7 @@ where
     ///         filter,
     ///         filter::Filter,
     ///         result,
-    ///         views,
+    ///         Views,
     ///     },
     ///     registry::ContainsQuery,
     ///     system::System,
@@ -381,7 +381,7 @@ where
     /// struct MySystem;
     ///
     /// impl System for MySystem {
-    ///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
+    ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
@@ -422,7 +422,7 @@ where
     ///         filter,
     ///         filter::Filter,
     ///         result,
-    ///         views,
+    ///         Views,
     ///     },
     ///     registry::ContainsParQuery,
     ///     system::ParSystem,
@@ -441,7 +441,7 @@ where
     /// struct MySystem;
     ///
     /// impl ParSystem for MySystem {
-    ///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
+    ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
@@ -481,7 +481,7 @@ where
     ///         filter,
     ///         filter::Filter,
     ///         result,
-    ///         views,
+    ///         Views,
     ///     },
     ///     registry::ContainsQuery,
     ///     system::{
@@ -505,7 +505,7 @@ where
     /// struct SystemB;
     ///
     /// impl System for SystemA {
-    ///     type Views<'a> = views!(&'a mut Foo);
+    ///     type Views<'a> = Views!(&'a mut Foo);
     ///     type Filter = filter::None;
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
@@ -521,7 +521,7 @@ where
     /// }
     ///
     /// impl System for SystemB {
-    ///     type Views<'a> = views!(&'a mut Bar);
+    ///     type Views<'a> = Views!(&'a mut Bar);
     ///     type Filter = filter::None;
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
@@ -786,7 +786,7 @@ mod tests {
         query::{
             filter,
             result,
-            views,
+            Views,
         },
         Registry,
     };
@@ -867,7 +867,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query(Query::<views!(&B, &A)>::new())
+            .query(Query::<Views!(&B, &A)>::new())
             .map(|result!(b, a)| (b.0, a.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -884,7 +884,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query(Query::<views!(&A)>::new())
+            .query(Query::<Views!(&A)>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -901,7 +901,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query(Query::<views!(&mut B)>::new())
+            .query(Query::<Views!(&mut B)>::new())
             .map(|result!(b)| b.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -918,7 +918,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query(Query::<views!(Option<&A>)>::new())
+            .query(Query::<Views!(Option<&A>)>::new())
             .map(|result!(a)| a.map(|a| a.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -935,7 +935,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query(Query::<views!(Option<&mut B>)>::new())
+            .query(Query::<Views!(Option<&mut B>)>::new())
             .map(|result!(b)| b.map(|b| b.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -953,7 +953,7 @@ mod tests {
 
         let result = world
             .query(Query::<
-                views!(entity::Identifier),
+                Views!(entity::Identifier),
                 filter::And<filter::Has<A>, filter::Has<B>>,
             >::new())
             .map(|result!(identifier)| identifier)
@@ -971,7 +971,7 @@ mod tests {
         world.insert(entity!());
 
         let result = world
-            .query(Query::<views!(&A), filter::Has<B>>::new())
+            .query(Query::<Views!(&A), filter::Has<B>>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![1]);
@@ -987,7 +987,7 @@ mod tests {
         world.insert(entity!());
 
         let result = world
-            .query(Query::<views!(&A), filter::Not<filter::Has<B>>>::new())
+            .query(Query::<Views!(&A), filter::Not<filter::Has<B>>>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![2]);
@@ -1004,7 +1004,7 @@ mod tests {
 
         let result = world
             .query(Query::<
-                views!(&A),
+                Views!(&A),
                 filter::And<filter::Has<A>, filter::Has<B>>,
             >::new())
             .map(|result!(a)| a.0)
@@ -1023,7 +1023,7 @@ mod tests {
 
         let mut result = world
             .query(Query::<
-                views!(&A),
+                Views!(&A),
                 filter::Or<filter::Has<A>, filter::Has<B>>,
             >::new())
             .map(|result!(a)| a.0)
@@ -1042,7 +1042,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .query(Query::<views!(&B, &A)>::new())
+            .query(Query::<Views!(&B, &A)>::new())
             .map(|result!(b, a)| (a.0, b.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -1060,7 +1060,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .par_query(Query::<views!(&A)>::new())
+            .par_query(Query::<Views!(&A)>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1078,7 +1078,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .par_query(Query::<views!(&mut B)>::new())
+            .par_query(Query::<Views!(&mut B)>::new())
             .map(|result!(b)| b.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1096,7 +1096,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .par_query(Query::<views!(Option<&A>)>::new())
+            .par_query(Query::<Views!(Option<&A>)>::new())
             .map(|result!(a)| a.map(|a| a.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -1114,7 +1114,7 @@ mod tests {
         world.insert(entity!());
 
         let mut result = world
-            .par_query(Query::<views!(Option<&mut B>)>::new())
+            .par_query(Query::<Views!(Option<&mut B>)>::new())
             .map(|result!(b)| b.map(|b| b.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -1133,7 +1133,7 @@ mod tests {
 
         let result = world
             .par_query(Query::<
-                views!(entity::Identifier),
+                Views!(entity::Identifier),
                 filter::And<filter::Has<A>, filter::Has<B>>,
             >::new())
             .map(|result!(identifier)| identifier)
@@ -1152,7 +1152,7 @@ mod tests {
         world.insert(entity!());
 
         let result = world
-            .par_query(Query::<views!(&A), filter::Has<B>>::new())
+            .par_query(Query::<Views!(&A), filter::Has<B>>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![1]);
@@ -1169,7 +1169,7 @@ mod tests {
         world.insert(entity!());
 
         let result = world
-            .par_query(Query::<views!(&A), filter::Not<filter::Has<B>>>::new())
+            .par_query(Query::<Views!(&A), filter::Not<filter::Has<B>>>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![2]);
@@ -1187,7 +1187,7 @@ mod tests {
 
         let result = world
             .par_query(Query::<
-                views!(&A),
+                Views!(&A),
                 filter::And<filter::Has<A>, filter::Has<B>>,
             >::new())
             .map(|result!(a)| a.0)
@@ -1207,7 +1207,7 @@ mod tests {
 
         let mut result = world
             .par_query(Query::<
-                views!(&A),
+                Views!(&A),
                 filter::Or<filter::Has<A>, filter::Has<B>>,
             >::new())
             .map(|result!(a)| a.0)
@@ -1221,7 +1221,7 @@ mod tests {
         struct TestSystem;
 
         impl System for TestSystem {
-            type Views<'a> = views!(&'a A);
+            type Views<'a> = Views!(&'a A);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1251,7 +1251,7 @@ mod tests {
         struct TestSystem;
 
         impl System for TestSystem {
-            type Views<'a> = views!(&'a mut B);
+            type Views<'a> = Views!(&'a mut B);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1281,7 +1281,7 @@ mod tests {
         struct TestSystem;
 
         impl System for TestSystem {
-            type Views<'a> = views!(Option<&'a A>);
+            type Views<'a> = Views!(Option<&'a A>);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1313,7 +1313,7 @@ mod tests {
         struct TestSystem;
 
         impl System for TestSystem {
-            type Views<'a> = views!(Option<&'a mut B>);
+            type Views<'a> = Views!(Option<&'a mut B>);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1347,7 +1347,7 @@ mod tests {
         }
 
         impl System for TestSystem {
-            type Views<'a> = views!(entity::Identifier);
+            type Views<'a> = Views!(entity::Identifier);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1378,7 +1378,7 @@ mod tests {
         struct TestSystem;
 
         impl System for TestSystem {
-            type Views<'a> = views!(&'a A);
+            type Views<'a> = Views!(&'a A);
             type Filter = filter::Has<B>;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1407,7 +1407,7 @@ mod tests {
         struct TestSystem;
 
         impl System for TestSystem {
-            type Views<'a> = views!(&'a A);
+            type Views<'a> = Views!(&'a A);
             type Filter = filter::Not<filter::Has<B>>;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1436,7 +1436,7 @@ mod tests {
         struct TestSystem;
 
         impl System for TestSystem {
-            type Views<'a> = views!(&'a A);
+            type Views<'a> = Views!(&'a A);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1465,7 +1465,7 @@ mod tests {
         struct TestSystem;
 
         impl System for TestSystem {
-            type Views<'a> = views!(&'a A);
+            type Views<'a> = Views!(&'a A);
             type Filter = filter::Or<filter::Has<A>, filter::Has<B>>;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1496,7 +1496,7 @@ mod tests {
         struct TestSystem;
 
         impl ParSystem for TestSystem {
-            type Views<'a> = views!(&'a A);
+            type Views<'a> = Views!(&'a A);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1537,7 +1537,7 @@ mod tests {
         struct TestSystem;
 
         impl ParSystem for TestSystem {
-            type Views<'a> = views!(&'a mut B);
+            type Views<'a> = Views!(&'a mut B);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1578,7 +1578,7 @@ mod tests {
         struct TestSystem;
 
         impl ParSystem for TestSystem {
-            type Views<'a> = views!(Option<&'a A>);
+            type Views<'a> = Views!(Option<&'a A>);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1621,7 +1621,7 @@ mod tests {
         struct TestSystem;
 
         impl ParSystem for TestSystem {
-            type Views<'a> = views!(Option<&'a mut B>);
+            type Views<'a> = Views!(Option<&'a mut B>);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1666,7 +1666,7 @@ mod tests {
         }
 
         impl ParSystem for TestSystem {
-            type Views<'a> = views!(entity::Identifier);
+            type Views<'a> = Views!(entity::Identifier);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1708,7 +1708,7 @@ mod tests {
         struct TestSystem;
 
         impl ParSystem for TestSystem {
-            type Views<'a> = views!(&'a A);
+            type Views<'a> = Views!(&'a A);
             type Filter = filter::Has<B>;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1748,7 +1748,7 @@ mod tests {
         struct TestSystem;
 
         impl ParSystem for TestSystem {
-            type Views<'a> = views!(&'a A);
+            type Views<'a> = Views!(&'a A);
             type Filter = filter::Not<filter::Has<B>>;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1788,7 +1788,7 @@ mod tests {
         struct TestSystem;
 
         impl ParSystem for TestSystem {
-            type Views<'a> = views!(&'a A);
+            type Views<'a> = Views!(&'a A);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1828,7 +1828,7 @@ mod tests {
         struct TestSystem;
 
         impl ParSystem for TestSystem {
-            type Views<'a> = views!(&'a A);
+            type Views<'a> = Views!(&'a A);
             type Filter = filter::Or<filter::Has<A>, filter::Has<B>>;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1869,7 +1869,7 @@ mod tests {
         struct TestSystem;
 
         impl System for TestSystem {
-            type Views<'a> = views!(&'a A);
+            type Views<'a> = Views!(&'a A);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1887,7 +1887,7 @@ mod tests {
         struct TestParSystem;
 
         impl ParSystem for TestParSystem {
-            type Views<'a> = views!(&'a mut B);
+            type Views<'a> = Views!(&'a mut B);
             type Filter = filter::None;
 
             fn run<'a, R, FI, VI, P, I, Q>(
@@ -1963,7 +1963,7 @@ mod tests {
         entry.add(A(3));
 
         let mut result = world
-            .query(Query::<views!(&A)>::new())
+            .query(Query::<Views!(&A)>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1983,7 +1983,7 @@ mod tests {
         entry.add(A(3));
 
         let mut result = world
-            .query(Query::<views!(&A)>::new())
+            .query(Query::<Views!(&A)>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -2003,7 +2003,7 @@ mod tests {
         entry.remove::<A, _>();
 
         let mut result = world
-            .query(Query::<views!(&A)>::new())
+            .query(Query::<Views!(&A)>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -2022,7 +2022,7 @@ mod tests {
         let mut entry = assert_some!(world.entry(entity_identifier));
 
         let result!(queried_identifier, a, b) = assert_some!(entry.query(Query::<
-            views!(entity::Identifier, &A, Option<&B>),
+            Views!(entity::Identifier, &A, Option<&B>),
             filter::None,
         >::new()));
         assert_eq!(queried_identifier, entity_identifier);
@@ -2043,7 +2043,7 @@ mod tests {
         let mut entry = assert_some!(world.entry(entity_identifier));
 
         let result!(a, b) =
-            assert_some!(entry.query(Query::<views!(&mut A, Option<&mut B>)>::new()));
+            assert_some!(entry.query(Query::<Views!(&mut A, Option<&mut B>)>::new()));
         assert_eq!(a.0, 1);
         let b = assert_some!(b);
         assert_eq!(b.0, 'a');
@@ -2060,7 +2060,7 @@ mod tests {
 
         let mut entry = assert_some!(world.entry(entity_identifier));
 
-        assert_none!(entry.query(Query::<views!(entity::Identifier, &A, &B)>::new()));
+        assert_none!(entry.query(Query::<Views!(entity::Identifier, &A, &B)>::new()));
     }
 
     #[test]
@@ -2089,7 +2089,7 @@ mod tests {
         world.remove(entity_identifier);
 
         let mut result = world
-            .query(Query::<views!(&A)>::new())
+            .query(Query::<Views!(&A)>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -2125,7 +2125,7 @@ mod tests {
         world.clear();
 
         let mut result = world
-            .query(Query::<views!(&A)>::new())
+            .query(Query::<Views!(&A)>::new())
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();

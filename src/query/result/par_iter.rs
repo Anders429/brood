@@ -44,7 +44,7 @@ use rayon::iter::{
 ///     query::{
 ///         filter,
 ///         result,
-///         views,
+///         Views,
 ///     },
 ///     Query,
 ///     Registry,
@@ -61,7 +61,7 @@ use rayon::iter::{
 /// world.insert(entity!(Foo(42), Bar(true)));
 ///
 /// world
-///     .par_query(Query::<views!(&mut Foo, &Bar)>::new())
+///     .par_query(Query::<Views!(&mut Foo, &Bar)>::new())
 ///     .for_each(|result!(foo, bar)| {
 ///         if bar.0 {
 ///             foo.0 += 1;

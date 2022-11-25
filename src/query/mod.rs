@@ -18,7 +18,7 @@
 //!     query::{
 //!         filter,
 //!         result,
-//!         views,
+//!         Views,
 //!     },
 //!     Query,
 //!     Registry,
@@ -35,7 +35,7 @@
 //! let mut world = World::<Registry>::new();
 //! world.insert(entity!(Foo(42), Bar(true), Baz(1.5)));
 //!
-//! for result!(foo, bar) in world.query(Query::<views!(&mut Foo, &Bar), filter::Has<Baz>>::new()) {
+//! for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar), filter::Has<Baz>>::new()) {
 //!     // Do something.
 //! }
 //! ```
@@ -55,7 +55,7 @@ pub(crate) mod claim;
 #[doc(inline)]
 pub use result::result;
 #[doc(inline)]
-pub use view::views;
+pub use view::Views;
 
 use core::marker::PhantomData;
 
@@ -72,7 +72,7 @@ use core::marker::PhantomData;
 ///     query::{
 ///         filter,
 ///         result,
-///         views,
+///         Views,
 ///     },
 ///     Query,
 ///     Registry,
@@ -89,7 +89,7 @@ use core::marker::PhantomData;
 /// let mut world = World::<Registry>::new();
 /// world.insert(entity!(Foo(42), Bar(true), Baz(1.5)));
 ///
-/// for result!(foo, bar) in world.query(Query::<views!(&mut Foo, &Bar), filter::Has<Baz>>::new()) {
+/// for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar), filter::Has<Baz>>::new()) {
 ///     // Do something.
 /// }
 /// ```
