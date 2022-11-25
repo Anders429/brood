@@ -55,7 +55,7 @@ pub(crate) mod claim;
 #[doc(inline)]
 pub use result::result;
 #[doc(inline)]
-pub use view::Views;
+pub use view::inner::Views;
 
 use core::marker::PhantomData;
 

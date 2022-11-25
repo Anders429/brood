@@ -173,7 +173,7 @@ where
 {
 }
 
-mod inner {
+pub(crate) mod inner {
     use crate::doc;
     doc::non_root_macro! {
         /// Creates a set of [`View`]s over components.
