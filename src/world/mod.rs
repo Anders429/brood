@@ -44,7 +44,7 @@ use crate::{
     system::{
         schedule::Stages,
         ParSystem,
-        Schedule,
+        schedule::Schedule,
     },
 };
 use alloc::vec::Vec;
@@ -545,7 +545,7 @@ where
     /// world.run_schedule(&mut schedule);
     /// ```
     ///
-    /// [`Schedule`]: trait@crate::system::Schedule
+    /// [`Schedule`]: trait@crate::system::schedule::Schedule
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub fn run_schedule<'a, S, I, P, RI, SFI, SVI, SP, SI, SQ>(&mut self, schedule: &'a mut S)

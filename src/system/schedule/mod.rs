@@ -69,7 +69,7 @@
 //! ```
 //!
 //! [`ParSystem`]: crate::system::ParSystem
-//! [`Schedule`]: trait@crate::system::Schedule
+//! [`Schedule`]: trait@crate::system::schedule::Schedule
 //! [`System`]: crate::system::System
 //! [`Views`]: trait@crate::query::view::Views
 
@@ -201,7 +201,7 @@ doc::non_root_macro! {
 }
 
 /// Nesting this macro definition in a module is necessary to unambiguate the import of the macro.
-mod inner {
+pub(crate) mod inner {
     use crate::doc;
 
     doc::non_root_macro! {

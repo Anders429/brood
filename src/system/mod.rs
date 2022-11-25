@@ -62,7 +62,7 @@ pub use par::ParSystem;
 #[doc(inline)]
 pub use schedule::{
     schedule,
-    Schedule,
+    inner::Schedule,
 };
 
 use crate::{
