@@ -351,7 +351,7 @@ where
 mod tests {
     use crate::{
         archetype::Identifier,
-        registry,
+        Registry,
     };
     use alloc::{
         vec,
@@ -374,7 +374,7 @@ mod tests {
     );
 
     type Registry =
-        registry!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
+        Registry!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
 
     #[test]
     fn buffer_as_slice() {
@@ -385,7 +385,7 @@ mod tests {
 
     #[test]
     fn empty_buffer_as_slice() {
-        let buffer = unsafe { Identifier::<registry!()>::new(Vec::new()) };
+        let buffer = unsafe { Identifier::<Registry!()>::new(Vec::new()) };
 
         assert_eq!(unsafe { buffer.as_slice() }, &[]);
     }
@@ -422,7 +422,7 @@ mod tests {
 
     #[test]
     fn buffer_size_of_components() {
-        let buffer = unsafe { Identifier::<registry!(bool, u64, f32)>::new(vec![7]) };
+        let buffer = unsafe { Identifier::<Registry!(bool, u64, f32)>::new(vec![7]) };
 
         assert_eq!(buffer.size_of_components(), 13);
     }

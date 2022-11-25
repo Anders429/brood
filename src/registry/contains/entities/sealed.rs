@@ -91,7 +91,7 @@ mod tests {
     use super::*;
     use crate::{
         entities,
-        registry,
+        Registry,
     };
 
     #[derive(Clone, Debug, Eq, PartialEq)]
@@ -105,7 +105,7 @@ mod tests {
     #[derive(Clone, Debug, Eq, PartialEq)]
     struct E;
 
-    type Registry = registry!(A, B, C, D, E);
+    type Registry = Registry!(A, B, C, D, E);
 
     #[test]
     fn entities_empty() {

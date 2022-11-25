@@ -1,9 +1,9 @@
-use brood::registry;
+use brood::Registry;
 
 // Define components.
 struct A;
 struct B;
 
-type Registry = registry!(A, + B,);
+type Registry = Registry!(A, + B,);
 
 fn main() {}

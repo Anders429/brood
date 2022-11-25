@@ -1,5 +1,5 @@
-use brood::registry;
+use brood::Registry;
 
-type Registry = registry!(,);
+type Registry = Registry!(,);
 
 fn main() {}

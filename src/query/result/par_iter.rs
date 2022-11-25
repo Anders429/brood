@@ -46,8 +46,8 @@ use rayon::iter::{
 ///         result,
 ///         views,
 ///     },
-///     registry,
 ///     Query,
+///     Registry,
 ///     World,
 /// };
 /// use rayon::iter::ParallelIterator;
@@ -55,7 +55,7 @@ use rayon::iter::{
 /// struct Foo(u32);
 /// struct Bar(bool);
 ///
-/// type Registry = registry!(Foo, Bar);
+/// type Registry = Registry!(Foo, Bar);
 ///
 /// let mut world = World::<Registry>::new();
 /// world.insert(entity!(Foo(42), Bar(true)));

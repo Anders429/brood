@@ -20,8 +20,8 @@
 //!         result,
 //!         views,
 //!     },
-//!     registry,
 //!     Query,
+//!     Registry,
 //!     World,
 //! };
 //!
@@ -30,7 +30,7 @@
 //! struct Bar(bool);
 //! struct Baz(f64);
 //!
-//! type Registry = registry!(Foo, Bar, Baz);
+//! type Registry = Registry!(Foo, Bar, Baz);
 //!
 //! let mut world = World::<Registry>::new();
 //! world.insert(entity!(Foo(42), Bar(true), Baz(1.5)));
@@ -74,8 +74,8 @@ use core::marker::PhantomData;
 ///         result,
 ///         views,
 ///     },
-///     registry,
 ///     Query,
+///     Registry,
 ///     World,
 /// };
 ///
@@ -84,7 +84,7 @@ use core::marker::PhantomData;
 /// struct Bar(bool);
 /// struct Baz(f64);
 ///
-/// type Registry = registry!(Foo, Bar, Baz);
+/// type Registry = Registry!(Foo, Bar, Baz);
 ///
 /// let mut world = World::<Registry>::new();
 /// world.insert(entity!(Foo(42), Bar(true), Baz(1.5)));

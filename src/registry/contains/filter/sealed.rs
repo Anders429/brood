@@ -246,14 +246,14 @@ mod tests {
     use super::*;
     use crate::{
         query::views,
-        registry,
+        Registry,
     };
     use alloc::vec;
 
     struct A;
     struct B;
 
-    type Registry = registry!(A, B);
+    type Registry = Registry!(A, B);
 
     #[test]
     fn filter_none() {

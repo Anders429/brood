@@ -307,6 +307,7 @@ mod tests {
         archetype::Archetype,
         entity,
         registry,
+        Registry,
     };
     use claims::assert_ok;
     use core::{
@@ -330,7 +331,7 @@ mod tests {
     #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
     struct B;
 
-    type Registry = registry!(A, B);
+    type Registry = Registry!(A, B);
 
     trait Seed<R>
     where

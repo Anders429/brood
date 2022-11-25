@@ -88,7 +88,7 @@ mod tests {
     use super::*;
     use crate::{
         entity,
-        registry,
+        Registry,
     };
     use serde_derive::{
         Deserialize,
@@ -108,7 +108,7 @@ mod tests {
     #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
     struct B(char);
 
-    type Registry = registry!(A, B);
+    type Registry = Registry!(A, B);
 
     #[test]
     fn serialize_deserialize_empty() {

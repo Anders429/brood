@@ -110,7 +110,7 @@ mod tests {
     use crate::{
         archetype::Identifier,
         entity,
-        registry,
+        Registry,
     };
     use alloc::{
         format,
@@ -203,7 +203,7 @@ mod tests {
     #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
     struct B(char);
 
-    type Registry = registry!(A, B);
+    type Registry = Registry!(A, B);
 
     #[test]
     fn serialize_deserialize_empty() {

@@ -45,7 +45,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::Assertions;
-    use crate::registry;
+    use crate::Registry;
     use fnv::FnvBuildHasher;
     use hashbrown::HashSet;
 
@@ -55,14 +55,14 @@ mod tests {
 
     #[test]
     fn no_duplicates() {
-        type NoDuplicates = registry!(A, B, C);
+        type NoDuplicates = Registry!(A, B, C);
 
         NoDuplicates::assert_no_duplicates(&mut HashSet::with_hasher(FnvBuildHasher::default()));
     }
 
     #[test]
     fn empty_no_duplicates() {
-        type Empty = registry!();
+        type Empty = Registry!();
 
         Empty::assert_no_duplicates(&mut HashSet::with_hasher(FnvBuildHasher::default()));
     }
@@ -70,7 +70,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn has_duplicates() {
-        type HasDuplicates = registry!(A, B, A, C);
+        type HasDuplicates = Registry!(A, B, A, C);
 
         HasDuplicates::assert_no_duplicates(&mut HashSet::with_hasher(FnvBuildHasher::default()));
     }

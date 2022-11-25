@@ -292,7 +292,6 @@ mod tests {
             result,
             views,
         },
-        registry,
         registry::{
             ContainsParQuery,
             ContainsQuery,
@@ -306,6 +305,7 @@ mod tests {
             ParSystem,
             System,
         },
+        Registry,
     };
     use core::any::TypeId;
 
@@ -315,7 +315,7 @@ mod tests {
     struct D;
     struct E;
 
-    type Registry = registry!(A, B, C, D, E);
+    type Registry = Registry!(A, B, C, D, E);
 
     #[test]
     fn null() {

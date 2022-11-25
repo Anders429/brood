@@ -61,7 +61,7 @@ use hashbrown::HashSet;
 /// ``` rust
 /// use brood::{
 ///     entity,
-///     registry,
+///     Registry,
 ///     World,
 /// };
 ///
@@ -70,7 +70,7 @@ use hashbrown::HashSet;
 /// struct Bar(bool);
 ///
 /// // Create a world.
-/// let mut world = World::<registry!(Foo, Bar)>::new();
+/// let mut world = World::<Registry!(Foo, Bar)>::new();
 ///
 /// // Insert a new entity. The returned identifier uniquely identifies the entity.
 /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
@@ -124,14 +124,14 @@ where
     /// # Example
     /// ``` rust
     /// use brood::{
-    ///     registry,
+    ///     Registry,
     ///     World,
     /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
     ///
-    /// type Registry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// let world = World::<Registry>::new();
     /// ```
@@ -148,14 +148,14 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     registry,
+    ///     Registry,
     ///     World,
     /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
     ///
-    /// type Registry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
     ///
@@ -189,14 +189,14 @@ where
     /// ``` rust
     /// use brood::{
     ///     entities,
-    ///     registry,
+    ///     Registry,
     ///     World,
     /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
     ///
-    /// type Registry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
     ///
@@ -242,8 +242,8 @@ where
     ///         result,
     ///         views,
     ///     },
-    ///     registry,
     ///     Query,
+    ///     Registry,
     ///     World,
     /// };
     ///
@@ -251,7 +251,7 @@ where
     /// struct Bar(bool);
     /// struct Baz(u32);
     ///
-    /// type Registry = registry!(Foo, Bar, Baz);
+    /// type Registry = Registry!(Foo, Bar, Baz);
     ///
     /// let mut world = World::<Registry>::new();
     /// let inserted_entity_identifier = world.insert(entity!(Foo(42), Bar(true), Baz(100)));
@@ -303,8 +303,8 @@ where
     ///         result,
     ///         views,
     ///     },
-    ///     registry,
     ///     Query,
+    ///     Registry,
     ///     World,
     /// };
     /// use rayon::iter::ParallelIterator;
@@ -313,7 +313,7 @@ where
     /// struct Bar(bool);
     /// struct Baz(u32);
     ///
-    /// type Registry = registry!(Foo, Bar, Baz);
+    /// type Registry = Registry!(Foo, Bar, Baz);
     ///
     /// let mut world = World::<Registry>::new();
     /// let inserted_entity_identifier = world.insert(entity!(Foo(42), Bar(true), Baz(100)));
@@ -365,9 +365,9 @@ where
     ///         result,
     ///         views,
     ///     },
-    ///     registry,
     ///     registry::ContainsQuery,
     ///     system::System,
+    ///     Registry,
     ///     World,
     /// };
     ///
@@ -375,7 +375,7 @@ where
     /// struct Foo(usize);
     /// struct Bar(usize);
     ///
-    /// type MyRegistry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// // Define system.
     /// struct MySystem;
@@ -397,7 +397,7 @@ where
     ///     }
     /// }
     ///
-    /// let mut world = World::<MyRegistry>::new();
+    /// let mut world = World::<Registry>::new();
     /// world.insert(entity!(Foo(42), Bar(100)));
     ///
     /// world.run_system(&mut MySystem);
@@ -424,9 +424,9 @@ where
     ///         result,
     ///         views,
     ///     },
-    ///     registry,
     ///     registry::ContainsParQuery,
     ///     system::ParSystem,
+    ///     Registry,
     ///     World,
     /// };
     /// use rayon::iter::ParallelIterator;
@@ -435,7 +435,7 @@ where
     /// struct Foo(usize);
     /// struct Bar(usize);
     ///
-    /// type MyRegistry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// // Define system.
     /// struct MySystem;
@@ -454,7 +454,7 @@ where
     ///     }
     /// }
     ///
-    /// let mut world = World::<MyRegistry>::new();
+    /// let mut world = World::<Registry>::new();
     /// world.insert(entity!(Foo(42), Bar(100)));
     ///
     /// world.run_par_system(&mut MySystem);
@@ -483,7 +483,6 @@ where
     ///         result,
     ///         views,
     ///     },
-    ///     registry,
     ///     registry::ContainsQuery,
     ///     system::{
     ///         schedule,
@@ -491,6 +490,7 @@ where
     ///         Schedule,
     ///         System,
     ///     },
+    ///     Registry,
     ///     World,
     /// };
     ///
@@ -498,7 +498,7 @@ where
     /// struct Foo(usize);
     /// struct Bar(usize);
     ///
-    /// type MyRegistry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// // Define systems.
     /// struct SystemA;
@@ -539,7 +539,7 @@ where
     /// // Define schedule.
     /// let mut schedule = schedule!(task::System(SystemA), task::System(SystemB));
     ///
-    /// let mut world = World::<MyRegistry>::new();
+    /// let mut world = World::<Registry>::new();
     /// world.insert(entity!(Foo(42), Bar(100)));
     ///
     /// world.run_schedule(&mut schedule);
@@ -561,14 +561,14 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     registry,
+    ///     Registry,
     ///     World,
     /// };
     ///
     /// struct Foo(usize);
     /// struct Bar(bool);
     ///
-    /// type Registry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
@@ -591,14 +591,14 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     registry,
+    ///     Registry,
     ///     World,
     /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
     ///
-    /// type Registry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
@@ -625,14 +625,14 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     registry,
+    ///     Registry,
     ///     World,
     /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
     ///
-    /// type Registry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
@@ -670,14 +670,14 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     registry,
+    ///     Registry,
     ///     World,
     /// };
     ///
     /// struct Foo(usize);
     /// struct Bar(bool);
     ///
-    /// type Registry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
     /// world.insert(entity!(Foo(42), Bar(true)));
@@ -697,14 +697,14 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entities, registry, World};
+    /// use brood::{entities, Registry, World};
     ///
     /// #[derive(Clone)]
     /// struct Foo(usize);
     /// #[derive(Clone)]
     /// struct Bar(bool);
     ///
-    /// type Registry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
     /// world.extend(entities!((Foo(42), Bar(false)); 100));
@@ -722,14 +722,14 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     registry,
+    ///     Registry,
     ///     World,
     /// };
     ///
     /// struct Foo(usize);
     /// struct Bar(bool);
     ///
-    /// type Registry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
     ///
@@ -748,14 +748,14 @@ where
     ///
     /// # Example
     /// ``` rust
-    /// use brood::{entities, registry, World};
+    /// use brood::{entities, Registry, World};
     ///
     /// #[derive(Clone)]
     /// struct Foo(usize);
     /// #[derive(Clone)]
     /// struct Bar(bool);
     ///
-    /// type Registry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
     ///
@@ -788,7 +788,7 @@ mod tests {
             result,
             views,
         },
-        registry,
+        Registry,
     };
     use alloc::vec;
     use claims::{
@@ -804,7 +804,7 @@ mod tests {
     #[derive(Clone, Debug)]
     struct B(char);
 
-    type Registry = registry!(A, B);
+    type Registry = Registry!(A, B);
 
     #[test]
     fn insert() {

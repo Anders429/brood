@@ -1,6 +1,6 @@
 //! A heterogeneous list of registered [`Component`]s.
 //!
-//! [`Registry`]s are most often defined using the [`registry!`] macro. The items contained within
+//! [`Registry`]s are most often defined using the [`Registry!`] macro. The items contained within
 //! this module should rarely be needed in user code.
 //!
 //! Recommended practice is to define a `Registry` as a custom type, and use that type when
@@ -9,7 +9,7 @@
 //! # Example
 //! ``` rust
 //! use brood::{
-//!     registry,
+//!     Registry,
 //!     World,
 //! };
 //!
@@ -17,14 +17,14 @@
 //! struct Foo(usize);
 //! struct Bar(bool);
 //!
-//! type Registry = registry!(Foo, Bar);
+//! type Registry = Registry!(Foo, Bar);
 //!
 //! let world = World::<Registry>::new();
 //! ```
 //!
 //! [`Component`]: crate::component::Component
 //! [`Registry`]: crate::registry::Registry
-//! [`registry!`]: crate::registry!
+//! [`Registry!`]: crate::Registry!
 //! [`World`]: crate::world::World
 
 pub(crate) mod contains;
@@ -86,13 +86,13 @@ define_null_uninstantiable!();
 ///
 /// # Example
 /// ``` rust
-/// use brood::registry;
+/// use brood::Registry;
 ///
 /// // Define components.
 /// struct Foo(usize);
 /// struct Bar(bool);
 ///
-/// type Registry = registry!(Foo, Bar);
+/// type Registry = Registry!(Foo, Bar);
 /// ```
 ///
 /// [`Component`]: crate::component::Component
@@ -120,7 +120,7 @@ where
 /// # Example
 /// ``` rust
 /// use brood::{
-///     registry,
+///     Registry,
 ///     World,
 /// };
 ///
@@ -129,7 +129,7 @@ where
 /// struct Bar(f32);
 ///
 /// // Define a registry containing those components.
-/// type Registry = registry!(Foo, Bar);
+/// type Registry = Registry!(Foo, Bar);
 ///
 /// // Define a world using the registry.
 /// let world = World::<Registry>::new();
@@ -137,9 +137,9 @@ where
 ///
 /// [`World`]: crate::World
 #[macro_export]
-macro_rules! registry {
+macro_rules! Registry {
     ($component:ty $(,$components:ty)* $(,)?) => {
-        ($component, $crate::registry!($($components,)*))
+        ($component, $crate::Registry!($($components,)*))
     };
     () => {
         $crate::registry::Null

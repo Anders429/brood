@@ -22,7 +22,7 @@
 //! `World`.
 //!
 //! ``` rust
-//! use brood::registry;
+//! use brood::Registry;
 //!
 //! struct Position {
 //!     x: f32,
@@ -34,7 +34,7 @@
 //!     y: f32,
 //! }
 //!
-//! type Registry = registry!(Position, Velocity);
+//! type Registry = Registry!(Position, Velocity);
 //! ```
 //!
 //! You must define a separate component (meaning a new `struct` or `enum`) for each component you
@@ -46,7 +46,7 @@
 //! components within the `Registry` can then be inserted into the `World`.
 //!
 //! ``` rust
-//! # use brood::registry;
+//! # use brood::Registry;
 //! #
 //! # struct Position {
 //! #     x: f32,
@@ -58,7 +58,7 @@
 //! #     y: f32,
 //! # }
 //! #
-//! # type Registry = registry!(Position, Velocity);
+//! # type Registry = Registry!(Position, Velocity);
 //! #
 //! use brood::{
 //!     entity,

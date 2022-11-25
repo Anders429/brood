@@ -285,7 +285,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::registry;
+    use crate::Registry;
     use alloc::vec;
     use serde_derive::Deserialize;
 
@@ -295,7 +295,7 @@ mod tests {
     struct B;
     #[derive(Deserialize)]
     struct C;
-    type Registry = registry!(A, B, C);
+    type Registry = Registry!(A, B, C);
 
     #[test]
     fn expected_row_component_names_empty() {
