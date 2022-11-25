@@ -1,5 +1,5 @@
 use brood::system::Schedule;
 
-type MySchedule = Schedule!(,);
+type Schedule = Schedule!(,);
 
 fn main() {}

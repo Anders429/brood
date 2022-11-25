@@ -4,6 +4,6 @@ use brood::query::Views;
 struct A;
 struct B;
 
-type MyViews = Views!(&A, + &B,);
+type Views = Views!(&A, + &B,);
 
 fn main() {}

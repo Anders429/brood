@@ -1,5 +1,5 @@
 use brood::query::Views;
 
-type MyViews = Views!(,);
+type Views = Views!(,);
 
 fn main() {}

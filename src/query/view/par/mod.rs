@@ -68,7 +68,7 @@ impl<'a> ParView<'a> for entity::Identifier {}
 /// struct Bar(bool);
 ///
 /// // Define views over those components.
-/// type MyViews<'a> = Views!(&'a Foo, &'a mut Bar);
+/// type Views<'a> = Views!(&'a Foo, &'a mut Bar);
 /// ```
 ///
 /// Because the `Component`s viewed above implement both [`Send`] and [`Sync`], the views created

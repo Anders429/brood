@@ -32,6 +32,6 @@ impl System for B {
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> {}
 }
 
-type MySchedule = Schedule!(task::System<A>, + task::System<B>,);
+type Schedule = Schedule!(task::System<A>, + task::System<B>,);
 
 fn main() {}

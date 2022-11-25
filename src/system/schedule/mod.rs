@@ -267,7 +267,7 @@ pub(crate) mod inner {
         ///     }
         /// }
         ///
-        /// type MySchedule = Schedule!(task::System<SystemA>, task::System<SystemB>);
+        /// type Schedule = Schedule!(task::System<SystemA>, task::System<SystemB>);
         /// ```
         macro_rules! Schedule {
             ($task:ty $(,$tasks:ty)* $(,)?) => (

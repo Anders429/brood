@@ -31,7 +31,7 @@
 //! struct Bar(bool);
 //! struct Baz(f64);
 //!
-//! type MyViews<'a> = Views!(&'a mut Foo, &'a Bar, Option<&'a Baz>, entity::Identifier);
+//! type Views<'a> = Views!(&'a mut Foo, &'a Bar, Option<&'a Baz>, entity::Identifier);
 //! ```
 //!
 //! Note that the lifetime `'a` can often be omitted when [`query`]ing a [`World`], but is required
@@ -111,7 +111,7 @@ use sealed::ViewSealed;
 /// struct Foo(u32);
 /// struct Bar(bool);
 ///
-/// type MyViews<'a> = Views!(&'a mut Foo, &'a Bar);
+/// type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 /// ```
 ///
 /// [`Component`]: crate::component::Component
@@ -154,7 +154,7 @@ define_null!();
 /// struct Foo(u32);
 /// struct Bar(bool);
 ///
-/// type MyViews<'a> = Views!(&'a mut Foo, &'a Bar);
+/// type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 /// ```
 ///
 /// [`Component`]: crate::component::Component
@@ -191,7 +191,7 @@ pub(crate) mod inner {
         /// struct Foo(u32);
         /// struct Bar(bool);
         ///
-        /// type MyViews<'a> = Views!(&'a mut Foo, &'a Bar);
+        /// type Views<'a> = Views!(&'a mut Foo, &'a Bar);
         /// ```
         ///
         /// Note that the lifetime `'a` can often be omitted when [`query`]ing a [`World`], but is required
