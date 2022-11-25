@@ -274,7 +274,7 @@ where
     /// [`Filter`]: crate::query::filter::Filter
     /// [`Iterator`]: core::iter::Iterator
     /// [`query`]: crate::query
-    /// [`Views`]: crate::query::view::Views
+    /// [`Views`]: trait@crate::query::view::Views
     pub fn query<'a, V, F, VI, FI, P, I, Q>(
         &'a mut self,
         #[allow(unused_variables)] query: Query<V, F>,

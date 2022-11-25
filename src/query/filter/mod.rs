@@ -11,7 +11,7 @@
 //! [`And`]: crate::query::filter::And
 //! [`Component`]: crate::component::Component
 //! [`Has<C>`]: crate::query::filter::Has
-//! [`Views`]: crate::query::view::Views
+//! [`Views`]: trait@crate::query::view::Views
 //! [`World`]: crate::world::World
 
 mod sealed;
@@ -38,7 +38,7 @@ use core::marker::PhantomData;
 /// [`And`]: crate::query::filter::And
 /// [`Component`]: crate::component::Component
 /// [`Has<C>`]: crate::query::filter::Has
-/// [`Views`]: crate::query::view::Views
+/// [`Views`]: trait@crate::query::view::Views
 /// [`World`]: crate::world::World
 pub trait Filter: Sealed {}
 
@@ -55,7 +55,7 @@ pub trait Filter: Sealed {}
 /// type NoFilter = filter::None;
 /// ```
 ///
-/// [`Views`]: crate::query::view::Views
+/// [`Views`]: trait@crate::query::view::Views
 pub enum None {}
 
 impl Filter for None {}

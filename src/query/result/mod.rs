@@ -46,7 +46,7 @@
 //! [`Component`]: crate::component::Component
 //! [`Filter`]: crate::query::filter::Filter
 //! [`result!`]: crate::query::result!
-//! [`Views`]: crate::query::view::Views
+//! [`Views`]: trait@crate::query::view::Views
 //! [`World`]: crate::world::World
 
 pub(crate) mod get;

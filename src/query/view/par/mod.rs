@@ -78,7 +78,7 @@ impl<'a> ParView<'a> for entity::Identifier {}
 /// [`ParSystem`]: crate::system::ParSystem
 /// [`ParView`]: crate::query::view::ParView
 /// [`par_query`]: crate::world::World::par_query()
-/// [`Views`]: crate::query::view::Views
+/// [`Views`]: trait@crate::query::view::Views
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub trait ParViews<'a>: ParViewsSeal<'a> + Send {}
 

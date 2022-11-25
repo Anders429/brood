@@ -71,7 +71,7 @@
 //! [`ParSystem`]: crate::system::ParSystem
 //! [`Schedule`]: trait@crate::system::Schedule
 //! [`System`]: crate::system::System
-//! [`Views`]: crate::query::view::Views
+//! [`Views`]: trait@crate::query::view::Views
 
 pub mod task;
 
@@ -106,7 +106,7 @@ use task::Task;
 /// [`ParSystem`]: crate::system::ParSystem
 /// [`schedule!`]: crate::system::schedule!
 /// [`System`]: crate::system::System
-/// [`Views`]: crate::query::view::Views
+/// [`Views`]: trait@crate::query::view::Views
 pub trait Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>:
     Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>
 where

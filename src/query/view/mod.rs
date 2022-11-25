@@ -43,7 +43,7 @@
 //! [`query`]: crate::world::World::query()
 //! [`System`]: crate::system::System
 //! [`View`]: crate::query::view::View
-//! [`Views`]: crate::query::view::Views
+//! [`Views`]: trait@crate::query::view::Views
 //! [`Views!`]: crate::query::Views!
 //! [`World`]: crate::world::World.
 
@@ -116,7 +116,7 @@ use sealed::ViewSealed;
 ///
 /// [`Component`]: crate::component::Component
 /// [`Identifier`]: crate::entity::Identifier
-/// [`Views`]: crate::query::view::Views
+/// [`Views`]: trait@crate::query::view::Views
 /// [`Views!`]: crate::query::Views!
 /// [`World`]: crate::world::World
 pub trait View<'a>: ViewSealed<'a> {}

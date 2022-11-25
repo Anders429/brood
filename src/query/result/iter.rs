@@ -64,7 +64,7 @@ use core::{
 /// [`Filter`]: crate::query::filter::Filter
 /// [`query`]: crate::world::World::query()
 /// [`result!`]: crate::query::result!
-/// [`Views`]: crate::query::view::Views
+/// [`Views`]: trait@crate::query::view::Views
 /// [`World`]: crate::world::World
 pub struct Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
