@@ -304,7 +304,7 @@ where
     /// assert_eq!(foo.0, 42);
     /// assert_eq!(bar.0, true);
     /// ```
-    /// 
+    ///
     /// [`Views`]: trait@crate::query::view::Views
     pub fn query<V, F, VI, FI, P, I, Q>(
         &'a mut self,

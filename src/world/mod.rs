@@ -42,9 +42,9 @@ use crate::{
     query::view::ParViews,
     registry::ContainsParQuery,
     system::{
+        schedule::Schedule,
         schedule::Stages,
         ParSystem,
-        schedule::Schedule,
     },
 };
 use alloc::vec::Vec;

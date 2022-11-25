@@ -61,8 +61,8 @@ pub use par::ParSystem;
 #[cfg(feature = "rayon")]
 #[doc(inline)]
 pub use schedule::{
-    schedule,
     inner::Schedule,
+    schedule,
 };
 
 use crate::{
