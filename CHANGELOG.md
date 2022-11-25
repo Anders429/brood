@@ -14,12 +14,13 @@
 - Both `System` and `ParSystem` no longer require a lifetime bound on the `Registry` `R` in their `run()` methods.
 - `Schedule` has been changed from a `struct` to a `trait`.
 - Schedules now have their stages defined at compile-time.
+- `registry!` macro has been renamed to `Registry!` to indicate that it is intended to be a type-level macro.
 ### Removed
 - `system::Null` is removed, since it is no longer needed for defining a `Schedule`.
 - `schedule::Builder` is removed, since it is no longer needed for defining a `Schedule`.
 - The `schedule::raw_task` module has been removed. There is now no distinction between a raw task and a regular task.
 - The `schedule::stage` module has been removed. It still exists as part of the private API, but is no longer exposed publicly.
-- The `schedule::stage!` macro is removed. Schedules are no longer defined in terms of their stages directly, but are defined in terms of their tasks using the `schedule!` and `Schedule!` macros.
+- The `schedule::stages!` macro is removed. Schedules are no longer defined in terms of their stages directly, but are defined in terms of their tasks using the `schedule!` and `Schedule!` macros.
 ### Fixed
 - Mitigated potential bug regarding the way non-root macros are exported when compiling documentation. Previously, a change in Rust's experimental `macro` syntax could have potentially broken usage of the library for all users. Now, a change in the syntax will only break building of the documentation (using `--cfg doc_cfg`), which is acceptable.
 
