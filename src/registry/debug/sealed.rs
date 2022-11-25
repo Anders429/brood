@@ -76,9 +76,9 @@ pub trait Sealed: Registry {
     /// there are components remaining.
     ///
     /// [`DebugMap`]: core::fmt::DebugMap
-    unsafe fn debug_components<'a, 'b, R>(
+    unsafe fn debug_components<R>(
         pointers: &[*const u8],
-        debug_map: &mut DebugMap<'a, 'b>,
+        debug_map: &mut DebugMap,
         identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry;
@@ -95,9 +95,9 @@ impl Sealed for Null {
     {
     }
 
-    unsafe fn debug_components<'a, 'b, R>(
+    unsafe fn debug_components<R>(
         _pointers: &[*const u8],
-        _debug_map: &mut DebugMap<'a, 'b>,
+        _debug_map: &mut DebugMap,
         _identifier_iter: archetype::identifier::Iter<R>,
     ) where
         R: Registry,
@@ -160,9 +160,9 @@ where
         unsafe { R::extract_component_pointers(index, components, pointers, identifier_iter) };
     }
 
-    unsafe fn debug_components<'a, 'b, R_>(
+    unsafe fn debug_components<R_>(
         mut pointers: &[*const u8],
-        debug_map: &mut DebugMap<'a, 'b>,
+        debug_map: &mut DebugMap,
         mut identifier_iter: archetype::identifier::Iter<R_>,
     ) where
         R_: Registry,
