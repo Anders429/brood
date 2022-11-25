@@ -42,12 +42,12 @@ struct Velocity {
 }
 ```
 
-In order to use these components within a `World` container, they will need to be contained in a `Registry`, provided to a `World` on creation. A `Registry` can be created using the `registry!()` macro.
+In order to use these components within a `World` container, they will need to be contained in a `Registry`, provided to a `World` on creation. A `Registry` can be created using the `Registry!()` macro.
 
 ``` rust
-use brood::registry;
+use brood::Registry;
 
-type Registry = registry!(Position, Velocity);
+type Registry = Registry!(Position, Velocity);
 ```
 
 A `World` can then be created using this `Registry`, and entities can be stored inside it.
@@ -75,13 +75,13 @@ Note that entities stored in `world` above can be made up of any subset of the `
 To operate on the entities stored in a `World`, a `System` must be used. `System`s are defined to operate on any entities containing a specified set of components, reading and modifying those components. An example system could be defined and run as follows:
 
 ``` rust
-use brood::{query::{filter, result, views}, registry::ContainsQuery, system::System};
+use brood::{query::{filter, result, Views}, registry::ContainsQuery, system::System};
 
 struct UpdatePosition;
 
 impl System for UpdatePosition {
     type Filter: filter::None;
-    type Views<'a>: views!(&'a mut Position, &'a Velocity);
+    type Views<'a>: Views!(&'a mut Position, &'a Velocity);
 
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
@@ -109,7 +109,7 @@ There are lots of options for more complicated `System`s, including optional com
 For example, a `World` can be serialized to [`bincode`](https://crates.io/crates/bincode) (and deserialized from the same) as follows:
 
 ``` rust
-use brood::{entity, registry, World};
+use brood::{entity, Registry, World};
 
 #[derive(Deserialize, Serialize)]
 struct Position {
@@ -123,7 +123,7 @@ struct Velocity {
     y: f32,
 }
 
-type Registry = registry!(Position, Velocity);
+type Registry = Registry!(Position, Velocity);
 
 let mut world = World::<Registry>::new();
 
@@ -158,7 +158,7 @@ Note that there are two modes for serialization, depending on whether the serial
 To parallelize system operations on entities (commonly referred to as inner-parallelism), a `ParSystem` can be used instead of a standard `System`. This will allow the `ParSystem`'s operations to be spread across multiple CPUs. For example, a `ParSystem` can be defined as follows:
 
 ``` rust
-use brood::{entity, query::{filter, result, views}, registry, registry::ContainsParQuery, World, system::ParSystem};
+use brood::{entity, query::{filter, result, Views}, Registry, registry::ContainsParQuery, World, system::ParSystem};
 
 struct Position {
     x: f32,
@@ -170,7 +170,7 @@ struct Velocity {
     y: f32,
 }
 
-type Registry = registry!(Position, Velocity);
+type Registry = Registry!(Position, Velocity);
 
 let mut world = World::<Registry>::new();
 
@@ -189,7 +189,7 @@ struct UpdatePosition;
 
 impl ParSystem for UpdatePosition {
     type Filter: filter::None;
-    type Views<'a>: views!(&'a mut Position, &'a Velocity);
+    type Views<'a>: Views!(&'a mut Position, &'a Velocity);
 
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
@@ -215,7 +215,7 @@ Multiple `System`s and `ParSystem`s can be run in parallel as well by defining a
 Define and run a `Schedule` that contains multiple `System`s as follows:
 
 ``` rust
-use brood::{entity, query::{filter, result, views}, registry, registry::ContainsQuery, World, system::{schedule, schedule::task, System}};
+use brood::{entity, query::{filter, result, Views}, Registry, registry::ContainsQuery, World, system::{schedule, schedule::task, System}};
 
 struct Position {
     x: f32,
@@ -229,7 +229,7 @@ struct Velocity {
 
 struct IsMoving(bool);
 
-type Registry = registry!(Position, Velocity, IsMoving);
+type Registry = Registry!(Position, Velocity, IsMoving);
 
 let mut world = World::<Registry>::new();
 
@@ -248,7 +248,7 @@ struct UpdatePosition;
 
 impl System for UpdatePosition {
     type Filter: filter::None;
-    type Views<'a>: views!(&'a mut Position, &'a Velocity);
+    type Views<'a>: Views!(&'a mut Position, &'a Velocity);
 
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
@@ -267,7 +267,7 @@ struct UpdateIsMoving;
 
 impl System for UpdateIsMoving {
     type Filter: filter::None;
-    type Views<'a>: views!(&'a Velocity, &'a mut IsMoving);
+    type Views<'a>: Views!(&'a Velocity, &'a mut IsMoving);
 
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,

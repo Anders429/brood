@@ -34,14 +34,14 @@ use core::fmt;
 /// ``` rust
 /// use brood::{
 ///     entity,
-///     registry,
+///     Registry,
 ///     World,
 /// };
 ///
 /// struct Foo(u32);
 /// struct Bar(bool);
 ///
-/// type Registry = registry!(Foo, Bar);
+/// type Registry = Registry!(Foo, Bar);
 ///
 /// let mut world = World::<Registry>::new();
 /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
@@ -76,7 +76,7 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     registry,
+    ///     Registry,
     ///     World,
     /// };
     ///
@@ -84,7 +84,7 @@ where
     /// struct Bar(bool);
     /// struct Baz(f64);
     ///
-    /// type Registry = registry!(Foo, Bar, Baz);
+    /// type Registry = Registry!(Foo, Bar, Baz);
     ///
     /// let mut world = World::<Registry>::new();
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
@@ -184,14 +184,14 @@ where
     /// ``` rust
     /// use brood::{
     ///     entity,
-    ///     registry,
+    ///     Registry,
     ///     World,
     /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
     ///
-    /// type Registry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
@@ -282,28 +282,30 @@ where
     ///     query::{
     ///         filter,
     ///         result,
-    ///         views,
+    ///         Views,
     ///     },
-    ///     registry,
     ///     Query,
+    ///     Registry,
     ///     World,
     /// };
     ///
     /// struct Foo(u32);
     /// struct Bar(bool);
     ///
-    /// type Registry = registry!(Foo, Bar);
+    /// type Registry = Registry!(Foo, Bar);
     ///
     /// let mut world = World::<Registry>::new();
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(true)));
     /// let mut entry = world.entry(entity_identifier).unwrap();
     ///
-    /// let result = entry.query(Query::<views!(&Foo, &Bar), filter::None>::new());
+    /// let result = entry.query(Query::<Views!(&Foo, &Bar), filter::None>::new());
     /// assert!(result.is_some());
     /// let result!(foo, bar) = result.unwrap();
     /// assert_eq!(foo.0, 42);
     /// assert_eq!(bar.0, true);
     /// ```
+    ///
+    /// [`Views`]: trait@crate::query::view::Views
     pub fn query<V, F, VI, FI, P, I, Q>(
         &'a mut self,
         #[allow(unused_variables)] query: Query<V, F>,

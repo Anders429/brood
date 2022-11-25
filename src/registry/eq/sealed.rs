@@ -163,7 +163,7 @@ mod tests {
     use super::Sealed;
     use crate::{
         archetype::Identifier,
-        registry,
+        Registry,
     };
     use alloc::vec;
 
@@ -175,7 +175,7 @@ mod tests {
         struct B(bool);
         #[derive(PartialEq)]
         struct C;
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
         let mut a_column_a = vec![A(0), A(1), A(2)];
         let mut b_column_a = vec![B(false), B(true), B(true)];
@@ -207,7 +207,7 @@ mod tests {
         struct B(bool);
         #[derive(PartialEq)]
         struct C;
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
         let mut a_column_a = vec![A(0), A(1), A(2)];
         let mut b_column_a = vec![B(false), B(true), B(true)];

@@ -133,7 +133,7 @@ mod tests {
     use crate::{
         archetype,
         entity,
-        registry,
+        Registry,
     };
     use alloc::vec::Vec;
 
@@ -148,11 +148,11 @@ mod tests {
     struct I;
 
     // Using enough components to create archetype identifiers with more than one byte.
-    type Registry = registry!(A, B, C, D, E, F, G, H, I);
+    type Registry = Registry!(A, B, C, D, E, F, G, H, I);
 
     #[test]
     fn create_archetype_identifier_empty_registry() {
-        type Registry = registry!();
+        type Registry = Registry!();
 
         assert_eq!(Registry::create_archetype_identifier(), unsafe {
             archetype::Identifier::<Registry>::new(Vec::new())

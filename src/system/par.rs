@@ -24,7 +24,7 @@ use crate::{
 ///         filter,
 ///         filter::Filter,
 ///         result,
-///         views,
+///         Views,
 ///     },
 ///     registry::ContainsParQuery,
 ///     system::ParSystem,
@@ -39,7 +39,7 @@ use crate::{
 /// struct MySystem;
 ///
 /// impl ParSystem for MySystem {
-///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
+///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
 ///     fn run<'a, R, FI, VI, P, I, Q>(
@@ -83,7 +83,7 @@ pub trait ParSystem {
     ///         filter,
     ///         filter::Filter,
     ///         result,
-    ///         views,
+    ///         Views,
     ///     },
     ///     registry::ContainsParQuery,
     ///     system::ParSystem,
@@ -98,7 +98,7 @@ pub trait ParSystem {
     /// struct MySystem;
     ///
     /// impl ParSystem for MySystem {
-    ///     type Views<'a> = views!(&'a mut Foo, &'a Bar);
+    ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
@@ -135,7 +135,7 @@ pub trait ParSystem {
     /// executes the removal during post processing.
     ///
     /// ``` rust
-    /// use brood::{entity, query::{filter, filter::Filter, result, views}, registry::{ContainsParQuery, Registry}, system::ParSystem, World};
+    /// use brood::{entity, query::{filter, filter::Filter, result, Views}, registry::{ContainsParQuery, Registry}, system::ParSystem, World};
     /// use rayon::iter::ParallelIterator;
     ///
     /// // Define components.
@@ -149,7 +149,7 @@ pub trait ParSystem {
     /// }
     ///
     /// impl ParSystem for MySystem {
-    ///     type Views<'a> = views!(&'a mut Foo, &'a Bar, entity::Identifier);
+    ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar, entity::Identifier);
     ///     type Filter = filter::None;
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)

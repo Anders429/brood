@@ -310,7 +310,7 @@ mod tests {
     use crate::{
         archetype,
         archetypes::Archetypes,
-        registry,
+        Registry,
     };
     use alloc::vec;
 
@@ -327,7 +327,7 @@ mod tests {
     );
 
     type Registry =
-        registry!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
+        Registry!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
 
     #[test]
     fn get_mut_or_insert_new_insertion() {

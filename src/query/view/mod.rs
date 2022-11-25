@@ -17,13 +17,13 @@
 //! results.
 //!
 //! `Views` is a heterogeneous list of individual `View`s. Therefore, it is easiest to define them
-//! using the [`views!`] macro.
+//! using the [`Views!`] macro.
 //!
 //! # Example
 //! ``` rust
 //! use brood::{
 //!     entity,
-//!     query::views,
+//!     query::Views,
 //! };
 //!
 //! // Define components.
@@ -31,7 +31,7 @@
 //! struct Bar(bool);
 //! struct Baz(f64);
 //!
-//! type Views<'a> = views!(&'a mut Foo, &'a Bar, Option<&'a Baz>, entity::Identifier);
+//! type Views<'a> = Views!(&'a mut Foo, &'a Bar, Option<&'a Baz>, entity::Identifier);
 //! ```
 //!
 //! Note that the lifetime `'a` can often be omitted when [`query`]ing a [`World`], but is required
@@ -43,8 +43,8 @@
 //! [`query`]: crate::world::World::query()
 //! [`System`]: crate::system::System
 //! [`View`]: crate::query::view::View
-//! [`Views`]: crate::query::view::Views
-//! [`views!`]: crate::query::views!
+//! [`Views`]: trait@crate::query::view::Views
+//! [`Views!`]: crate::query::Views!
 //! [`World`]: crate::world::World.
 
 mod get;
@@ -70,7 +70,6 @@ pub(crate) use sealed::ViewsSealed;
 
 use crate::{
     component::Component,
-    doc,
     entity,
     hlist::define_null,
 };
@@ -102,23 +101,23 @@ use sealed::ViewSealed;
 /// ```
 ///
 /// Note that a single `View` by itself isn't very useful. To be usable in querying a [`World`],
-/// a [`Views`] heterogeneous list must be used. It is recommended to use the [`views!`] macro to
+/// a [`Views`] heterogeneous list must be used. It is recommended to use the [`Views!`] macro to
 /// construct this heterogeneous list.
 ///
 /// ``` rust
-/// use brood::query::views;
+/// use brood::query::Views;
 ///
 /// // Define components.
 /// struct Foo(u32);
 /// struct Bar(bool);
 ///
-/// type Views<'a> = views!(&'a mut Foo, &'a Bar);
+/// type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 /// ```
 ///
 /// [`Component`]: crate::component::Component
 /// [`Identifier`]: crate::entity::Identifier
-/// [`Views`]: crate::query::view::Views
-/// [`views!`]: crate::query::views!
+/// [`Views`]: trait@crate::query::view::Views
+/// [`Views!`]: crate::query::Views!
 /// [`World`]: crate::world::World
 pub trait View<'a>: ViewSealed<'a> {}
 
@@ -145,23 +144,23 @@ define_null!();
 /// In other words, borrows in `Views` must follow Rust's
 /// [borrowing rules](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html).
 ///
-/// As `Views` is a heterogeneous list, it is most easily constructed using the [`views!`] macro.
+/// As `Views` is a heterogeneous list, it is most easily constructed using the [`Views!`] macro.
 ///
 /// # Example
 /// ``` rust
-/// use brood::query::views;
+/// use brood::query::Views;
 ///
 /// // Define components.
 /// struct Foo(u32);
 /// struct Bar(bool);
 ///
-/// type Views<'a> = views!(&'a mut Foo, &'a Bar);
+/// type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 /// ```
 ///
 /// [`Component`]: crate::component::Component
 /// [`Filter`]: crate::query::filter::Filter
 /// [`View`]: crate::query::view::View
-/// [`views!`]: crate::query::views!
+/// [`Views!`]: crate::query::Views!
 /// [`World`]: crate::world::World
 pub trait Views<'a>: ViewsSealed<'a> {}
 
@@ -174,38 +173,43 @@ where
 {
 }
 
-doc::non_root_macro! {
-    /// Creates a set of [`View`]s over components.
-    ///
-    /// These views can be used to [`query`] the components stored within a [`World`]. They can also be
-    /// used when defining [`System`]s to be run over components stored in a [`World`].
-    ///
-    /// See the documentation for [`View`] to learn more about what kinds of `View`s can be created.
-    ///
-    /// # Example
-    /// ``` rust
-    /// use brood::query::views;
-    ///
-    /// // Define components.
-    /// struct Foo(u32);
-    /// struct Bar(bool);
-    ///
-    /// type Views<'a> = views!(&'a mut Foo, &'a Bar);
-    /// ```
-    ///
-    /// Note that the lifetime `'a` can often be omitted when [`query`]ing a [`World`], but is required
-    /// when defining a [`System`].
-    ///
-    /// [`query`]: crate::world::World::query()
-    /// [`System`]: crate::system::System
-    /// [`View`]: crate::query::view::View
-    /// [`World`]: crate::world::World
-    macro_rules! views {
-        ($view:ty $(,$views:ty)* $(,)?) => (
-            ($view, $crate::query::view::views!($($views,)*))
-        );
-        () => (
-            $crate::query::view::Null
-        );
+pub(crate) mod inner {
+    use crate::doc;
+    doc::non_root_macro! {
+        /// Creates a set of [`View`]s over components.
+        ///
+        /// These views can be used to [`query`] the components stored within a [`World`]. They can also be
+        /// used when defining [`System`]s to be run over components stored in a [`World`].
+        ///
+        /// See the documentation for [`View`] to learn more about what kinds of `View`s can be created.
+        ///
+        /// # Example
+        /// ``` rust
+        /// use brood::query::Views;
+        ///
+        /// // Define components.
+        /// struct Foo(u32);
+        /// struct Bar(bool);
+        ///
+        /// type Views<'a> = Views!(&'a mut Foo, &'a Bar);
+        /// ```
+        ///
+        /// Note that the lifetime `'a` can often be omitted when [`query`]ing a [`World`], but is required
+        /// when defining a [`System`].
+        ///
+        /// [`query`]: crate::world::World::query()
+        /// [`System`]: crate::system::System
+        /// [`View`]: crate::query::view::View
+        /// [`World`]: crate::world::World
+        macro_rules! Views {
+            ($view:ty $(,$views:ty)* $(,)?) => (
+                ($view, $crate::query::view::Views!($($views,)*))
+            );
+            () => (
+                $crate::query::view::Null
+            );
+        }
     }
 }
+
+pub use inner::Views;

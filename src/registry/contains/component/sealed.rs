@@ -93,7 +93,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::Sealed;
-    use crate::registry;
+    use crate::Registry;
 
     struct A;
     struct B;
@@ -101,7 +101,7 @@ mod tests {
     struct D;
     struct E;
 
-    type Registry = registry!(A, B, C, D, E);
+    type Registry = Registry!(A, B, C, D, E);
 
     #[test]
     fn contains_start() {

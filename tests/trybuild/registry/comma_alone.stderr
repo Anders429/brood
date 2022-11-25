@@ -1,7 +1,7 @@
 error: no rules expected the token `,`
  --> tests/trybuild/registry/comma_alone.rs:3:27
   |
-3 | type Registry = registry!(,);
+3 | type Registry = Registry!(,);
   |                           ^ no rules expected this token in macro call
   |
 note: while trying to match meta-variable `$component:ty`

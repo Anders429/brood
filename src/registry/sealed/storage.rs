@@ -1090,7 +1090,7 @@ mod tests {
     use super::Storage;
     use crate::{
         archetype::Identifier,
-        registry,
+        Registry,
     };
     use alloc::{
         vec,
@@ -1107,7 +1107,7 @@ mod tests {
 
     #[test]
     fn new_components_with_capacity_empty_registry() {
-        type Registry = registry!();
+        type Registry = Registry!();
         let identifier = unsafe { Identifier::<Registry>::new(Vec::new()) };
 
         let mut components = Vec::new();
@@ -1121,7 +1121,7 @@ mod tests {
         struct A(usize);
         struct B(usize);
         struct C(usize);
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
         const CAPACITY: usize = 100;
 
@@ -1143,7 +1143,7 @@ mod tests {
         struct A(usize);
         struct B(usize);
         struct C(usize);
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![5]) };
         const CAPACITY: usize = 100;
 
@@ -1164,7 +1164,7 @@ mod tests {
         struct A(usize);
         struct B(usize);
         struct C(usize);
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![0]) };
         const CAPACITY: usize = 100;
 
@@ -1178,7 +1178,7 @@ mod tests {
 
     #[test]
     fn size_of_components_for_identifier_empty_registry() {
-        type Registry = registry!();
+        type Registry = Registry!();
         let identifier = unsafe { Identifier::<Registry>::new(Vec::new()) };
 
         let size = unsafe { Registry::size_of_components_for_identifier(identifier.iter()) };
@@ -1191,7 +1191,7 @@ mod tests {
         struct A;
         struct B(f32);
         struct C(u8);
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
 
         let size = unsafe { Registry::size_of_components_for_identifier(identifier.iter()) };
@@ -1204,7 +1204,7 @@ mod tests {
         struct A;
         struct B(f32);
         struct C(u8);
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![5]) };
 
         let size = unsafe { Registry::size_of_components_for_identifier(identifier.iter()) };
@@ -1217,7 +1217,7 @@ mod tests {
         struct A;
         struct B(f32);
         struct C(u8);
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![0]) };
 
         let size = unsafe { Registry::size_of_components_for_identifier(identifier.iter()) };
@@ -1227,7 +1227,7 @@ mod tests {
 
     #[test]
     fn remove_component_row_empty_registry() {
-        type Registry = registry!();
+        type Registry = Registry!();
         let identifier = unsafe { Identifier::<Registry>::new(Vec::new()) };
         // `components` must be empty because there are no components in the registry.
         let mut components = Vec::new();
@@ -1245,7 +1245,7 @@ mod tests {
         struct B(bool);
         #[derive(Debug, Eq, PartialEq)]
         struct C;
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
         let mut a_column = ManuallyDrop::new(vec![A(0), A(1), A(2)]);
         let mut b_column = ManuallyDrop::new(vec![B(false), B(true), B(true)]);
@@ -1292,7 +1292,7 @@ mod tests {
         struct B(bool);
         #[derive(Debug, Eq, PartialEq)]
         struct C;
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![5]) };
         let mut a_column = ManuallyDrop::new(vec![A(0), A(1), A(2)]);
         let mut c_column = ManuallyDrop::new(vec![C, C, C]);
@@ -1326,7 +1326,7 @@ mod tests {
         struct A(usize);
         struct B(bool);
         struct C;
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![0]) };
         // `components` must be empty because there are no components in the identifier.
         let mut components = Vec::new();
@@ -1342,7 +1342,7 @@ mod tests {
         struct A(usize);
         struct B(bool);
         struct C;
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
         let mut a_column = vec![A(0), A(1), A(2)];
         let mut b_column = vec![B(false), B(true), B(true)];
@@ -1358,7 +1358,7 @@ mod tests {
 
     #[test]
     fn pop_component_row_empty_registry() {
-        type Registry = registry!();
+        type Registry = Registry!();
         let identifier = unsafe { Identifier::<Registry>::new(Vec::new()) };
         // `components` must be empty because there are no components in the registry.
         let mut components = Vec::new();
@@ -1388,7 +1388,7 @@ mod tests {
         struct B(bool);
         #[derive(Debug, Eq, PartialEq)]
         struct C;
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
         let mut a_column = ManuallyDrop::new(vec![A(0), A(1), A(2)]);
         let mut b_column = ManuallyDrop::new(vec![B(false), B(true), B(true)]);
@@ -1455,7 +1455,7 @@ mod tests {
         struct B(bool);
         #[derive(Debug, Eq, PartialEq)]
         struct C;
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![5]) };
         let mut a_column = ManuallyDrop::new(vec![A(0), A(1), A(2)]);
         let mut c_column = ManuallyDrop::new(vec![C, C, C]);
@@ -1506,7 +1506,7 @@ mod tests {
         struct A(usize);
         struct B(bool);
         struct C;
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![0]) };
         // `components` must be empty because there are no components in the identifier.
         let mut components = Vec::new();
@@ -1534,7 +1534,7 @@ mod tests {
         struct A(usize);
         struct B(bool);
         struct C;
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
         let mut a_column = vec![A(0), A(1), A(2)];
         let mut b_column = vec![B(false), B(true), B(true)];
@@ -1567,7 +1567,7 @@ mod tests {
         struct B(bool);
         #[derive(Debug, PartialEq)]
         struct C(f32);
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
         let mut a_column = ManuallyDrop::new(vec![A(0), A(1), A(2)]);
         let mut b_column = ManuallyDrop::new(vec![B(false), B(true), B(true)]);
@@ -1637,7 +1637,7 @@ mod tests {
         struct B(bool);
         #[derive(Debug, PartialEq)]
         struct C(f32);
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![5]) };
         let mut a_column = ManuallyDrop::new(vec![A(0), A(1), A(2)]);
         let mut c_column = ManuallyDrop::new(vec![C(1.0), C(1.1), C(1.2)]);
@@ -1698,7 +1698,7 @@ mod tests {
 
     #[test]
     fn free_components_empty_registry() {
-        type Registry = registry!();
+        type Registry = Registry!();
         let identifier = unsafe { Identifier::<Registry>::new(Vec::new()) };
         let mut components = Vec::new();
 
@@ -1714,7 +1714,7 @@ mod tests {
                 unsafe { DROP_COUNT += 1 };
             }
         }
-        type Registry = registry!(A);
+        type Registry = Registry!(A);
         let identifier = unsafe { Identifier::<Registry>::new(vec![1]) };
         let mut a_column = ManuallyDrop::new(vec![A]);
         let mut components = vec![(a_column.as_mut_ptr().cast::<u8>(), a_column.capacity())];
@@ -1726,7 +1726,7 @@ mod tests {
 
     #[test]
     fn try_free_components_empty_registry() {
-        type Registry = registry!();
+        type Registry = Registry!();
         let identifier = unsafe { Identifier::<Registry>::new(Vec::new()) };
         let mut components = Vec::new();
 
@@ -1742,7 +1742,7 @@ mod tests {
                 unsafe { DROP_COUNT += 1 };
             }
         }
-        type Registry = registry!(A);
+        type Registry = Registry!(A);
         let identifier = unsafe { Identifier::<Registry>::new(vec![1]) };
         let mut a_column = ManuallyDrop::new(vec![A]);
         let mut components = vec![(a_column.as_mut_ptr().cast::<u8>(), a_column.capacity())];
@@ -1762,7 +1762,7 @@ mod tests {
             }
         }
         struct B;
-        type Registry = registry!(A, B);
+        type Registry = Registry!(A, B);
         let identifier = unsafe { Identifier::<Registry>::new(vec![3]) };
         let mut a_column = ManuallyDrop::new(vec![A]);
         let mut components = vec![(a_column.as_mut_ptr().cast::<u8>(), a_column.capacity())];
@@ -1774,7 +1774,7 @@ mod tests {
 
     #[test]
     fn clear_components_empty_registry() {
-        type Registry = registry!();
+        type Registry = Registry!();
         let identifier = unsafe { Identifier::<Registry>::new(Vec::new()) };
         let mut components = Vec::new();
 
@@ -1788,7 +1788,7 @@ mod tests {
         struct A(usize);
         struct B(bool);
         struct C;
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
         let mut a_column = ManuallyDrop::new(vec![A(0), A(1), A(2)]);
         let mut b_column = ManuallyDrop::new(vec![B(false), B(true), B(true)]);
@@ -1832,7 +1832,7 @@ mod tests {
         struct A(usize);
         struct B(bool);
         struct C;
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![5]) };
         let mut a_column = ManuallyDrop::new(vec![A(0), A(1), A(2)]);
         let mut c_column = ManuallyDrop::new(vec![C, C, C]);
@@ -1863,7 +1863,7 @@ mod tests {
 
     #[test]
     fn shrink_components_to_fit_empty_registry() {
-        type Registry = registry!();
+        type Registry = Registry!();
         let identifier = unsafe { Identifier::<Registry>::new(Vec::new()) };
         let mut components = Vec::new();
 
@@ -1877,7 +1877,7 @@ mod tests {
         struct A(usize);
         struct B(bool);
         struct C;
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![7]) };
         let mut a_column = ManuallyDrop::new(vec![
             A(0),
@@ -1942,7 +1942,7 @@ mod tests {
         struct A(usize);
         struct B(bool);
         struct C;
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
         let identifier = unsafe { Identifier::<Registry>::new(vec![3]) };
         let mut a_column = ManuallyDrop::new(vec![
             A(0),

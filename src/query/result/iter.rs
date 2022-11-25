@@ -38,22 +38,22 @@ use core::{
 ///     query::{
 ///         filter,
 ///         result,
-///         views,
+///         Views,
 ///     },
-///     registry,
 ///     Query,
+///     Registry,
 ///     World,
 /// };
 ///
 /// struct Foo(u32);
 /// struct Bar(bool);
 ///
-/// type Registry = registry!(Foo, Bar);
+/// type Registry = Registry!(Foo, Bar);
 ///
 /// let mut world = World::<Registry>::new();
 /// world.insert(entity!(Foo(42), Bar(true)));
 ///
-/// for result!(foo, bar) in world.query(Query::<views!(&mut Foo, &Bar)>::new()) {
+/// for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar)>::new()) {
 ///     if bar.0 {
 ///         foo.0 += 1;
 ///     }
@@ -64,7 +64,7 @@ use core::{
 /// [`Filter`]: crate::query::filter::Filter
 /// [`query`]: crate::world::World::query()
 /// [`result!`]: crate::query::result!
-/// [`Views`]: crate::query::view::Views
+/// [`Views`]: trait@crate::query::view::Views
 /// [`World`]: crate::world::World
 pub struct Iter<'a, R, F, FI, V, VI, P, I, Q>
 where

@@ -1,7 +1,7 @@
 error: no rules expected the token `+`
  --> tests/trybuild/registry/unexpected_token.rs:7:30
   |
-7 | type Registry = registry!(A, + B,);
+7 | type Registry = Registry!(A, + B,);
   |                              ^ no rules expected this token in macro call
   |
 note: while trying to match meta-variable `$components:ty`

@@ -1,4 +1,4 @@
-use brood::{query::{views, filter, result}, registry::ContainsQuery, system::{System, Schedule}};
+use brood::{query::{Views, filter, result}, registry::ContainsQuery, system::{System, Schedule}};
 // This import is technically unused, since the macro fails to compile before it would be consumed.
 // I'm leaving it here, though, for completeness; user code would use this module, and these tests
 // should do their best to simulate user code.
@@ -9,7 +9,7 @@ use brood::system::schedule::task;
 struct A;
 
 impl System for A {
-    type Views<'a> = views!();
+    type Views<'a> = Views!();
     type Filter = filter::None;
 
     fn run<'a, R, FI, VI, P, I, Q>(
@@ -22,7 +22,7 @@ impl System for A {
 struct B;
 
 impl System for B {
-    type Views<'a> = views!();
+    type Views<'a> = Views!();
     type Filter = filter::None;
 
     fn run<'a, R, FI, VI, P, I, Q>(
@@ -32,6 +32,6 @@ impl System for B {
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> {}
 }
 
-type MySchedule = Schedule!(task::System<A>, + task::System<B>,);
+type Schedule = Schedule!(task::System<A>, + task::System<B>,);
 
 fn main() {}

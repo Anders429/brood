@@ -105,7 +105,7 @@ where
 mod tests {
     use crate::{
         archetype::Identifier,
-        registry,
+        Registry,
     };
     use alloc::{
         vec,
@@ -125,7 +125,7 @@ mod tests {
     );
 
     type Registry =
-        registry!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
+        Registry!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
 
     #[test]
     fn none_set() {
@@ -177,14 +177,14 @@ mod tests {
 
     #[test]
     fn no_components() {
-        let buffer = unsafe { Identifier::<registry!()>::new(Vec::new()) };
+        let buffer = unsafe { Identifier::<Registry!()>::new(Vec::new()) };
 
         assert_eq!(unsafe { buffer.iter() }.collect::<Vec<bool>>(), Vec::new());
     }
 
     #[test]
     fn seven_components() {
-        let buffer = unsafe { Identifier::<registry!(A, B, C, D, E, F, G)>::new(vec![0]) };
+        let buffer = unsafe { Identifier::<Registry!(A, B, C, D, E, F, G)>::new(vec![0]) };
 
         assert_eq!(
             unsafe { buffer.iter() }.collect::<Vec<bool>>(),
@@ -194,7 +194,7 @@ mod tests {
 
     #[test]
     fn eight_components() {
-        let buffer = unsafe { Identifier::<registry!(A, B, C, D, E, F, G, H)>::new(vec![0]) };
+        let buffer = unsafe { Identifier::<Registry!(A, B, C, D, E, F, G, H)>::new(vec![0]) };
 
         assert_eq!(
             unsafe { buffer.iter() }.collect::<Vec<bool>>(),
@@ -204,7 +204,7 @@ mod tests {
 
     #[test]
     fn nine_components() {
-        let buffer = unsafe { Identifier::<registry!(A, B, C, D, E, F, G, H, I)>::new(vec![0, 0]) };
+        let buffer = unsafe { Identifier::<Registry!(A, B, C, D, E, F, G, H, I)>::new(vec![0, 0]) };
 
         assert_eq!(
             unsafe { buffer.iter() }.collect::<Vec<bool>>(),

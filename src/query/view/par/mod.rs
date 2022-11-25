@@ -61,14 +61,14 @@ impl<'a> ParView<'a> for entity::Identifier {}
 ///
 /// # Example
 /// ``` rust
-/// use brood::query::views;
+/// use brood::query::Views;
 ///
 /// // Define components.
 /// struct Foo(usize);
 /// struct Bar(bool);
 ///
 /// // Define views over those components.
-/// type Views<'a> = views!(&'a Foo, &'a mut Bar);
+/// type Views<'a> = Views!(&'a Foo, &'a mut Bar);
 /// ```
 ///
 /// Because the `Component`s viewed above implement both [`Send`] and [`Sync`], the views created
@@ -78,7 +78,7 @@ impl<'a> ParView<'a> for entity::Identifier {}
 /// [`ParSystem`]: crate::system::ParSystem
 /// [`ParView`]: crate::query::view::ParView
 /// [`par_query`]: crate::world::World::par_query()
-/// [`Views`]: crate::query::view::Views
+/// [`Views`]: trait@crate::query::view::Views
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub trait ParViews<'a>: ParViewsSeal<'a> + Send {}
 

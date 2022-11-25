@@ -18,10 +18,10 @@
 //!     query::{
 //!         filter,
 //!         result,
-//!         views,
+//!         Views,
 //!     },
-//!     registry,
 //!     Query,
+//!     Registry,
 //!     World,
 //! };
 //!
@@ -30,12 +30,12 @@
 //! struct Bar(bool);
 //! struct Baz(f64);
 //!
-//! type Registry = registry!(Foo, Bar, Baz);
+//! type Registry = Registry!(Foo, Bar, Baz);
 //!
 //! let mut world = World::<Registry>::new();
 //! world.insert(entity!(Foo(42), Bar(true), Baz(1.5)));
 //!
-//! for result!(foo, bar) in world.query(Query::<views!(&mut Foo, &Bar), filter::Has<Baz>>::new()) {
+//! for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar), filter::Has<Baz>>::new()) {
 //!     // Do something.
 //! }
 //! ```
@@ -43,7 +43,7 @@
 //! [`Component`]: crate::component::Component
 //! [`Filter`]: crate::query::filter::Filter
 //! [`result!`]: crate::query::result!
-//! [`Views`]: crate::query::view::Views
+//! [`Views`]: trait@crate::query::view::Views
 //! [`World`]: crate::world::World
 
 pub mod filter;
@@ -55,7 +55,7 @@ pub(crate) mod claim;
 #[doc(inline)]
 pub use result::result;
 #[doc(inline)]
-pub use view::views;
+pub use view::inner::Views;
 
 use core::marker::PhantomData;
 
@@ -72,10 +72,10 @@ use core::marker::PhantomData;
 ///     query::{
 ///         filter,
 ///         result,
-///         views,
+///         Views,
 ///     },
-///     registry,
 ///     Query,
+///     Registry,
 ///     World,
 /// };
 ///
@@ -84,12 +84,12 @@ use core::marker::PhantomData;
 /// struct Bar(bool);
 /// struct Baz(f64);
 ///
-/// type Registry = registry!(Foo, Bar, Baz);
+/// type Registry = Registry!(Foo, Bar, Baz);
 ///
 /// let mut world = World::<Registry>::new();
 /// world.insert(entity!(Foo(42), Bar(true), Baz(1.5)));
 ///
-/// for result!(foo, bar) in world.query(Query::<views!(&mut Foo, &Bar), filter::Has<Baz>>::new()) {
+/// for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar), filter::Has<Baz>>::new()) {
 ///     // Do something.
 /// }
 /// ```
