@@ -69,7 +69,7 @@
 //! ```
 //!
 //! [`ParSystem`]: crate::system::ParSystem
-//! [`Schedule`]: crate::system::Schedule
+//! [`Schedule`]: trait@crate::system::Schedule
 //! [`System`]: crate::system::System
 //! [`Views`]: crate::query::view::Views
 
