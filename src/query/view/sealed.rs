@@ -2,7 +2,6 @@ use crate::{
     component::Component,
     entity,
     query::{
-        claim::Claim,
         result::Results,
         view::Null,
     },
@@ -13,7 +12,7 @@ use core::{
 };
 use either::Either;
 
-pub trait ViewSealed<'a>: Claim {
+pub trait ViewSealed<'a> {
     type Result: Iterator<Item = Self>;
 }
 
@@ -55,7 +54,7 @@ impl<'a> ViewSealed<'a> for entity::Identifier {
     type Result = iter::Copied<slice::Iter<'a, Self>>;
 }
 
-pub trait ViewsSealed<'a>: Claim {
+pub trait ViewsSealed<'a> {
     type Results: Results<View = Self>;
 }
 
