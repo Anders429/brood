@@ -159,6 +159,31 @@ where
     }
 }
 
+/// Clones the identifier into a new buffer.
+///
+/// This is not equivalent to the `Clone` impl for `IdentifierRef<R>`. This creates an entirely new
+/// allocation.
+impl<R> Clone for Identifier<R>
+where
+    R: Registry,
+{
+    fn clone(&self) -> Self {
+        // SAFETY: `self.pointer` and `self.capacity` are guaranteed to be the raw parts for a
+        // `Vec<u8>` of length `(R::LEN + 7) / 8`.
+        let mut buffer = ManuallyDrop::new(unsafe {
+            Vec::from_raw_parts(self.pointer, (R::LEN + 7) / 8, self.capacity)
+        })
+        .clone();
+
+        Self {
+            registry: PhantomData,
+
+            pointer: buffer.as_mut_ptr(),
+            capacity: buffer.capacity(),
+        }
+    }
+}
+
 impl<R> Drop for Identifier<R>
 where
     R: Registry,
@@ -236,7 +261,7 @@ where
     ///
     /// # Safety
     /// The caller must ensure the referenced `Identifier` outlives the returned slice.
-    pub(crate) unsafe fn as_slice(&self) -> &[u8] {
+    pub(crate) unsafe fn as_slice<'a>(&self) -> &'a [u8] {
         // SAFETY: `pointer` is invariantly guaranteed to point to an allocation of length
         // `(R::LEN + 7) / 8`.
         unsafe { slice::from_raw_parts(self.pointer, (R::LEN + 7) / 8) }

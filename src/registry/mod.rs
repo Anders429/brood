@@ -29,6 +29,7 @@
 
 pub(crate) mod contains;
 
+mod clone;
 mod debug;
 mod eq;
 mod sealed;
@@ -40,6 +41,7 @@ pub use self::serde::{
     Deserialize,
     Serialize,
 };
+pub use clone::Clone;
 #[cfg(feature = "rayon")]
 pub use contains::ContainsParQuery;
 pub use contains::{

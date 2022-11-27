@@ -5,6 +5,7 @@
 //! `Registry`.
 
 mod entry;
+mod impl_clone;
 mod impl_debug;
 mod impl_default;
 mod impl_eq;

@@ -12,6 +12,7 @@ pub(crate) use locations::Locations;
 pub(crate) use slot::Slot;
 
 use crate::{
+    archetype,
     entity,
     registry::Registry,
 };
@@ -19,10 +20,13 @@ use alloc::{
     collections::VecDeque,
     vec::Vec,
 };
+use by_address::ByThinAddress;
 use core::{
     fmt,
     fmt::Debug,
 };
+use fnv::FnvBuildHasher;
+use hashbrown::HashMap;
 
 pub struct Allocator<R>
 where
@@ -181,6 +185,29 @@ where
     /// there is no need to shrink them.
     pub(crate) fn shrink_to_fit(&mut self) {
         self.free.shrink_to_fit();
+    }
+
+    /// Clone the entity allocator, using `identifier_map` to replace old archetype identifiers
+    /// with new ones.
+    ///
+    /// # Safety
+    /// `identifier_map` must contain entries for every archetype referenced in this entity
+    /// allocator.
+    pub(crate) unsafe fn clone(
+        &self,
+        identifier_map: &HashMap<ByThinAddress<&[u8]>, archetype::IdentifierRef<R>, FnvBuildHasher>,
+    ) -> Self {
+        Self {
+            slots: self
+                .slots
+                .iter()
+                .map(|slot|
+                // SAFETY: `identifier_map` contains an entry for the archetype referenced in
+                // `slot`, if there is one.
+                unsafe {slot.clone_with_new_identifier(identifier_map)})
+                .collect(),
+            free: self.free.clone(),
+        }
     }
 }
 

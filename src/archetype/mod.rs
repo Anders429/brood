@@ -1,3 +1,4 @@
+mod impl_clone;
 mod impl_debug;
 mod impl_drop;
 mod impl_eq;
