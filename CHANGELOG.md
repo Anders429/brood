@@ -6,6 +6,7 @@
 - `schedule!` macro for defining a schedule.
 - `Schedule!` macro for defining the type of a schedule.
 - `schedule::task` module for defining tasks that make up schedules.
+- `Clone` implementation for `World`.
 ### Changed
 - `Send` and `Sync` implementations of `World` now only require the registry to implement `Registry + Send` and `Registry + Sync` respectively.
 - Lifetime in `System` and `ParSystem` traits has been moved to the `Views` associated type.
@@ -24,6 +25,7 @@
 - The `schedule::stages!` macro is removed. Schedules are no longer defined in terms of their stages directly, but are defined in terms of their tasks using the `schedule!` and `Schedule!` macros.
 ### Fixed
 - Mitigated potential bug regarding the way non-root macros are exported when compiling documentation. Previously, a change in Rust's experimental `macro` syntax could have potentially broken usage of the library for all users. Now, a change in the syntax will only break building of the documentation (using `--cfg doc_cfg`), which is acceptable.
+- `World::shrink_to_fit()` is no longer unsound. There were issues previously with it improperly deleting archetypes.
 
 ## 0.3.0 - 2022-10-28
 ### Added
