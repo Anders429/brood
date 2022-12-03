@@ -185,7 +185,7 @@ where
                 )
             });
 
-            component_vec_a.clone_from(&component_vec_b);
+            (*component_vec_a).clone_from(&(*component_vec_b));
             *component_column_a = (
                 component_vec_a.as_mut_ptr().cast::<u8>(),
                 component_vec_a.capacity(),

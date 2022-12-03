@@ -64,7 +64,7 @@ where
                 source.entity_identifiers.1,
             )
         });
-        entity_identifiers.clone_from(&source_entity_identifiers);
+        (*entity_identifiers).clone_from(&(*source_entity_identifiers));
         self.entity_identifiers = (
             entity_identifiers.as_mut_ptr(),
             entity_identifiers.capacity(),
