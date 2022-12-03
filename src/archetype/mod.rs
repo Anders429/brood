@@ -1,3 +1,4 @@
+mod impl_clone;
 mod impl_debug;
 mod impl_drop;
 mod impl_eq;
@@ -633,6 +634,26 @@ where
         }
         entity_identifiers.clear();
 
+        self.length = 0;
+    }
+
+    /// Clear the archetype as a detached entity.
+    ///
+    /// The difference between this as `clear()` is that this method does not attempt to remove the
+    /// entities from an `entity::Allocator`. It is for use in contexts such as
+    /// `Clone::clone_from()`.
+    pub(crate) fn clear_detached(&mut self) {
+        // Clear each column.
+        // SAFETY: `self.components` has the same number of values as there are set bits in
+        // `self.identifier`. Also, each element in `self.components` defines a `Vec<C>` of size
+        // `self.length` for each `C` identified by `self.identifier`.
+        //
+        // The `R` over which `self.identifier` is generic is the same `R` on which this function
+        // is being called.
+        unsafe { R::clear_components(&mut self.components, self.length, self.identifier.iter()) };
+
+        // Note that we don't need to touch the entity identifiers in this case. Setting the length
+        // to `0` is sufficient because the entity identifiers are `Copy`.
         self.length = 0;
     }
 

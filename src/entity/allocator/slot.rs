@@ -1,11 +1,15 @@
 use crate::{
+    archetype,
     entity::allocator::Location,
     registry::Registry,
 };
+use by_address::ByThinAddress;
 use core::{
     fmt,
     fmt::Debug,
 };
+use fnv::FnvBuildHasher;
+use hashbrown::HashMap;
 
 /// An entry for a possibly allocated entity.
 ///
@@ -60,6 +64,27 @@ where
 
     pub(super) fn is_active(&self) -> bool {
         self.location.is_some()
+    }
+
+    /// Clone using a new set of archetype identifiers.
+    ///
+    /// This is used when cloning an entire `World`, in which case the archetype identifiers will
+    /// change.
+    ///
+    /// # Safety
+    /// `identifier_map` must contain an entry for the identifier stored in `self.location`, if one
+    /// exists.
+    pub(super) unsafe fn clone_with_new_identifier(
+        &self,
+        identifier_map: &HashMap<ByThinAddress<&[u8]>, archetype::IdentifierRef<R>, FnvBuildHasher>,
+    ) -> Self {
+        Self {
+            generation: self.generation,
+            location: self.location.map(|location|
+                // SAFETY: `identifier_map` contains an entry for the identifier stored in
+                // `location`.
+                unsafe { location.clone_with_new_identifier(identifier_map) }),
+        }
     }
 }
 
