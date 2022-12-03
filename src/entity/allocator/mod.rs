@@ -209,6 +209,28 @@ where
             free: self.free.clone(),
         }
     }
+
+    /// Clone from another entity allocator into this one, using `identifier_map` to replace old
+    /// archetype identifiers with new ones.
+    ///
+    /// This reuses the existing allocations.
+    ///
+    /// # Safety
+    /// `identifier_map` must contain entries for every archetype referenced in this entity
+    /// allocator.
+    pub(crate) unsafe fn clone_from(
+        &mut self,
+        source: &Self,
+        identifier_map: &HashMap<ByThinAddress<&[u8]>, archetype::IdentifierRef<R>, FnvBuildHasher>,
+    ) {
+        self.slots.clear();
+        self.slots.extend(source.slots.iter().map(|slot|
+            // SAFETY: `identifier_map` contains an entry for the archetype referenced in
+            // `slot`, if there is one.
+            unsafe {slot.clone_with_new_identifier(identifier_map)}));
+
+        self.free.clone_from(&source.free);
+    }
 }
 
 impl<R> Debug for Allocator<R>

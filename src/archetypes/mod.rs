@@ -387,6 +387,84 @@ where
 
         (cloned_archetypes, identifier_map)
     }
+
+    /// Clone the `Archetypes` in `source` into the allocation owned by this `Archetypes`.
+    ///
+    /// Returns a map from the source archetype identifiers to their equivalent archetype
+    /// identifiers in these archetypes.
+    ///
+    /// # Safety
+    /// The returned `HashMap` must outlive both the original and cloned archetypes.
+    pub(crate) unsafe fn clone_from(
+        &mut self,
+        source: &Self,
+    ) -> HashMap<ByThinAddress<&'static [u8]>, archetype::IdentifierRef<R>, FnvBuildHasher> {
+        let mut identifier_map =
+            HashMap::with_capacity_and_hasher(self.raw_archetypes.len(), FnvBuildHasher::default());
+
+        // Clone archetypes.
+        for source_archetype in source.iter() {
+            // SAFETY: `source_archetype.identifier()` is guaranteed to be outlived by
+            // `source_archetype`, as no archetypes are dropped in this method.
+            if let Some(archetype) = self.get_mut(unsafe { source_archetype.identifier() }) {
+                archetype.clone_from(source_archetype);
+                identifier_map.insert(
+                    // SAFETY: This slice will outlive the original archetype by the safety
+                    // contract of this method.
+                    ByThinAddress(unsafe { source_archetype.identifier().as_slice() }),
+                    // SAFETY: This `IdentifierRef` will outlive the cloned archetype by the safety
+                    // contract of this method.
+                    unsafe { archetype.identifier() },
+                );
+            } else {
+                // No archetype exists for this identifier, so simply clone a new one.
+                let archetype = source_archetype.clone();
+                identifier_map.insert(
+                    // SAFETY: This slice will outlive the original archetype by the safety
+                    // contract of this method.
+                    ByThinAddress(unsafe { source_archetype.identifier().as_slice() }),
+                    // SAFETY: This `IdentifierRef` will outlive the cloned archetype by the safety
+                    // contract of this method.
+                    unsafe { archetype.identifier() },
+                );
+                #[allow(unused_must_use)]
+                {
+                    self.insert(archetype);
+                }
+            }
+        }
+
+        // Clear any archetypes that were not cloned into.
+        let cloned_archetype_identifiers = identifier_map
+            .values()
+            .collect::<HashSet<_, FnvBuildHasher>>();
+        for archetype in self.iter_mut() {
+            // SAFETY: `archetype.identifier()` is guaranteed to be outlived by `archetype`.
+            if !cloned_archetype_identifiers.contains(&unsafe { archetype.identifier() }) {
+                archetype.clear_detached();
+            }
+        }
+        drop(cloned_archetype_identifiers);
+
+        // Clone `type_id_lookup`.
+        //
+        // Note that no type id entries are removed here. New ones are just added, since the old
+        // archetypes were just cleared, not removed entirely.
+        for (&type_id, identifier) in source.type_id_lookup.iter() {
+            self.type_id_lookup.insert(
+                type_id,
+                // SAFETY: Each identifier in `source.type_id_lookup` is guaranteed to be found in
+                // `identifier_map`.
+                *unsafe {
+                    identifier_map
+                        .get(&ByThinAddress(identifier.as_slice()))
+                        .unwrap_unchecked()
+                },
+            );
+        }
+
+        identifier_map
+    }
 }
 
 #[cfg(test)]
