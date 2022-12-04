@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.4.0 - 2022-12-03
 ### Added
 - `Debug`, `Eq`, `PartialEq`, `Serialize`, and `Deserialize` traits are added to the `registry` module.
 - `schedule!` macro for defining a schedule.
