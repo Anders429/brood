@@ -19,5 +19,5 @@ trybuild_test!(entity);
 trybuild_test!(registry);
 trybuild_test!(result);
 #[cfg(feature = "rayon")]
-trybuild_test!(stages);
+trybuild_test!(schedule);
 trybuild_test!(views);

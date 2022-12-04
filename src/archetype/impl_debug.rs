@@ -2,28 +2,25 @@ use crate::{
     archetype,
     archetype::Archetype,
     entity,
-    registry::RegistryDebug,
+    registry,
 };
 use alloc::vec::Vec;
 use core::{
-    fmt::{
-        self,
-        Debug,
-    },
+    fmt,
     mem::ManuallyDrop,
 };
 
 struct Components<R>
 where
-    R: RegistryDebug,
+    R: registry::Debug,
 {
     pointers: Vec<*const u8>,
     identifier: archetype::IdentifierRef<R>,
 }
 
-impl<R> Debug for Components<R>
+impl<R> fmt::Debug for Components<R>
 where
-    R: RegistryDebug,
+    R: registry::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut debug_map = f.debug_map();
@@ -39,15 +36,15 @@ where
 
 struct Row<R>
 where
-    R: RegistryDebug,
+    R: registry::Debug,
 {
     identifier: entity::Identifier,
     components: Components<R>,
 }
 
-impl<R> Debug for Row<R>
+impl<R> fmt::Debug for Row<R>
 where
-    R: RegistryDebug,
+    R: registry::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Row")
@@ -57,9 +54,9 @@ where
     }
 }
 
-impl<R> Debug for Archetype<R>
+impl<R> fmt::Debug for Archetype<R>
 where
-    R: RegistryDebug,
+    R: registry::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut debug_map = f.debug_map();

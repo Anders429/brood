@@ -1,12 +1,10 @@
 use super::World;
-use crate::registry::{
-    RegistryEq,
-    RegistryPartialEq,
-};
+use crate::registry;
+use core::cmp;
 
-impl<R> PartialEq for World<R>
+impl<R> cmp::PartialEq for World<R>
 where
-    R: RegistryPartialEq,
+    R: registry::PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
         self.len == other.len
@@ -15,14 +13,14 @@ where
     }
 }
 
-impl<R> Eq for World<R> where R: RegistryEq {}
+impl<R> cmp::Eq for World<R> where R: registry::Eq {}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{
         entity,
-        registry,
+        Registry,
     };
 
     #[derive(Debug, Eq, PartialEq)]
@@ -31,11 +29,11 @@ mod tests {
     #[derive(Debug, Eq, PartialEq)]
     struct B(char);
 
-    type Registry = registry!(A, B);
+    type Registry = Registry!(A, B);
 
     #[test]
     fn empty_eq() {
-        assert_eq!(World::<registry!()>::new(), World::<registry!()>::new());
+        assert_eq!(World::<Registry!()>::new(), World::<Registry!()>::new());
     }
 
     #[test]

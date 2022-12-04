@@ -4,6 +4,18 @@
 //! affect how this crate works logically; things included here should only affect how the crate is
 //! documented.
 
+/// Wrapper around a token tree to ensure it is not parsed at compile time if it is excluded by
+/// `cfg` rules.
+///
+/// This is necessary for using the `macro` keyword for controlling where macro documentation is
+/// exported, as the `macro` syntax is experimental and subject to change at any time. This
+/// protects the crate from being unusable if that syntax changes, as the changes would cause all
+/// compilation, even compilation not enabling `doc_cfg`, to break otherwise.
+#[cfg(doc_cfg)]
+macro_rules! unparsed {
+    ( $($tokens:tt)* ) => { $($tokens)* }
+}
+
 /// Defines a macro that is not documented at the crate's root.
 ///
 /// This changes the way the macro is defined only when the `doc_cfg` cfg flag is passed. It
@@ -25,18 +37,21 @@ macro_rules! non_root_macro {
             );*
         }
 
-        $(#[$m])*
         #[cfg(not(doc_cfg))]
         pub use $name;
 
-        $(#[$m])*
         #[cfg(doc_cfg)]
-        pub macro $name {
-            $(
-                ($($token)*) => ($($expansion)*)
-            ),*
+        crate::doc::unparsed! {
+            $(#[$m])*
+            pub macro $name {
+                $(
+                    ($($token)*) => ($($expansion)*)
+                ),*
+            }
         }
     )
 }
 
 pub(crate) use non_root_macro;
+#[cfg(doc_cfg)]
+pub(crate) use unparsed;

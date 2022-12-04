@@ -2,10 +2,13 @@ use crate::{
     archetype,
     registry::Registry,
 };
+use by_address::ByThinAddress;
 use core::{
     fmt,
     fmt::Debug,
 };
+use fnv::FnvBuildHasher;
+use hashbrown::HashMap;
 
 /// Defines an entity's location.
 ///
@@ -27,6 +30,28 @@ where
     /// Creates a new location from an archetype identifier and an index within that archetype.
     pub(crate) fn new(identifier: archetype::IdentifierRef<R>, index: usize) -> Self {
         Self { identifier, index }
+    }
+
+    /// Clone using a new set of archetype identifiers.
+    ///
+    /// This is for cloning of an entire world, in which case the archetype identifiers will
+    /// change.
+    ///
+    /// # Safety
+    /// `identifier_map` must contain an entry for `self.identifier`.
+    pub(super) unsafe fn clone_with_new_identifier(
+        &self,
+        identifier_map: &HashMap<ByThinAddress<&[u8]>, archetype::IdentifierRef<R>, FnvBuildHasher>,
+    ) -> Self {
+        Self {
+            // SAFETY: `identifier_map` is guaranteed to contain an entry for `self.identifier`.
+            identifier: *unsafe {
+                identifier_map
+                    .get(&ByThinAddress(self.identifier.as_slice()))
+                    .unwrap_unchecked()
+            },
+            index: self.index,
+        }
     }
 }
 
@@ -70,7 +95,7 @@ mod tests {
     use super::Location;
     use crate::{
         archetype::Identifier,
-        registry,
+        Registry,
     };
     use alloc::vec;
 
@@ -87,7 +112,7 @@ mod tests {
     );
 
     type Registry =
-        registry!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
+        Registry!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
 
     #[test]
     fn new() {

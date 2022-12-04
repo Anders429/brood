@@ -1,0 +1,11 @@
+error: no rules expected the token `+`
+  --> tests/trybuild/schedule/type_unexpected_token.rs:35:44
+   |
+35 | type Schedule = Schedule!(task::System<A>, + task::System<B>,);
+   |                                            ^ no rules expected this token in macro call
+   |
+note: while trying to match meta-variable `$tasks:ty`
+  --> src/system/schedule/mod.rs
+   |
+   |             ($task:ty $(,$tasks:ty)* $(,)?) => (
+   |                          ^^^^^^^^^

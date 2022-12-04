@@ -44,10 +44,10 @@ use rayon::iter::{
 ///     query::{
 ///         filter,
 ///         result,
-///         views,
+///         Views,
 ///     },
-///     registry,
 ///     Query,
+///     Registry,
 ///     World,
 /// };
 /// use rayon::iter::ParallelIterator;
@@ -55,13 +55,13 @@ use rayon::iter::{
 /// struct Foo(u32);
 /// struct Bar(bool);
 ///
-/// type Registry = registry!(Foo, Bar);
+/// type Registry = Registry!(Foo, Bar);
 ///
 /// let mut world = World::<Registry>::new();
 /// world.insert(entity!(Foo(42), Bar(true)));
 ///
 /// world
-///     .par_query(Query::<views!(&mut Foo, &Bar)>::new())
+///     .par_query(Query::<Views!(&mut Foo, &Bar)>::new())
 ///     .for_each(|result!(foo, bar)| {
 ///         if bar.0 {
 ///             foo.0 += 1;
@@ -128,7 +128,7 @@ unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Sync for ParIter<'a, R, F, FI, V, VI, 
 impl<'a, R, F, FI, V, VI, P, I, Q> ParallelIterator for ParIter<'a, R, F, FI, V, VI, P, I, Q>
 where
     V: ParViews<'a>,
-    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q> + 'a,
+    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>,
 {
     type Item = <<V as ParViewsSeal<'a>>::ParResults as ParResults>::View;
 

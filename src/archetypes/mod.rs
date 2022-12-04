@@ -20,11 +20,14 @@ use crate::{
         self,
         Entity,
     },
+    registry,
     registry::{
         Canonical,
         Registry,
     },
 };
+use alloc::vec::Vec;
+use by_address::ByThinAddress;
 use core::{
     any::TypeId,
     hash::{
@@ -38,6 +41,7 @@ use fnv::FnvBuildHasher;
 use hashbrown::{
     raw::RawTable,
     HashMap,
+    HashSet,
 };
 use iter::Iter;
 
@@ -64,7 +68,6 @@ where
         }
     }
 
-    #[cfg(feature = "serde")]
     pub(crate) fn with_capacity(capacity: usize) -> Self {
         Self {
             raw_archetypes: RawTable::with_capacity(capacity),
@@ -232,7 +235,6 @@ where
         }
     }
 
-    #[cfg(feature = "serde")]
     pub(crate) fn insert(&mut self, archetype: Archetype<R>) -> Result<(), Archetype<R>> {
         let hash = Self::make_hash(
             // SAFETY: The `IdentifierRef` obtained here does not live longer than the `archetype`.
@@ -284,6 +286,8 @@ where
     /// This may not decrease to the most optimal value, as the shrinking is dependent on the
     /// allocator.
     pub(crate) fn shrink_to_fit(&mut self) {
+        let mut identifiers_to_erase = HashSet::with_hasher(FnvBuildHasher::default());
+        let mut archetypes_to_erase = Vec::new();
         // SAFETY: The resulting `RawIter` is guaranteed to not outlive `self.raw_archetypes`.
         for archetype_bucket in unsafe { self.raw_archetypes.iter() } {
             // SAFETY: The reference to the archetype stored in this bucket is guaranteed to be
@@ -291,17 +295,175 @@ where
             let archetype = unsafe { archetype_bucket.as_mut() };
             // Only retain non-empty archetypes.
             if archetype.is_empty() {
-                // SAFETY: `erase()` drops in-place, meaning it is safe to do during iteration.
-                // Additionally, `archetype` is not used again after it is dropped from the table.
-                unsafe {
-                    self.raw_archetypes.erase(archetype_bucket);
-                }
+                identifiers_to_erase.insert(
+                    // SAFETY: This identifier will outlive its archetype, since the archetypes are
+                    // deleted after the identifiers are used.
+                    unsafe { archetype.identifier() },
+                );
+                archetypes_to_erase.push(archetype_bucket);
             } else {
                 archetype.shrink_to_fit();
             }
         }
+
+        // Removing from `self.type_id_lookup` guarantees that the invariant that any entry in
+        // `type_id_lookup` corresponds to a valid archetype is still upheld.
+        for type_id in self
+            .type_id_lookup
+            .iter()
+            .filter_map(|(&type_id, identifier)| {
+                if identifiers_to_erase.contains(identifier) {
+                    Some(type_id)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
+        {
+            self.type_id_lookup.remove(&type_id);
+        }
+
+        for archetype_bucket in archetypes_to_erase {
+            // SAFETY: `archetype` is not used again after it is dropped from the table.
+            unsafe {
+                self.raw_archetypes.erase(archetype_bucket);
+            }
+        }
+
         self.raw_archetypes
             .shrink_to(0, Self::make_hasher(&self.hash_builder));
+    }
+}
+
+impl<R> Archetypes<R>
+where
+    R: registry::Clone,
+{
+    /// Clone the archetypes.
+    ///
+    /// Returns both the new archetypes and a map from the source archetype identifiers to their
+    /// equivalent archetype identifiers in the new archetypes.
+    ///
+    /// # Safety
+    /// The returned `HashMap` must outlive both the original and cloned archetypes.
+    pub(crate) unsafe fn clone(
+        &self,
+    ) -> (
+        Self,
+        HashMap<ByThinAddress<&'static [u8]>, archetype::IdentifierRef<R>, FnvBuildHasher>,
+    ) {
+        let mut identifier_map =
+            HashMap::with_capacity_and_hasher(self.raw_archetypes.len(), FnvBuildHasher::default());
+        let mut cloned_archetypes = Self::with_capacity(self.raw_archetypes.len());
+
+        for archetype in self.iter() {
+            let cloned_archetype = archetype.clone();
+            identifier_map.insert(
+                // SAFETY: This slice will outlive the original archetype by the safety contract of
+                // this method.
+                ByThinAddress(unsafe { archetype.identifier().as_slice() }),
+                // SAFETY: This `IdentifierRef` will outlive the cloned archetype by the safety
+                // contract of this method.
+                unsafe { cloned_archetype.identifier() },
+            );
+            #[allow(unused_must_use)]
+            {
+                cloned_archetypes.insert(cloned_archetype);
+            }
+        }
+
+        for (&type_id, identifier) in self.type_id_lookup.iter() {
+            cloned_archetypes.type_id_lookup.insert(
+                type_id,
+                // SAFETY: Each identifier in `self.type_id_lookup` is guaranteed to be found in
+                // `identifier_map`.
+                *unsafe {
+                    identifier_map
+                        .get(&ByThinAddress(identifier.as_slice()))
+                        .unwrap_unchecked()
+                },
+            );
+        }
+
+        (cloned_archetypes, identifier_map)
+    }
+
+    /// Clone the `Archetypes` in `source` into the allocation owned by this `Archetypes`.
+    ///
+    /// Returns a map from the source archetype identifiers to their equivalent archetype
+    /// identifiers in these archetypes.
+    ///
+    /// # Safety
+    /// The returned `HashMap` must outlive both the original and cloned archetypes.
+    pub(crate) unsafe fn clone_from(
+        &mut self,
+        source: &Self,
+    ) -> HashMap<ByThinAddress<&'static [u8]>, archetype::IdentifierRef<R>, FnvBuildHasher> {
+        let mut identifier_map =
+            HashMap::with_capacity_and_hasher(self.raw_archetypes.len(), FnvBuildHasher::default());
+
+        // Clone archetypes.
+        for source_archetype in source.iter() {
+            // SAFETY: `source_archetype.identifier()` is guaranteed to be outlived by
+            // `source_archetype`, as no archetypes are dropped in this method.
+            if let Some(archetype) = self.get_mut(unsafe { source_archetype.identifier() }) {
+                archetype.clone_from(source_archetype);
+                identifier_map.insert(
+                    // SAFETY: This slice will outlive the original archetype by the safety
+                    // contract of this method.
+                    ByThinAddress(unsafe { source_archetype.identifier().as_slice() }),
+                    // SAFETY: This `IdentifierRef` will outlive the cloned archetype by the safety
+                    // contract of this method.
+                    unsafe { archetype.identifier() },
+                );
+            } else {
+                // No archetype exists for this identifier, so simply clone a new one.
+                let archetype = source_archetype.clone();
+                identifier_map.insert(
+                    // SAFETY: This slice will outlive the original archetype by the safety
+                    // contract of this method.
+                    ByThinAddress(unsafe { source_archetype.identifier().as_slice() }),
+                    // SAFETY: This `IdentifierRef` will outlive the cloned archetype by the safety
+                    // contract of this method.
+                    unsafe { archetype.identifier() },
+                );
+                #[allow(unused_must_use)]
+                {
+                    self.insert(archetype);
+                }
+            }
+        }
+
+        // Clear any archetypes that were not cloned into.
+        let cloned_archetype_identifiers = identifier_map
+            .values()
+            .collect::<HashSet<_, FnvBuildHasher>>();
+        for archetype in self.iter_mut() {
+            // SAFETY: `archetype.identifier()` is guaranteed to be outlived by `archetype`.
+            if !cloned_archetype_identifiers.contains(&unsafe { archetype.identifier() }) {
+                archetype.clear_detached();
+            }
+        }
+        drop(cloned_archetype_identifiers);
+
+        // Clone `type_id_lookup`.
+        //
+        // Note that no type id entries are removed here. New ones are just added, since the old
+        // archetypes were just cleared, not removed entirely.
+        for (&type_id, identifier) in source.type_id_lookup.iter() {
+            self.type_id_lookup.insert(
+                type_id,
+                // SAFETY: Each identifier in `source.type_id_lookup` is guaranteed to be found in
+                // `identifier_map`.
+                *unsafe {
+                    identifier_map
+                        .get(&ByThinAddress(identifier.as_slice()))
+                        .unwrap_unchecked()
+                },
+            );
+        }
+
+        identifier_map
     }
 }
 
@@ -310,7 +472,7 @@ mod tests {
     use crate::{
         archetype,
         archetypes::Archetypes,
-        registry,
+        Registry,
     };
     use alloc::vec;
 
@@ -327,7 +489,7 @@ mod tests {
     );
 
     type Registry =
-        registry!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
+        Registry!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
 
     #[test]
     fn get_mut_or_insert_new_insertion() {

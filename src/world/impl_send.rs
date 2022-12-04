@@ -1,8 +1,8 @@
 use crate::{
-    registry::RegistrySend,
+    registry::Registry,
     world::World,
 };
 
 // SAFETY: This type is safe to send between threads, since all pointers are owned and cannot be
 // mutated without mutable access.
-unsafe impl<R> Send for World<R> where R: RegistrySend {}
+unsafe impl<R> Send for World<R> where R: Registry + Send {}

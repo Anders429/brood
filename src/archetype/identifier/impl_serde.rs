@@ -119,7 +119,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::registry;
+    use crate::Registry;
     use alloc::vec;
     use serde_test::{
         assert_de_tokens_error,
@@ -140,7 +140,7 @@ mod tests {
     );
 
     type Registry =
-        registry!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
+        Registry!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
 
     #[test]
     fn serialize_deserialize() {
@@ -161,7 +161,7 @@ mod tests {
 
     #[test]
     fn serialize_deserialize_empty() {
-        let identifier = unsafe { Identifier::<registry!()>::new(vec![]) };
+        let identifier = unsafe { Identifier::<Registry!()>::new(vec![]) };
 
         assert_tokens(&identifier, &[Token::Tuple { len: 0 }, Token::TupleEnd]);
     }

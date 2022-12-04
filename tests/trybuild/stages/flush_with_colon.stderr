@@ -1,5 +1,0 @@
-error: no rules expected the token `:`
- --> tests/trybuild/stages/flush_with_colon.rs:4:10
-  |
-4 |     flush: value,
-  |          ^ no rules expected this token in macro call

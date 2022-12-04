@@ -12,7 +12,7 @@ mod impl_serde;
 /// ``` rust
 /// use brood::{
 ///     entity,
-///     registry,
+///     Registry,
 ///     World,
 /// };
 ///
@@ -20,7 +20,7 @@ mod impl_serde;
 /// struct Foo(usize);
 /// struct Bar(bool);
 ///
-/// type Registry = registry!(Foo, Bar);
+/// type Registry = Registry!(Foo, Bar);
 ///
 /// let mut world = World::<Registry>::new();
 ///

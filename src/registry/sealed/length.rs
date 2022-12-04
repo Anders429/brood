@@ -30,11 +30,11 @@ where
 #[cfg(test)]
 mod tests {
     use super::Length;
-    use crate::registry;
+    use crate::Registry;
 
     #[test]
     fn empty() {
-        type Registry = registry!();
+        type Registry = Registry!();
 
         assert_eq!(Registry::LEN, 0);
     }
@@ -45,7 +45,7 @@ mod tests {
         struct B;
         struct C;
 
-        type Registry = registry!(A, B, C);
+        type Registry = Registry!(A, B, C);
 
         assert_eq!(Registry::LEN, 3);
     }

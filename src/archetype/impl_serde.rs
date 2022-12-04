@@ -3,10 +3,7 @@ use crate::{
     archetype::Archetype,
     component::Component,
     entity,
-    registry::{
-        RegistryDeserialize,
-        RegistrySerialize,
-    },
+    registry,
 };
 use alloc::{
     string::String,
@@ -61,11 +58,11 @@ where
 
 struct SerializeColumns<'a, R>(&'a Archetype<R>)
 where
-    R: RegistrySerialize;
+    R: registry::Serialize;
 
 impl<R> Serialize for SerializeColumns<'_, R>
 where
-    R: RegistrySerialize,
+    R: registry::Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -100,11 +97,11 @@ where
 
 struct SerializeArchetypeByColumn<'a, R>(&'a Archetype<R>)
 where
-    R: RegistrySerialize;
+    R: registry::Serialize;
 
 impl<R> Serialize for SerializeArchetypeByColumn<'_, R>
 where
-    R: RegistrySerialize,
+    R: registry::Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -120,7 +117,7 @@ where
 
 struct SerializeRow<'a, R>
 where
-    R: RegistrySerialize,
+    R: registry::Serialize,
 {
     archetype: &'a Archetype<R>,
     index: usize,
@@ -128,7 +125,7 @@ where
 
 impl<R> Serialize for SerializeRow<'_, R>
 where
-    R: RegistrySerialize,
+    R: registry::Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -170,11 +167,11 @@ where
 
 struct SerializeRows<'a, R>(&'a Archetype<R>)
 where
-    R: RegistrySerialize;
+    R: registry::Serialize;
 
 impl<R> Serialize for SerializeRows<'_, R>
 where
-    R: RegistrySerialize,
+    R: registry::Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -193,11 +190,11 @@ where
 
 struct SerializeArchetypeByRow<'a, R>(&'a Archetype<R>)
 where
-    R: RegistrySerialize;
+    R: registry::Serialize;
 
 impl<R> Serialize for SerializeArchetypeByRow<'_, R>
 where
-    R: RegistrySerialize,
+    R: registry::Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -213,7 +210,7 @@ where
 
 impl<R> Serialize for Archetype<R>
 where
-    R: RegistrySerialize,
+    R: registry::Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -229,7 +226,7 @@ where
 
 struct DeserializeRow<'a, 'de, R>
 where
-    R: RegistryDeserialize<'de>,
+    R: registry::Deserialize<'de>,
 {
     lifetime: PhantomData<&'de ()>,
 
@@ -242,7 +239,7 @@ where
 
 impl<'a, 'de, R> DeserializeRow<'a, 'de, R>
 where
-    R: RegistryDeserialize<'de>,
+    R: registry::Deserialize<'de>,
 {
     /// # Safety
     /// `entity_identifiers` must be the valid raw parts for a `Vec<entity::Identifier>` of size
@@ -268,7 +265,7 @@ where
 
 impl<'de, R> DeserializeSeed<'de> for DeserializeRow<'_, 'de, R>
 where
-    R: RegistryDeserialize<'de>,
+    R: registry::Deserialize<'de>,
 {
     // The deserialized values are stored directly in the buffers to avoid reallocations.
     type Value = ();
@@ -279,11 +276,11 @@ where
     {
         struct DeserializeRowVisitor<'a, 'de, R>(DeserializeRow<'a, 'de, R>)
         where
-            R: RegistryDeserialize<'de>;
+            R: registry::Deserialize<'de>;
 
         impl<'de, R> Visitor<'de> for DeserializeRowVisitor<'_, 'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             type Value = ();
 
@@ -348,7 +345,7 @@ where
 
 struct DeserializeRows<'de, R>
 where
-    R: RegistryDeserialize<'de>,
+    R: registry::Deserialize<'de>,
 {
     lifetime: PhantomData<&'de ()>,
 
@@ -358,7 +355,7 @@ where
 
 impl<'de, R> DeserializeSeed<'de> for DeserializeRows<'de, R>
 where
-    R: RegistryDeserialize<'de>,
+    R: registry::Deserialize<'de>,
 {
     type Value = Archetype<R>;
 
@@ -369,11 +366,11 @@ where
     {
         struct DeserializeRowsVisitor<'de, R>(DeserializeRows<'de, R>)
         where
-            R: RegistryDeserialize<'de>;
+            R: registry::Deserialize<'de>;
 
         impl<'de, R> Visitor<'de> for DeserializeRowsVisitor<'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             type Value = Archetype<R>;
 
@@ -582,7 +579,7 @@ where
 
 struct DeserializeColumns<'de, R>
 where
-    R: RegistryDeserialize<'de>,
+    R: registry::Deserialize<'de>,
 {
     lifetime: PhantomData<&'de ()>,
 
@@ -592,7 +589,7 @@ where
 
 impl<'de, R> DeserializeSeed<'de> for DeserializeColumns<'de, R>
 where
-    R: RegistryDeserialize<'de>,
+    R: registry::Deserialize<'de>,
 {
     type Value = Archetype<R>;
 
@@ -602,11 +599,11 @@ where
     {
         struct DeserializeColumnsVisitor<'de, R>(DeserializeColumns<'de, R>)
         where
-            R: RegistryDeserialize<'de>;
+            R: registry::Deserialize<'de>;
 
         impl<'de, R> Visitor<'de> for DeserializeColumnsVisitor<'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             type Value = Archetype<R>;
 
@@ -700,7 +697,7 @@ where
 
 impl<'de, R> Deserialize<'de> for Archetype<R>
 where
-    R: RegistryDeserialize<'de>,
+    R: registry::Deserialize<'de>,
 {
     #[allow(clippy::too_many_lines)]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -709,14 +706,14 @@ where
     {
         struct VisitArchetypeByColumn<'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             registry: PhantomData<&'de R>,
         }
 
         impl<'de, R> Visitor<'de> for VisitArchetypeByColumn<'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             type Value = Archetype<R>;
 
@@ -748,14 +745,14 @@ where
 
         struct VisitArchetypeByRow<'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             registry: PhantomData<&'de R>,
         }
 
         impl<'de, R> Visitor<'de> for VisitArchetypeByRow<'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             type Value = Archetype<R>;
 
@@ -787,14 +784,14 @@ where
 
         struct ArchetypeVisitor<'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             registry: PhantomData<&'de R>,
         }
 
         impl<'de, R> Visitor<'de> for ArchetypeVisitor<'de, R>
         where
-            R: RegistryDeserialize<'de>,
+            R: registry::Deserialize<'de>,
         {
             type Value = Archetype<R>;
 
@@ -839,7 +836,7 @@ mod tests {
     use crate::{
         archetype::Identifier,
         entity,
-        registry,
+        Registry,
     };
     use alloc::{
         format,
@@ -865,7 +862,7 @@ mod tests {
     #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
     struct B(char);
 
-    type Registry = registry!(A, B);
+    type Registry = Registry!(A, B);
 
     #[test]
     fn serialize_deserialize_by_column() {

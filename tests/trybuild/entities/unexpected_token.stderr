@@ -3,3 +3,9 @@ error: no rules expected the token `+`
   |
 8 |     let entities = entities!((A, B), (A, B), + (A, B));
   |                                              ^ no rules expected this token in macro call
+  |
+note: while trying to match `(`
+ --> src/entities/mod.rs
+  |
+  |     ($(($($components:expr),*)),+ $(,)?) => {
+  |        ^

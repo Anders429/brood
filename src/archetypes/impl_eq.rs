@@ -1,14 +1,12 @@
 use crate::{
     archetypes::Archetypes,
-    registry::{
-        RegistryEq,
-        RegistryPartialEq,
-    },
+    registry,
 };
+use core::cmp;
 
-impl<R> PartialEq for Archetypes<R>
+impl<R> cmp::PartialEq for Archetypes<R>
 where
-    R: RegistryPartialEq,
+    R: registry::PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
         if self.raw_archetypes.len() != other.raw_archetypes.len() {
@@ -27,4 +25,4 @@ where
     }
 }
 
-impl<R> Eq for Archetypes<R> where R: RegistryEq {}
+impl<R> cmp::Eq for Archetypes<R> where R: registry::Eq {}

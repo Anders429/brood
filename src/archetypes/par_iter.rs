@@ -35,7 +35,7 @@ where
 
 impl<'a, R> ParallelIterator for ParIterMut<'a, R>
 where
-    R: Registry + 'a,
+    R: Registry,
 {
     type Item = &'a mut Archetype<R>;
 

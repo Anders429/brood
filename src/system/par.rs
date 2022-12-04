@@ -24,7 +24,7 @@ use crate::{
 ///         filter,
 ///         filter::Filter,
 ///         result,
-///         views,
+///         Views,
 ///     },
 ///     registry::ContainsParQuery,
 ///     system::ParSystem,
@@ -38,15 +38,15 @@ use crate::{
 /// // Define parallel system to operate on those components.
 /// struct MySystem;
 ///
-/// impl<'a> ParSystem<'a> for MySystem {
-///     type Views = views!(&'a mut Foo, &'a Bar);
+/// impl ParSystem for MySystem {
+///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R, FI, VI, P, I, Q>(
+///     fn run<'a, R, FI, VI, P, I, Q>(
 ///         &mut self,
-///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     ) where
-///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     {
 ///         query_results.for_each(|result!(foo, bar)| {
 ///             if bar.0 {
@@ -64,11 +64,11 @@ use crate::{
 /// [`System`]: crate::system::System
 /// [`World`]: crate::world::World
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-pub trait ParSystem<'a> {
+pub trait ParSystem {
     /// The filter to apply to queries run by this system.
     type Filter: Filter;
     /// The views on components this system should operate on.
-    type Views: ParViews<'a> + Filter;
+    type Views<'a>: ParViews<'a> + Filter;
 
     /// Logic to be run over the parallel query result.
     ///
@@ -83,7 +83,7 @@ pub trait ParSystem<'a> {
     ///         filter,
     ///         filter::Filter,
     ///         result,
-    ///         views,
+    ///         Views,
     ///     },
     ///     registry::ContainsParQuery,
     ///     system::ParSystem,
@@ -97,15 +97,15 @@ pub trait ParSystem<'a> {
     /// // Define parallel system to operate on those components.
     /// struct MySystem;
     ///
-    /// impl<'a> ParSystem<'a> for MySystem {
-    ///     type Views = views!(&'a mut Foo, &'a Bar);
+    /// impl ParSystem for MySystem {
+    ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R, FI, VI, P, I, Q>(
+    ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
-    ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+    ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     ) where
-    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
     ///         query_results.for_each(|result!(foo, bar)| {
     ///             if bar.0 {
@@ -118,11 +118,11 @@ pub trait ParSystem<'a> {
     ///
     /// [`World`]: crate::world::World
     /// [`world_post_processing`]: crate::system::System::world_post_processing()
-    fn run<R, FI, VI, P, I, Q>(
+    fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
-        query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+        query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ) where
-        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a;
+        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>;
 
     /// Logic to be run after processing.
     ///
@@ -135,7 +135,7 @@ pub trait ParSystem<'a> {
     /// executes the removal during post processing.
     ///
     /// ``` rust
-    /// use brood::{entity, query::{filter, filter::Filter, result, views}, registry::{ContainsParQuery, Registry}, system::ParSystem, World};
+    /// use brood::{entity, query::{filter, filter::Filter, result, Views}, registry::{ContainsParQuery, Registry}, system::ParSystem, World};
     /// use rayon::iter::ParallelIterator;
     ///
     /// // Define components.
@@ -148,13 +148,13 @@ pub trait ParSystem<'a> {
     ///     entities_to_remove: Vec<entity::Identifier>,     
     /// }
     ///
-    /// impl<'a> ParSystem<'a> for MySystem {
-    ///     type Views = views!(&'a mut Foo, &'a Bar, entity::Identifier);
+    /// impl ParSystem for MySystem {
+    ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar, entity::Identifier);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
+    ///     fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     ///     where
-    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
     ///         self.entities_to_remove = query_results.filter_map(|result!(foo, bar, entity_identifier)| {
     ///             // If `bar` is true, increment `foo`. Otherwise, remove the entity in post processing.

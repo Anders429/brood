@@ -1,6 +1,6 @@
 use crate::{
     archetypes::Archetypes,
-    registry::RegistryDebug,
+    registry,
 };
 use core::{
     fmt,
@@ -9,7 +9,7 @@ use core::{
 
 impl<R> Debug for Archetypes<R>
 where
-    R: RegistryDebug,
+    R: registry::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_map()

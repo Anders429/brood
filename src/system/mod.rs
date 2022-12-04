@@ -10,7 +10,7 @@
 //!         filter,
 //!         filter::Filter,
 //!         result,
-//!         views,
+//!         Views,
 //!     },
 //!     registry::ContainsQuery,
 //!     system::System,
@@ -23,15 +23,15 @@
 //! // Define system to operate on those components.
 //! struct MySystem;
 //!
-//! impl<'a> System<'a> for MySystem {
-//!     type Views = views!(&'a mut Foo, &'a Bar);
+//! impl System for MySystem {
+//!     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
 //!
-//!     fn run<R, FI, VI, P, I, Q>(
+//!     fn run<'a, R, FI, VI, P, I, Q>(
 //!         &mut self,
-//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 //!     ) where
-//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 //!     {
 //!         for result!(foo, bar) in query_results {
 //!             if bar.0 {
@@ -45,7 +45,7 @@
 //! Defining `System`s allows for reuse of querying logic in multiple places, as well as combining
 //! `System`s together within a `Schedule` to allow them to be run in parallel.
 //!
-//! [`Schedule`]: crate::system::schedule::Schedule
+//! [`Schedule`]: trait@crate::system::schedule::Schedule
 //! [`System`]: crate::system::System
 //! [`World`]: crate::world::World
 
@@ -53,16 +53,17 @@
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub mod schedule;
 
-mod null;
 #[cfg(feature = "rayon")]
 mod par;
 
-pub use null::Null;
 #[cfg(feature = "rayon")]
 pub use par::ParSystem;
 #[cfg(feature = "rayon")]
 #[doc(inline)]
-pub use schedule::Schedule;
+pub use schedule::{
+    inner::Schedule,
+    schedule,
+};
 
 use crate::{
     query::{
@@ -95,7 +96,7 @@ use crate::{
 ///         filter,
 ///         filter::Filter,
 ///         result,
-///         views,
+///         Views,
 ///     },
 ///     registry::ContainsQuery,
 ///     system::System,
@@ -108,15 +109,15 @@ use crate::{
 /// // Define system to operate on those components.
 /// struct MySystem;
 ///
-/// impl<'a> System<'a> for MySystem {
-///     type Views = views!(&'a mut Foo, &'a Bar);
+/// impl System for MySystem {
+///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///
-///     fn run<R, FI, VI, P, I, Q>(
+///     fn run<'a, R, FI, VI, P, I, Q>(
 ///         &mut self,
-///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     ) where
-///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     {
 ///         for result!(foo, bar) in query_results {
 ///             if bar.0 {
@@ -130,11 +131,11 @@ use crate::{
 /// [`run`]: crate::system::System::run()
 /// [`World`]: crate::world::World
 /// [`world_post_processing`]: crate::system::System::world_post_processing()
-pub trait System<'a> {
+pub trait System {
     /// The filter to apply to queries run by this system.
     type Filter: Filter;
     /// The views on components this system should operate on.
-    type Views: Views<'a> + Filter;
+    type Views<'a>: Views<'a> + Filter;
 
     /// Logic to be run over the query result.
     ///
@@ -149,7 +150,7 @@ pub trait System<'a> {
     ///         filter,
     ///         filter::Filter,
     ///         result,
-    ///         views,
+    ///         Views,
     ///     },
     ///     registry::ContainsQuery,
     ///     system::System,
@@ -162,15 +163,15 @@ pub trait System<'a> {
     /// // Define system to operate on those components.
     /// struct MySystem;
     ///
-    /// impl<'a> System<'a> for MySystem {
-    ///     type Views = views!(&'a mut Foo, &'a Bar);
+    /// impl System for MySystem {
+    ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R, FI, VI, P, I, Q>(
+    ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
-    ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+    ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     ) where
-    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a,
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
     ///         for result!(foo, bar) in query_results {
     ///             if bar.0 {
@@ -183,11 +184,11 @@ pub trait System<'a> {
     ///
     /// [`World`]: crate::world::World
     /// [`world_post_processing`]: crate::system::System::world_post_processing()
-    fn run<R, FI, VI, P, I, Q>(
+    fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
-        query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>,
+        query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ) where
-        R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a;
+        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>;
 
     /// Logic to be run after processing.
     ///
@@ -200,7 +201,7 @@ pub trait System<'a> {
     /// executes the removal during post processing.
     ///
     /// ``` rust
-    /// use brood::{entity, query::{filter, filter::Filter, result, views}, registry::{ContainsQuery, Registry}, system::System, World};
+    /// use brood::{entity, query::{filter, filter::Filter, result, Views}, registry::{ContainsQuery, Registry}, system::System, World};
     ///
     /// // Define components.
     /// struct Foo(usize);
@@ -212,13 +213,13 @@ pub trait System<'a> {
     ///     entities_to_remove: Vec<entity::Identifier>,     
     /// }
     ///
-    /// impl<'a> System<'a> for MySystem {
-    ///     type Views = views!(&'a mut Foo, &'a Bar, entity::Identifier);
+    /// impl System for MySystem {
+    ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar, entity::Identifier);
     ///     type Filter = filter::None;
     ///
-    ///     fn run<R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views, VI, P, I, Q>)
+    ///     fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
     ///     where
-    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views, VI, P, I, Q> + 'a
+    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
     ///     {
     ///         for result!(foo, bar, entity_identifier) in query_results {
     ///             // If `bar` is true, increment `foo`. Otherwise, remove the entity in post processing.

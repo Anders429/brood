@@ -2,7 +2,34 @@
 
 ## Unreleased
 
-## 0.3.0 - 2022-10-28
+## 0.4.0 - 2022-12-03
+### Added
+- `Debug`, `Eq`, `PartialEq`, `Serialize`, and `Deserialize` traits are added to the `registry` module.
+- `schedule!` macro for defining a schedule.
+- `Schedule!` macro for defining the type of a schedule.
+- `schedule::task` module for defining tasks that make up schedules.
+- `Clone` implementation for `World`.
+### Changed
+- `Send` and `Sync` implementations of `World` now only require the registry to implement `Registry + Send` and `Registry + Sync` respectively.
+- Lifetime in `System` and `ParSystem` traits has been moved to the `Views` associated type.
+- The generic lifetimes on the `system::schedule::RawTask` and `system::Stages` traits have been removed.
+- `Registry` is now explicitly bound to the `static` lifetime. This was previously only implicit, with `Registry`s being made of `Component`s which were bound to `'static`.
+- Both `System` and `ParSystem` no longer require a lifetime bound on the `Registry` `R` in their `run()` methods.
+- `Schedule` has been changed from a `struct` to a `trait`.
+- Schedules now have their stages defined at compile-time.
+- `registry!` macro has been renamed to `Registry!` to indicate that it is intended to be a type-level macro.
+- `views!` macro has been renamed to `Views!` to indicate that it is intended to be a type-level macro.
+### Removed
+- `system::Null` is removed, since it is no longer needed for defining a `Schedule`.
+- `schedule::Builder` is removed, since it is no longer needed for defining a `Schedule`.
+- The `schedule::raw_task` module has been removed. There is now no distinction between a raw task and a regular task.
+- The `schedule::stage` module has been removed. It still exists as part of the private API, but is no longer exposed publicly.
+- The `schedule::stages!` macro is removed. Schedules are no longer defined in terms of their stages directly, but are defined in terms of their tasks using the `schedule!` and `Schedule!` macros.
+### Fixed
+- Mitigated potential bug regarding the way non-root macros are exported when compiling documentation. Previously, a change in Rust's experimental `macro` syntax could have potentially broken usage of the library for all users. Now, a change in the syntax will only break building of the documentation (using `--cfg doc_cfg`), which is acceptable.
+- `World::shrink_to_fit()` is no longer unsound. There were issues previously with it improperly deleting archetypes.
+
+## 0.3.0 - 2022-10-28 [YANKED]
 ### Added
 - `shrink_to_fit()` method on `World` for shrinking the `World`'s current allocation to the minimum required for the current data.
 - `ContainsComponent`, `ContainsEntities`, `ContainsEntity`, `ContainsParQuery`, and `ContainsQuery` traits to indicate more specific bounds on registries.

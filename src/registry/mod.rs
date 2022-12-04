@@ -1,6 +1,6 @@
 //! A heterogeneous list of registered [`Component`]s.
 //!
-//! [`Registry`]s are most often defined using the [`registry!`] macro. The items contained within
+//! [`Registry`]s are most often defined using the [`Registry!`] macro. The items contained within
 //! this module should rarely be needed in user code.
 //!
 //! Recommended practice is to define a `Registry` as a custom type, and use that type when
@@ -9,7 +9,7 @@
 //! # Example
 //! ``` rust
 //! use brood::{
-//!     registry,
+//!     Registry,
 //!     World,
 //! };
 //!
@@ -17,26 +17,31 @@
 //! struct Foo(usize);
 //! struct Bar(bool);
 //!
-//! type Registry = registry!(Foo, Bar);
+//! type Registry = Registry!(Foo, Bar);
 //!
 //! let world = World::<Registry>::new();
 //! ```
 //!
 //! [`Component`]: crate::component::Component
 //! [`Registry`]: crate::registry::Registry
-//! [`registry!`]: crate::registry!
+//! [`Registry!`]: crate::Registry!
 //! [`World`]: crate::world::World
 
 pub(crate) mod contains;
 
+mod clone;
 mod debug;
 mod eq;
 mod sealed;
-mod send;
 #[cfg(feature = "serde")]
 mod serde;
-mod sync;
 
+#[cfg(feature = "serde")]
+pub use self::serde::{
+    Deserialize,
+    Serialize,
+};
+pub use clone::Clone;
 #[cfg(feature = "rayon")]
 pub use contains::ContainsParQuery;
 pub use contains::{
@@ -45,20 +50,15 @@ pub use contains::{
     ContainsEntity,
     ContainsQuery,
 };
-
-#[cfg(feature = "serde")]
-pub(crate) use self::serde::{
-    RegistryDeserialize,
-    RegistrySerialize,
+pub use debug::Debug;
+pub use eq::{
+    Eq,
+    PartialEq,
 };
+
 #[cfg(feature = "rayon")]
 pub(crate) use contains::ContainsParViews;
 pub(crate) use contains::ContainsViews;
-pub(crate) use debug::RegistryDebug;
-pub(crate) use eq::{
-    RegistryEq,
-    RegistryPartialEq,
-};
 #[cfg(feature = "rayon")]
 pub(crate) use sealed::CanonicalParViews;
 pub(crate) use sealed::{
@@ -66,8 +66,6 @@ pub(crate) use sealed::{
     CanonicalViews,
     Length,
 };
-pub(crate) use send::RegistrySend;
-pub(crate) use sync::RegistrySync;
 
 use crate::{
     component::Component,
@@ -90,18 +88,18 @@ define_null_uninstantiable!();
 ///
 /// # Example
 /// ``` rust
-/// use brood::registry;
+/// use brood::Registry;
 ///
 /// // Define components.
 /// struct Foo(usize);
 /// struct Bar(bool);
 ///
-/// type Registry = registry!(Foo, Bar);
+/// type Registry = Registry!(Foo, Bar);
 /// ```
 ///
 /// [`Component`]: crate::component::Component
 /// [`World`]: crate::World
-pub trait Registry: Sealed {}
+pub trait Registry: Sealed + 'static {}
 
 impl Registry for Null {}
 
@@ -124,7 +122,7 @@ where
 /// # Example
 /// ``` rust
 /// use brood::{
-///     registry,
+///     Registry,
 ///     World,
 /// };
 ///
@@ -133,7 +131,7 @@ where
 /// struct Bar(f32);
 ///
 /// // Define a registry containing those components.
-/// type Registry = registry!(Foo, Bar);
+/// type Registry = Registry!(Foo, Bar);
 ///
 /// // Define a world using the registry.
 /// let world = World::<Registry>::new();
@@ -141,9 +139,9 @@ where
 ///
 /// [`World`]: crate::World
 #[macro_export]
-macro_rules! registry {
+macro_rules! Registry {
     ($component:ty $(,$components:ty)* $(,)?) => {
-        ($component, $crate::registry!($($components,)*))
+        ($component, $crate::Registry!($($components,)*))
     };
     () => {
         $crate::registry::Null
