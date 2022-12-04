@@ -27,7 +27,7 @@
 - Mitigated potential bug regarding the way non-root macros are exported when compiling documentation. Previously, a change in Rust's experimental `macro` syntax could have potentially broken usage of the library for all users. Now, a change in the syntax will only break building of the documentation (using `--cfg doc_cfg`), which is acceptable.
 - `World::shrink_to_fit()` is no longer unsound. There were issues previously with it improperly deleting archetypes.
 
-## 0.3.0 - 2022-10-28
+## 0.3.0 - 2022-10-28 [YANKED]
 ### Added
 - `shrink_to_fit()` method on `World` for shrinking the `World`'s current allocation to the minimum required for the current data.
 - `ContainsComponent`, `ContainsEntities`, `ContainsEntity`, `ContainsParQuery`, and `ContainsQuery` traits to indicate more specific bounds on registries.
