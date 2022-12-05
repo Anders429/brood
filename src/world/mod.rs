@@ -771,6 +771,46 @@ where
         self.archetypes.shrink_to_fit();
         self.entity_allocator.shrink_to_fit();
     }
+
+    /// Reserve capacity for at least `additional` more entities of type `E`.
+    ///
+    /// Note that the capacity is reserved for all future entities that contain the components of
+    /// `E`, regardless of order.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use brood::{
+    ///     Entity,
+    ///     Registry,
+    ///     World,
+    /// };
+    ///
+    /// struct Foo(usize);
+    /// struct Bar(bool);
+    ///
+    /// type Registry = Registry!(Foo, Bar);
+    ///
+    /// let mut world = World::<Registry>::new();
+    ///
+    /// world.reserve::<Entity!(Foo, Bar), _, _, _>(10);
+    /// ```
+    pub fn reserve<E, I, P, Q>(&mut self, additional: usize)
+    where
+        E: Entity,
+        R: ContainsEntity<E, P, Q, I>,
+    {
+        // SAFETY: Since the canonical entity form is used, the archetype obtained is guaranteed to
+        // be the unique archetype for entities of type `E`.
+        //
+        // Additionally, the same entity type is used for the call to `reserve`, meaning that the
+        // set of components in the entity are guaranteed to be the same set as those in the
+        // archetype.
+        unsafe {
+            self.archetypes
+                .get_mut_or_insert_new_for_entity::<<R as contains::entity::Sealed<E, P, Q, I>>::Canonical, Q>()
+                .reserve::<<R as contains::entity::Sealed<E, P, Q, I>>::Canonical>(additional);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -789,6 +829,7 @@ mod tests {
             result,
             Views,
         },
+        Entity,
         Registry,
     };
     use alloc::vec;
@@ -799,10 +840,10 @@ mod tests {
     #[cfg(feature = "rayon")]
     use rayon::iter::ParallelIterator;
 
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, Eq, PartialEq)]
     struct A(u32);
 
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, Eq, PartialEq)]
     struct B(char);
 
     type Registry = Registry!(A, B);
@@ -2180,5 +2221,37 @@ mod tests {
         world.remove(entity_identifier);
 
         world.shrink_to_fit();
+    }
+
+    #[test]
+    fn reserve() {
+        let mut world = World::<Registry>::new();
+
+        world.reserve::<Entity!(A, B), _, _, _>(10);
+    }
+
+    #[test]
+    fn reserve_in_existing_archetype() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(A(1)));
+        world.reserve::<Entity!(A), _, _, _>(10);
+    }
+
+    #[test]
+    fn reserve_creates_new_archetyps() {
+        let mut world = World::<Registry>::new();
+        world.insert(entity!(A(42)));
+        world.extend(entities!((B('a')); 5));
+        world.extend(entities!((A(100), B('b')); 10));
+        let mut source_world = World::<Registry>::new();
+
+        world.clone_from(&source_world);
+
+        source_world.reserve::<Entity!(A), _, _, _>(0);
+        source_world.reserve::<Entity!(B), _, _, _>(0);
+        source_world.reserve::<Entity!(A, B), _, _, _>(0);
+
+        assert_eq!(world, source_world);
     }
 }
