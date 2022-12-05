@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+### Added
+- `Entity!` macro for defining the type of an entity.
 
 ## 0.4.0 - 2022-12-03
 ### Added

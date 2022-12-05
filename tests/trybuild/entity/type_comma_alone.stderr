@@ -1,0 +1,11 @@
+error: no rules expected the token `,`
+ --> tests/trybuild/entity/type_comma_alone.rs:3:23
+  |
+3 | type Entity = Entity!(,);
+  |                       ^ no rules expected this token in macro call
+  |
+note: while trying to match meta-variable `$component:ty`
+ --> src/entity/mod.rs
+  |
+  |     ($component:ty $(,$components:ty)* $(,)?) => {
+  |      ^^^^^^^^^^^^^
