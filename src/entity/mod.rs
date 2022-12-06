@@ -121,6 +121,29 @@ macro_rules! entity {
     };
 }
 
+/// Defines the type of an entity containing the provided components.
+///
+/// # Example
+/// ``` rust
+/// use brood::Entity;
+///
+/// // Define components `Foo` and `Bar`.
+/// struct Foo(u16);
+/// struct Bar(f32);
+///
+/// // Define the type for an entity containing the components `Foo` and `Bar`.
+/// type Entity = Entity!(Foo, Bar);
+/// ```
+#[macro_export]
+macro_rules! Entity {
+    ($component:ty $(,$components:ty)* $(,)?) => {
+        ($component, $crate::Entity!($($components,)*))
+    };
+    () => {
+        $crate::entity::Null
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

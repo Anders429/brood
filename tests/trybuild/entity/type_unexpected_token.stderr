@@ -1,0 +1,11 @@
+error: no rules expected the token `+`
+ --> tests/trybuild/entity/type_unexpected_token.rs:6:26
+  |
+6 | type Entity = Entity!(A, + B,);
+  |                          ^ no rules expected this token in macro call
+  |
+note: while trying to match meta-variable `$components:ty`
+ --> src/entity/mod.rs
+  |
+  |     ($component:ty $(,$components:ty)* $(,)?) => {
+  |                       ^^^^^^^^^^^^^^

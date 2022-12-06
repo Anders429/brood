@@ -689,6 +689,39 @@ where
         );
     }
 
+    /// Reserve capacity for `additional` elements in this `Archetype`.
+    ///
+    /// # Safety
+    /// `E` must be made up of only components that are identified by this `Archetype`'s
+    /// `Identifier`, in the same order.
+    pub(crate) unsafe fn reserve<E>(&mut self, additional: usize)
+    where
+        E: Entity,
+    {
+        // SAFETY: Since `E` is made up of only components defined in this `Archetype`'s
+        // `Identifier`, in the same order, then the components will also be in the same order as
+        // `E`. Also, `self.components` and `self.length` make up valid `Vec<C>`s for each
+        // component.
+        unsafe { E::reserve_components(&mut self.components, self.length, additional) }
+
+        let mut entity_identifiers = ManuallyDrop::new(
+            // SAFETY: `self.entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec` of size `self.length`.
+            unsafe {
+                Vec::from_raw_parts(
+                    self.entity_identifiers.0,
+                    self.length,
+                    self.entity_identifiers.1,
+                )
+            },
+        );
+        entity_identifiers.reserve(additional);
+        self.entity_identifiers = (
+            entity_identifiers.as_mut_ptr(),
+            entity_identifiers.capacity(),
+        );
+    }
+
     /// # Safety
     /// The `Archetype` must outlive the returned `IdentifierRef`.
     pub(crate) unsafe fn identifier(&self) -> IdentifierRef<R> {
