@@ -777,6 +777,9 @@ where
     /// Note that the capacity is reserved for all future entities that contain the components of
     /// `E`, regardless of order.
     ///
+    /// # Panics
+    /// Panics if the new capacity for entities of type `E` exceeds `isize::MAX` bytes.
+    ///
     /// # Example
     /// ``` rust
     /// use brood::{
