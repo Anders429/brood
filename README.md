@@ -1,6 +1,6 @@
 # brood
 
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/Anders429/brood/test.yaml?branch=master)](https://github.com/Anders429/brood/actions)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/Anders429/brood/workflows/test.yaml?branch=master)](https://github.com/Anders429/brood/actions)
 [![codecov.io](https://img.shields.io/codecov/c/gh/Anders429/brood)](https://codecov.io/gh/Anders429/brood)
 [![crates.io](https://img.shields.io/crates/v/brood)](https://crates.io/crates/brood)
 [![docs.rs](https://docs.rs/brood/badge.svg)](https://docs.rs/brood)
