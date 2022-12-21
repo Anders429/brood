@@ -78,7 +78,7 @@ use crate::{
 ///
 /// `System`s can be passed to a `World` to be executed. When executed, the query specified by the
 /// `Filter` and `Views` associated types is performed and the result is passed to the [`run`]
-/// method. After execution, the [`world_post_processing`] method will be run.
+/// method.
 ///
 /// It is advised to define a new struct for each `System` you wish to write. `System` structs can
 /// contain internal state, which can be used after running the system to execute post-processing
