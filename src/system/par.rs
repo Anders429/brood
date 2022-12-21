@@ -73,8 +73,8 @@ pub trait ParSystem {
     /// Logic to be run over the parallel query result.
     ///
     /// Any action performed using the query result should be performed here. If any modifications
-    /// to the [`World`] itself are desired based on the query result, those should be performed in
-    /// the [`world_post_processing`] method.
+    /// to the [`World`] itself are desired based on the query result, it should be performed after
+    /// running the system.
     ///
     /// # Example
     /// ``` rust
@@ -117,71 +117,9 @@ pub trait ParSystem {
     /// ```
     ///
     /// [`World`]: crate::world::World
-    /// [`world_post_processing`]: crate::system::System::world_post_processing()
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ) where
         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>;
-
-    /// Logic to be run after processing.
-    ///
-    /// This is an optional method that can be defined if any changes are desired to be made to the
-    /// [`World`] after querying. Changes can be stored using fields of the type implementing
-    /// `ParSystem` during the [`run`] method so that they can be accessed by this method.
-    ///
-    /// # Example
-    /// The following example creates a list of entities to remove during evaluation, and then
-    /// executes the removal during post processing.
-    ///
-    /// ``` rust
-    /// use brood::{entity, query::{filter, filter::Filter, result, Views}, registry::{ContainsParQuery, Registry}, system::ParSystem, World};
-    /// use rayon::iter::ParallelIterator;
-    ///
-    /// // Define components.
-    /// struct Foo(usize);
-    /// struct Bar(bool);
-    ///
-    /// // Define system to operate on those components.
-    /// struct MySystem {
-    ///     // A list of entity identifiers to remove during post processing.
-    ///     entities_to_remove: Vec<entity::Identifier>,     
-    /// }
-    ///
-    /// impl ParSystem for MySystem {
-    ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar, entity::Identifier);
-    ///     type Filter = filter::None;
-    ///
-    ///     fn run<'a, R, FI, VI, P, I, Q>(&mut self, query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>)
-    ///     where
-    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-    ///     {
-    ///         self.entities_to_remove = query_results.filter_map(|result!(foo, bar, entity_identifier)| {
-    ///             // If `bar` is true, increment `foo`. Otherwise, remove the entity in post processing.
-    ///             if bar.0 {
-    ///                 foo.0 += 1;
-    ///                 None
-    ///             } else {
-    ///                 Some(entity_identifier)
-    ///             }
-    ///         }).collect::<Vec<_>>();
-    ///     }
-    ///
-    ///     fn world_post_processing<R>(&mut self, world: &mut World<R>) where R: Registry {
-    ///         for entity_identifier in &self.entities_to_remove {
-    ///             world.remove(*entity_identifier);
-    ///         }
-    ///     }
-    /// }
-    /// ```
-    ///
-    /// [`run`]: crate::system::ParSystem::run()
-    /// [`World`]: crate::world::World
-    #[inline]
-    #[allow(unused_variables)]
-    fn world_post_processing<R>(&mut self, world: &mut World<R>)
-    where
-        R: Registry,
-    {
-    }
 }

@@ -4,6 +4,8 @@
 ### Added
 - `Entity!` macro for defining the type of an entity.
 - `reserve()` method on `World` for reserving capacity for additional entities made up of a specific set of components.
+### Removed
+- `System::world_post_processing()` and `ParSystem::world_post_processing()`.
 
 ## 0.4.0 - 2022-12-03
 ### Added
