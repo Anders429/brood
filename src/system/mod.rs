@@ -134,8 +134,8 @@ pub trait System {
     /// Logic to be run over the query result.
     ///
     /// Any action performed using the query result should be performed here. If any modifications
-    /// to the [`World`] itself are desired based on the query result, it should be performed after
-    /// running the system.
+    /// to the [`World`] itself are desired based on the query result, they should be performed
+    /// after running the system.
     ///
     /// # Example
     /// ``` rust
