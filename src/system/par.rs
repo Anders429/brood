@@ -4,11 +4,7 @@ use crate::{
         result,
         view::ParViews,
     },
-    registry::{
-        ContainsParQuery,
-        Registry,
-    },
-    world::World,
+    registry::ContainsParQuery,
 };
 
 /// An executable type which operates over the entities within a [`World`] in parallel.
