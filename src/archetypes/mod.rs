@@ -27,7 +27,6 @@ use crate::{
     },
 };
 use alloc::vec::Vec;
-use by_address::ByThinAddress;
 use core::{
     any::TypeId,
     hash::{
@@ -53,6 +52,7 @@ where
     hash_builder: FnvBuildHasher,
 
     type_id_lookup: HashMap<TypeId, archetype::IdentifierRef<R>, FnvBuildHasher>,
+    foreign_identifier_lookup: HashMap<&'static [u8], archetype::IdentifierRef<R>, FnvBuildHasher>,
 }
 
 impl<R> Archetypes<R>
@@ -65,6 +65,7 @@ where
             hash_builder: FnvBuildHasher::default(),
 
             type_id_lookup: HashMap::default(),
+            foreign_identifier_lookup: HashMap::default(),
         }
     }
 
@@ -74,6 +75,10 @@ where
             hash_builder: FnvBuildHasher::default(),
 
             type_id_lookup: HashMap::with_capacity_and_hasher(capacity, FnvBuildHasher::default()),
+            foreign_identifier_lookup: HashMap::with_capacity_and_hasher(
+                capacity,
+                FnvBuildHasher::default(),
+            ),
         }
     }
 
@@ -129,6 +134,25 @@ where
         )
     }
 
+    fn get_with_foreign(&self, identifier: archetype::IdentifierRef<R>) -> Option<&Archetype<R>> {
+        self.get(
+            *self
+                .foreign_identifier_lookup
+                .get(unsafe { identifier.as_slice() })?,
+        )
+    }
+
+    fn get_mut_with_foreign(
+        &mut self,
+        identifier: archetype::IdentifierRef<R>,
+    ) -> Option<&mut Archetype<R>> {
+        self.get_mut(
+            *self
+                .foreign_identifier_lookup
+                .get(unsafe { identifier.as_slice() })?,
+        )
+    }
+
     pub(crate) fn get_mut_or_insert_new(
         &mut self,
         identifier_buffer: archetype::Identifier<R>,
@@ -151,11 +175,19 @@ where
             Some(archetype_bucket) =>
             // SAFETY: This reference to the archetype contained in this bucket is unique.
             unsafe { archetype_bucket.as_mut() },
-            None => self.raw_archetypes.insert_entry(
-                hash,
-                Archetype::new(identifier_buffer),
-                Self::make_hasher(&self.hash_builder),
-            ),
+            None => {
+                unsafe {
+                    self.foreign_identifier_lookup.insert_unique_unchecked(
+                        &*(identifier_buffer.as_slice() as *const [u8]),
+                        identifier_buffer.as_ref(),
+                    );
+                }
+                self.raw_archetypes.insert_entry(
+                    hash,
+                    Archetype::new(identifier_buffer),
+                    Self::make_hasher(&self.hash_builder),
+                )
+            }
         }
     }
 
@@ -208,6 +240,12 @@ where
                     // `identifier_buffer`.
                     unsafe { identifier.as_ref() },
                 );
+                unsafe {
+                    self.foreign_identifier_lookup.insert_unique_unchecked(
+                        &*(identifier.as_slice() as *const [u8]),
+                        identifier.as_ref(),
+                    );
+                }
                 self.raw_archetypes.insert_entry(
                     hash,
                     Archetype::new(identifier),
@@ -241,16 +279,15 @@ where
             unsafe { archetype.identifier() },
             &self.hash_builder,
         );
-        if let Some(_existing_archetype) = self.raw_archetypes.get(
-            hash,
-            Self::equivalent_identifier(
-                // SAFETY: The `IdentifierRef` obtained here does not live longer than the
-                // `archetype`.
-                unsafe { archetype.identifier() },
-            ),
-        ) {
+        if let Some(_existing_archetype) = self.get_with_foreign(unsafe { archetype.identifier() })
+        {
             Err(archetype)
         } else {
+            let identifier = unsafe { archetype.identifier() };
+            unsafe {
+                self.foreign_identifier_lookup
+                    .insert_unique_unchecked(&*(identifier.as_slice() as *const [u8]), identifier);
+            }
             self.raw_archetypes
                 .insert(hash, archetype, Self::make_hasher(&self.hash_builder));
             Ok(())
@@ -323,6 +360,21 @@ where
             self.type_id_lookup.remove(&type_id);
         }
 
+        for slice in self
+            .foreign_identifier_lookup
+            .iter()
+            .filter_map(|(&slice, identifier)| {
+                if identifiers_to_erase.contains(identifier) {
+                    Some(slice)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
+        {
+            self.foreign_identifier_lookup.remove(slice);
+        }
+
         for archetype_bucket in archetypes_to_erase {
             // SAFETY: `archetype` is not used again after it is dropped from the table.
             unsafe {
@@ -350,7 +402,7 @@ where
         &self,
     ) -> (
         Self,
-        HashMap<ByThinAddress<&'static [u8]>, archetype::IdentifierRef<R>, FnvBuildHasher>,
+        HashMap<archetype::IdentifierRef<R>, archetype::IdentifierRef<R>, FnvBuildHasher>,
     ) {
         let mut identifier_map =
             HashMap::with_capacity_and_hasher(self.raw_archetypes.len(), FnvBuildHasher::default());
@@ -361,11 +413,19 @@ where
             identifier_map.insert(
                 // SAFETY: This slice will outlive the original archetype by the safety contract of
                 // this method.
-                ByThinAddress(unsafe { archetype.identifier().as_slice() }),
+                unsafe { archetype.identifier() },
                 // SAFETY: This `IdentifierRef` will outlive the cloned archetype by the safety
                 // contract of this method.
                 unsafe { cloned_archetype.identifier() },
             );
+            unsafe {
+                cloned_archetypes
+                    .foreign_identifier_lookup
+                    .insert_unique_unchecked(
+                        &*(cloned_archetype.identifier().as_slice() as *const [u8]),
+                        cloned_archetype.identifier(),
+                    );
+            }
             #[allow(unused_must_use)]
             {
                 cloned_archetypes.insert(cloned_archetype);
@@ -377,11 +437,7 @@ where
                 type_id,
                 // SAFETY: Each identifier in `self.type_id_lookup` is guaranteed to be found in
                 // `identifier_map`.
-                *unsafe {
-                    identifier_map
-                        .get(&ByThinAddress(identifier.as_slice()))
-                        .unwrap_unchecked()
-                },
+                *unsafe { identifier_map.get(identifier).unwrap_unchecked() },
             );
         }
 
@@ -398,7 +454,7 @@ where
     pub(crate) unsafe fn clone_from(
         &mut self,
         source: &Self,
-    ) -> HashMap<ByThinAddress<&'static [u8]>, archetype::IdentifierRef<R>, FnvBuildHasher> {
+    ) -> HashMap<archetype::IdentifierRef<R>, archetype::IdentifierRef<R>, FnvBuildHasher> {
         let mut identifier_map =
             HashMap::with_capacity_and_hasher(self.raw_archetypes.len(), FnvBuildHasher::default());
 
@@ -406,12 +462,14 @@ where
         for source_archetype in source.iter() {
             // SAFETY: `source_archetype.identifier()` is guaranteed to be outlived by
             // `source_archetype`, as no archetypes are dropped in this method.
-            if let Some(archetype) = self.get_mut(unsafe { source_archetype.identifier() }) {
+            if let Some(archetype) =
+                self.get_mut_with_foreign(unsafe { source_archetype.identifier() })
+            {
                 archetype.clone_from(source_archetype);
                 identifier_map.insert(
                     // SAFETY: This slice will outlive the original archetype by the safety
                     // contract of this method.
-                    ByThinAddress(unsafe { source_archetype.identifier().as_slice() }),
+                    unsafe { source_archetype.identifier() },
                     // SAFETY: This `IdentifierRef` will outlive the cloned archetype by the safety
                     // contract of this method.
                     unsafe { archetype.identifier() },
@@ -422,7 +480,7 @@ where
                 identifier_map.insert(
                     // SAFETY: This slice will outlive the original archetype by the safety
                     // contract of this method.
-                    ByThinAddress(unsafe { source_archetype.identifier().as_slice() }),
+                    unsafe { source_archetype.identifier() },
                     // SAFETY: This `IdentifierRef` will outlive the cloned archetype by the safety
                     // contract of this method.
                     unsafe { archetype.identifier() },
@@ -455,11 +513,7 @@ where
                 type_id,
                 // SAFETY: Each identifier in `source.type_id_lookup` is guaranteed to be found in
                 // `identifier_map`.
-                *unsafe {
-                    identifier_map
-                        .get(&ByThinAddress(identifier.as_slice()))
-                        .unwrap_unchecked()
-                },
+                *unsafe { identifier_map.get(identifier).unwrap_unchecked() },
             );
         }
 

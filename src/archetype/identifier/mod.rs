@@ -336,9 +336,7 @@ where
     where
         H: Hasher,
     {
-        // SAFETY: The slice created here will be outlived by the referenced `Identifier`, as the
-        // slice will only live for the scope of this function.
-        unsafe { self.as_slice() }.hash(state);
+        self.pointer.hash(state);
     }
 }
 
@@ -347,9 +345,7 @@ where
     R: Registry,
 {
     fn eq(&self, other: &Self) -> bool {
-        // SAFETY: The slices created here will be outlived by the referenced `Identifier`, as the
-        // slices will only live for the scope of this function.
-        unsafe { self.as_slice() == other.as_slice() }
+        self.pointer == other.pointer
     }
 }
 

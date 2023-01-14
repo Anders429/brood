@@ -20,7 +20,6 @@ use alloc::{
     collections::VecDeque,
     vec::Vec,
 };
-use by_address::ByThinAddress;
 use core::{
     fmt,
     fmt::Debug,
@@ -195,7 +194,11 @@ where
     /// allocator.
     pub(crate) unsafe fn clone(
         &self,
-        identifier_map: &HashMap<ByThinAddress<&[u8]>, archetype::IdentifierRef<R>, FnvBuildHasher>,
+        identifier_map: &HashMap<
+            archetype::IdentifierRef<R>,
+            archetype::IdentifierRef<R>,
+            FnvBuildHasher,
+        >,
     ) -> Self {
         Self {
             slots: self
@@ -221,7 +224,11 @@ where
     pub(crate) unsafe fn clone_from(
         &mut self,
         source: &Self,
-        identifier_map: &HashMap<ByThinAddress<&[u8]>, archetype::IdentifierRef<R>, FnvBuildHasher>,
+        identifier_map: &HashMap<
+            archetype::IdentifierRef<R>,
+            archetype::IdentifierRef<R>,
+            FnvBuildHasher,
+        >,
     ) {
         self.slots.clear();
         self.slots.extend(source.slots.iter().map(|slot|
