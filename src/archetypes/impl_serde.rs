@@ -106,7 +106,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        Archetype,
+        Archetypes,
+        DeserializeArchetypes,
+    };
     use crate::{
         archetype::Identifier,
         entity,
@@ -116,86 +120,33 @@ mod tests {
         format,
         vec,
     };
-    use claims::assert_ok;
+    use claims::{
+        assert_err_eq,
+        assert_ok,
+        assert_ok_eq,
+    };
     use core::{
         any::type_name,
-        fmt,
         fmt::Debug,
     };
     use serde::{
-        Deserialize,
-        Deserializer,
+        de::{
+            DeserializeSeed,
+            Error as _,
+        },
         Serialize,
+    };
+    use serde_assert::{
+        de::Error,
+        Deserializer,
         Serializer,
+        Token,
+        Tokens,
     };
     use serde_derive::{
         Deserialize,
         Serialize,
     };
-    use serde_test::{
-        assert_de_tokens_error,
-        assert_tokens,
-        Compact,
-        Configure,
-        Token,
-    };
-
-    struct SeededArchetypes<R>
-    where
-        R: crate::registry::Registry,
-    {
-        archetypes: Archetypes<R>,
-        len: usize,
-    }
-
-    impl<R> PartialEq for SeededArchetypes<R>
-    where
-        R: registry::PartialEq,
-    {
-        fn eq(&self, other: &Self) -> bool {
-            self.archetypes == other.archetypes && self.len == other.len
-        }
-    }
-
-    impl<R> Eq for SeededArchetypes<R> where R: registry::Eq {}
-
-    impl<R> Debug for SeededArchetypes<R>
-    where
-        R: registry::Debug,
-    {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            f.debug_struct("SeededArchetypes")
-                .field("archetypes", &self.archetypes)
-                .field("len", &self.len)
-                .finish()
-        }
-    }
-
-    impl<R> Serialize for SeededArchetypes<R>
-    where
-        R: registry::Serialize,
-    {
-        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-        {
-            self.archetypes.serialize(serializer)
-        }
-    }
-
-    impl<'de, R> Deserialize<'de> for SeededArchetypes<R>
-    where
-        R: registry::Deserialize<'de>,
-    {
-        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
-        {
-            let mut len = 0;
-            let archetypes = DeserializeArchetypes::<R>::new(&mut len).deserialize(deserializer)?;
-            Ok(Self { archetypes, len })
-        }
-    }
 
     #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
     struct A(u32);
@@ -209,10 +160,21 @@ mod tests {
     fn serialize_deserialize_empty() {
         let archetypes = Archetypes::<Registry>::new();
 
-        assert_tokens(
-            &SeededArchetypes { archetypes, len: 0 },
-            &[Token::Seq { len: Some(0) }, Token::SeqEnd],
+        let serializer = Serializer::builder().build();
+        let tokens = assert_ok_eq!(
+            archetypes.serialize(&serializer),
+            Tokens(vec![Token::Seq { len: Some(0) }, Token::SeqEnd])
         );
+        let mut len = 0;
+        let mut deserializer = Deserializer::builder()
+            .tokens(tokens)
+            .self_describing(false)
+            .build();
+        assert_ok_eq!(
+            DeserializeArchetypes::<Registry>::new(&mut len).deserialize(&mut deserializer),
+            archetypes
+        );
+        assert_eq!(len, 0);
     }
 
     #[test]
@@ -245,11 +207,10 @@ mod tests {
         }
         assert_ok!(archetypes.insert(no_component_archetype));
 
-        assert_tokens(
-            &SeededArchetypes { archetypes, len: 6 }.compact(),
-            // The order here should stay constant, because the fnv hasher uses the same seed every
-            // time.
-            &[
+        let serializer = Serializer::builder().is_human_readable(false).build();
+        let tokens = assert_ok_eq!(
+            archetypes.serialize(&serializer),
+            Tokens(vec![
                 Token::Seq { len: Some(4) },
                 // B Archetype
                 Token::NewtypeStruct { name: "Archetype" },
@@ -287,9 +248,9 @@ mod tests {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(5),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::TupleEnd,
@@ -312,27 +273,27 @@ mod tests {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(0),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(1),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(2),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::TupleEnd,
@@ -373,18 +334,18 @@ mod tests {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(3),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(4),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::TupleEnd,
@@ -398,14 +359,25 @@ mod tests {
                 Token::TupleEnd,
                 Token::TupleEnd,
                 Token::SeqEnd,
-            ],
+            ])
         );
+        let mut len = 0;
+        let mut deserializer = Deserializer::builder()
+            .tokens(tokens)
+            .is_human_readable(false)
+            .self_describing(false)
+            .build();
+        assert_ok_eq!(
+            DeserializeArchetypes::<Registry>::new(&mut len).deserialize(&mut deserializer),
+            archetypes
+        );
+        assert_eq!(len, 6);
     }
 
     #[test]
     fn deserialize_duplicate_archetype_identifiers() {
-        assert_de_tokens_error::<Compact<SeededArchetypes<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::Seq { len: Some(4) },
                 // B Archetype
                 Token::NewtypeStruct { name: "Archetype" },
@@ -445,8 +417,15 @@ mod tests {
                 Token::TupleEnd,
                 Token::TupleEnd,
                 Token::TupleEnd,
-            ],
-            &format!("non-unique `Identifier` [\"{}\"], expected sequence of `Archetype`s with unique `Identifier`s", type_name::<B>()),
+            ]))
+            .is_human_readable(false)
+            .self_describing(false)
+            .build();
+
+        let mut len = 0;
+        assert_err_eq!(
+            DeserializeArchetypes::<Registry>::new(&mut len).deserialize(&mut deserializer),
+            Error::custom(&format!("non-unique `Identifier` [\"{}\"], expected sequence of `Archetype`s with unique `Identifier`s", type_name::<B>()))
         );
     }
 }

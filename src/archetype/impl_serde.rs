@@ -842,18 +842,22 @@ mod tests {
         format,
         vec,
     };
+    use claims::{
+        assert_err_eq,
+        assert_ok_eq,
+    };
     use core::any::type_name;
+    use serde::de::Error as _;
+    use serde_assert::{
+        de::Error,
+        Deserializer,
+        Serializer,
+        Token,
+        Tokens,
+    };
     use serde_derive::{
         Deserialize,
         Serialize,
-    };
-    use serde_test::{
-        assert_de_tokens_error,
-        assert_tokens,
-        Compact,
-        Configure,
-        Readable,
-        Token,
     };
 
     #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -874,9 +878,11 @@ mod tests {
             archetype.push(entity!(A(3), B('c')), &mut entity_allocator);
         }
 
-        assert_tokens(
-            &archetype.compact(),
-            &[
+        let serializer = Serializer::builder().is_human_readable(false).build();
+
+        let tokens = assert_ok_eq!(
+            archetype.serialize(&serializer),
+            Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 3 },
                 // Identifier
@@ -893,27 +899,27 @@ mod tests {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(0),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(1),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(2),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::TupleEnd,
@@ -937,48 +943,65 @@ mod tests {
                 Token::TupleEnd,
                 Token::TupleEnd,
                 Token::TupleEnd,
-            ],
+            ])
+        );
+        let mut deserializer = Deserializer::builder()
+            .tokens(tokens)
+            .is_human_readable(false)
+            .self_describing(false)
+            .build();
+        assert_ok_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            archetype
         );
     }
 
     #[test]
     fn deserialize_by_column_missing_entity_identifiers() {
-        assert_de_tokens_error::<Compact<Archetype<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 3 },
                 // Identifier
                 Token::Tuple { len: 1 },
-                Token::U8(3),
+                Token::U8(0),
                 Token::TupleEnd,
                 // Length
                 Token::U64(3),
                 // Columns
-                Token::Tuple { len: 3 },
+                Token::Tuple { len: 1 },
                 // Entity identifiers
                 Token::Tuple { len: 1 },
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(0),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::TupleEnd,
-            ],
-            &format!(
-                "invalid length 1, expected column of 3 `{}`s",
-                type_name::<entity::Identifier>()
-            ),
+                Token::TupleEnd,
+                Token::TupleEnd,
+            ]))
+            .is_human_readable(false)
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(
+                1,
+                &format!("column of 3 `{}`s", type_name::<entity::Identifier>()).as_str()
+            )
         );
     }
 
     #[test]
     fn deserialize_by_column_missing_components() {
-        assert_de_tokens_error::<Compact<Archetype<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 3 },
                 // Identifier
@@ -995,27 +1018,27 @@ mod tests {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(0),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(1),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(2),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::TupleEnd,
@@ -1026,18 +1049,32 @@ mod tests {
                 Token::NewtypeStruct { name: "A" },
                 Token::U32(2),
                 Token::TupleEnd,
-            ],
-            &format!(
-                "invalid length 2, expected column of 3 `{}`s",
-                type_name::<A>()
-            ),
+                // B column
+                Token::Tuple { len: 3 },
+                Token::NewtypeStruct { name: "B" },
+                Token::Char('a'),
+                Token::NewtypeStruct { name: "B" },
+                Token::Char('b'),
+                Token::NewtypeStruct { name: "B" },
+                Token::Char('c'),
+                Token::TupleEnd,
+                Token::TupleEnd,
+                Token::TupleEnd,
+            ]))
+            .is_human_readable(false)
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(2, &format!("column of 3 `{}`s", type_name::<A>()).as_str())
         );
     }
 
     #[test]
     fn deserialize_by_column_missing_entity_identifier_column() {
-        assert_de_tokens_error::<Compact<Archetype<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 3 },
                 // Identifier
@@ -1049,19 +1086,30 @@ mod tests {
                 // Columns
                 Token::Tuple { len: 0 },
                 Token::TupleEnd,
-            ],
-            &format!(
-                "invalid length 0, expected columns for each of (entity::Identifier, {}, {})",
-                type_name::<A>(),
-                type_name::<B>()
-            ),
+                Token::TupleEnd,
+            ]))
+            .is_human_readable(false)
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(
+                0,
+                &format!(
+                    "columns for each of (entity::Identifier, {}, {})",
+                    type_name::<A>(),
+                    type_name::<B>()
+                )
+                .as_str()
+            )
         );
     }
 
     #[test]
     fn deserialize_by_column_missing_component_column() {
-        assert_de_tokens_error::<Compact<Archetype<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 3 },
                 // Identifier
@@ -1078,27 +1126,27 @@ mod tests {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(0),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(1),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(2),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::TupleEnd,
@@ -1112,31 +1160,48 @@ mod tests {
                 Token::U32(3),
                 Token::TupleEnd,
                 Token::TupleEnd,
-            ],
-            &format!(
-                "invalid length 2, expected columns for each of (entity::Identifier, {}, {})",
-                type_name::<A>(),
-                type_name::<B>()
-            ),
+                Token::TupleEnd,
+            ]))
+            .is_human_readable(false)
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(
+                2,
+                &format!(
+                    "columns for each of (entity::Identifier, {}, {})",
+                    type_name::<A>(),
+                    type_name::<B>()
+                )
+                .as_str()
+            )
         );
     }
 
     #[test]
     fn deserialize_by_column_missing_identifier() {
-        assert_de_tokens_error::<Compact<Archetype<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 0 },
                 Token::TupleEnd,
-            ],
-            "invalid length 0, expected column-serialized Archetype",
+            ]))
+            .is_human_readable(false)
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(0, &"column-serialized Archetype")
         );
     }
 
     #[test]
     fn deserialize_by_column_missing_length() {
-        assert_de_tokens_error::<Compact<Archetype<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 1 },
                 // Identifier
@@ -1144,15 +1209,21 @@ mod tests {
                 Token::U8(3),
                 Token::TupleEnd,
                 Token::TupleEnd,
-            ],
-            "invalid length 1, expected column-serialized Archetype",
+            ]))
+            .is_human_readable(false)
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(1, &"column-serialized Archetype")
         );
     }
 
     #[test]
     fn deserialize_by_column_missing_columns() {
-        assert_de_tokens_error::<Compact<Archetype<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 2 },
                 // Identifier
@@ -1162,8 +1233,14 @@ mod tests {
                 // Length
                 Token::U64(3),
                 Token::TupleEnd,
-            ],
-            "invalid length 2, expected column-serialized Archetype",
+            ]))
+            .is_human_readable(false)
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(2, &"column-serialized Archetype")
         );
     }
 
@@ -1177,9 +1254,10 @@ mod tests {
             archetype.push(entity!(A(3), B('c')), &mut entity_allocator);
         }
 
-        assert_tokens(
-            &archetype.readable(),
-            &[
+        let serializer = Serializer::builder().build();
+        let tokens = assert_ok_eq!(
+            archetype.serialize(&serializer),
+            Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 3 },
                 // Identifier
@@ -1196,9 +1274,9 @@ mod tests {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(0),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::NewtypeStruct { name: "A" },
@@ -1212,9 +1290,9 @@ mod tests {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(1),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::NewtypeStruct { name: "A" },
@@ -1228,9 +1306,9 @@ mod tests {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(2),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::NewtypeStruct { name: "A" },
@@ -1240,14 +1318,22 @@ mod tests {
                 Token::TupleEnd,
                 Token::TupleEnd,
                 Token::TupleEnd,
-            ],
+            ])
+        );
+        let mut deserializer = Deserializer::builder()
+            .tokens(tokens)
+            .self_describing(false)
+            .build();
+        assert_ok_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            archetype
         );
     }
 
     #[test]
     fn deserialize_by_row_no_entity_identifier() {
-        assert_de_tokens_error::<Readable<Archetype<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 3 },
                 // Identifier
@@ -1261,19 +1347,30 @@ mod tests {
                 // Row 1
                 Token::Tuple { len: 0 },
                 Token::TupleEnd,
-            ],
-            &format!(
-                "invalid length 0, expected (entity::Identifier, {}, {})",
-                type_name::<A>(),
-                type_name::<B>()
-            ),
+                Token::TupleEnd,
+                Token::TupleEnd,
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(
+                0,
+                &format!(
+                    "(entity::Identifier, {}, {})",
+                    type_name::<A>(),
+                    type_name::<B>()
+                )
+                .as_str()
+            )
         );
     }
 
     #[test]
     fn deserialize_by_row_missing_component() {
-        assert_de_tokens_error::<Readable<Archetype<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 3 },
                 // Identifier
@@ -1290,27 +1387,38 @@ mod tests {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(0),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::NewtypeStruct { name: "A" },
                 Token::U32(1),
                 Token::TupleEnd,
-            ],
-            &format!(
-                "invalid length 2, expected (entity::Identifier, {}, {})",
-                type_name::<A>(),
-                type_name::<B>()
-            ),
+                Token::TupleEnd,
+                Token::TupleEnd,
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(
+                2,
+                &format!(
+                    "(entity::Identifier, {}, {})",
+                    type_name::<A>(),
+                    type_name::<B>()
+                )
+                .as_str()
+            )
         );
     }
 
     #[test]
     fn deserialize_by_row_no_rows() {
-        assert_de_tokens_error::<Readable<Archetype<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 3 },
                 // Identifier
@@ -1322,19 +1430,29 @@ mod tests {
                 // Rows
                 Token::Tuple { len: 0 },
                 Token::TupleEnd,
-            ],
-            &format!(
-                "invalid length 0, expected 1 rows of (entity::Identifier, {}, {})",
-                type_name::<A>(),
-                type_name::<B>()
-            ),
+                Token::TupleEnd,
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(
+                0,
+                &format!(
+                    "1 rows of (entity::Identifier, {}, {})",
+                    type_name::<A>(),
+                    type_name::<B>()
+                )
+                .as_str()
+            )
         );
     }
 
     #[test]
     fn deserialize_by_row_missing_rows() {
-        assert_de_tokens_error::<Readable<Archetype<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 3 },
                 // Identifier
@@ -1351,9 +1469,9 @@ mod tests {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(0),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::NewtypeStruct { name: "A" },
@@ -1362,31 +1480,46 @@ mod tests {
                 Token::Char('a'),
                 Token::TupleEnd,
                 Token::TupleEnd,
-            ],
-            &format!(
-                "invalid length 1, expected 3 rows of (entity::Identifier, {}, {})",
-                type_name::<A>(),
-                type_name::<B>()
-            ),
+                Token::TupleEnd,
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(
+                1,
+                &format!(
+                    "3 rows of (entity::Identifier, {}, {})",
+                    type_name::<A>(),
+                    type_name::<B>()
+                )
+                .as_str()
+            )
         );
     }
 
     #[test]
     fn deserialize_by_row_missing_identifier() {
-        assert_de_tokens_error::<Readable<Archetype<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 0 },
                 Token::TupleEnd,
-            ],
-            "invalid length 0, expected row-serialized Archetype",
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(0, &"row-serialized Archetype")
         );
     }
 
     #[test]
     fn deserialize_by_row_missing_length() {
-        assert_de_tokens_error::<Readable<Archetype<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 1 },
                 // Identifier
@@ -1394,15 +1527,20 @@ mod tests {
                 Token::U8(3),
                 Token::TupleEnd,
                 Token::TupleEnd,
-            ],
-            "invalid length 1, expected row-serialized Archetype",
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(1, &"row-serialized Archetype")
         );
     }
 
     #[test]
     fn deserialize_by_row_missing_rows_completely() {
-        assert_de_tokens_error::<Readable<Archetype<Registry>>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::NewtypeStruct { name: "Archetype" },
                 Token::Tuple { len: 2 },
                 // Identifier
@@ -1412,8 +1550,13 @@ mod tests {
                 // Length
                 Token::U64(3),
                 Token::TupleEnd,
-            ],
-            "invalid length 2, expected row-serialized Archetype",
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Archetype::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(2, &"row-serialized Archetype")
         );
     }
 }

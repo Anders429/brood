@@ -121,10 +121,20 @@ mod tests {
     use super::*;
     use crate::Registry;
     use alloc::vec;
-    use serde_test::{
-        assert_de_tokens_error,
-        assert_tokens,
+    use claims::{
+        assert_err_eq,
+        assert_ok_eq,
+    };
+    use serde::de::{
+        Error as _,
+        Unexpected,
+    };
+    use serde_assert::{
+        de::Error,
+        Deserializer,
+        Serializer,
         Token,
+        Tokens,
     };
 
     macro_rules! create_components {
@@ -146,16 +156,17 @@ mod tests {
     fn serialize_deserialize() {
         let identifier = unsafe { Identifier::<Registry>::new(vec![1, 2, 3, 0]) };
 
-        assert_tokens(
-            &identifier,
-            &[
+        let serializer = Serializer::builder().build();
+        assert_ok_eq!(
+            identifier.serialize(&serializer),
+            Tokens(vec![
                 Token::Tuple { len: 4 },
                 Token::U8(1),
                 Token::U8(2),
                 Token::U8(3),
                 Token::U8(0),
-                Token::TupleEnd,
-            ],
+                Token::TupleEnd
+            ])
         );
     }
 
@@ -163,35 +174,43 @@ mod tests {
     fn serialize_deserialize_empty() {
         let identifier = unsafe { Identifier::<Registry!()>::new(vec![]) };
 
-        assert_tokens(&identifier, &[Token::Tuple { len: 0 }, Token::TupleEnd]);
+        let serializer = Serializer::builder().build();
+        assert_ok_eq!(
+            identifier.serialize(&serializer),
+            Tokens(vec![Token::Tuple { len: 0 }, Token::TupleEnd])
+        );
     }
 
     #[test]
     fn deserialize_from_too_many_bits() {
-        assert_de_tokens_error::<Identifier<Registry>>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::Tuple { len: 4 },
                 Token::U8(1),
                 Token::U8(2),
                 Token::U8(3),
                 Token::U8(255),
                 Token::TupleEnd,
-            ],
-            "invalid value: byte array [1, 2, 3, 255], expected 26 bits corresponding to components, with prefixed 0s padded on the last byte to round up to 4 bytes"
-        );
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(Identifier::<Registry>::deserialize(&mut deserializer), Error::invalid_value(Unexpected::Other("byte array [1, 2, 3, 255]"), &"26 bits corresponding to components, with prefixed 0s padded on the last byte to round up to 4 bytes"));
     }
 
     #[test]
     fn deserialize_from_too_few_bytes() {
-        assert_de_tokens_error::<Identifier<Registry>>(
-            &[
-                Token::Tuple { len: 3 },
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
+                Token::Tuple { len: 4 },
                 Token::U8(1),
                 Token::U8(2),
                 Token::U8(3),
                 Token::TupleEnd,
-            ],
-            "invalid length 3, expected 26 bits corresponding to components, with prefixed 0s padded on the last byte to round up to 4 bytes"
-        );
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(Identifier::<Registry>::deserialize(&mut deserializer), Error::invalid_length(3, &"26 bits corresponding to components, with prefixed 0s padded on the last byte to round up to 4 bytes"));
     }
 }
