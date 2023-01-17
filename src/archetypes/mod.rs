@@ -157,24 +157,20 @@ where
         &mut self,
         identifier_buffer: archetype::Identifier<R>,
     ) -> &mut Archetype<R> {
-        let hash = Self::make_hash(
-            // SAFETY: The `IdentifierRef` obtained here does not live longer than the
-            // `identifier_buffer`.
-            unsafe { identifier_buffer.as_ref() },
-            &self.hash_builder,
-        );
-
-        match self.raw_archetypes.find(
-            hash,
-            Self::equivalent_identifier(
-                // SAFETY: The `IdentifierRef` obtained here does not live longer than the
-                // `identifier_buffer`.
-                unsafe { identifier_buffer.as_ref() },
-            ),
-        ) {
-            Some(archetype_bucket) =>
-            // SAFETY: This reference to the archetype contained in this bucket is unique.
-            unsafe { archetype_bucket.as_mut() },
+        // SAFETY: The slice created here does not outlive the `identifier_buffer`.
+        match self
+            .foreign_identifier_lookup
+            .get(unsafe { identifier_buffer.as_slice() })
+        {
+            Some(&identifier) => {
+                if let Some(archetype) = self.get_mut(identifier) {
+                    archetype
+                } else {
+                    // SAFETY: Since the identifier was present in `foreign_identifier_lookup`, it
+                    // is guaranteed to have an associated `archetype`.
+                    unsafe { unreachable_unchecked() }
+                }
+            }
             None => {
                 unsafe {
                     self.foreign_identifier_lookup.insert_unique_unchecked(
@@ -183,7 +179,9 @@ where
                     );
                 }
                 self.raw_archetypes.insert_entry(
-                    hash,
+                    // SAFETY: The `IdentifierRef` created here does not outlive the
+                    // `identifier_buffer`.
+                    Self::make_hash(unsafe { identifier_buffer.as_ref() }, &self.hash_builder),
                     Archetype::new(identifier_buffer),
                     Self::make_hasher(&self.hash_builder),
                 )
