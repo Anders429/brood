@@ -27,8 +27,8 @@ serde = {version = "1.0.148", default-features = false, features = ["alloc"], op
 [dev-dependencies]
 claims = "0.7.1"
 rustversion = "1.0.9"
+serde_assert = "0.2.0"
 serde_derive = "1.0.148"
-serde_test = "1.0.148"
 trybuild = "1.0.72"
 
 [features]

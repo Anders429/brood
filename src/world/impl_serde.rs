@@ -85,21 +85,31 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::World;
     use crate::{
         entity,
         Registry,
     };
-    use serde_derive::{
+    use alloc::vec;
+    use claims::{
+        assert_err_eq,
+        assert_ok_eq,
+    };
+    use serde::{
+        de::Error as _,
         Deserialize,
         Serialize,
     };
-    use serde_test::{
-        assert_de_tokens_error,
-        assert_tokens,
-        Compact,
-        Configure,
+    use serde_assert::{
+        de::Error,
+        Deserializer,
+        Serializer,
         Token,
+        Tokens,
+    };
+    use serde_derive::{
+        Deserialize,
+        Serialize,
     };
 
     #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -114,9 +124,10 @@ mod tests {
     fn serialize_deserialize_empty() {
         let world = World::<Registry>::new();
 
-        assert_tokens(
-            &world,
-            &[
+        let serializer = Serializer::builder().build();
+        let tokens = assert_ok_eq!(
+            world.serialize(&serializer),
+            Tokens(vec![
                 Token::Tuple { len: 2 },
                 // Archetypes
                 Token::Seq { len: Some(0) },
@@ -126,15 +137,20 @@ mod tests {
                     name: "Allocator",
                     len: 2,
                 },
-                Token::String("length"),
+                Token::Field("length"),
                 Token::U64(0),
-                Token::String("free"),
+                Token::Field("free"),
                 Token::Seq { len: Some(0) },
                 Token::SeqEnd,
                 Token::StructEnd,
                 Token::TupleEnd,
-            ],
+            ])
         );
+        let mut deserializer = Deserializer::builder()
+            .tokens(tokens)
+            .self_describing(false)
+            .build();
+        assert_ok_eq!(World::<Registry>::deserialize(&mut deserializer), world);
     }
 
     #[test]
@@ -154,9 +170,10 @@ mod tests {
         let entity_identifier = world.insert(entity!(B('h')));
         world.remove(entity_identifier);
 
-        assert_tokens(
-            &world.compact(),
-            &[
+        let serializer = Serializer::builder().is_human_readable(false).build();
+        let tokens = assert_ok_eq!(
+            world.serialize(&serializer),
+            Tokens(vec![
                 Token::Tuple { len: 2 },
                 // Archetypes
                 Token::Seq { len: Some(4) },
@@ -196,9 +213,9 @@ mod tests {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(5),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::TupleEnd,
@@ -221,27 +238,27 @@ mod tests {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(0),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(1),
                 Token::StructEnd,
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(1),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(2),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::TupleEnd,
@@ -282,18 +299,18 @@ mod tests {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(3),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(4),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
                 Token::TupleEnd,
@@ -312,45 +329,63 @@ mod tests {
                     name: "Allocator",
                     len: 2,
                 },
-                Token::String("length"),
+                Token::Field("length"),
                 Token::U64(7),
-                Token::String("free"),
+                Token::Field("free"),
                 Token::Seq { len: Some(1) },
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(6),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(1),
                 Token::StructEnd,
                 Token::SeqEnd,
                 Token::StructEnd,
                 Token::TupleEnd,
-            ],
+            ])
         );
+        let mut deserializer = Deserializer::builder()
+            .tokens(tokens)
+            .is_human_readable(false)
+            .self_describing(false)
+            .build();
+        assert_ok_eq!(World::<Registry>::deserialize(&mut deserializer), world);
     }
 
     #[test]
     fn deserialize_missing_archetypes() {
-        assert_de_tokens_error::<Compact<World<Registry>>>(
-            &[Token::Tuple { len: 0 }, Token::TupleEnd],
-            "invalid length 0, expected serialized World",
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![Token::Tuple { len: 0 }, Token::TupleEnd]))
+            .is_human_readable(false)
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            World::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(0, &"serialized World")
         );
     }
 
     #[test]
     fn deserialize_missing_entity_allocator() {
-        assert_de_tokens_error::<Compact<World<Registry>>>(
-            &[
-                Token::Tuple { len: 0 },
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
+                Token::Tuple { len: 1 },
                 // Archetypes
                 Token::Seq { len: Some(0) },
                 Token::SeqEnd,
                 Token::TupleEnd,
-            ],
-            "invalid length 1, expected serialized World",
+            ]))
+            .is_human_readable(false)
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            World::<Registry>::deserialize(&mut deserializer),
+            Error::invalid_length(1, &"serialized World")
         );
     }
 }

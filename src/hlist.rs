@@ -83,11 +83,25 @@ pub(crate) use define_null_uninstantiable;
 mod tests {
     use super::*;
     #[cfg(feature = "serde")]
-    use serde_test::{
-        assert_de_tokens,
-        assert_de_tokens_error,
-        assert_tokens,
+    use alloc::vec;
+    #[cfg(feature = "serde")]
+    use claims::{
+        assert_err_eq,
+        assert_ok_eq,
+    };
+    #[cfg(feature = "serde")]
+    use serde::{
+        de::Error as _,
+        Deserialize,
+        Serialize,
+    };
+    #[cfg(feature = "serde")]
+    use serde_assert::{
+        de::Error,
+        Deserializer,
+        Serializer,
         Token,
+        Tokens,
     };
 
     define_null!();
@@ -95,21 +109,31 @@ mod tests {
     #[cfg(feature = "serde")]
     #[test]
     fn serialize_deserialize() {
-        assert_tokens(&Null, &[Token::UnitStruct { name: "Null" }]);
-    }
+        let null = Null;
 
-    #[cfg(feature = "serde")]
-    #[test]
-    fn deserialize_from_unit() {
-        assert_de_tokens(&Null, &[Token::Unit]);
+        let serializer = Serializer::builder().build();
+        let tokens = assert_ok_eq!(
+            null.serialize(&serializer),
+            Tokens(vec![Token::UnitStruct { name: "Null" }])
+        );
+        let mut deserializer = Deserializer::builder()
+            .tokens(tokens)
+            .self_describing(false)
+            .build();
+        assert_ok_eq!(Null::deserialize(&mut deserializer), null);
     }
 
     #[cfg(feature = "serde")]
     #[test]
     fn deserialize_from_invalid_type() {
-        assert_de_tokens_error::<Null>(
-            &[Token::U32(42)],
-            "invalid type: integer `42`, expected struct Null",
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![Token::U32(42)]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Null::deserialize(&mut deserializer),
+            Error::invalid_type((&Token::U32(42)).into(), &"struct Null")
         );
     }
 }
