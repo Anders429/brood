@@ -177,152 +177,162 @@ mod tests {
                 Token::Tuple { len: 2 },
                 // Archetypes
                 Token::Seq { len: Some(4) },
-                // B Archetype
-                Token::NewtypeStruct { name: "Archetype" },
-                Token::Tuple { len: 3 },
-                // Identifier
-                Token::Tuple { len: 1 },
-                Token::U8(2),
-                Token::TupleEnd,
-                // Length
-                Token::U64(0),
-                // Columns
-                Token::Tuple { len: 2 },
-                // Entity identifiers
-                Token::Tuple { len: 0 },
-                Token::TupleEnd,
-                // B column
-                Token::Tuple { len: 0 },
-                Token::TupleEnd,
-                Token::TupleEnd,
-                Token::TupleEnd,
-                // No component Archetype
-                Token::NewtypeStruct { name: "Archetype" },
-                Token::Tuple { len: 3 },
-                // Identifier
-                Token::Tuple { len: 1 },
-                Token::U8(0),
-                Token::TupleEnd,
-                // Length
-                Token::U64(1),
-                // Columns
-                Token::Tuple { len: 1 },
-                // Entity identifiers
-                Token::Tuple { len: 1 },
-                Token::Struct {
-                    name: "Identifier",
-                    len: 2,
-                },
-                Token::Field("index"),
-                Token::U64(5),
-                Token::Field("generation"),
-                Token::U64(0),
-                Token::StructEnd,
-                Token::TupleEnd,
-                Token::TupleEnd,
-                Token::TupleEnd,
-                // AB Archetype
-                Token::NewtypeStruct { name: "Archetype" },
-                Token::Tuple { len: 3 },
-                // Identifier
-                Token::Tuple { len: 1 },
-                Token::U8(3),
-                Token::TupleEnd,
-                // Length
-                Token::U64(3),
-                // Columns
-                Token::Tuple { len: 3 },
-                // Entity identifiers
-                Token::Tuple { len: 3 },
-                Token::Struct {
-                    name: "Identifier",
-                    len: 2,
-                },
-                Token::Field("index"),
-                Token::U64(0),
-                Token::Field("generation"),
-                Token::U64(1),
-                Token::StructEnd,
-                Token::Struct {
-                    name: "Identifier",
-                    len: 2,
-                },
-                Token::Field("index"),
-                Token::U64(1),
-                Token::Field("generation"),
-                Token::U64(0),
-                Token::StructEnd,
-                Token::Struct {
-                    name: "Identifier",
-                    len: 2,
-                },
-                Token::Field("index"),
-                Token::U64(2),
-                Token::Field("generation"),
-                Token::U64(0),
-                Token::StructEnd,
-                Token::TupleEnd,
-                // A column
-                Token::Tuple { len: 3 },
-                Token::NewtypeStruct { name: "A" },
-                Token::U32(2),
-                Token::NewtypeStruct { name: "A" },
-                Token::U32(3),
-                Token::NewtypeStruct { name: "A" },
-                Token::U32(4),
-                Token::TupleEnd,
-                // B column
-                Token::Tuple { len: 3 },
-                Token::NewtypeStruct { name: "B" },
-                Token::Char('b'),
-                Token::NewtypeStruct { name: "B" },
-                Token::Char('c'),
-                Token::NewtypeStruct { name: "B" },
-                Token::Char('d'),
-                Token::TupleEnd,
-                Token::TupleEnd,
-                Token::TupleEnd,
-                // A Archetype
-                Token::NewtypeStruct { name: "Archetype" },
-                Token::Tuple { len: 3 },
-                // Identifier
-                Token::Tuple { len: 1 },
-                Token::U8(1),
-                Token::TupleEnd,
-                // Length
-                Token::U64(2),
-                // Columns
-                Token::Tuple { len: 2 },
-                // Entity identifiers
-                Token::Tuple { len: 2 },
-                Token::Struct {
-                    name: "Identifier",
-                    len: 2,
-                },
-                Token::Field("index"),
-                Token::U64(3),
-                Token::Field("generation"),
-                Token::U64(0),
-                Token::StructEnd,
-                Token::Struct {
-                    name: "Identifier",
-                    len: 2,
-                },
-                Token::Field("index"),
-                Token::U64(4),
-                Token::Field("generation"),
-                Token::U64(0),
-                Token::StructEnd,
-                Token::TupleEnd,
-                // A column
-                Token::Tuple { len: 2 },
-                Token::NewtypeStruct { name: "A" },
-                Token::U32(5),
-                Token::NewtypeStruct { name: "A" },
-                Token::U32(6),
-                Token::TupleEnd,
-                Token::TupleEnd,
-                Token::TupleEnd,
+                Token::Unordered(&[
+                    // No component Archetype
+                    &[
+                        Token::NewtypeStruct { name: "Archetype" },
+                        Token::Tuple { len: 3 },
+                        // Identifier
+                        Token::Tuple { len: 1 },
+                        Token::U8(0),
+                        Token::TupleEnd,
+                        // Length
+                        Token::U64(1),
+                        // Columns
+                        Token::Tuple { len: 1 },
+                        // Entity identifiers
+                        Token::Tuple { len: 1 },
+                        Token::Struct {
+                            name: "Identifier",
+                            len: 2,
+                        },
+                        Token::Field("index"),
+                        Token::U64(5),
+                        Token::Field("generation"),
+                        Token::U64(0),
+                        Token::StructEnd,
+                        Token::TupleEnd,
+                        Token::TupleEnd,
+                        Token::TupleEnd,
+                    ],
+                    // A Archetype
+                    &[
+                        Token::NewtypeStruct { name: "Archetype" },
+                        Token::Tuple { len: 3 },
+                        // Identifier
+                        Token::Tuple { len: 1 },
+                        Token::U8(1),
+                        Token::TupleEnd,
+                        // Length
+                        Token::U64(2),
+                        // Columns
+                        Token::Tuple { len: 2 },
+                        // Entity identifiers
+                        Token::Tuple { len: 2 },
+                        Token::Struct {
+                            name: "Identifier",
+                            len: 2,
+                        },
+                        Token::Field("index"),
+                        Token::U64(3),
+                        Token::Field("generation"),
+                        Token::U64(0),
+                        Token::StructEnd,
+                        Token::Struct {
+                            name: "Identifier",
+                            len: 2,
+                        },
+                        Token::Field("index"),
+                        Token::U64(4),
+                        Token::Field("generation"),
+                        Token::U64(0),
+                        Token::StructEnd,
+                        Token::TupleEnd,
+                        // A column
+                        Token::Tuple { len: 2 },
+                        Token::NewtypeStruct { name: "A" },
+                        Token::U32(5),
+                        Token::NewtypeStruct { name: "A" },
+                        Token::U32(6),
+                        Token::TupleEnd,
+                        Token::TupleEnd,
+                        Token::TupleEnd,
+                    ],
+                    // B Archetype
+                    &[
+                        Token::NewtypeStruct { name: "Archetype" },
+                        Token::Tuple { len: 3 },
+                        // Identifier
+                        Token::Tuple { len: 1 },
+                        Token::U8(2),
+                        Token::TupleEnd,
+                        // Length
+                        Token::U64(0),
+                        // Columns
+                        Token::Tuple { len: 2 },
+                        // Entity identifiers
+                        Token::Tuple { len: 0 },
+                        Token::TupleEnd,
+                        // B column
+                        Token::Tuple { len: 0 },
+                        Token::TupleEnd,
+                        Token::TupleEnd,
+                        Token::TupleEnd,
+                    ],
+                    // AB Archetype
+                    &[
+                        Token::NewtypeStruct { name: "Archetype" },
+                        Token::Tuple { len: 3 },
+                        // Identifier
+                        Token::Tuple { len: 1 },
+                        Token::U8(3),
+                        Token::TupleEnd,
+                        // Length
+                        Token::U64(3),
+                        // Columns
+                        Token::Tuple { len: 3 },
+                        // Entity identifiers
+                        Token::Tuple { len: 3 },
+                        Token::Struct {
+                            name: "Identifier",
+                            len: 2,
+                        },
+                        Token::Field("index"),
+                        Token::U64(0),
+                        Token::Field("generation"),
+                        Token::U64(1),
+                        Token::StructEnd,
+                        Token::Struct {
+                            name: "Identifier",
+                            len: 2,
+                        },
+                        Token::Field("index"),
+                        Token::U64(1),
+                        Token::Field("generation"),
+                        Token::U64(0),
+                        Token::StructEnd,
+                        Token::Struct {
+                            name: "Identifier",
+                            len: 2,
+                        },
+                        Token::Field("index"),
+                        Token::U64(2),
+                        Token::Field("generation"),
+                        Token::U64(0),
+                        Token::StructEnd,
+                        Token::TupleEnd,
+                        // A column
+                        Token::Tuple { len: 3 },
+                        Token::NewtypeStruct { name: "A" },
+                        Token::U32(2),
+                        Token::NewtypeStruct { name: "A" },
+                        Token::U32(3),
+                        Token::NewtypeStruct { name: "A" },
+                        Token::U32(4),
+                        Token::TupleEnd,
+                        // B column
+                        Token::Tuple { len: 3 },
+                        Token::NewtypeStruct { name: "B" },
+                        Token::Char('b'),
+                        Token::NewtypeStruct { name: "B" },
+                        Token::Char('c'),
+                        Token::NewtypeStruct { name: "B" },
+                        Token::Char('d'),
+                        Token::TupleEnd,
+                        Token::TupleEnd,
+                        Token::TupleEnd,
+                    ],
+                ]),
                 Token::SeqEnd,
                 // Entity Allocator
                 Token::Struct {
