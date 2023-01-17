@@ -125,153 +125,222 @@ impl<'de> Deserialize<'de> for Identifier {
 #[cfg(test)]
 mod tests {
     use crate::entity::Identifier;
-    use serde_test::{
-        assert_de_tokens,
-        assert_de_tokens_error,
-        assert_tokens,
+    use alloc::vec;
+    use claims::{
+        assert_err_eq,
+        assert_ok_eq,
+    };
+    use serde::{
+        de::Error as _,
+        Deserialize,
+        Serialize,
+    };
+    use serde_assert::{
+        de::Error,
+        ser::SerializeStructAs,
+        Deserializer,
+        Serializer,
         Token,
+        Tokens,
     };
 
     #[test]
     fn serialize_deserialize() {
         let identifier = Identifier::new(1, 2);
 
-        assert_tokens(
-            &identifier,
-            &[
+        let serializer = Serializer::builder().build();
+        let tokens = assert_ok_eq!(
+            identifier.serialize(&serializer),
+            Tokens(vec![
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(1),
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(2),
                 Token::StructEnd,
-            ],
+            ])
         );
+        let mut deserializer = Deserializer::builder()
+            .tokens(tokens)
+            .self_describing(false)
+            .build();
+        assert_ok_eq!(Identifier::deserialize(&mut deserializer), identifier);
     }
 
     #[test]
     fn deserialize_missing_index() {
-        assert_de_tokens_error::<Identifier>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::Struct {
                     name: "Identifier",
                     len: 1,
                 },
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
                 Token::StructEnd,
-            ],
-            "missing field `index`",
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Identifier::deserialize(&mut deserializer),
+            Error::missing_field("index")
         );
     }
 
     #[test]
     fn deserialize_missing_generation() {
-        assert_de_tokens_error::<Identifier>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::Struct {
                     name: "Identifier",
                     len: 1,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(0),
                 Token::StructEnd,
-            ],
-            "missing field `generation`",
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Identifier::deserialize(&mut deserializer),
+            Error::missing_field("generation")
         );
     }
 
     #[test]
     fn deserialize_duplicate_index() {
-        assert_de_tokens_error::<Identifier>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("index"),
+                Token::Field("index"),
                 Token::U64(0),
-                Token::String("index"),
-            ],
-            "duplicate field `index`",
+                Token::Field("index"),
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Identifier::deserialize(&mut deserializer),
+            Error::duplicate_field("index")
         );
     }
 
     #[test]
     fn deserialize_duplicate_generation() {
-        assert_de_tokens_error::<Identifier>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("generation"),
+                Token::Field("generation"),
                 Token::U64(0),
-                Token::String("generation"),
-            ],
-            "duplicate field `generation`",
+                Token::Field("generation"),
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Identifier::deserialize(&mut deserializer),
+            Error::duplicate_field("generation")
         );
     }
 
     #[test]
     fn deserialize_unknown_field() {
-        assert_de_tokens_error::<Identifier>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::Struct {
                     name: "Identifier",
                     len: 2,
                 },
-                Token::String("unknown"),
-            ],
-            "unknown field `unknown`, expected `index` or `generation`",
+                Token::Field("unknown"),
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Identifier::deserialize(&mut deserializer),
+            Error::unknown_field("unknown", &["index", "generation"])
         );
     }
 
     #[test]
-    fn deserialize_from_seq() {
+    fn serialize_deserialize_from_seq() {
         let identifier = Identifier::new(1, 2);
 
-        assert_de_tokens(
-            &identifier,
-            &[
+        let serializer = Serializer::builder()
+            .serialize_struct_as(SerializeStructAs::Seq)
+            .build();
+        let tokens = assert_ok_eq!(
+            identifier.serialize(&serializer),
+            Tokens(vec![
                 Token::Seq { len: Some(2) },
                 Token::U64(1),
                 Token::U64(2),
                 Token::SeqEnd,
-            ],
+            ])
         );
+        let mut deserializer = Deserializer::builder()
+            .tokens(tokens)
+            .self_describing(false)
+            .build();
+        assert_ok_eq!(Identifier::deserialize(&mut deserializer), identifier);
     }
 
     #[test]
     fn deserialize_from_seq_no_items() {
-        assert_de_tokens_error::<Identifier>(
-            &[Token::Seq { len: Some(0) }, Token::SeqEnd],
-            "invalid length 0, expected struct Identifier",
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![Token::Seq { len: Some(0) }, Token::SeqEnd]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Identifier::deserialize(&mut deserializer),
+            Error::invalid_length(0, &"struct Identifier")
         );
     }
 
     #[test]
     fn deserialize_from_seq_missing_item() {
-        assert_de_tokens_error::<Identifier>(
-            &[Token::Seq { len: Some(1) }, Token::U64(1), Token::SeqEnd],
-            "invalid length 1, expected struct Identifier",
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
+                Token::Seq { len: Some(1) },
+                Token::U64(1),
+                Token::SeqEnd,
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Identifier::deserialize(&mut deserializer),
+            Error::invalid_length(1, &"struct Identifier")
         );
     }
 
     #[test]
-    #[should_panic(expected = "expected Token::U64(3) but deserialization wants Token::SeqEnd")]
     fn deserialize_from_seq_too_many_items() {
-        assert_de_tokens_error::<Identifier>(
-            &[
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
                 Token::Seq { len: Some(3) },
                 Token::U64(1),
                 Token::U64(2),
                 Token::U64(3),
-            ],
-            "",
+            ]))
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            Identifier::deserialize(&mut deserializer),
+            Error::ExpectedToken(Token::SeqEnd)
         );
     }
 }
