@@ -135,57 +135,54 @@ where
     }
 
     fn get_with_foreign(&self, identifier: archetype::IdentifierRef<R>) -> Option<&Archetype<R>> {
-        self.get(
-            *self
-                .foreign_identifier_lookup
-                .get(unsafe { identifier.as_slice() })?,
-        )
+        self.get(*self.foreign_identifier_lookup.get(
+            // SAFETY: The slice created here does not outlive its identifier.
+            unsafe { identifier.as_slice() },
+        )?)
     }
 
     fn get_mut_with_foreign(
         &mut self,
         identifier: archetype::IdentifierRef<R>,
     ) -> Option<&mut Archetype<R>> {
-        self.get_mut(
-            *self
-                .foreign_identifier_lookup
-                .get(unsafe { identifier.as_slice() })?,
-        )
+        self.get_mut(*self.foreign_identifier_lookup.get(
+            // SAFETY: The slice created here does not outlive its identifier.
+            unsafe { identifier.as_slice() },
+        )?)
     }
 
     pub(crate) fn get_mut_or_insert_new(
         &mut self,
         identifier_buffer: archetype::Identifier<R>,
     ) -> &mut Archetype<R> {
-        // SAFETY: The slice created here does not outlive the `identifier_buffer`.
-        match self
-            .foreign_identifier_lookup
-            .get(unsafe { identifier_buffer.as_slice() })
-        {
-            Some(&identifier) => {
-                if let Some(archetype) = self.get_mut(identifier) {
-                    archetype
-                } else {
-                    // SAFETY: Since the identifier was present in `foreign_identifier_lookup`, it
-                    // is guaranteed to have an associated `archetype`.
-                    unsafe { unreachable_unchecked() }
-                }
+        if let Some(&identifier) = self.foreign_identifier_lookup.get(
+            // SAFETY: The slice created here does not outlive the `identifier_buffer`.
+            unsafe { identifier_buffer.as_slice() },
+        ) {
+            if let Some(archetype) = self.get_mut(identifier) {
+                archetype
+            } else {
+                // SAFETY: Since the identifier was present in `foreign_identifier_lookup`, it
+                // is guaranteed to have an associated `archetype`.
+                unsafe { unreachable_unchecked() }
             }
-            None => {
-                unsafe {
-                    self.foreign_identifier_lookup.insert_unique_unchecked(
-                        &*(identifier_buffer.as_slice() as *const [u8]),
-                        identifier_buffer.as_ref(),
-                    );
-                }
-                self.raw_archetypes.insert_entry(
-                    // SAFETY: The `IdentifierRef` created here does not outlive the
-                    // `identifier_buffer`.
-                    Self::make_hash(unsafe { identifier_buffer.as_ref() }, &self.hash_builder),
-                    Archetype::new(identifier_buffer),
-                    Self::make_hasher(&self.hash_builder),
-                )
+        } else {
+            // SAFETY: This identifier has already been verified to not be contained in
+            // `foreign_identifier_lookup`. Additionally, the slice and `IdentifierRef` created
+            // here will not outlive the `identifier_buffer`.
+            unsafe {
+                self.foreign_identifier_lookup.insert_unique_unchecked(
+                    &*(identifier_buffer.as_slice() as *const [u8]),
+                    identifier_buffer.as_ref(),
+                );
             }
+            self.raw_archetypes.insert_entry(
+                // SAFETY: The `IdentifierRef` created here does not outlive the
+                // `identifier_buffer`.
+                Self::make_hash(unsafe { identifier_buffer.as_ref() }, &self.hash_builder),
+                Archetype::new(identifier_buffer),
+                Self::make_hasher(&self.hash_builder),
+            )
         }
     }
 
@@ -238,6 +235,10 @@ where
                     // `identifier_buffer`.
                     unsafe { identifier.as_ref() },
                 );
+                // SAFETY: Since the archetype is not contained anywhere in this container, it is
+                // invariantly guaranteed that the identifier is not contained in
+                // `foreign_identifier_lookup` either. Additionally, both the slice and
+                // `IdentifierRef` created here do not outlive `identifier`.
                 unsafe {
                     self.foreign_identifier_lookup.insert_unique_unchecked(
                         &*(identifier.as_slice() as *const [u8]),
@@ -277,11 +278,16 @@ where
             unsafe { archetype.identifier() },
             &self.hash_builder,
         );
+        // SAFETY: The `IdentifierRef` created here does not outlive `archetype`.
         if let Some(_existing_archetype) = self.get_with_foreign(unsafe { archetype.identifier() })
         {
             Err(archetype)
         } else {
+            // SAFETY: The `IdentifierRef` created here does not outlive `archetype`.
             let identifier = unsafe { archetype.identifier() };
+            // SAFETY: Since `identifier` was not found by `get_with_foreign()`, it is guaranteed
+            // to not be contained in `foreign_identifier_lookup`. Additionally, the slice created
+            // here does not outlive `identifier`.
             unsafe {
                 self.foreign_identifier_lookup
                     .insert_unique_unchecked(&*(identifier.as_slice() as *const [u8]), identifier);
@@ -416,6 +422,9 @@ where
                 // contract of this method.
                 unsafe { cloned_archetype.identifier() },
             );
+            // SAFETY: Since each archetype in the source container has a unique identifier, then
+            // each insertion here will also be unique. Additionally, the slice and `IdentifierRef`
+            // created here will not outlive the `cloned_archetype`.
             unsafe {
                 cloned_archetypes
                     .foreign_identifier_lookup
@@ -458,11 +467,11 @@ where
 
         // Clone archetypes.
         for source_archetype in source.iter() {
-            // SAFETY: `source_archetype.identifier()` is guaranteed to be outlived by
-            // `source_archetype`, as no archetypes are dropped in this method.
-            if let Some(archetype) =
-                self.get_mut_with_foreign(unsafe { source_archetype.identifier() })
-            {
+            if let Some(archetype) = self.get_mut_with_foreign(
+                // SAFETY: `source_archetype.identifier()` is guaranteed to be outlived by
+                // `source_archetype`, as no archetypes are dropped in this method.
+                unsafe { source_archetype.identifier() },
+            ) {
                 archetype.clone_from(source_archetype);
                 identifier_map.insert(
                     // SAFETY: This slice will outlive the original archetype by the safety

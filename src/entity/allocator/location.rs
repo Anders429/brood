@@ -85,6 +85,7 @@ where
     R: Registry,
 {
     fn eq(&self, other: &Self) -> bool {
+        // SAFETY: The slices created here do not outlive their respective identifiers.
         unsafe {
             self.identifier.as_slice() == other.identifier.as_slice() && self.index == other.index
         }
