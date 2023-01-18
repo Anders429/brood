@@ -4,6 +4,7 @@ use super::super::{
 };
 use crate::query::view::ParViews;
 
+#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 /// Indicates that a registry is queryable in parallel by the filter `F` and the views `V`.
 pub trait Sealed<'a, F, FI, V, VI, P, I, Q>:
     ContainsFilter<F, FI> + ContainsFilter<V, VI> + ContainsParViews<'a, V, P, I, Q>

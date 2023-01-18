@@ -2,7 +2,6 @@ use crate::{
     archetype,
     registry::Registry,
 };
-use by_address::ByThinAddress;
 use core::{
     fmt,
     fmt::Debug,
@@ -41,15 +40,15 @@ where
     /// `identifier_map` must contain an entry for `self.identifier`.
     pub(super) unsafe fn clone_with_new_identifier(
         &self,
-        identifier_map: &HashMap<ByThinAddress<&[u8]>, archetype::IdentifierRef<R>, FnvBuildHasher>,
+        identifier_map: &HashMap<
+            archetype::IdentifierRef<R>,
+            archetype::IdentifierRef<R>,
+            FnvBuildHasher,
+        >,
     ) -> Self {
         Self {
             // SAFETY: `identifier_map` is guaranteed to contain an entry for `self.identifier`.
-            identifier: *unsafe {
-                identifier_map
-                    .get(&ByThinAddress(self.identifier.as_slice()))
-                    .unwrap_unchecked()
-            },
+            identifier: *unsafe { identifier_map.get(&self.identifier).unwrap_unchecked() },
             index: self.index,
         }
     }
@@ -86,7 +85,10 @@ where
     R: Registry,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.identifier == other.identifier && self.index == other.index
+        // SAFETY: The slices created here do not outlive their respective identifiers.
+        unsafe {
+            self.identifier.as_slice() == other.identifier.as_slice() && self.index == other.index
+        }
     }
 }
 
