@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.5.0 - 2023-01-18
 ### Added
 - `Entity!` macro for defining the type of an entity.
 - `reserve()` method on `World` for reserving capacity for additional entities made up of a specific set of components.
