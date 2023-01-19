@@ -3,7 +3,6 @@ use crate::{
     entity::allocator::Location,
     registry::Registry,
 };
-use by_address::ByThinAddress;
 use core::{
     fmt,
     fmt::Debug,
@@ -76,7 +75,11 @@ where
     /// exists.
     pub(super) unsafe fn clone_with_new_identifier(
         &self,
-        identifier_map: &HashMap<ByThinAddress<&[u8]>, archetype::IdentifierRef<R>, FnvBuildHasher>,
+        identifier_map: &HashMap<
+            archetype::IdentifierRef<R>,
+            archetype::IdentifierRef<R>,
+            FnvBuildHasher,
+        >,
     ) -> Self {
         Self {
             generation: self.generation,

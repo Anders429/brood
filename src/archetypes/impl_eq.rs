@@ -15,7 +15,7 @@ where
 
         self.iter().all(|archetype| {
             other
-                .get(
+                .get_with_foreign(
                     // SAFETY: The `IdentifierRef` obtained here does not live longer than the
                     // `archetype`.
                     unsafe { archetype.identifier() },

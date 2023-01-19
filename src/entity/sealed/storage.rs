@@ -19,10 +19,30 @@ pub trait Storage {
     ///
     /// `components`, together with `length`, must define a valid `Vec<C>` for each component.
     unsafe fn push_components(self, components: &mut [(*mut u8, usize)], length: usize);
+
+    /// Reserve capacity for `additional` components in the component columns.
+    ///
+    /// # Safety
+    /// The components in `components` must correspond to the same components in this entity in the
+    /// same order.
+    ///
+    /// `components`, together with `length`, must define a valid `Vec<C>` for each component.
+    unsafe fn reserve_components(
+        components: &mut [(*mut u8, usize)],
+        length: usize,
+        additional: usize,
+    );
 }
 
 impl Storage for Null {
     unsafe fn push_components(self, _components: &mut [(*mut u8, usize)], _length: usize) {}
+
+    unsafe fn reserve_components(
+        _components: &mut [(*mut u8, usize)],
+        _length: usize,
+        _additional: usize,
+    ) {
+    }
 }
 
 impl<C, E> Storage for (C, E)
@@ -46,5 +66,27 @@ where
         // SAFETY: Since `components` and `length` all meet the safety requirements for the current
         // method body, they will meet those same requirements for this method call.
         unsafe { E::push_components(self.1, components.get_unchecked_mut(1..), length) };
+    }
+
+    unsafe fn reserve_components(
+        components: &mut [(*mut u8, usize)],
+        length: usize,
+        additional: usize,
+    ) {
+        // SAFETY: `components` is guaranteed by the safety contract of this method to contain a
+        // column for component `C` as its first value.
+        let component_column = unsafe { components.get_unchecked_mut(0) };
+        let mut v = ManuallyDrop::new(
+            // SAFETY: The `component_column` extracted from `components` is guaranteed to,
+            // together with `length`, define a valid `Vec<C>` for the current `C`.
+            unsafe {
+                Vec::<C>::from_raw_parts(component_column.0.cast::<C>(), length, component_column.1)
+            },
+        );
+        v.reserve(additional);
+        *component_column = (v.as_mut_ptr().cast::<u8>(), v.capacity());
+        // SAFETY: Since `components` and `length` all meet the safety requirements for the current
+        // method body, they will meet those same requirements for this method call.
+        unsafe { E::reserve_components(components.get_unchecked_mut(1..), length, additional) };
     }
 }
