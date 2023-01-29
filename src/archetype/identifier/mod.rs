@@ -368,6 +368,10 @@ where
     }
 }
 
+// SAFETY: This type is safe to send between threads, since it is guaranteed by its safety
+// contracts to not outlive the `Identifier` it references.
+unsafe impl<R> Send for IdentifierRef<R> where R: Registry {}
+
 #[cfg(test)]
 mod tests {
     use crate::{

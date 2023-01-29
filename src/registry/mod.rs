@@ -32,9 +32,10 @@ pub(crate) mod contains;
 mod clone;
 mod debug;
 mod eq;
-mod sealed;
 #[cfg(feature = "serde")]
 mod serde;
+
+pub(crate) mod sealed;
 
 #[cfg(feature = "serde")]
 pub use self::serde::{

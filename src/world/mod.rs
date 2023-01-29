@@ -40,8 +40,14 @@ use crate::{
 };
 #[cfg(feature = "rayon")]
 use crate::{
-    query::view::ParViews,
-    registry::ContainsParQuery,
+    query::{
+        filter::And,
+        view::ParViews,
+    },
+    registry::{
+        contains::filter::ContainsFilter,
+        ContainsParQuery,
+    },
     system::{
         schedule::Schedule,
         schedule::Stages,
@@ -354,6 +360,20 @@ where
         result::ParIter::new(self.archetypes.par_iter_mut())
     }
 
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    pub(crate) unsafe fn query_archetype_identifiers<'a, V, F, VI, FI, P, I, Q>(
+        &'a mut self,
+        #[allow(unused_variables)] query: Query<V, F>,
+    ) -> result::ArchetypeIdentifiers<'a, R, F, FI, V, VI, P, I, Q>
+    where
+        V: Views<'a> + Filter,
+        F: Filter,
+        R: ContainsFilter<And<F, V>, And<FI, VI>>,
+    {
+        unsafe { result::ArchetypeIdentifiers::new(self.archetypes.iter_mut()) }
+    }
+
     /// Run a [`System`] over the entities in this `World`.
     ///
     /// # Example
@@ -553,7 +573,7 @@ where
     where
         S: Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>,
     {
-        schedule.as_stages().run(self);
+        schedule.as_stages().run(self, S::Stages::new_has_run());
     }
 
     /// Returns `true` if the world contains an entity identified by `entity_identifier`.

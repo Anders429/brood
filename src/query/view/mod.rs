@@ -54,11 +54,19 @@ mod reshape;
 mod sealed;
 
 #[cfg(feature = "rayon")]
+pub(crate) mod claim;
+
+#[cfg(feature = "rayon")]
 pub use par::{
     ParView,
     ParViews,
 };
 
+#[cfg(feature = "rayon")]
+pub(crate) use claim::{
+    Claim,
+    Claims,
+};
 pub(crate) use get::Get;
 #[cfg(feature = "rayon")]
 pub(crate) use par::{

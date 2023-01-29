@@ -13,6 +13,8 @@
 
 mod assertions;
 mod canonical;
+#[cfg(feature = "rayon")]
+mod claim;
 mod length;
 #[cfg(feature = "rayon")]
 mod par_view;
@@ -20,6 +22,8 @@ mod storage;
 mod view;
 
 pub(crate) use canonical::Canonical;
+#[cfg(feature = "rayon")]
+pub(crate) use claim::Claims;
 pub(crate) use length::Length;
 #[cfg(feature = "rayon")]
 pub(crate) use par_view::CanonicalParViews;
@@ -41,6 +45,9 @@ use storage::Storage;
 /// While this trait specifically does not have any functions implemented, the traits it relies on
 /// do. See the modules where they are defined for more details on the internal functionality
 /// defined through these sealed traits.
+#[cfg(feature = "rayon")]
+pub trait Sealed: Assertions + Claims + Length + Storage {}
+#[cfg(not(feature = "rayon"))]
 pub trait Sealed: Assertions + Length + Storage {}
 
 impl Sealed for Null {}

@@ -1,3 +1,8 @@
+#[cfg(feature = "rayon")]
+use crate::query::view::{
+    claim,
+    Claim,
+};
 use crate::{
     archetype,
     component::Component,
@@ -24,7 +29,7 @@ use core::{
 };
 use either::Either;
 
-pub trait CanonicalViews<'a, V, P>
+pub trait CanonicalViews<'a, V, P>: Registry
 where
     V: Views<'a>,
 {
@@ -54,6 +59,10 @@ where
     ) -> V
     where
         R: Registry;
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    fn claims() -> Self::Claims;
 }
 
 impl<'a> CanonicalViews<'a, view::Null, Null> for registry::Null {
@@ -78,6 +87,12 @@ impl<'a> CanonicalViews<'a, view::Null, Null> for registry::Null {
         R: Registry,
     {
         view::Null
+    }
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    fn claims() -> Self::Claims {
+        claim::Null
     }
 }
 
@@ -142,6 +157,12 @@ where
             },
         )
     }
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    fn claims() -> Self::Claims {
+        (Claim::Immutable, R::claims())
+    }
 }
 
 impl<'a, C, P, R, V> CanonicalViews<'a, (&'a mut C, V), (&'a mut Contained, P)> for (C, R)
@@ -204,6 +225,12 @@ where
                 )
             },
         )
+    }
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    fn claims() -> Self::Claims {
+        (Claim::Mutable, R::claims())
     }
 }
 
@@ -292,6 +319,12 @@ where
             unsafe { R::view_one(index, columns, length, archetype_identifier) },
         )
     }
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    fn claims() -> Self::Claims {
+        (Claim::Immutable, R::claims())
+    }
 }
 
 impl<'a, C, P, R, V> CanonicalViews<'a, (Option<&'a mut C>, V), (Option<&'a mut Contained>, P)>
@@ -379,6 +412,12 @@ where
             unsafe { R::view_one(index, columns, length, archetype_identifier) },
         )
     }
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    fn claims() -> Self::Claims {
+        (Claim::Mutable, R::claims())
+    }
 }
 
 impl<'a, C, P, R, V> CanonicalViews<'a, V, (NotContained, P)> for (C, R)
@@ -430,5 +469,11 @@ where
         // for valid `Vec<C>`s of length `length` for each of the remaining components
         // identified by `archetype_identifier`. `index` is guaranteed to be less than `length`.
         unsafe { R::view_one(index, columns, length, archetype_identifier) }
+    }
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    fn claims() -> Self::Claims {
+        (Claim::None, R::claims())
     }
 }

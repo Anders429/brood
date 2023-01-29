@@ -29,15 +29,25 @@ where
     V: Views<'a>,
 {
     type Viewable: ContainsViewsOuter<'a, V, P, I, Q>;
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    fn claims() -> Self::Claims;
 }
 
 impl<'a, T, V, P, I, Q> Sealed<'a, V, P, I, Q> for T
 where
     T: Registry,
     V: Views<'a>,
-    (EntityIdentifierMarker, T): ContainsViewsOuter<'a, V, P, I, Q>,
+    (EntityIdentifierMarker, T): ContainsViewsOuter<'a, V, P, I, Q, Registry = T>,
 {
     type Viewable = (EntityIdentifierMarker, Self);
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    fn claims() -> Self::Claims {
+        Self::Viewable::claims()
+    }
 }
 
 /// Indicates that all of the components viewed are contained in a registry.
@@ -48,6 +58,7 @@ pub trait ContainsViewsOuter<'a, V, P, I, Q>
 where
     V: Views<'a>,
 {
+    type Registry: Registry;
     /// The canonical form of the views `V`.
     type Canonical: Views<'a>
         + ViewsSealed<'a, Results = Self::CanonicalResults>
@@ -90,6 +101,10 @@ where
     ) -> Self::Canonical
     where
         R: Registry;
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    fn claims() -> <Self::Registry as registry::sealed::Claims>::Claims;
 }
 
 impl<'a, I, IS, P, V, R, Q> ContainsViewsOuter<'a, V, (Contained, P), (I, IS), Q>
@@ -125,6 +140,7 @@ where
         >>::Canonical,
     ): view::Reshape<'a, V, Q>,
 {
+    type Registry = R;
     type Canonical = (
         entity::Identifier,
         <R as ContainsViewsInner<
@@ -184,6 +200,12 @@ where
             unsafe { R::view_one(index, columns, length, archetype_identifier) },
         )
     }
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    fn claims() -> <Self::Registry as registry::sealed::Claims>::Claims {
+        R::claims()
+    }
 }
 
 impl<'a, I, P, R, V, Q> ContainsViewsOuter<'a, V, (NotContained, P), I, Q>
@@ -196,6 +218,7 @@ where
     <R as ContainsViewsInner<'a, V, P, I>>::Canonical: view::Reshape<'a, V, Q>,
     V: Views<'a>,
 {
+    type Registry = R;
     type Canonical = <R as ContainsViewsInner<'a, V, P, I>>::Canonical;
     type CanonicalResults = <Self::Canonical as ViewsSealed<'a>>::Results;
 
@@ -228,6 +251,12 @@ where
         // `Vec<C>`s of length `length` for each of the components identified by
         // `archetype_identifier`. `index` is guaranteed to be less than `length`.
         unsafe { R::view_one(index, columns, length, archetype_identifier) }
+    }
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    fn claims() -> <Self::Registry as registry::sealed::Claims>::Claims {
+        R::claims()
     }
 }
 
