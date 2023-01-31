@@ -154,7 +154,10 @@ where
     {
         // Determine whether this task still needs to run, or if it has been run as part of a
         // previous stage.
-        if !has_run.0 {
+        if has_run.0 {
+            self.1
+                .run(world, borrowed_archetypes, has_run.1, next_stage)
+        } else {
             rayon::join(
                 // Continue scheduling tasks. Note that the first task is executed on the
                 // current thread.
@@ -172,9 +175,6 @@ where
                 || self.0.run(world),
             )
             .0
-        } else {
-            self.1
-                .run(world, borrowed_archetypes, has_run.1, next_stage)
         }
     }
 
