@@ -24,12 +24,21 @@ use super::Stages;
 
 define_null!();
 
+/// A stage within a schedule.
+///
+/// A single stage contains only tasks that can always be run in parallel.
 pub trait Stage<'a, R, FI, VI, P, I, Q>: Send
 where
     R: Registry,
 {
+    /// A list of booleans indicating whether each task within the stage has already been run.
     type HasRun: Send;
 
+    /// Run all of the tasks within this stage in parallel.
+    ///
+    /// After the tasks have been scheduled to run, tasks within the following stage will also
+    /// be attempted to be scheduled. Any tasks that are dynamically found to be able to run in
+    /// parallel with the current tasks will be executed as well.
     fn run<'b, N, NFI, NVI, NP, NI, NQ>(
         &mut self,
         world: SendableWorld<R>,
@@ -40,12 +49,24 @@ where
     where
         N: Stages<'b, R, NFI, NVI, NP, NI, NQ>;
 
-    fn run_add_ons(
+    /// Attempt to run as many tasks within this stage as possible as add-ons to the previous
+    /// stage.
+    ///
+    /// `borrowed_archetypes` contains a set of dynamic claims that are already borrowed by the
+    /// previous stage. This method respects those claims when evaluating whether new tasks can be
+    /// executed.
+    ///
+    /// # Safety
+    /// `borrowed_archetypes` must accurately represent the dynamic claims already made on the
+    /// component columns within `world`.
+    unsafe fn run_add_ons(
         &mut self,
         world: SendableWorld<R>,
         borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
     ) -> Self::HasRun;
 
+    /// Creates a new default set of booleans to indicate that each task within the stage has not
+    /// been run.
     fn new_has_run() -> Self::HasRun;
 }
 
@@ -71,11 +92,13 @@ where
             N::new_has_run()
         } else {
             // Run tasks from next stage that can be parallelized dynamically.
-            next_stage.run_add_ons(world, borrowed_archetypes)
+            // SAFETY: The safety contract of this method call is upheld by the safety contract of
+            // this method.
+            unsafe { next_stage.run_add_ons(world, borrowed_archetypes) }
         }
     }
 
-    fn run_add_ons(
+    unsafe fn run_add_ons(
         &mut self,
         _world: SendableWorld<R>,
         _borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
@@ -186,19 +209,31 @@ where
         }
     }
 
-    fn run_add_ons(
+    unsafe fn run_add_ons(
         &mut self,
         world: SendableWorld<R>,
         mut borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
     ) -> Self::HasRun {
         if query_archetype_identifiers::<R, T, FI, VI, P, I, Q>(world, &mut borrowed_archetypes) {
             rayon::join(
-                || (true, self.1.run_add_ons(world, borrowed_archetypes)),
+                || {
+                    (
+                        true,
+                        // SAFETY: The safety contract of this method call is upheld by the safety
+                        // contract of this method.
+                        unsafe { self.1.run_add_ons(world, borrowed_archetypes) },
+                    )
+                },
                 || self.0.run(world),
             )
             .0
         } else {
-            (false, self.1.run_add_ons(world, borrowed_archetypes))
+            (
+                false,
+                // SAFETY: The safety contract of this method call is upheld by the safety contract
+                // of this method.
+                unsafe { self.1.run_add_ons(world, borrowed_archetypes) },
+            )
         }
     }
 
