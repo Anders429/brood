@@ -1995,6 +1995,140 @@ mod tests {
         world.run_schedule(&mut schedule);
     }
 
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn schedule_dynamic_optimization() {
+        #[derive(Clone)]
+        struct A(u32);
+        #[derive(Clone)]
+        struct B(u32);
+        #[derive(Clone)]
+        struct C(u32);
+
+        type Registry = Registry!(A, B, C);
+
+        struct Foo;
+
+        impl System for Foo {
+            type Views<'a> = Views!(&'a mut A, &'a mut B);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                for result!(a, b) in query_results {
+                    core::mem::swap(&mut a.0, &mut b.0);
+                }
+            }
+        }
+
+        struct Bar;
+
+        impl System for Bar {
+            type Views<'a> = Views!(&'a mut A, &'a mut C);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                for result!(a, c) in query_results {
+                    core::mem::swap(&mut a.0, &mut c.0);
+                }
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        world.extend(entities!((A(0), B(0)); 1000));
+        world.extend(entities!((A(0), C(0)); 1000));
+
+        let mut schedule = schedule!(task::System(Foo), task::System(Bar));
+
+        world.run_schedule(&mut schedule);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn schedule_dynamic_optimization_three_stages() {
+        #[derive(Clone)]
+        struct A(u32);
+        #[derive(Clone)]
+        struct B(u32);
+        #[derive(Clone)]
+        struct C(u32);
+
+        type Registry = Registry!(A, B, C);
+
+        struct Foo;
+
+        impl System for Foo {
+            type Views<'a> = Views!(&'a mut A, &'a mut B);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                for result!(a, b) in query_results {
+                    core::mem::swap(&mut a.0, &mut b.0);
+                }
+            }
+        }
+
+        struct Bar;
+
+        impl System for Bar {
+            type Views<'a> = Views!(&'a mut A, &'a mut C);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                for result!(a, c) in query_results {
+                    core::mem::swap(&mut a.0, &mut c.0);
+                }
+            }
+        }
+
+        struct Baz;
+
+        impl System for Baz {
+            type Views<'a> = Views!(&'a mut A, &'a mut B, &'a mut C);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                for result!(a, b, c) in query_results {
+                    core::mem::swap(&mut a.0, &mut c.0);
+                }
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        world.extend(entities!((A(0), B(0)); 1000));
+        world.extend(entities!((A(0), C(0)); 1000));
+
+        let mut schedule = schedule!(task::System(Foo), task::System(Bar), task::System(Baz));
+
+        world.run_schedule(&mut schedule);
+    }
+
     #[test]
     fn contains() {
         let mut world = World::<Registry>::new();
