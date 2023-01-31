@@ -1,3 +1,5 @@
+//! Common interface for tasks.
+
 use super::{
     ParSystem,
     System,
@@ -17,13 +19,17 @@ use crate::{
     system::schedule::sendable::SendableWorld,
 };
 
+/// A task that can be run in a schedule.
 pub trait Task<'a, R, SFI, SVI, SP, SI, SQ>
 where
     R: Registry,
 {
+    /// The components viewed by this task.
     type Views: Views<'a> + Filter;
+    /// A filter applied to the components viewed by this task.
     type Filter: Filter;
 
+    /// Executes the task over the given world.
     fn run(&mut self, world: SendableWorld<R>);
 }
 
