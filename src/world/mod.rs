@@ -360,6 +360,9 @@ where
         result::ParIter::new(self.archetypes.par_iter_mut())
     }
 
+    /// # Safety
+    /// The `archetype::IdentifierRef`s over which this iterator iterates must not outlive the
+    /// `Archetypes` to which they belong.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub(crate) unsafe fn query_archetype_identifiers<'a, V, F, VI, FI, P, I, Q>(
@@ -371,6 +374,7 @@ where
         F: Filter,
         R: ContainsFilter<And<F, V>, And<FI, VI>>,
     {
+        // SAFETY: The safety contract here is upheld by the safety contract of this method.
         unsafe { result::ArchetypeIdentifiers::new(self.archetypes.iter_mut()) }
     }
 

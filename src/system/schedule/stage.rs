@@ -98,6 +98,7 @@ where
 {
     let mut merged_borrowed_archetypes = borrowed_archetypes.clone();
 
+    // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing rules.
     for (identifier, claims) in
         unsafe { (*world.get()).query_archetype_identifiers(Query::<T::Views, T::Filter>::new()) }
     {
@@ -126,6 +127,7 @@ fn query_archetype_identifiers_unchecked<'a, R, T, FI, VI, P, I, Q>(
     R: ContainsQuery<'a, T::Filter, FI, T::Views, VI, P, I, Q>,
     T: Task<'a, R, FI, VI, P, I, Q>,
 {
+    // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing rules.
     for (identifier, claims) in
         unsafe { (*world.get()).query_archetype_identifiers(Query::<T::Views, T::Filter>::new()) }
     {

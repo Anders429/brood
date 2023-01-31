@@ -35,6 +35,9 @@ impl<'a, R, F, FI, V, VI, P, I, Q> ArchetypeIdentifiers<'a, R, F, FI, V, VI, P, 
 where
     R: Registry,
 {
+    /// # SAFETY
+    /// The `archetype::IdentifierRef`s over which this iterator iterates must not outlive the
+    /// `Archetypes` to which they belong.
     pub(crate) unsafe fn new(archetypes_iter: archetypes::IterMut<'a, R>) -> Self {
         Self {
             archetypes_iter,
@@ -70,6 +73,13 @@ where
                     )
                 }
             })
-            .map(|archetype| unsafe { (archetype.identifier(), R::claims()) })
+            .map(|archetype| {
+                (
+                    // SAFETY: The `IdentifierRef` created here is guaranteed to outlive
+                    // `archetype`, so long as the safety contract at construction is upheld.
+                    unsafe { archetype.identifier() },
+                    R::claims(),
+                )
+            })
     }
 }
