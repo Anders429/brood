@@ -43,6 +43,7 @@ where
 {
     type Viewable = (EntityIdentifierMarker, Self);
 
+    /// Return the dynamic claims over the components borrowed by the `Views`.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims {
@@ -58,6 +59,10 @@ pub trait ContainsViewsOuter<'a, V, P, I, Q>
 where
     V: Views<'a>,
 {
+    /// The underlying `Registry`.
+    ///
+    /// The type on which this trait is implemented is a registry combined with an entity
+    /// identifier. This associated type allows access directly to that registry.
     type Registry: Registry;
     /// The canonical form of the views `V`.
     type Canonical: Views<'a>
@@ -102,6 +107,7 @@ where
     where
         R: Registry;
 
+    /// Return the dynamic claims over the components borrowed by the `Views`.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> <Self::Registry as registry::sealed::Claims>::Claims;

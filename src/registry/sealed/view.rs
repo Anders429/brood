@@ -60,6 +60,7 @@ where
     where
         R: Registry;
 
+    /// Return the dynamic claims over the components borrowed by the `Views`.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims;
