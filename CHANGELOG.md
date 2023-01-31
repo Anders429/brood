@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+### Changed
+- Running a schedule now performs optimizations at run-time. Tasks that can be are now run earlier than their compile-time scheduled stage.
 
 ## 0.5.0 - 2023-01-18
 ### Added
