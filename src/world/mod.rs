@@ -360,22 +360,24 @@ where
         result::ParIter::new(self.archetypes.par_iter_mut())
     }
 
+    /// Return the claims on each archetype touched by the given query.
+    ///
     /// # Safety
     /// The `archetype::IdentifierRef`s over which this iterator iterates must not outlive the
     /// `Archetypes` to which they belong.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub(crate) unsafe fn query_archetype_identifiers<'a, V, F, VI, FI, P, I, Q>(
+    pub(crate) unsafe fn query_archetype_claims<'a, V, F, VI, FI, P, I, Q>(
         &'a mut self,
         #[allow(unused_variables)] query: Query<V, F>,
-    ) -> result::ArchetypeIdentifiers<'a, R, F, FI, V, VI, P, I, Q>
+    ) -> result::ArchetypeClaims<'a, R, F, FI, V, VI, P, I, Q>
     where
         V: Views<'a> + Filter,
         F: Filter,
         R: ContainsFilter<And<F, V>, And<FI, VI>>,
     {
         // SAFETY: The safety contract here is upheld by the safety contract of this method.
-        unsafe { result::ArchetypeIdentifiers::new(self.archetypes.iter_mut()) }
+        unsafe { result::ArchetypeClaims::new(self.archetypes.iter_mut()) }
     }
 
     /// Run a [`System`] over the entities in this `World`.

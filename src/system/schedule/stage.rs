@@ -125,7 +125,7 @@ where
         // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
         // rules.
         unsafe {
-            (*world.get()).query_archetype_identifiers(Query::<T::Views, T::Filter>::new())
+            (*world.get()).query_archetype_claims(Query::<T::Views, T::Filter>::new())
         }
     {
         match merged_borrowed_archetypes.entry(identifier) {
@@ -157,7 +157,7 @@ fn query_archetype_identifiers_unchecked<'a, R, T, FI, VI, P, I, Q>(
         // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
         // rules.
         unsafe {
-            (*world.get()).query_archetype_identifiers(Query::<T::Views, T::Filter>::new())
+            (*world.get()).query_archetype_claims(Query::<T::Views, T::Filter>::new())
         }
     {
         borrowed_archetypes.insert_unique_unchecked(identifier, claims);

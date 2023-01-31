@@ -1,3 +1,5 @@
+//! Iterator over dynamic claims of a query on its affected archetypes.
+
 use crate::{
     archetype,
     archetypes,
@@ -16,7 +18,11 @@ use crate::{
 };
 use core::marker::PhantomData;
 
-pub struct ArchetypeIdentifiers<'a, R, F, FI, V, VI, P, I, Q>
+/// Iterator over dynamic claims of a query on its affected archetypes.
+///
+/// This iterator returns key-value pairs of archetype identifiers and the list of claimed
+/// components for the given query on that archetype.
+pub struct ArchetypeClaims<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
 {
@@ -31,11 +37,13 @@ where
     reshape_indices: PhantomData<Q>,
 }
 
-impl<'a, R, F, FI, V, VI, P, I, Q> ArchetypeIdentifiers<'a, R, F, FI, V, VI, P, I, Q>
+impl<'a, R, F, FI, V, VI, P, I, Q> ArchetypeClaims<'a, R, F, FI, V, VI, P, I, Q>
 where
     R: Registry,
 {
-    /// # SAFETY
+    /// Returns a new `ArchetypeClaims` iterator.
+    ///
+    /// # Safety
     /// The `archetype::IdentifierRef`s over which this iterator iterates must not outlive the
     /// `Archetypes` to which they belong.
     pub(crate) unsafe fn new(archetypes_iter: archetypes::IterMut<'a, R>) -> Self {
@@ -53,7 +61,7 @@ where
     }
 }
 
-impl<'a, R, F, FI, V, VI, P, I, Q> Iterator for ArchetypeIdentifiers<'a, R, F, FI, V, VI, P, I, Q>
+impl<'a, R, F, FI, V, VI, P, I, Q> Iterator for ArchetypeClaims<'a, R, F, FI, V, VI, P, I, Q>
 where
     F: Filter,
     V: Views<'a> + Filter,

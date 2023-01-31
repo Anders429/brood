@@ -50,7 +50,7 @@
 //! [`World`]: crate::world::World
 
 #[cfg(feature = "rayon")]
-pub(crate) mod archetype_identifiers;
+pub(crate) mod archetype_claims;
 pub(crate) mod get;
 pub(crate) mod reshape;
 
@@ -64,7 +64,7 @@ pub use iter::Iter;
 pub use par_iter::ParIter;
 
 #[cfg(feature = "rayon")]
-pub(crate) use archetype_identifiers::ArchetypeIdentifiers;
+pub(crate) use archetype_claims::ArchetypeClaims;
 pub(crate) use get::Get;
 pub(crate) use reshape::Reshape;
 #[cfg(feature = "rayon")]
