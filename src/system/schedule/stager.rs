@@ -1,6 +1,9 @@
 use crate::{
     hlist::define_null,
-    registry::Registry,
+    registry::{
+        ContainsQuery,
+        Registry,
+    },
     system::{
         schedule::{
             claim::{
@@ -221,7 +224,7 @@ impl<'a, R, T, U, C, I, P, RI, SFI, SFIS, SVI, SVIS, SP, SPS, SI, SIS, SQ, SQS>
         (SQ, SQS),
     > for (T, U)
 where
-    R: Registry,
+    R: ContainsQuery<'a, T::Filter, SFI, T::Views, SVI, SP, SI, SQ>,
     T: Task<'a, R, SFI, SVI, SP, SI, SQ> + Send + 'a,
     U: Stager<'a, R, C, I, P, RI, SFIS, SVIS, SPS, SIS, SQS>,
 {

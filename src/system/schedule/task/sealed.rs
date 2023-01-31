@@ -1,9 +1,15 @@
+//! Common interface for tasks.
+
 use super::{
     ParSystem,
     System,
 };
 use crate::{
-    query::Query,
+    query::{
+        filter::Filter,
+        view::Views,
+        Query,
+    },
     registry::{
         ContainsParQuery,
         ContainsQuery,
@@ -13,10 +19,17 @@ use crate::{
     system::schedule::sendable::SendableWorld,
 };
 
+/// A task that can be run in a schedule.
 pub trait Task<'a, R, SFI, SVI, SP, SI, SQ>
 where
     R: Registry,
 {
+    /// The components viewed by this task.
+    type Views: Views<'a> + Filter;
+    /// A filter applied to the components viewed by this task.
+    type Filter: Filter;
+
+    /// Executes the task over the given world.
     fn run(&mut self, world: SendableWorld<R>);
 }
 
@@ -25,6 +38,9 @@ where
     S: system::System + Send,
     R: ContainsQuery<'a, S::Filter, SFI, S::Views<'a>, SVI, SP, SI, SQ>,
 {
+    type Views = S::Views<'a>;
+    type Filter = S::Filter;
+
     fn run(&mut self, world: SendableWorld<R>) {
         // Query world using system.
         let result =
@@ -40,6 +56,9 @@ where
     P: system::ParSystem + Send,
     R: ContainsParQuery<'a, P::Filter, SFI, P::Views<'a>, SVI, SP, SI, SQ>,
 {
+    type Views = P::Views<'a>;
+    type Filter = P::Filter;
+
     fn run(&mut self, world: SendableWorld<R>) {
         // Query world using system.
         let result =

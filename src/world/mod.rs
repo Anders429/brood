@@ -40,8 +40,14 @@ use crate::{
 };
 #[cfg(feature = "rayon")]
 use crate::{
-    query::view::ParViews,
-    registry::ContainsParQuery,
+    query::{
+        filter::And,
+        view::ParViews,
+    },
+    registry::{
+        contains::filter::ContainsFilter,
+        ContainsParQuery,
+    },
     system::{
         schedule::Schedule,
         schedule::Stages,
@@ -354,6 +360,26 @@ where
         result::ParIter::new(self.archetypes.par_iter_mut())
     }
 
+    /// Return the claims on each archetype touched by the given query.
+    ///
+    /// # Safety
+    /// The `archetype::IdentifierRef`s over which this iterator iterates must not outlive the
+    /// `Archetypes` to which they belong.
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    pub(crate) unsafe fn query_archetype_claims<'a, V, F, VI, FI, P, I, Q>(
+        &'a mut self,
+        #[allow(unused_variables)] query: Query<V, F>,
+    ) -> result::ArchetypeClaims<'a, R, F, FI, V, VI, P, I, Q>
+    where
+        V: Views<'a> + Filter,
+        F: Filter,
+        R: ContainsFilter<And<F, V>, And<FI, VI>>,
+    {
+        // SAFETY: The safety contract here is upheld by the safety contract of this method.
+        unsafe { result::ArchetypeClaims::new(self.archetypes.iter_mut()) }
+    }
+
     /// Run a [`System`] over the entities in this `World`.
     ///
     /// # Example
@@ -553,7 +579,7 @@ where
     where
         S: Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>,
     {
-        schedule.as_stages().run(self);
+        schedule.as_stages().run(self, S::Stages::new_has_run());
     }
 
     /// Returns `true` if the world contains an entity identified by `entity_identifier`.
@@ -1965,6 +1991,140 @@ mod tests {
         world.insert(entity!());
 
         let mut schedule = schedule!(task::System(TestSystem), task::ParSystem(TestParSystem));
+
+        world.run_schedule(&mut schedule);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn schedule_dynamic_optimization() {
+        #[derive(Clone)]
+        struct A(u32);
+        #[derive(Clone)]
+        struct B(u32);
+        #[derive(Clone)]
+        struct C(u32);
+
+        type Registry = Registry!(A, B, C);
+
+        struct Foo;
+
+        impl System for Foo {
+            type Views<'a> = Views!(&'a mut A, &'a mut B);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                for result!(a, b) in query_results {
+                    core::mem::swap(&mut a.0, &mut b.0);
+                }
+            }
+        }
+
+        struct Bar;
+
+        impl System for Bar {
+            type Views<'a> = Views!(&'a mut A, &'a mut C);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                for result!(a, c) in query_results {
+                    core::mem::swap(&mut a.0, &mut c.0);
+                }
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        world.extend(entities!((A(0), B(0)); 1000));
+        world.extend(entities!((A(0), C(0)); 1000));
+
+        let mut schedule = schedule!(task::System(Foo), task::System(Bar));
+
+        world.run_schedule(&mut schedule);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn schedule_dynamic_optimization_three_stages() {
+        #[derive(Clone)]
+        struct A(u32);
+        #[derive(Clone)]
+        struct B(u32);
+        #[derive(Clone)]
+        struct C(u32);
+
+        type Registry = Registry!(A, B, C);
+
+        struct Foo;
+
+        impl System for Foo {
+            type Views<'a> = Views!(&'a mut A, &'a mut B);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                for result!(a, b) in query_results {
+                    core::mem::swap(&mut a.0, &mut b.0);
+                }
+            }
+        }
+
+        struct Bar;
+
+        impl System for Bar {
+            type Views<'a> = Views!(&'a mut A, &'a mut C);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                for result!(a, c) in query_results {
+                    core::mem::swap(&mut a.0, &mut c.0);
+                }
+            }
+        }
+
+        struct Baz;
+
+        impl System for Baz {
+            type Views<'a> = Views!(&'a mut A, &'a mut B, &'a mut C);
+            type Filter = filter::None;
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                for result!(a, b, c) in query_results {
+                    core::mem::swap(&mut a.0, &mut c.0);
+                }
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        world.extend(entities!((A(0), B(0)); 1000));
+        world.extend(entities!((A(0), C(0)); 1000));
+
+        let mut schedule = schedule!(task::System(Foo), task::System(Bar), task::System(Baz));
 
         world.run_schedule(&mut schedule);
     }
