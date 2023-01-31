@@ -1,7 +1,18 @@
+//! Dynamic claims on components.
+//!
+//! This module models rust borrowing rules for component columns. Components can be borrowed
+//! mutably, immutably, or not at all, and these borrows must follow Rust's borrowing rules.
+//! Multiple simultaneous claims can be compared and merged if they are compatible.
+
 use crate::hlist::define_null;
 
 define_null!();
 
+/// A single claim on a single component column.
+///
+/// This dynamically represents a borrow on a component column. Simultaneous borrows must follow
+/// Rust's borrowing rules, and this enum is intended to be used as a tool to ensure such rules are
+/// followed.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Claim {
     None,
@@ -10,6 +21,10 @@ pub enum Claim {
 }
 
 impl Claim {
+    /// Attempt to merge two claims on a single component column.
+    ///
+    /// If the claims are compatible, meaning they can both exist at the same time, they are merged
+    /// together into a single claim. If they are incompatible, `None` is returned.
     pub(crate) fn try_merge(self, other: Self) -> Option<Self> {
         match self {
             Self::None => Some(other),
@@ -31,7 +46,14 @@ impl Claim {
     }
 }
 
+/// A list of claims on the components contained in a heterogeneous list.
+///
+/// This is most commonly a list of claims for the components of a `Registry`.
 pub trait Claims: Sized {
+    /// Attempt to merge two lists of claims for the same component columns.
+    ///
+    /// If the claims are compatible, meaning they can both exist at the same time, they are merged
+    /// together into a single list. If they are incompatible, `None` is returned.
     fn try_merge(self, other: &Self) -> Option<Self>;
 }
 
