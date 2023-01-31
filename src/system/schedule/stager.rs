@@ -170,50 +170,6 @@ where
     }
 }
 
-// impl<'a, R, T, U, C, I, IS, P, PS, RI, RIS, SFI, SFIS, SVI, SVIS, SP, SPS, SI, SIS, SQ, SQS>
-//     Stager<'a, R, C, (I, IS), (P, PS), (RI, RIS), (SFI, SFIS), (SVI, SVIS), (SP, SPS), (SI, SIS),
-// (SQ, SQS)> for (T, U) where
-//     R: Registry,
-//     T: Task<'a, R, SFI, SVI, SP, SI, SQ> + Send,
-//     C: Claims<'a, T::Views, I, P, R, RI>,
-//     (T, U): Cutoff<
-//         'a,
-//         R,
-//         <C as Claims<'a, T::Views, I, P, R, RI>>::Decision,
-//         (T::Views, C),
-//         IS,
-//         PS,
-//         RIS,
-//         (SFI, SFIS), (SVI, SVIS), (SP, SPS), (SI, SIS), (SQ, SQS)
-//     >,
-// {
-//     type Stage = <(T, U) as Cutoff<
-//         'a,
-//         R,
-//         <C as Claims<'a, T::Views, I, P, R, RI>>::Decision,
-//         (T::Views, C),
-//         IS,
-//         PS,
-//         RIS,
-//         (SFI, SFIS), (SVI, SVIS), (SP, SPS), (SI, SIS), (SQ, SQS)
-//     >>::Stage;
-//     type Remainder = <(T, U) as Cutoff<
-//         'a,
-//         R,
-//         <C as Claims<'a, T::Views, I, P, R, RI>>::Decision,
-//         (T::Views, C),
-//         IS,
-//         PS,
-//         RIS,
-//         (SFI, SFIS), (SVI, SVIS), (SP, SPS), (SI, SIS), (SQ, SQS)
-//     >>::Remainder;
-
-//     #[inline]
-//     fn extract_stage(&'a mut self) -> (Self::Stage, &'a mut Self::Remainder) {
-//         self.cutoff_stage()
-//     }
-// }
-
 pub trait Cutoff<'a, R, D, C, I, P, RI, SFI, SVI, SP, SI, SQ>
 where
     R: Registry,
