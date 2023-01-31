@@ -98,9 +98,12 @@ where
 {
     let mut merged_borrowed_archetypes = borrowed_archetypes.clone();
 
-    // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing rules.
     for (identifier, claims) in
-        unsafe { (*world.get()).query_archetype_identifiers(Query::<T::Views, T::Filter>::new()) }
+        // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
+        // rules.
+        unsafe {
+            (*world.get()).query_archetype_identifiers(Query::<T::Views, T::Filter>::new())
+        }
     {
         match merged_borrowed_archetypes.entry(identifier) {
             hash_map::Entry::Occupied(mut entry) => {
@@ -127,9 +130,12 @@ fn query_archetype_identifiers_unchecked<'a, R, T, FI, VI, P, I, Q>(
     R: ContainsQuery<'a, T::Filter, FI, T::Views, VI, P, I, Q>,
     T: Task<'a, R, FI, VI, P, I, Q>,
 {
-    // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing rules.
     for (identifier, claims) in
-        unsafe { (*world.get()).query_archetype_identifiers(Query::<T::Views, T::Filter>::new()) }
+        // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
+        // rules.
+        unsafe {
+            (*world.get()).query_archetype_identifiers(Query::<T::Views, T::Filter>::new())
+        }
     {
         borrowed_archetypes.insert_unique_unchecked(identifier, claims);
     }
