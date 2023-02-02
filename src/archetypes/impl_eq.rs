@@ -20,7 +20,10 @@ where
                     // `archetype`.
                     unsafe { archetype.identifier() },
                 )
-                .map_or(false, |other_archetype| archetype == other_archetype)
+                .map_or(false, |other_archetype|
+                    // SAFETY: Sincde the `other_archetype` was obtained using the identifier from
+                    // `archetype`, the identifiers are guaranteed to be equal.
+                    unsafe {archetype.component_eq(other_archetype)})
         })
     }
 }
