@@ -2113,7 +2113,7 @@ mod tests {
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
-                for result!(a, b, c) in query_results {
+                for result!(a, _b, c) in query_results {
                     core::mem::swap(&mut a.0, &mut c.0);
                 }
             }
