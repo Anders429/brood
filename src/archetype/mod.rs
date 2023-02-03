@@ -1,6 +1,7 @@
 mod impl_clone;
 mod impl_debug;
 mod impl_drop;
+#[cfg(test)]
 mod impl_eq;
 mod impl_send;
 #[cfg(feature = "serde")]
