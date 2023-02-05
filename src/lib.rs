@@ -126,6 +126,7 @@ pub mod entities;
 pub mod entity;
 pub mod query;
 pub mod registry;
+pub mod resource;
 pub mod system;
 pub mod world;
 
