@@ -22,20 +22,21 @@ use crate::{
 
 define_null!();
 
-pub trait Stager<'a, R, C, I, P, RI, SFI, SVI, SP, SI, SQ>
+pub trait Stager<'a, R, Resources, C, I, P, RI, SFI, SVI, SP, SI, SQ>
 where
     R: Registry,
 {
-    type Stage: Stage<'a, R, SFI, SVI, SP, SI, SQ>;
+    type Stage: Stage<'a, R, Resources, SFI, SVI, SP, SI, SQ>;
     type Remainder;
 
     fn extract_stage(&'a mut self) -> (Self::Stage, &'a mut Self::Remainder);
 }
 
-impl<'a, R, C>
+impl<'a, R, Resources, C>
     Stager<
         'a,
         R,
+        Resources,
         C,
         Null,
         Null,
@@ -58,8 +59,9 @@ where
     }
 }
 
-impl<'a, R, T, U, C, I, IS, P, PS, RI, RIS, SFI, SVI, SP, SI, SQ>
-    Stager<'a, R, C, (I, IS), (P, PS), (RI, RIS), SFI, SVI, SP, SI, SQ> for (task::System<T>, U)
+impl<'a, R, Resources, T, U, C, I, IS, P, PS, RI, RIS, SFI, SVI, SP, SI, SQ>
+    Stager<'a, R, Resources, C, (I, IS), (P, PS), (RI, RIS), SFI, SVI, SP, SI, SQ>
+    for (task::System<T>, U)
 where
     R: Registry,
     T: System + Send,
@@ -67,6 +69,7 @@ where
     (task::System<T>, U): Cutoff<
         'a,
         R,
+        Resources,
         <C as Claims<'a, T::Views<'a>, I, P, R, RI>>::Decision,
         (T::Views<'a>, C),
         IS,
@@ -82,6 +85,7 @@ where
     type Stage = <(task::System<T>, U) as Cutoff<
         'a,
         R,
+        Resources,
         <C as Claims<'a, T::Views<'a>, I, P, R, RI>>::Decision,
         (T::Views<'a>, C),
         IS,
@@ -96,6 +100,7 @@ where
     type Remainder = <(task::System<T>, U) as Cutoff<
         'a,
         R,
+        Resources,
         <C as Claims<'a, T::Views<'a>, I, P, R, RI>>::Decision,
         (T::Views<'a>, C),
         IS,
@@ -114,8 +119,9 @@ where
     }
 }
 
-impl<'a, R, T, U, C, I, IS, P, PS, RI, RIS, SFI, SVI, SP, SI, SQ>
-    Stager<'a, R, C, (I, IS), (P, PS), (RI, RIS), SFI, SVI, SP, SI, SQ> for (task::ParSystem<T>, U)
+impl<'a, R, Resources, T, U, C, I, IS, P, PS, RI, RIS, SFI, SVI, SP, SI, SQ>
+    Stager<'a, R, Resources, C, (I, IS), (P, PS), (RI, RIS), SFI, SVI, SP, SI, SQ>
+    for (task::ParSystem<T>, U)
 where
     R: Registry,
     T: ParSystem + Send,
@@ -123,6 +129,7 @@ where
     (task::ParSystem<T>, U): Cutoff<
         'a,
         R,
+        Resources,
         <C as Claims<'a, T::Views<'a>, I, P, R, RI>>::Decision,
         (T::Views<'a>, C),
         IS,
@@ -138,6 +145,7 @@ where
     type Stage = <(task::ParSystem<T>, U) as Cutoff<
         'a,
         R,
+        Resources,
         <C as Claims<'a, T::Views<'a>, I, P, R, RI>>::Decision,
         (T::Views<'a>, C),
         IS,
@@ -152,6 +160,7 @@ where
     type Remainder = <(task::ParSystem<T>, U) as Cutoff<
         'a,
         R,
+        Resources,
         <C as Claims<'a, T::Views<'a>, I, P, R, RI>>::Decision,
         (T::Views<'a>, C),
         IS,
@@ -170,20 +179,21 @@ where
     }
 }
 
-pub trait Cutoff<'a, R, D, C, I, P, RI, SFI, SVI, SP, SI, SQ>
+pub trait Cutoff<'a, R, Resources, D, C, I, P, RI, SFI, SVI, SP, SI, SQ>
 where
     R: Registry,
 {
-    type Stage: Stage<'a, R, SFI, SVI, SP, SI, SQ>;
+    type Stage: Stage<'a, R, Resources, SFI, SVI, SP, SI, SQ>;
     type Remainder;
 
     fn cutoff_stage(&'a mut self) -> (Self::Stage, &'a mut Self::Remainder);
 }
 
-impl<'a, R, T, C>
+impl<'a, R, Resources, T, C>
     Cutoff<
         'a,
         R,
+        Resources,
         decision::Cut,
         C,
         Null,
@@ -208,10 +218,11 @@ where
     }
 }
 
-impl<'a, R, T, U, C, I, P, RI, SFI, SFIS, SVI, SVIS, SP, SPS, SI, SIS, SQ, SQS>
+impl<'a, R, Resources, T, U, C, I, P, RI, SFI, SFIS, SVI, SVIS, SP, SPS, SI, SIS, SQ, SQS>
     Cutoff<
         'a,
         R,
+        Resources,
         decision::Append,
         C,
         I,
@@ -225,14 +236,16 @@ impl<'a, R, T, U, C, I, P, RI, SFI, SFIS, SVI, SVIS, SP, SPS, SI, SIS, SQ, SQS>
     > for (T, U)
 where
     R: ContainsQuery<'a, T::Filter, SFI, T::Views, SVI, SP, SI, SQ>,
-    T: Task<'a, R, SFI, SVI, SP, SI, SQ> + Send + 'a,
-    U: Stager<'a, R, C, I, P, RI, SFIS, SVIS, SPS, SIS, SQS>,
+    Resources: 'a,
+    T: Task<'a, R, Resources, SFI, SVI, SP, SI, SQ> + Send + 'a,
+    U: Stager<'a, R, Resources, C, I, P, RI, SFIS, SVIS, SPS, SIS, SQS>,
 {
     type Stage = (
         &'a mut T,
-        <U as Stager<'a, R, C, I, P, RI, SFIS, SVIS, SPS, SIS, SQS>>::Stage,
+        <U as Stager<'a, R, Resources, C, I, P, RI, SFIS, SVIS, SPS, SIS, SQS>>::Stage,
     );
-    type Remainder = <U as Stager<'a, R, C, I, P, RI, SFIS, SVIS, SPS, SIS, SQS>>::Remainder;
+    type Remainder =
+        <U as Stager<'a, R, Resources, C, I, P, RI, SFIS, SVIS, SPS, SIS, SQS>>::Remainder;
 
     #[inline]
     fn cutoff_stage(&'a mut self) -> (Self::Stage, &'a mut Self::Remainder) {

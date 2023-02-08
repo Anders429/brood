@@ -36,6 +36,7 @@ use crate::{
         ContainsQuery,
         Registry,
     },
+    resource,
     system::System,
 };
 #[cfg(feature = "rayon")]
@@ -93,36 +94,21 @@ use hashbrown::HashSet;
 /// [`query()`]: crate::World::query()
 /// [`Registry`]: crate::registry::Registry
 /// [`System`]: crate::system::System
-pub struct World<R>
+pub struct World<R, Resources = resource::Null>
 where
     R: Registry,
 {
     archetypes: Archetypes<R>,
     entity_allocator: entity::Allocator<R>,
     len: usize,
+
+    resources: Resources,
 }
 
-impl<R> World<R>
+impl<R> World<R, resource::Null>
 where
     R: Registry,
 {
-    fn from_raw_parts(
-        archetypes: Archetypes<R>,
-        entity_allocator: entity::Allocator<R>,
-        len: usize,
-    ) -> Self {
-        R::assert_no_duplicates(&mut HashSet::with_capacity_and_hasher(
-            R::LEN,
-            FnvBuildHasher::default(),
-        ));
-
-        Self {
-            archetypes,
-            entity_allocator,
-            len,
-        }
-    }
-
     /// Creates an empty `World`.
     ///
     /// Often, calls to `new()` are accompanied with a [`Registry`] to tell the compiler what
@@ -146,7 +132,37 @@ where
     /// [`Registry`]: crate::registry::Registry
     #[must_use]
     pub fn new() -> Self {
-        Self::from_raw_parts(Archetypes::new(), entity::Allocator::new(), 0)
+        Self::with_resources(resource::Null)
+    }
+}
+
+impl<R, Resources> World<R, Resources>
+where
+    R: Registry,
+{
+    fn from_raw_parts(
+        archetypes: Archetypes<R>,
+        entity_allocator: entity::Allocator<R>,
+        len: usize,
+        resources: Resources,
+    ) -> Self {
+        R::assert_no_duplicates(&mut HashSet::with_capacity_and_hasher(
+            R::LEN,
+            FnvBuildHasher::default(),
+        ));
+
+        Self {
+            archetypes,
+            entity_allocator,
+            len,
+
+            resources,
+        }
+    }
+
+    #[must_use]
+    pub fn with_resources(resources: Resources) -> Self {
+        Self::from_raw_parts(Archetypes::new(), entity::Allocator::new(), 0, resources)
     }
 
     /// Insert an entity, returning an [`entity::Identifier`].
@@ -577,7 +593,7 @@ where
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub fn run_schedule<'a, S, I, P, RI, SFI, SVI, SP, SI, SQ>(&mut self, schedule: &'a mut S)
     where
-        S: Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>,
+        S: Schedule<'a, R, Resources, I, P, RI, SFI, SVI, SP, SI, SQ>,
     {
         schedule.as_stages().run(self, S::Stages::new_has_run());
     }
@@ -638,7 +654,7 @@ where
     /// [`Entry`]: crate::world::Entry
     /// [`None`]: Option::None
     #[must_use]
-    pub fn entry(&mut self, entity_identifier: entity::Identifier) -> Option<Entry<R>> {
+    pub fn entry(&mut self, entity_identifier: entity::Identifier) -> Option<Entry<R, Resources>> {
         self.entity_allocator
             .get(entity_identifier)
             .map(|location| Entry::new(self, location))

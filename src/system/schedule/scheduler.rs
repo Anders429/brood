@@ -12,19 +12,20 @@ use crate::{
 
 define_null!();
 
-pub trait Scheduler<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>
+pub trait Scheduler<'a, R, Resources, I, P, RI, SFI, SVI, SP, SI, SQ>
 where
     R: Registry,
 {
-    type Stages: Stages<'a, R, SFI, SVI, SP, SI, SQ>;
+    type Stages: Stages<'a, R, Resources, SFI, SVI, SP, SI, SQ>;
 
     fn as_stages(&'a mut self) -> Self::Stages;
 }
 
-impl<'a, R>
+impl<'a, R, Resources>
     Scheduler<
         'a,
         R,
+        Resources,
         Null,
         Null,
         Null,
@@ -45,10 +46,33 @@ where
     }
 }
 
-impl<'a, R, T, U, I, IS, P, PS, RI, RIS, SFI, SFIS, SVI, SVIS, SP, SPS, SI, SIS, SQ, SQS>
+impl<
+        'a,
+        R,
+        Resources,
+        T,
+        U,
+        I,
+        IS,
+        P,
+        PS,
+        RI,
+        RIS,
+        SFI,
+        SFIS,
+        SVI,
+        SVIS,
+        SP,
+        SPS,
+        SI,
+        SIS,
+        SQ,
+        SQS,
+    >
     Scheduler<
         'a,
         R,
+        Resources,
         (I, IS),
         (P, PS),
         (RI, RIS),
@@ -59,10 +83,11 @@ impl<'a, R, T, U, I, IS, P, PS, RI, RIS, SFI, SFIS, SVI, SVIS, SP, SPS, SI, SIS,
         (SQ, SQS),
     > for (T, U)
 where
-    (T, U): Stager<'a, R, claim::Null, I, P, RI, SFI, SVI, SP, SI, SQ>,
-    <(T, U) as Stager<'a, R, claim::Null, I, P, RI, SFI, SVI, SP, SI, SQ>>::Remainder:
-        Scheduler<'a, R, IS, PS, RIS, SFIS, SVIS, SPS, SIS, SQS>,
+    (T, U): Stager<'a, R, Resources, claim::Null, I, P, RI, SFI, SVI, SP, SI, SQ>,
+    <(T, U) as Stager<'a, R, Resources, claim::Null, I, P, RI, SFI, SVI, SP, SI, SQ>>::Remainder:
+        Scheduler<'a, R, Resources, IS, PS, RIS, SFIS, SVIS, SPS, SIS, SQS>,
     R: Registry + 'a,
+    Resources: 'a,
     I: 'a,
     P: 'a,
     RI: 'a,
@@ -73,10 +98,11 @@ where
     SQ: 'a,
 {
     type Stages = (
-        <(T, U) as Stager<'a, R, claim::Null, I, P, RI, SFI, SVI, SP, SI, SQ>>::Stage,
-        <<(T, U) as Stager<'a, R, claim::Null, I, P, RI, SFI, SVI, SP, SI, SQ>>::Remainder as Scheduler<
+        <(T, U) as Stager<'a, R, Resources, claim::Null, I, P, RI, SFI, SVI, SP, SI, SQ>>::Stage,
+        <<(T, U) as Stager<'a, R, Resources, claim::Null, I, P, RI, SFI, SVI, SP, SI, SQ>>::Remainder as Scheduler<
             'a,
             R,
+            Resources,
             IS,
             PS,
             RIS,

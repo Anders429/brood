@@ -107,17 +107,18 @@ use task::Task;
 /// [`schedule!`]: crate::system::schedule!
 /// [`System`]: crate::system::System
 /// [`Views`]: trait@crate::query::view::Views
-pub trait Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>:
-    Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>
+pub trait Schedule<'a, R, Resources, I, P, RI, SFI, SVI, SP, SI, SQ>:
+    Sealed<'a, R, Resources, I, P, RI, SFI, SVI, SP, SI, SQ>
 where
     R: Registry,
 {
 }
 
-impl<'a, R, T, I, P, RI, SFI, SVI, SP, SI, SQ> Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ> for T
+impl<'a, R, Resources, T, I, P, RI, SFI, SVI, SP, SI, SQ>
+    Schedule<'a, R, Resources, I, P, RI, SFI, SVI, SP, SI, SQ> for T
 where
     R: Registry,
-    T: Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>,
+    T: Sealed<'a, R, Resources, I, P, RI, SFI, SVI, SP, SI, SQ>,
 {
 }
 
@@ -306,6 +307,7 @@ mod tests {
             System,
         },
         Registry,
+        Resources,
     };
     use core::any::TypeId;
 
@@ -320,7 +322,7 @@ mod tests {
     #[test]
     fn null() {
         assert_eq!(
-            TypeId::of::<<task::Null as Schedule<'_, Registry, _, _, _, _, _, _, _, _>>::Stages>(),
+            TypeId::of::<<task::Null as Schedule<'_, Registry, Resources!(), _, _, _, _, _, _, _, _>>::Stages>(),
             TypeId::of::<stages::Null>()
         );
     }
@@ -348,6 +350,7 @@ mod tests {
                 <(task::System<ImmutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
                     _,
                     _,
                     _,
@@ -385,6 +388,7 @@ mod tests {
                 <(task::System<MutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
                     _,
                     _,
                     _,
@@ -422,6 +426,7 @@ mod tests {
                 <(task::System<OptionImmutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
                     _,
                     _,
                     _,
@@ -459,6 +464,7 @@ mod tests {
                 <(task::System<OptionMutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
                     _,
                     _,
                     _,
@@ -496,6 +502,7 @@ mod tests {
                 <(task::System<EntityIdentifier>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
                     _,
                     _,
                     _,
@@ -546,6 +553,7 @@ mod tests {
                 <(task::ParSystem<ImmutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
                     _,
                     _,
                     _,
@@ -593,6 +601,7 @@ mod tests {
                 <(task::ParSystem<MutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
                     _,
                     _,
                     _,
@@ -640,6 +649,7 @@ mod tests {
                 <(task::ParSystem<OptionImmutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
                     _,
                     _,
                     _,
@@ -690,6 +700,7 @@ mod tests {
                 <(task::ParSystem<OptionMutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
                     _,
                     _,
                     _,
@@ -740,6 +751,7 @@ mod tests {
                 <(task::ParSystem<EntityIdentifier>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
                     _,
                     _,
                     _,
@@ -812,7 +824,7 @@ mod tests {
                 <(
                     task::System<AB>,
                     (task::System<CD>, (task::System<CE>, task::Null))
-                ) as Schedule<'_, Registry, _, _, _, _, _, _, _, _>>::Stages,
+                ) as Schedule<'_, Registry, Resources!(), _, _, _, _, _, _, _, _>>::Stages,
             >(),
             TypeId::of::<(
                 (&mut task::System<AB>, (&mut task::System<CD>, stage::Null)),

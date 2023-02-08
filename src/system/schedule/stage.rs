@@ -27,7 +27,7 @@ define_null!();
 /// A stage within a schedule.
 ///
 /// A single stage contains only tasks that can always be run in parallel.
-pub trait Stage<'a, R, FI, VI, P, I, Q>: Send
+pub trait Stage<'a, R, Resources, FI, VI, P, I, Q>: Send
 where
     R: Registry,
 {
@@ -41,13 +41,13 @@ where
     /// parallel with the current tasks will be executed as well.
     fn run<'b, N, NFI, NVI, NP, NI, NQ>(
         &mut self,
-        world: SendableWorld<R>,
+        world: SendableWorld<R, Resources>,
         borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
         has_run: Self::HasRun,
         next_stage: &mut N,
     ) -> N::HasRun
     where
-        N: Stages<'b, R, NFI, NVI, NP, NI, NQ>;
+        N: Stages<'b, R, Resources, NFI, NVI, NP, NI, NQ>;
 
     /// Attempt to run as many tasks within this stage as possible as add-ons to the previous
     /// stage.
@@ -61,7 +61,7 @@ where
     /// component columns within `world`.
     unsafe fn run_add_ons(
         &mut self,
-        world: SendableWorld<R>,
+        world: SendableWorld<R, Resources>,
         borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
     ) -> Self::HasRun;
 
@@ -70,7 +70,7 @@ where
     fn new_has_run() -> Self::HasRun;
 }
 
-impl<R> Stage<'_, R, Null, Null, Null, Null, Null> for Null
+impl<R, Resources> Stage<'_, R, Resources, Null, Null, Null, Null, Null> for Null
 where
     R: Registry,
 {
@@ -78,13 +78,13 @@ where
 
     fn run<'b, N, NFI, NVI, NP, NI, NQ>(
         &mut self,
-        world: SendableWorld<R>,
+        world: SendableWorld<R, Resources>,
         borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
         _has_run: Self::HasRun,
         next_stage: &mut N,
     ) -> N::HasRun
     where
-        N: Stages<'b, R, NFI, NVI, NP, NI, NQ>,
+        N: Stages<'b, R, Resources, NFI, NVI, NP, NI, NQ>,
     {
         // Check if borrowed_archetypes is empty.
         // If so, it is better to just run the next stage directly.
@@ -100,7 +100,7 @@ where
 
     unsafe fn run_add_ons(
         &mut self,
-        _world: SendableWorld<R>,
+        _world: SendableWorld<R, Resources>,
         _borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
     ) -> Self::HasRun {
         Null
@@ -111,13 +111,14 @@ where
     }
 }
 
-fn query_archetype_identifiers<'a, R, T, FI, VI, P, I, Q>(
-    world: SendableWorld<R>,
+fn query_archetype_identifiers<'a, R, Resources, T, FI, VI, P, I, Q>(
+    world: SendableWorld<R, Resources>,
     borrowed_archetypes: &mut HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
 ) -> bool
 where
     R: ContainsQuery<'a, T::Filter, FI, T::Views, VI, P, I, Q>,
-    T: Task<'a, R, FI, VI, P, I, Q>,
+    Resources: 'a,
+    T: Task<'a, R, Resources, FI, VI, P, I, Q>,
 {
     let mut merged_borrowed_archetypes = borrowed_archetypes.clone();
 
@@ -146,12 +147,13 @@ where
     true
 }
 
-fn query_archetype_identifiers_unchecked<'a, R, T, FI, VI, P, I, Q>(
-    world: SendableWorld<R>,
+fn query_archetype_identifiers_unchecked<'a, R, Resources, T, FI, VI, P, I, Q>(
+    world: SendableWorld<R, Resources>,
     borrowed_archetypes: &mut HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
 ) where
     R: ContainsQuery<'a, T::Filter, FI, T::Views, VI, P, I, Q>,
-    T: Task<'a, R, FI, VI, P, I, Q>,
+    Resources: 'a,
+    T: Task<'a, R, Resources, FI, VI, P, I, Q>,
 {
     for (identifier, claims) in
         // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
@@ -164,24 +166,25 @@ fn query_archetype_identifiers_unchecked<'a, R, T, FI, VI, P, I, Q>(
     }
 }
 
-impl<'a, R, T, U, FI, FIS, VI, VIS, P, PS, I, IS, Q, QS>
-    Stage<'a, R, (FI, FIS), (VI, VIS), (P, PS), (I, IS), (Q, QS)> for (&mut T, U)
+impl<'a, R, Resources, T, U, FI, FIS, VI, VIS, P, PS, I, IS, Q, QS>
+    Stage<'a, R, Resources, (FI, FIS), (VI, VIS), (P, PS), (I, IS), (Q, QS)> for (&mut T, U)
 where
     R: ContainsQuery<'a, T::Filter, FI, T::Views, VI, P, I, Q>,
-    T: Task<'a, R, FI, VI, P, I, Q> + Send,
-    U: Stage<'a, R, FIS, VIS, PS, IS, QS>,
+    Resources: 'a,
+    T: Task<'a, R, Resources, FI, VI, P, I, Q> + Send,
+    U: Stage<'a, R, Resources, FIS, VIS, PS, IS, QS>,
 {
     type HasRun = (bool, U::HasRun);
 
     fn run<'b, N, NFI, NVI, NP, NI, NQ>(
         &mut self,
-        world: SendableWorld<R>,
+        world: SendableWorld<R, Resources>,
         mut borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
         has_run: Self::HasRun,
         next_stage: &mut N,
     ) -> N::HasRun
     where
-        N: Stages<'b, R, NFI, NVI, NP, NI, NQ>,
+        N: Stages<'b, R, Resources, NFI, NVI, NP, NI, NQ>,
     {
         // Determine whether this task still needs to run, or if it has been run as part of a
         // previous stage.
@@ -194,7 +197,7 @@ where
                 // current thread.
                 || {
                     // Track all archetypes that are being directly borrowed by this task.
-                    query_archetype_identifiers_unchecked::<R, T, FI, VI, P, I, Q>(
+                    query_archetype_identifiers_unchecked::<R, Resources, T, FI, VI, P, I, Q>(
                         world,
                         &mut borrowed_archetypes,
                     );
@@ -211,10 +214,13 @@ where
 
     unsafe fn run_add_ons(
         &mut self,
-        world: SendableWorld<R>,
+        world: SendableWorld<R, Resources>,
         mut borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
     ) -> Self::HasRun {
-        if query_archetype_identifiers::<R, T, FI, VI, P, I, Q>(world, &mut borrowed_archetypes) {
+        if query_archetype_identifiers::<R, Resources, T, FI, VI, P, I, Q>(
+            world,
+            &mut borrowed_archetypes,
+        ) {
             rayon::join(
                 || {
                     (

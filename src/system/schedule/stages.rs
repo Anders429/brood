@@ -14,7 +14,7 @@ use hashbrown::HashMap;
 define_null!();
 
 /// The stages within a schedule.
-pub trait Stages<'a, R, FI, VI, P, I, Q>: Send
+pub trait Stages<'a, R, Resources, FI, VI, P, I, Q>: Send
 where
     R: Registry,
 {
@@ -31,7 +31,7 @@ where
     /// `World` are tracked when scheduling a single stage. Then, any tasks within the next stage
     /// whose borrowed components do not interfere with the tasks in the current stage's dynamic
     /// claims are run as well.
-    fn run(&mut self, world: &mut World<R>, has_run: Self::HasRun);
+    fn run(&mut self, world: &mut World<R, Resources>, has_run: Self::HasRun);
 
     /// Attempt to run as many tasks within the first stage in the list as possible as add-ons to
     /// the previous stage.
@@ -45,7 +45,7 @@ where
     /// component columns within `world`.
     unsafe fn run_add_ons(
         &mut self,
-        world: SendableWorld<R>,
+        world: SendableWorld<R, Resources>,
         borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
     ) -> Self::HasRun;
 
@@ -54,17 +54,17 @@ where
     fn new_has_run() -> Self::HasRun;
 }
 
-impl<R> Stages<'_, R, Null, Null, Null, Null, Null> for Null
+impl<R, Resources> Stages<'_, R, Resources, Null, Null, Null, Null, Null> for Null
 where
     R: Registry,
 {
     type HasRun = Null;
 
-    fn run(&mut self, _world: &mut World<R>, _has_run: Self::HasRun) {}
+    fn run(&mut self, _world: &mut World<R, Resources>, _has_run: Self::HasRun) {}
 
     unsafe fn run_add_ons(
         &mut self,
-        _world: SendableWorld<R>,
+        _world: SendableWorld<R, Resources>,
         _borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
     ) -> Self::HasRun {
         Null
@@ -75,16 +75,16 @@ where
     }
 }
 
-impl<'a, R, T, U, FI, FIS, VI, VIS, P, PS, I, IS, Q, QS>
-    Stages<'a, R, (FI, FIS), (VI, VIS), (P, PS), (I, IS), (Q, QS)> for (T, U)
+impl<'a, R, Resources, T, U, FI, FIS, VI, VIS, P, PS, I, IS, Q, QS>
+    Stages<'a, R, Resources, (FI, FIS), (VI, VIS), (P, PS), (I, IS), (Q, QS)> for (T, U)
 where
     R: Registry,
-    T: Stage<'a, R, FI, VI, P, I, Q>,
-    U: Stages<'a, R, FIS, VIS, PS, IS, QS>,
+    T: Stage<'a, R, Resources, FI, VI, P, I, Q>,
+    U: Stages<'a, R, Resources, FIS, VIS, PS, IS, QS>,
 {
     type HasRun = T::HasRun;
 
-    fn run(&mut self, world: &mut World<R>, has_run: Self::HasRun) {
+    fn run(&mut self, world: &mut World<R, Resources>, has_run: Self::HasRun) {
         // Each stage is run sequentially. The tasks within a stage are parallelized.
         let next_has_run = self.0.run(
             // SAFETY: The pointer provided here is unique, being created from a mutable reference.
@@ -98,7 +98,7 @@ where
 
     unsafe fn run_add_ons(
         &mut self,
-        world: SendableWorld<R>,
+        world: SendableWorld<R, Resources>,
         borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
     ) -> Self::HasRun {
         // SAFETY: The safety contract of this method call is upheld by the safety contract of this
