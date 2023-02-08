@@ -23,10 +23,15 @@ mod tests {
     };
 
     type Registry = Registry!();
-    type Resources = Resources!();
+    type Resources = Resources!(u32, bool);
 
     #[test]
     fn default() {
+        assert_eq!(World::<Registry>::default(), World::new());
+    }
+
+    #[test]
+    fn default_resources() {
         assert_eq!(
             World::<Registry, Resources>::default(),
             World::with_resources(Resources::default())
