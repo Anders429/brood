@@ -37,6 +37,7 @@ use crate::{
         Registry,
     },
     resource,
+    resource::ContainsResource,
     system::System,
 };
 #[cfg(feature = "rayon")]
@@ -855,6 +856,13 @@ where
                 .get_mut_or_insert_new_for_entity::<<R as contains::entity::Sealed<E, P, Q, I>>::Canonical, Q>()
                 .reserve::<<R as contains::entity::Sealed<E, P, Q, I>>::Canonical>(additional);
         }
+    }
+
+    pub fn get<Resource, Index>(&self) -> &Resource
+    where
+        Resources: ContainsResource<Resource, Index>,
+    {
+        self.resources.get()
     }
 }
 

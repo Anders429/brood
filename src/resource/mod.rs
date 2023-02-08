@@ -1,9 +1,11 @@
+mod contains;
 #[cfg(feature = "serde")]
 mod de;
 mod length;
 #[cfg(feature = "serde")]
 mod ser;
 
+pub use contains::ContainsResource;
 #[cfg(feature = "serde")]
 pub use de::Deserialize;
 #[cfg(feature = "serde")]
