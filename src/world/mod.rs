@@ -864,6 +864,13 @@ where
     {
         self.resources.get()
     }
+
+    pub fn get_mut<Resource, Index>(&mut self) -> &mut Resource
+    where
+        Resources: ContainsResource<Resource, Index>,
+    {
+        self.resources.get_mut()
+    }
 }
 
 #[cfg(test)]

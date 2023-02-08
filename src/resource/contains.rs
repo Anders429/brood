@@ -9,11 +9,17 @@ enum Contained {}
 
 pub trait Sealed<Resource, Index> {
     fn get(&self) -> &Resource;
+
+    fn get_mut(&mut self) -> &mut Resource;
 }
 
 impl<Resources, Resource> Sealed<Resource, Contained> for (Resource, Resources) {
     fn get(&self) -> &Resource {
         &self.0
+    }
+
+    fn get_mut(&mut self) -> &mut Resource {
+        &mut self.0
     }
 }
 
@@ -24,5 +30,9 @@ where
 {
     fn get(&self) -> &Resource {
         self.1.get()
+    }
+
+    fn get_mut(&mut self) -> &mut Resource {
+        self.1.get_mut()
     }
 }
