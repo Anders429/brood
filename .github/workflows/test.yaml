@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: dtolnay/rust-toolchain@master
       with:
         components: rustfmt
     - run: cargo fmt -- --check
@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: dtolnay/rust-toolchain@master
     - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
     - run: cargo hack check --feature-powerset
 
@@ -70,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: dtolnay/rust-toolchain@master
       with:
         components: clippy
     - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: dtolnay/rust-toolchain@master
     - run: cargo doc --no-deps --all-features
       env:
         RUSTDOCFLAGS: --cfg doc_cfg -D warnings
@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: dtolnay/rust-toolchain@master
     - run: cargo doc --no-deps --all-features --document-private-items
       env:
         RUSTDOCFLAGS: --cfg doc_cfg -D warnings
@@ -98,7 +98,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: dtolnay/rust-toolchain@master
     - run: curl -LsSf https://github.com/foresterre/cargo-msrv/releases/latest/download/cargo-msrv_v0.15.1_Linux_x86_64.tar | tar xf - -C ~/.cargo/bin
     - run: cargo msrv --verify
 
@@ -106,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: dtolnay/rust-toolchain@master
       with:
         components: miri
     - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
@@ -120,7 +120,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - run: sudo apt install valgrind
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: dtolnay/rust-toolchain@master
     - run: curl -LsSf https://github.com/jfrimmel/cargo-valgrind/releases/latest/download/cargo-valgrind-2.1.0-x86_64-unknown-linux-musl.tar.gz | tar xzf - -C ~/.cargo/bin
     - run: curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
     - run: cargo hack valgrind test --feature-powerset --exclude-features rayon
@@ -131,7 +131,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: dtolnay/rust-toolchain@master
       with:
         components: llvm-tools-preview, rust-src
     - run: curl -LsSf https://github.com/taiki-e/cargo-llvm-cov/releases/latest/download/cargo-llvm-cov-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ~/.cargo/bin
