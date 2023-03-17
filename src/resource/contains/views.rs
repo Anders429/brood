@@ -1,14 +1,19 @@
 /// Given a list of resource views, and a list of resources (not guaranteed to be in the same
 /// order), we return the borrowed resources as specified by the views.
-
 use crate::{
-    query::{view, view::resource::Reshape},
+    query::{
+        view,
+        view::resource::Reshape,
+    },
     resource,
-    resource::{contains::{
-        Contained,
-        NotContained,
-        Null,
-    }, view::CanonicalViews},
+    resource::{
+        contains::{
+            Contained,
+            NotContained,
+            Null,
+        },
+        view::CanonicalViews,
+    },
 };
 
 pub trait ContainsViews<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>:
@@ -16,7 +21,8 @@ pub trait ContainsViews<'a, Views, Containments, Indices, CanonicalContainments,
 {
 }
 
-impl<'a, Resources, Views, Containments, Indices, CanonicalContainments, ReshapeIndices> ContainsViews<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>
+impl<'a, Resources, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>
+    ContainsViews<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>
     for Resources
 where
     Resources: Sealed<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>,
@@ -29,7 +35,8 @@ pub trait Sealed<'a, Views, Containments, Indices, CanonicalContainments, Reshap
     fn view(&'a mut self) -> Views;
 }
 
-impl<'a, CanonicalContainments, ReshapeIndices> Sealed<'a, view::Null, Null, Null, CanonicalContainments, ReshapeIndices> for resource::Null
+impl<'a, CanonicalContainments, ReshapeIndices>
+    Sealed<'a, view::Null, Null, Null, CanonicalContainments, ReshapeIndices> for resource::Null
 where
     view::Null: Reshape<view::Null, ReshapeIndices>,
 {
@@ -40,7 +47,18 @@ where
     }
 }
 
-impl<'a, Resource, Resources, Views, Containments, Indices, CanonicalContainments, ReshapeIndices> Sealed<'a, Views, (NotContained, Containments), Indices, CanonicalContainments, ReshapeIndices> for (Resource, Resources)
+impl<
+        'a,
+        Resource,
+        Resources,
+        Views,
+        Containments,
+        Indices,
+        CanonicalContainments,
+        ReshapeIndices,
+    >
+    Sealed<'a, Views, (NotContained, Containments), Indices, CanonicalContainments, ReshapeIndices>
+    for (Resource, Resources)
 where
     Resources: Sealed<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>,
 {
@@ -51,12 +69,33 @@ where
     }
 }
 
-impl<'a, Resource, Resources, Views, Containments, Index, Indices, CanonicalContainments, ReshapeIndices> Sealed<'a, Views, (Contained, Containments), (Index, Indices), CanonicalContainments, ReshapeIndices> for (Resource, Resources)
+impl<
+        'a,
+        Resource,
+        Resources,
+        Views,
+        Containments,
+        Index,
+        Indices,
+        CanonicalContainments,
+        ReshapeIndex,
+        ReshapeIndices,
+    >
+    Sealed<
+        'a,
+        Views,
+        (Contained, Containments),
+        (Index, Indices),
+        CanonicalContainments,
+        (ReshapeIndex, ReshapeIndices),
+    > for (Resource, Resources)
 where
     Views: view::resource::Get<Resource, Index>,
-    Resources: Sealed<'a, Views::Remainder, Containments, Indices, CanonicalContainments, ReshapeIndices>,
-    (Resource, Resources): CanonicalViews<'a, (Views::View, Resources::Canonical), CanonicalContainments>,
-    (Views::View, Resources::Canonical): Reshape<Views, ReshapeIndices>,
+    Resources:
+        Sealed<'a, Views::Remainder, Containments, Indices, CanonicalContainments, ReshapeIndices>,
+    (Resource, Resources):
+        CanonicalViews<'a, (Views::View, Resources::Canonical), CanonicalContainments>,
+    (Views::View, Resources::Canonical): Reshape<Views, (ReshapeIndex, ReshapeIndices)>,
 {
     type Canonical = (Views::View, Resources::Canonical);
 

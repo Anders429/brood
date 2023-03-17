@@ -37,7 +37,10 @@ use crate::{
         Registry,
     },
     resource,
-    resource::ContainsResource,
+    resource::{
+        ContainsResource,
+        ContainsViews,
+    },
     system::System,
 };
 #[cfg(feature = "rayon")]
@@ -871,6 +874,16 @@ where
     {
         self.resources.get_mut()
     }
+
+    pub fn view_resources<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>(
+        &'a mut self,
+    ) -> Views
+    where
+        Resources:
+            ContainsViews<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>,
+    {
+        self.resources.view()
+    }
 }
 
 #[cfg(test)]
@@ -889,6 +902,7 @@ mod tests {
             result,
             Views,
         },
+        resources,
         Entity,
         Registry,
     };
@@ -2447,5 +2461,12 @@ mod tests {
         source_world.reserve::<Entity!(A, B), _, _, _>(0);
 
         assert_eq!(world, source_world);
+    }
+
+    #[test]
+    fn view_resource_immutably() {
+        let mut world = World::<Registry!(), _>::with_resources(resources!(A(42)));
+
+        assert_eq!(world.view_resources::<(&A, crate::query::view::Null), _, _, _, _>(), (&A(42), crate::query::view::Null));
     }
 }

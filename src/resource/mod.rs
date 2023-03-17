@@ -7,7 +7,10 @@ mod view;
 
 pub(crate) mod contains;
 
-pub use contains::ContainsResource;
+pub use contains::{
+    ContainsResource,
+    ContainsViews,
+};
 #[cfg(feature = "serde")]
 pub use de::Deserialize;
 #[cfg(feature = "serde")]

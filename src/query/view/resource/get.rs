@@ -1,5 +1,5 @@
 mod index {
-    pub(super) enum Index {}
+    pub enum Index {}
 }
 
 pub trait Get<Resource, Index> {
@@ -9,20 +9,18 @@ pub trait Get<Resource, Index> {
     fn get(self) -> (Self::View, Self::Remainder);
 }
 
-impl<'a, Resource, Resources> Get<Resource, index::Index> for (&'a Resource, Resources) {
+impl<'a, Resource, Views> Get<Resource, index::Index> for (&'a Resource, Views) {
     type View = &'a Resource;
-    type Remainder = Resources;
+    type Remainder = Views;
 
     fn get(self) -> (Self::View, Self::Remainder) {
         self
     }
 }
 
-impl<'a, Resource, Resources> Get<Resource, index::Index>
-    for (&'a mut Resource, Resources)
-{
+impl<'a, Resource, Views> Get<Resource, index::Index> for (&'a mut Resource, Views) {
     type View = &'a mut Resource;
-    type Remainder = Resources;
+    type Remainder = Views;
 
     fn get(self) -> (Self::View, Self::Remainder) {
         self
