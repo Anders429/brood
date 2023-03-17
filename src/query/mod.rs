@@ -93,12 +93,12 @@ use core::marker::PhantomData;
 /// ```
 ///
 /// [`query()`]: crate::world::World::query()
-pub struct Query<V, F = filter::None> {
-    view: PhantomData<V>,
-    filter: PhantomData<F>,
+pub struct Query<Views, Filters = filter::None> {
+    view: PhantomData<Views>,
+    filter: PhantomData<Filters>,
 }
 
-impl<V, F> Query<V, F> {
+impl<Views, Filters> Query<Views, Filters> {
     /// Creates a new `Query`.
     ///
     /// When creating a query, you must specify the views type `V`, and can optionally specify the
@@ -113,7 +113,7 @@ impl<V, F> Query<V, F> {
     }
 }
 
-impl<V, F> Default for Query<V, F> {
+impl<Views, Filters> Default for Query<Views, Filters> {
     fn default() -> Self {
         Self::new()
     }
