@@ -35,8 +35,7 @@ pub trait Sealed<'a, Views, Containments, Indices, CanonicalContainments, Reshap
     fn view(&'a mut self) -> Views;
 }
 
-impl<'a, CanonicalContainments, ReshapeIndices>
-    Sealed<'a, view::Null, Null, Null, CanonicalContainments, ReshapeIndices> for resource::Null
+impl<'a, ReshapeIndices> Sealed<'a, view::Null, Null, Null, Null, ReshapeIndices> for resource::Null
 where
     view::Null: Reshape<view::Null, ReshapeIndices>,
 {
@@ -77,6 +76,7 @@ impl<
         Containments,
         Index,
         Indices,
+        CanonicalContainment,
         CanonicalContainments,
         ReshapeIndex,
         ReshapeIndices,
@@ -86,15 +86,18 @@ impl<
         Views,
         (Contained, Containments),
         (Index, Indices),
-        CanonicalContainments,
+        (CanonicalContainment, CanonicalContainments),
         (ReshapeIndex, ReshapeIndices),
     > for (Resource, Resources)
 where
     Views: view::resource::Get<Resource, Index>,
     Resources:
         Sealed<'a, Views::Remainder, Containments, Indices, CanonicalContainments, ReshapeIndices>,
-    (Resource, Resources):
-        CanonicalViews<'a, (Views::View, Resources::Canonical), CanonicalContainments>,
+    (Resource, Resources): CanonicalViews<
+        'a,
+        (Views::View, Resources::Canonical),
+        (CanonicalContainment, CanonicalContainments),
+    >,
     (Views::View, Resources::Canonical): Reshape<Views, (ReshapeIndex, ReshapeIndices)>,
 {
     type Canonical = (Views::View, Resources::Canonical);

@@ -900,6 +900,7 @@ mod tests {
         query::{
             filter,
             result,
+            view,
             Views,
         },
         resources,
@@ -2464,12 +2465,78 @@ mod tests {
     }
 
     #[test]
+    fn view_no_resources() {
+        let mut world = World::<Registry!()>::new();
+
+        let null = world.view_resources::<Views!(), _, _, _, _>();
+        assert_eq!(null, view::Null);
+    }
+
+    #[test]
     fn view_resource_immutably() {
         let mut world = World::<Registry!(), _>::with_resources(resources!(A(42)));
 
-        assert_eq!(
-            world.view_resources::<(&A, crate::query::view::Null), _, _, _, _>(),
-            (&A(42), crate::query::view::Null)
-        );
+        let result!(a) = world.view_resources::<Views!(&A), _, _, _, _>();
+        assert_eq!(a, &A(42));
+    }
+
+    #[test]
+    fn view_resource_mutably() {
+        let mut world = World::<Registry!(), _>::with_resources(resources!(A(42)));
+
+        let result!(a) = world.view_resources::<Views!(&mut A), _, _, _, _>();
+        assert_eq!(a, &mut A(42));
+    }
+
+    #[test]
+    fn view_resource_mutably_modifying() {
+        let mut world = World::<Registry!(), _>::with_resources(resources!(A(42)));
+
+        let result!(a) = world.view_resources::<Views!(&mut A), _, _, _, _>();
+        a.0 = 100;
+
+        assert_eq!(a, &mut A(100));
+    }
+
+    #[test]
+    fn view_multiple_resources() {
+        let mut world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a')));
+
+        let result!(a, b) = world.view_resources::<Views!(&A, &mut B), _, _, _, _>();
+
+        assert_eq!(a, &A(42));
+        assert_eq!(b, &mut B('a'));
+    }
+
+    #[test]
+    fn view_multiple_resources_reshaped() {
+        let mut world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a')));
+
+        let result!(b, a) = world.view_resources::<Views!(&B, &mut A), _, _, _, _>();
+
+        assert_eq!(a, &A(42));
+        assert_eq!(b, &mut B('a'));
+    }
+
+    #[test]
+    fn view_multiple_resources_modifying() {
+        let mut world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a')));
+
+        let result!(a, b) = world.view_resources::<Views!(&A, &mut B), _, _, _, _>();
+        b.0 = 'b';
+
+        assert_eq!(a, &A(42));
+        assert_eq!(b, &mut B('b'));
+    }
+
+    #[test]
+    fn view_multiple_resources_modifying_reshaped() {
+        let mut world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a')));
+
+        let result!(b, a) = world.view_resources::<Views!(&B, &mut A), _, _, _, _>();
+        a.0 = 100;
+
+        assert_eq!(a, &A(100));
+        assert_eq!(b, &mut B('a'));
     }
 }
