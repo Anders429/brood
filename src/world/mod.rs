@@ -2467,6 +2467,9 @@ mod tests {
     fn view_resource_immutably() {
         let mut world = World::<Registry!(), _>::with_resources(resources!(A(42)));
 
-        assert_eq!(world.view_resources::<(&A, crate::query::view::Null), _, _, _, _>(), (&A(42), crate::query::view::Null));
+        assert_eq!(
+            world.view_resources::<(&A, crate::query::view::Null), _, _, _, _>(),
+            (&A(42), crate::query::view::Null)
+        );
     }
 }

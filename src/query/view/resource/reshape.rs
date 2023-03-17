@@ -16,8 +16,8 @@ impl Reshape<Null, contains::Null> for Null {
     }
 }
 
-impl<'a, Resource, Views, ReshapedViews, Index, Indices> Reshape<(&'a Resource, ReshapedViews), (Index, Indices)>
-    for Views
+impl<'a, Resource, Views, ReshapedViews, Index, Indices>
+    Reshape<(&'a Resource, ReshapedViews), (Index, Indices)> for Views
 where
     Views: Get<Resource, Index, View = &'a Resource>,
     Views::Remainder: Reshape<ReshapedViews, Indices>,
@@ -28,8 +28,8 @@ where
     }
 }
 
-impl<'a, Resource, Views, ReshapedViews, Index, Indices> Reshape<(&'a mut Resource, ReshapedViews), (Index, Indices)>
-    for Views
+impl<'a, Resource, Views, ReshapedViews, Index, Indices>
+    Reshape<(&'a mut Resource, ReshapedViews), (Index, Indices)> for Views
 where
     Views: Get<Resource, Index, View = &'a mut Resource>,
     Views::Remainder: Reshape<ReshapedViews, Indices>,
