@@ -1,9 +1,11 @@
-mod contains;
 #[cfg(feature = "serde")]
 mod de;
 mod length;
 #[cfg(feature = "serde")]
 mod ser;
+mod view;
+
+pub(crate) mod contains;
 
 pub use contains::ContainsResource;
 #[cfg(feature = "serde")]

@@ -1,11 +1,11 @@
+use super::Contained;
+
 pub trait ContainsResource<Resource, Index>: Sealed<Resource, Index> {}
 
 impl<Resources, Resource, Index> ContainsResource<Resource, Index> for Resources where
     Resources: Sealed<Resource, Index>
 {
 }
-
-enum Contained {}
 
 pub trait Sealed<Resource, Index> {
     fn get(&self) -> &Resource;

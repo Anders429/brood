@@ -47,6 +47,8 @@
 //! [`Views!`]: crate::query::Views!
 //! [`World`]: crate::world::World.
 
+pub mod resource;
+
 mod get;
 #[cfg(feature = "rayon")]
 mod par;
