@@ -28,6 +28,7 @@ use crate::{
         result,
         view::Views,
         Query,
+        Result,
     },
     registry::{
         contains,
@@ -284,10 +285,12 @@ where
     /// let inserted_entity_identifier = world.insert(entity!(Foo(42), Bar(true), Baz(100)));
     ///
     /// // Note that the views provide implicit filters.
-    /// for result!(foo, baz, entity_identifier) in world.query(Query::<
-    ///     Views!(&mut Foo, &Baz, entity::Identifier),
-    ///     filter::Has<Bar>,
-    /// >::new())
+    /// for result!(foo, baz, entity_identifier) in world
+    ///     .query(Query::<
+    ///         Views!(&mut Foo, &Baz, entity::Identifier),
+    ///         filter::Has<Bar>,
+    ///     >::new())
+    ///     .iter
     /// {
     ///     // Allows immutable or mutable access to queried components.
     ///     foo.0 = baz.0;
@@ -319,7 +322,7 @@ where
     >(
         &'a mut self,
         #[allow(unused_variables)] query: Query<V, F, ResourceViews>,
-    ) -> result::Iter<'a, R, F, FI, V, VI, P, I, Q>
+    ) -> Result<result::Iter<'a, R, F, FI, V, VI, P, I, Q>, ResourceViews>
     where
         V: Views<'a> + Filter,
         F: Filter,
@@ -333,7 +336,10 @@ where
             ResourceViewsReshapeIndices,
         >,
     {
-        result::Iter::new(self.archetypes.iter_mut())
+        Result {
+            iter: result::Iter::new(self.archetypes.iter_mut()),
+            resources: self.resources.view(),
+        }
     }
 
     /// Query for components contained within the `World` using the given [`ParViews`] `V` and
@@ -523,7 +529,10 @@ where
             ResourceViewsReshapeIndices,
         >,
     {
-        system.run(self.query(Query::<S::Views<'a>, S::Filter, S::ResourceViews>::new()));
+        system.run(
+            self.query(Query::<S::Views<'a>, S::Filter, S::ResourceViews>::new())
+                .iter,
+        );
     }
 
     /// Run a [`ParSystem`] over the entities in this `World`.
@@ -1116,6 +1125,7 @@ mod tests {
 
         let mut result = world
             .query(Query::<Views!(&B, &A)>::new())
+            .iter
             .map(|result!(b, a)| (b.0, a.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -1133,6 +1143,7 @@ mod tests {
 
         let mut result = world
             .query(Query::<Views!(&A)>::new())
+            .iter
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1150,6 +1161,7 @@ mod tests {
 
         let mut result = world
             .query(Query::<Views!(&mut B)>::new())
+            .iter
             .map(|result!(b)| b.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1167,6 +1179,7 @@ mod tests {
 
         let mut result = world
             .query(Query::<Views!(Option<&A>)>::new())
+            .iter
             .map(|result!(a)| a.map(|a| a.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -1184,6 +1197,7 @@ mod tests {
 
         let mut result = world
             .query(Query::<Views!(Option<&mut B>)>::new())
+            .iter
             .map(|result!(b)| b.map(|b| b.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -1204,6 +1218,7 @@ mod tests {
                 Views!(entity::Identifier),
                 filter::And<filter::Has<A>, filter::Has<B>>,
             >::new())
+            .iter
             .map(|result!(identifier)| identifier)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![entity_identifier]);
@@ -1220,6 +1235,7 @@ mod tests {
 
         let result = world
             .query(Query::<Views!(&A), filter::Has<B>>::new())
+            .iter
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![1]);
@@ -1236,6 +1252,7 @@ mod tests {
 
         let result = world
             .query(Query::<Views!(&A), filter::Not<filter::Has<B>>>::new())
+            .iter
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![2]);
@@ -1255,6 +1272,7 @@ mod tests {
                 Views!(&A),
                 filter::And<filter::Has<A>, filter::Has<B>>,
             >::new())
+            .iter
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         assert_eq!(result, vec![1]);
@@ -1274,6 +1292,7 @@ mod tests {
                 Views!(&A),
                 filter::Or<filter::Has<A>, filter::Has<B>>,
             >::new())
+            .iter
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -1291,6 +1310,7 @@ mod tests {
 
         let mut result = world
             .query(Query::<Views!(&B, &A)>::new())
+            .iter
             .map(|result!(b, a)| (a.0, b.0))
             .collect::<Vec<_>>();
         result.sort();
@@ -2371,6 +2391,7 @@ mod tests {
 
         let mut result = world
             .query(Query::<Views!(&A)>::new())
+            .iter
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -2391,6 +2412,7 @@ mod tests {
 
         let mut result = world
             .query(Query::<Views!(&A)>::new())
+            .iter
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -2411,6 +2433,7 @@ mod tests {
 
         let mut result = world
             .query(Query::<Views!(&A)>::new())
+            .iter
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -2497,6 +2520,7 @@ mod tests {
 
         let mut result = world
             .query(Query::<Views!(&A)>::new())
+            .iter
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();
@@ -2533,6 +2557,7 @@ mod tests {
 
         let mut result = world
             .query(Query::<Views!(&A)>::new())
+            .iter
             .map(|result!(a)| a.0)
             .collect::<Vec<_>>();
         result.sort();

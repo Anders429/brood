@@ -35,7 +35,10 @@
 //! let mut world = World::<Registry>::new();
 //! world.insert(entity!(Foo(42), Bar(true), Baz(1.5)));
 //!
-//! for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar), filter::Has<Baz>>::new()) {
+//! for result!(foo, bar) in world
+//!     .query(Query::<Views!(&mut Foo, &Bar), filter::Has<Baz>>::new())
+//!     .iter
+//! {
 //!     // Do something.
 //! }
 //! ```
@@ -51,7 +54,10 @@ pub mod result;
 pub mod view;
 
 #[doc(inline)]
-pub use result::result;
+pub use result::{
+    result,
+    Result,
+};
 #[doc(inline)]
 pub use view::inner::Views;
 
@@ -87,7 +93,10 @@ use core::marker::PhantomData;
 /// let mut world = World::<Registry>::new();
 /// world.insert(entity!(Foo(42), Bar(true), Baz(1.5)));
 ///
-/// for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar), filter::Has<Baz>>::new()) {
+/// for result!(foo, bar) in world
+///     .query(Query::<Views!(&mut Foo, &Bar), filter::Has<Baz>>::new())
+///     .iter
+/// {
 ///     // Do something.
 /// }
 /// ```

@@ -36,7 +36,7 @@
 //! let mut world = World::<Registry>::new();
 //! world.insert(entity!(Foo(42), Bar(true)));
 //!
-//! for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar)>::new()) {
+//! for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar)>::new()).iter {
 //!     if bar.0 {
 //!         foo.0 += 1;
 //!     }
@@ -73,6 +73,12 @@ pub(crate) use sealed::Results;
 
 use crate::doc;
 
+#[non_exhaustive]
+pub struct Result<Iterator, ResourceViews> {
+    pub iter: Iterator,
+    pub resources: ResourceViews,
+}
+
 doc::non_root_macro! {
     /// Defines identifiers to match items returned by a [`result::Iter`] iterator.
     ///
@@ -91,7 +97,7 @@ doc::non_root_macro! {
     /// let mut world = World::<Registry>::new();
     /// world.insert(entity!(Foo(42), Bar(true)));
     ///
-    /// for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar)>::new()) {
+    /// for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar)>::new()).iter {
     ///     // ...
     /// }
     /// ```
