@@ -152,6 +152,6 @@ where
             // SAFETY: The access to the world's components follows Rust's borrowing rules.
             unsafe { (*world.get()).par_query(Query::<P::Views<'a>, P::Filter, P::ResourceViews>::new()) };
         // Run system using the query result.
-        self.0.run(result);
+        self.0.run(result.iter);
     }
 }
