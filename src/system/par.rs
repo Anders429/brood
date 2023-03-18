@@ -37,6 +37,7 @@ use crate::{
 /// impl ParSystem for MySystem {
 ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
+///     type ResourceViews = Views!();
 ///
 ///     fn run<'a, R, FI, VI, P, I, Q>(
 ///         &mut self,
@@ -65,6 +66,10 @@ pub trait ParSystem {
     type Filter: Filter;
     /// The views on components this system should operate on.
     type Views<'a>: ParViews<'a> + Filter;
+    /// Views on resources.
+    ///
+    /// The system will have access to the resources requested here when run.
+    type ResourceViews;
 
     /// Logic to be run over the parallel query result.
     ///
@@ -96,6 +101,7 @@ pub trait ParSystem {
     /// impl ParSystem for MySystem {
     ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
+    ///     type ResourceViews = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,

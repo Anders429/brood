@@ -14,8 +14,20 @@ use hashbrown::HashMap;
 define_null!();
 
 /// The stages within a schedule.
-pub trait Stages<'a, R, Resources, FI, VI, P, I, Q>: Send
-where
+pub trait Stages<
+    'a,
+    R,
+    Resources,
+    FI,
+    VI,
+    P,
+    I,
+    Q,
+    ResourceViewsContainmentsLists,
+    ResourceViewsIndicesLists,
+    ResourceViewsCanonicalContainmentsLists,
+    ResourceViewsReshapeIndicesLists,
+>: Send where
     R: Registry,
 {
     /// A list of booleans indicating whether each task within the first stage has already been run.
@@ -54,7 +66,8 @@ where
     fn new_has_run() -> Self::HasRun;
 }
 
-impl<R, Resources> Stages<'_, R, Resources, Null, Null, Null, Null, Null> for Null
+impl<R, Resources> Stages<'_, R, Resources, Null, Null, Null, Null, Null, Null, Null, Null, Null>
+    for Null
 where
     R: Registry,
 {
@@ -75,12 +88,84 @@ where
     }
 }
 
-impl<'a, R, Resources, T, U, FI, FIS, VI, VIS, P, PS, I, IS, Q, QS>
-    Stages<'a, R, Resources, (FI, FIS), (VI, VIS), (P, PS), (I, IS), (Q, QS)> for (T, U)
+impl<
+        'a,
+        R,
+        Resources,
+        T,
+        U,
+        FI,
+        FIS,
+        VI,
+        VIS,
+        P,
+        PS,
+        I,
+        IS,
+        Q,
+        QS,
+        ResourceViewsContainmentsList,
+        ResourceViewsContainmentsLists,
+        ResourceViewsIndicesList,
+        ResourceViewsIndicesLists,
+        ResourceViewsCanonicalContainmentsList,
+        ResourceViewsCanonicalContainmentsLists,
+        ResourceViewsReshapeIndicesList,
+        ResourceViewsReshapeIndicesLists,
+    >
+    Stages<
+        'a,
+        R,
+        Resources,
+        (FI, FIS),
+        (VI, VIS),
+        (P, PS),
+        (I, IS),
+        (Q, QS),
+        (
+            ResourceViewsContainmentsList,
+            ResourceViewsContainmentsLists,
+        ),
+        (ResourceViewsIndicesList, ResourceViewsIndicesLists),
+        (
+            ResourceViewsCanonicalContainmentsList,
+            ResourceViewsCanonicalContainmentsLists,
+        ),
+        (
+            ResourceViewsReshapeIndicesList,
+            ResourceViewsReshapeIndicesLists,
+        ),
+    > for (T, U)
 where
     R: Registry,
-    T: Stage<'a, R, Resources, FI, VI, P, I, Q>,
-    U: Stages<'a, R, Resources, FIS, VIS, PS, IS, QS>,
+    T: Stage<
+        'a,
+        R,
+        Resources,
+        FI,
+        VI,
+        P,
+        I,
+        Q,
+        ResourceViewsContainmentsList,
+        ResourceViewsIndicesList,
+        ResourceViewsCanonicalContainmentsList,
+        ResourceViewsReshapeIndicesList,
+    >,
+    U: Stages<
+        'a,
+        R,
+        Resources,
+        FIS,
+        VIS,
+        PS,
+        IS,
+        QS,
+        ResourceViewsContainmentsLists,
+        ResourceViewsIndicesLists,
+        ResourceViewsCanonicalContainmentsLists,
+        ResourceViewsReshapeIndicesLists,
+    >,
 {
     type HasRun = T::HasRun;
 

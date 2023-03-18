@@ -26,6 +26,7 @@
 //! impl System for MySystem {
 //!     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
+//!     type ResourceViews = Views!();
 //!
 //!     fn run<'a, R, FI, VI, P, I, Q>(
 //!         &mut self,
@@ -107,6 +108,7 @@ use crate::{
 /// impl System for MySystem {
 ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
+///     type ResourceViews = Views!();
 ///
 ///     fn run<'a, R, FI, VI, P, I, Q>(
 ///         &mut self,
@@ -130,6 +132,10 @@ pub trait System {
     type Filter: Filter;
     /// The views on components this system should operate on.
     type Views<'a>: Views<'a> + Filter;
+    /// Views on resources.
+    ///
+    /// The system will have access to the resources requested here when run.
+    type ResourceViews;
 
     /// Logic to be run over the query result.
     ///
@@ -160,6 +166,7 @@ pub trait System {
     /// impl System for MySystem {
     ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
+    ///     type ResourceViews = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,

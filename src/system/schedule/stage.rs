@@ -27,8 +27,20 @@ define_null!();
 /// A stage within a schedule.
 ///
 /// A single stage contains only tasks that can always be run in parallel.
-pub trait Stage<'a, R, Resources, FI, VI, P, I, Q>: Send
-where
+pub trait Stage<
+    'a,
+    R,
+    Resources,
+    FI,
+    VI,
+    P,
+    I,
+    Q,
+    ResourceViewsContainmentsList,
+    ResourceViewsIndicesList,
+    ResourceViewsCanonicalContainmentsList,
+    ResourceViewsReshapeIndicesList,
+>: Send where
     R: Registry,
 {
     /// A list of booleans indicating whether each task within the stage has already been run.
@@ -39,7 +51,19 @@ where
     /// After the tasks have been scheduled to run, tasks within the following stage will also
     /// be attempted to be scheduled. Any tasks that are dynamically found to be able to run in
     /// parallel with the current tasks will be executed as well.
-    fn run<'b, N, NFI, NVI, NP, NI, NQ>(
+    fn run<
+        'b,
+        N,
+        NFI,
+        NVI,
+        NP,
+        NI,
+        NQ,
+        NextResourceViewsContainmentsLists,
+        NextResourceViewsIndicesLists,
+        NextResourceViewsCanonicalContainmentsLists,
+        NextResourceViewsReshapeIndicesLists,
+    >(
         &mut self,
         world: SendableWorld<R, Resources>,
         borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
@@ -47,7 +71,20 @@ where
         next_stage: &mut N,
     ) -> N::HasRun
     where
-        N: Stages<'b, R, Resources, NFI, NVI, NP, NI, NQ>;
+        N: Stages<
+            'b,
+            R,
+            Resources,
+            NFI,
+            NVI,
+            NP,
+            NI,
+            NQ,
+            NextResourceViewsContainmentsLists,
+            NextResourceViewsIndicesLists,
+            NextResourceViewsCanonicalContainmentsLists,
+            NextResourceViewsReshapeIndicesLists,
+        >;
 
     /// Attempt to run as many tasks within this stage as possible as add-ons to the previous
     /// stage.
@@ -70,13 +107,26 @@ where
     fn new_has_run() -> Self::HasRun;
 }
 
-impl<R, Resources> Stage<'_, R, Resources, Null, Null, Null, Null, Null> for Null
+impl<R, Resources> Stage<'_, R, Resources, Null, Null, Null, Null, Null, Null, Null, Null, Null>
+    for Null
 where
     R: Registry,
 {
     type HasRun = Null;
 
-    fn run<'b, N, NFI, NVI, NP, NI, NQ>(
+    fn run<
+        'b,
+        N,
+        NFI,
+        NVI,
+        NP,
+        NI,
+        NQ,
+        NextResourceViewsContainmentsLists,
+        NextResourceViewsIndicesLists,
+        NextResourceViewsCanonicalContainmentsLists,
+        NextResourceViewsReshapeIndicesLists,
+    >(
         &mut self,
         world: SendableWorld<R, Resources>,
         borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
@@ -84,7 +134,20 @@ where
         next_stage: &mut N,
     ) -> N::HasRun
     where
-        N: Stages<'b, R, Resources, NFI, NVI, NP, NI, NQ>,
+        N: Stages<
+            'b,
+            R,
+            Resources,
+            NFI,
+            NVI,
+            NP,
+            NI,
+            NQ,
+            NextResourceViewsContainmentsLists,
+            NextResourceViewsIndicesLists,
+            NextResourceViewsCanonicalContainmentsLists,
+            NextResourceViewsReshapeIndicesLists,
+        >,
     {
         // Check if borrowed_archetypes is empty.
         // If so, it is better to just run the next stage directly.
@@ -111,14 +174,41 @@ where
     }
 }
 
-fn query_archetype_identifiers<'a, R, Resources, T, FI, VI, P, I, Q>(
+fn query_archetype_identifiers<
+    'a,
+    R,
+    Resources,
+    T,
+    FI,
+    VI,
+    P,
+    I,
+    Q,
+    ResourceViewsContainments,
+    ResourceViewsIndices,
+    ResourceViewsCanonicalContainments,
+    ResourceViewsReshapeIndices,
+>(
     world: SendableWorld<R, Resources>,
     borrowed_archetypes: &mut HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
 ) -> bool
 where
     R: ContainsQuery<'a, T::Filter, FI, T::Views, VI, P, I, Q>,
     Resources: 'a,
-    T: Task<'a, R, Resources, FI, VI, P, I, Q>,
+    T: Task<
+        'a,
+        R,
+        Resources,
+        FI,
+        VI,
+        P,
+        I,
+        Q,
+        ResourceViewsContainments,
+        ResourceViewsIndices,
+        ResourceViewsCanonicalContainments,
+        ResourceViewsReshapeIndices,
+    >,
 {
     let mut merged_borrowed_archetypes = borrowed_archetypes.clone();
 
@@ -147,13 +237,40 @@ where
     true
 }
 
-fn query_archetype_identifiers_unchecked<'a, R, Resources, T, FI, VI, P, I, Q>(
+fn query_archetype_identifiers_unchecked<
+    'a,
+    R,
+    Resources,
+    T,
+    FI,
+    VI,
+    P,
+    I,
+    Q,
+    ResourceViewsContainments,
+    ResourceViewsIndices,
+    ResourceViewsCanonicalContainments,
+    ResourceViewsReshapeIndices,
+>(
     world: SendableWorld<R, Resources>,
     borrowed_archetypes: &mut HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
 ) where
     R: ContainsQuery<'a, T::Filter, FI, T::Views, VI, P, I, Q>,
     Resources: 'a,
-    T: Task<'a, R, Resources, FI, VI, P, I, Q>,
+    T: Task<
+        'a,
+        R,
+        Resources,
+        FI,
+        VI,
+        P,
+        I,
+        Q,
+        ResourceViewsContainments,
+        ResourceViewsIndices,
+        ResourceViewsCanonicalContainments,
+        ResourceViewsReshapeIndices,
+    >,
 {
     for (identifier, claims) in
         // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
@@ -166,17 +283,95 @@ fn query_archetype_identifiers_unchecked<'a, R, Resources, T, FI, VI, P, I, Q>(
     }
 }
 
-impl<'a, R, Resources, T, U, FI, FIS, VI, VIS, P, PS, I, IS, Q, QS>
-    Stage<'a, R, Resources, (FI, FIS), (VI, VIS), (P, PS), (I, IS), (Q, QS)> for (&mut T, U)
+impl<
+        'a,
+        R,
+        Resources,
+        T,
+        U,
+        FI,
+        FIS,
+        VI,
+        VIS,
+        P,
+        PS,
+        I,
+        IS,
+        Q,
+        QS,
+        ResourceViewsContainments,
+        ResourceViewsContainmentsList,
+        ResourceViewsIndices,
+        ResourceViewsIndicesList,
+        ResourceViewsCanonicalContainments,
+        ResourceViewsCanonicalContainmentsList,
+        ResourceViewsReshapeIndices,
+        ResourceViewsReshapeIndicesList,
+    >
+    Stage<
+        'a,
+        R,
+        Resources,
+        (FI, FIS),
+        (VI, VIS),
+        (P, PS),
+        (I, IS),
+        (Q, QS),
+        (ResourceViewsContainments, ResourceViewsContainmentsList),
+        (ResourceViewsIndices, ResourceViewsIndicesList),
+        (
+            ResourceViewsCanonicalContainments,
+            ResourceViewsCanonicalContainmentsList,
+        ),
+        (ResourceViewsReshapeIndices, ResourceViewsReshapeIndicesList),
+    > for (&mut T, U)
 where
     R: ContainsQuery<'a, T::Filter, FI, T::Views, VI, P, I, Q>,
     Resources: 'a,
-    T: Task<'a, R, Resources, FI, VI, P, I, Q> + Send,
-    U: Stage<'a, R, Resources, FIS, VIS, PS, IS, QS>,
+    T: Task<
+            'a,
+            R,
+            Resources,
+            FI,
+            VI,
+            P,
+            I,
+            Q,
+            ResourceViewsContainments,
+            ResourceViewsIndices,
+            ResourceViewsCanonicalContainments,
+            ResourceViewsReshapeIndices,
+        > + Send,
+    U: Stage<
+        'a,
+        R,
+        Resources,
+        FIS,
+        VIS,
+        PS,
+        IS,
+        QS,
+        ResourceViewsContainmentsList,
+        ResourceViewsIndicesList,
+        ResourceViewsCanonicalContainmentsList,
+        ResourceViewsReshapeIndicesList,
+    >,
 {
     type HasRun = (bool, U::HasRun);
 
-    fn run<'b, N, NFI, NVI, NP, NI, NQ>(
+    fn run<
+        'b,
+        N,
+        NFI,
+        NVI,
+        NP,
+        NI,
+        NQ,
+        NextResourceViewsContainmentsLists,
+        NextResourceViewsIndicesLists,
+        NextResourceViewsCanonicalContainmentsLists,
+        NextResourceViewsReshapeIndicesLists,
+    >(
         &mut self,
         world: SendableWorld<R, Resources>,
         mut borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
@@ -184,7 +379,20 @@ where
         next_stage: &mut N,
     ) -> N::HasRun
     where
-        N: Stages<'b, R, Resources, NFI, NVI, NP, NI, NQ>,
+        N: Stages<
+            'b,
+            R,
+            Resources,
+            NFI,
+            NVI,
+            NP,
+            NI,
+            NQ,
+            NextResourceViewsContainmentsLists,
+            NextResourceViewsIndicesLists,
+            NextResourceViewsCanonicalContainmentsLists,
+            NextResourceViewsReshapeIndicesLists,
+        >,
     {
         // Determine whether this task still needs to run, or if it has been run as part of a
         // previous stage.
@@ -197,10 +405,20 @@ where
                 // current thread.
                 || {
                     // Track all archetypes that are being directly borrowed by this task.
-                    query_archetype_identifiers_unchecked::<R, Resources, T, FI, VI, P, I, Q>(
-                        world,
-                        &mut borrowed_archetypes,
-                    );
+                    query_archetype_identifiers_unchecked::<
+                        R,
+                        Resources,
+                        T,
+                        FI,
+                        VI,
+                        P,
+                        I,
+                        Q,
+                        ResourceViewsContainments,
+                        ResourceViewsIndices,
+                        ResourceViewsCanonicalContainments,
+                        ResourceViewsReshapeIndices,
+                    >(world, &mut borrowed_archetypes);
 
                     self.1
                         .run(world, borrowed_archetypes, has_run.1, next_stage)
@@ -217,10 +435,21 @@ where
         world: SendableWorld<R, Resources>,
         mut borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
     ) -> Self::HasRun {
-        if query_archetype_identifiers::<R, Resources, T, FI, VI, P, I, Q>(
-            world,
-            &mut borrowed_archetypes,
-        ) {
+        if query_archetype_identifiers::<
+            R,
+            Resources,
+            T,
+            FI,
+            VI,
+            P,
+            I,
+            Q,
+            ResourceViewsContainments,
+            ResourceViewsIndices,
+            ResourceViewsCanonicalContainments,
+            ResourceViewsReshapeIndices,
+        >(world, &mut borrowed_archetypes)
+        {
             rayon::join(
                 || {
                     (
