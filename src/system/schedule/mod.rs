@@ -39,6 +39,7 @@
 //!     fn run<'a, R, FI, VI, P, I, Q>(
 //!         &mut self,
 //!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!         _resources: Self::ResourceViews,
 //!     ) where
 //!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 //!     {
@@ -58,6 +59,7 @@
 //!     fn run<'a, R, FI, VI, P, I, Q>(
 //!         &mut self,
 //!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!         _resources: Self::ResourceViews,
 //!     ) where
 //!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 //!     {
@@ -261,6 +263,7 @@ doc::non_root_macro! {
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///         _resources: Self::ResourceViews,
     ///     ) where
     ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
@@ -345,6 +348,7 @@ pub(crate) mod inner {
         ///     fn run<'a, R, FI, VI, P, I, Q>(
         ///         &mut self,
         ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        ///         _resources: Self::ResourceViews,
         ///     ) where
         ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
         ///     {
@@ -461,6 +465,7 @@ mod tests {
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -507,6 +512,7 @@ mod tests {
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -553,6 +559,7 @@ mod tests {
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -599,6 +606,7 @@ mod tests {
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -645,6 +653,7 @@ mod tests {
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -983,6 +992,7 @@ mod tests {
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1000,6 +1010,7 @@ mod tests {
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1017,6 +1028,7 @@ mod tests {
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
