@@ -574,6 +574,7 @@ where
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
     ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///         _resources: Self::ResourceViews,
     ///     ) where
     ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
@@ -617,10 +618,8 @@ where
             ResourceViewsReshapeIndices,
         >,
     {
-        par_system.run(
-            self.par_query(Query::<S::Views<'a>, S::Filter, S::ResourceViews>::new())
-                .iter,
-        );
+        let result = self.par_query(Query::<S::Views<'a>, S::Filter, S::ResourceViews>::new());
+        par_system.run(result.iter, result.resources);
     }
 
     /// Run a [`Schedule`] over the entities in this `World`.
@@ -1816,6 +1815,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1858,6 +1858,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1900,6 +1901,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1944,6 +1946,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1990,6 +1993,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2033,6 +2037,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2074,6 +2079,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2115,6 +2121,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2156,6 +2163,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2218,6 +2226,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {

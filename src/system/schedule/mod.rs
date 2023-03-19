@@ -281,6 +281,7 @@ doc::non_root_macro! {
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
     ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///         _resources: Self::ResourceViews,
     ///     ) where
     ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
@@ -366,6 +367,7 @@ pub(crate) mod inner {
         ///     fn run<'a, R, FI, VI, P, I, Q>(
         ///         &mut self,
         ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        ///         _resources: Self::ResourceViews,
         ///     ) where
         ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
         ///     {
@@ -713,6 +715,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -769,6 +772,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -825,6 +829,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -884,6 +889,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -943,6 +949,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {

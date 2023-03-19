@@ -42,6 +42,7 @@ use crate::{
 ///     fn run<'a, R, FI, VI, P, I, Q>(
 ///         &mut self,
 ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+///         _resources: Self::ResourceViews,
 ///     ) where
 ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     {
@@ -106,6 +107,7 @@ pub trait ParSystem {
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
     ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///         _resources: Self::ResourceViews,
     ///     ) where
     ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
@@ -122,6 +124,7 @@ pub trait ParSystem {
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        resources: Self::ResourceViews,
     ) where
         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>;
 }
