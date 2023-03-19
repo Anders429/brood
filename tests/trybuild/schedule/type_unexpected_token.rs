@@ -11,10 +11,12 @@ struct A;
 impl System for A {
     type Views<'a> = Views!();
     type Filter = filter::None;
+    type ResourceViews = Views!();
 
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
         _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        _resources: Self::ResourceViews,
     ) where
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> {}
 }
@@ -24,10 +26,12 @@ struct B;
 impl System for B {
     type Views<'a> = Views!();
     type Filter = filter::None;
+    type ResourceViews = Views!();
 
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
         _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        _resources: Self::ResourceViews,
     ) where
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> {}
 }
