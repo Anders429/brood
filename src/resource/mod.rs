@@ -1,5 +1,6 @@
 #[cfg(feature = "serde")]
 mod de;
+mod debug;
 mod length;
 #[cfg(feature = "serde")]
 mod ser;
@@ -13,11 +14,13 @@ pub use contains::{
 };
 #[cfg(feature = "serde")]
 pub use de::Deserialize;
+pub use debug::Debug;
 #[cfg(feature = "serde")]
 pub use ser::Serialize;
 
 #[cfg(feature = "serde")]
 pub(crate) use de::Deserializer;
+pub(crate) use debug::Debugger;
 #[cfg(feature = "serde")]
 pub(crate) use ser::Serializer;
 

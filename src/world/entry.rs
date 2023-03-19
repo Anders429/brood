@@ -20,6 +20,7 @@ use crate::{
         ContainsQuery,
         Registry,
     },
+    resource,
     world::World,
 };
 use core::fmt;
@@ -345,7 +346,7 @@ where
 impl<'a, R, Resources> fmt::Debug for Entry<'a, R, Resources>
 where
     R: registry::Debug,
-    Resources: fmt::Debug,
+    Resources: resource::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Entry")
