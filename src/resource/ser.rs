@@ -4,6 +4,12 @@ use crate::resource::{
 };
 use serde::ser::SerializeTuple;
 
+/// A list of resources that all implement [`Serialize`].
+/// 
+/// This is a supertrait to the `Serialize` trait. It is always implemented when all resources
+/// implement `Serialize`.
+/// 
+/// [`Serialize`]: serde::Serialize
 #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
 pub trait Serialize: Sealed {}
 
