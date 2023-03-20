@@ -17,6 +17,7 @@ macro_rules! trybuild_test {
 trybuild_test!(entities);
 trybuild_test!(entity);
 trybuild_test!(registry);
+trybuild_test!(resources);
 trybuild_test!(result);
 #[cfg(feature = "rayon")]
 trybuild_test!(schedule);
