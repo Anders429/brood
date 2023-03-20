@@ -1,6 +1,5 @@
 use crate::{
     query::view,
-    resource,
     resource::{
         contains,
         contains::{
