@@ -47,16 +47,15 @@
 //! [`Views!`]: crate::query::Views!
 //! [`World`]: crate::world::World.
 
-pub mod resource;
+#[cfg(feature = "rayon")]
+pub(crate) mod claim;
+pub(crate) mod resource;
 
 mod get;
 #[cfg(feature = "rayon")]
 mod par;
 mod reshape;
 mod sealed;
-
-#[cfg(feature = "rayon")]
-pub(crate) mod claim;
 
 #[cfg(feature = "rayon")]
 pub use par::{
