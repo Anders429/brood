@@ -128,4 +128,12 @@ mod tests {
         // The generational index of the entities will be different.
         assert_ne!(world_a, world_b);
     }
+
+    #[test]
+    fn resources_not_equal() {
+        let world_a = World::<Registry, Resources>::with_resources(resources!(A(42), B('a')));
+        let world_b = World::<Registry, Resources>::with_resources(resources!(A(42), B('b')));
+
+        assert_ne!(world_a, world_b);
+    }
 }
