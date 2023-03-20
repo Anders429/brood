@@ -107,6 +107,7 @@ mod tests {
         entity,
         Registry,
         Resources,
+        resources,
     };
     use alloc::vec;
     use claims::{
@@ -161,6 +162,7 @@ mod tests {
                 Token::Seq { len: Some(0) },
                 Token::SeqEnd,
                 Token::StructEnd,
+                // Resources
                 Token::Tuple { len: 0 },
                 Token::TupleEnd,
                 Token::TupleEnd,
@@ -395,6 +397,49 @@ mod tests {
     }
 
     #[test]
+    fn serialize_deserialize_with_resources() {
+        let world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a')));
+
+        let serializer = Serializer::builder().is_human_readable(false).build();
+        let tokens = assert_ok_eq!(
+            world.serialize(&serializer),
+            Tokens(vec![
+                Token::Tuple { len: 3 },
+                // Archetypes
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                // Entity Allocator
+                Token::Struct {
+                    name: "Allocator",
+                    len: 2,
+                },
+                Token::Field("length"),
+                Token::U64(0),
+                Token::Field("free"),
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                Token::StructEnd,
+                // Resources
+                Token::Tuple { len: 2 },
+                Token::NewtypeStruct { name: "A" },
+                Token::U32(42),
+                Token::NewtypeStruct { name: "B" },
+                Token::Char('a'),
+                Token::TupleEnd,
+                Token::TupleEnd,
+            ])
+        );
+        let mut deserializer = Deserializer::builder()
+            .tokens(tokens)
+            .self_describing(false)
+            .build();
+        assert_ok_eq!(
+            World::<Registry!(), _>::deserialize(&mut deserializer),
+            world
+        );
+    }
+
+    #[test]
     fn deserialize_missing_archetypes() {
         let mut deserializer = Deserializer::builder()
             .tokens(Tokens(vec![Token::Tuple { len: 0 }, Token::TupleEnd]))
@@ -425,6 +470,37 @@ mod tests {
         assert_err_eq!(
             World::<Registry, Resources!()>::deserialize(&mut deserializer),
             Error::invalid_length(1, &"serialized World")
+        );
+    }
+
+    #[test]
+    fn deserialize_missing_resources() {
+        let mut deserializer = Deserializer::builder()
+            .tokens(Tokens(vec![
+                Token::Tuple { len: 2 },
+                // Archetypes
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                // Entity allocator
+                Token::Struct {
+                    name: "Allocator",
+                    len: 2,
+                },
+                Token::Field("length"),
+                Token::U64(0),
+                Token::Field("free"),
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                Token::StructEnd,
+                Token::TupleEnd,
+            ]))
+            .is_human_readable(false)
+            .self_describing(false)
+            .build();
+
+        assert_err_eq!(
+            World::<Registry, Resources!()>::deserialize(&mut deserializer),
+            Error::invalid_length(2, &"serialized World")
         );
     }
 }
