@@ -82,10 +82,12 @@ struct UpdatePosition;
 impl System for UpdatePosition {
     type Filter: filter::None;
     type Views<'a>: Views!(&'a mut Position, &'a Velocity);
+    type ResourceViews: Views!();
 
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
+        _resources: Self::ResourceViews,
     ) where
         R: ContainsQuery<Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     {
@@ -190,10 +192,12 @@ struct UpdatePosition;
 impl ParSystem for UpdatePosition {
     type Filter: filter::None;
     type Views<'a>: Views!(&'a mut Position, &'a Velocity);
+    type ResourceViews: Views!();
 
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
-        query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
+        query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        _resources: Self::ResourceViews,
     ) where
         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     {
@@ -249,10 +253,12 @@ struct UpdatePosition;
 impl System for UpdatePosition {
     type Filter: filter::None;
     type Views<'a>: Views!(&'a mut Position, &'a Velocity);
+    type ResourceViews: Views!();
 
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
-        query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
+        query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        resources: Self::ResourceViews,
     ) where
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     {
@@ -268,10 +274,12 @@ struct UpdateIsMoving;
 impl System for UpdateIsMoving {
     type Filter: filter::None;
     type Views<'a>: Views!(&'a Velocity, &'a mut IsMoving);
+    type ResourceViews: Views!();
 
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
-        query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
+        query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        resources: Self::ResourceViews,
     ) where
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     {
