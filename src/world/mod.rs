@@ -165,6 +165,21 @@ where
         }
     }
 
+    /// Creates an empty world containing the given resources.
+    ///
+    /// # Example
+    /// ```
+    /// use brood::{
+    ///     resources,
+    ///     Registry,
+    ///     World,
+    /// };
+    ///
+    /// struct ResourceA(u32);
+    /// struct ResourceB(char);
+    ///
+    /// let world = World::<Registry!(), _>::with_resources(resources!(ResourceA(0), ResourceB('a')));
+    /// ```
     #[must_use]
     pub fn with_resources(resources: Resources) -> Self {
         Self::from_raw_parts(Archetypes::new(), entity::Allocator::new(), 0, resources)
@@ -1008,6 +1023,25 @@ where
         }
     }
 
+    /// View a single resource immutably.
+    ///
+    /// The `Index` parameter can be inferred.
+    ///
+    /// # Example
+    /// ```
+    /// use brood::{
+    ///     resources,
+    ///     Registry,
+    ///     World,
+    /// };
+    ///
+    /// #[derive(Debug, PartialEq)]
+    /// struct Resource(u32);
+    ///
+    /// let world = World::<Registry!(), _>::with_resources(resources!(Resource(100)));
+    ///
+    /// assert_eq!(world.get::<Resource, _>(), &Resource(100));
+    /// ```
     pub fn get<Resource, Index>(&self) -> &Resource
     where
         Resources: ContainsResource<Resource, Index>,
@@ -1015,6 +1049,26 @@ where
         self.resources.get()
     }
 
+    /// View a single resource mutably.
+    ///
+    /// The `Index` parameter can be inferred.
+    ///
+    /// # Example
+    /// ```
+    /// use brood::{
+    ///     resources,
+    ///     Registry,
+    ///     World,
+    /// };
+    ///
+    /// #[derive(Debug, PartialEq)]
+    /// struct Resource(u32);
+    ///
+    /// let mut world = World::<Registry!(), _>::with_resources(resources!(Resource(100)));
+    ///
+    /// world.get_mut::<Resource, _>().0 *= 2;
+    /// assert_eq!(world.get::<Resource, _>(), &Resource(200));
+    /// ```
     pub fn get_mut<Resource, Index>(&mut self) -> &mut Resource
     where
         Resources: ContainsResource<Resource, Index>,
@@ -1022,6 +1076,38 @@ where
         self.resources.get_mut()
     }
 
+    /// View multiple resources at once.
+    ///
+    /// All generic parameters besides `Views` can be omitted.
+    ///
+    /// # Example
+    /// ```
+    /// use brood::{
+    ///     query::{
+    ///         result,
+    ///         Views,
+    ///     },
+    ///     resources,
+    ///     Query,
+    ///     Registry,
+    ///     World,
+    /// };
+    ///
+    /// #[derive(Debug, PartialEq)]
+    /// struct ResourceA(u32);
+    /// #[derive(Debug, PartialEq)]
+    /// struct ResourceB(char);
+    ///
+    /// let mut world =
+    ///     World::<Registry!(), _>::with_resources(resources!(ResourceA(0), ResourceB('a')));
+    ///
+    /// let result!(a, b) = world.view_resources::<Views!(&ResourceA, &mut ResourceB), _, _, _, _>();
+    ///
+    /// assert_eq!(a, &ResourceA(0));
+    ///
+    /// b.0 = 'b';
+    /// assert_eq!(b, &mut ResourceB('b'));
+    /// ```
     pub fn view_resources<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>(
         &'a mut self,
     ) -> Views
