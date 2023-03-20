@@ -1,5 +1,6 @@
 use super::Contained;
 
+/// Indicates that a resource is contained in the list of resources.
 pub trait ContainsResource<Resource, Index>: Sealed<Resource, Index> {}
 
 impl<Resources, Resource, Index> ContainsResource<Resource, Index> for Resources where

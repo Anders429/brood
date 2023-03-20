@@ -16,6 +16,7 @@ use crate::{
     },
 };
 
+/// Indicates that all of the viewed resources are contained in the list of resources.
 pub trait ContainsViews<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>:
     Sealed<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>
 {
