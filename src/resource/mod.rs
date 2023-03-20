@@ -62,19 +62,24 @@ mod sealed {
 }
 
 /// Creates a list of resources.
-/// 
+///
 /// This should be used when defining a [`World`] with resources.
-/// 
+///
 /// # Example
 /// ```
-/// use brood::{World, Registry, Resources, resources};
-/// 
+/// use brood::{
+///     resources,
+///     Registry,
+///     Resources,
+///     World,
+/// };
+///
 /// struct A(u32);
 /// struct B(char);
-/// 
+///
 /// let world = World::<Registry!(), Resources!(A, B)>::with_resources(resources!(A(42), B('a')));
 /// ```
-/// 
+///
 /// [`World`]: crate::World
 #[macro_export]
 macro_rules! resources {
@@ -87,19 +92,24 @@ macro_rules! resources {
 }
 
 /// Defines the type of a list of resources.
-/// 
+///
 /// This should be used when defining a [`World`] with resources.
-/// 
+///
 /// # Example
 /// ```
-/// use brood::{World, Registry, Resources, resources};
-/// 
+/// use brood::{
+///     resources,
+///     Registry,
+///     Resources,
+///     World,
+/// };
+///
 /// struct A(u32);
 /// struct B(char);
-/// 
+///
 /// let world = World::<Registry!(), Resources!(A, B)>::with_resources(resources!(A(42), B('a')));
 /// ```
-/// 
+///
 /// [`World`]: crate::World
 #[macro_export]
 macro_rules! Resources {

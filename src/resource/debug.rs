@@ -6,10 +6,10 @@ use core::{
 };
 
 /// A list of resources that all implement [`Debug`].
-/// 
+///
 /// This is a supertrait to the `Debug` trait. It is always implemented when all resources
 /// implement `Debug`.
-/// 
+///
 /// [`Debug`]: core::fmt::Debug
 pub trait Debug: Sealed {}
 

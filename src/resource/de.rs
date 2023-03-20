@@ -17,10 +17,10 @@ use serde::de::{
 };
 
 /// A list of resources that all implement [`Deserialize`].
-/// 
+///
 /// This is a supertrait to the `Deserialize` trait. It is always implemented when all resources
 /// implement `Deserialize`.
-/// 
+///
 /// [`Deserialize`]: serde::Deserialize
 #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
 pub trait Deserialize<'de>: Sealed<'de> {}
