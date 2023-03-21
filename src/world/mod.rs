@@ -2913,8 +2913,24 @@ mod tests {
     }
 
     #[test]
+    fn get_multiple_resources() {
+        let world = World::<Registry!(), _>::with_resources(resources!(B('a'), A(42)));
+
+        assert_eq!(world.get::<A, _>(), &A(42));
+    }
+
+    #[test]
     fn get_mut() {
         let mut world = World::<Registry!(), _>::with_resources(resources!(A(42)));
+
+        world.get_mut::<A, _>().0 = 100;
+
+        assert_eq!(world.get::<A, _>(), &A(100));
+    }
+
+    #[test]
+    fn get_mut_multiple_resources() {
+        let mut world = World::<Registry!(), _>::with_resources(resources!(B('a'), A(42)));
 
         world.get_mut::<A, _>().0 = 100;
 
