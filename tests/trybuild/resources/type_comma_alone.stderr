@@ -1,0 +1,11 @@
+error: no rules expected the token `,`
+ --> tests/trybuild/resources/type_comma_alone.rs:3:29
+  |
+3 | type Resources = Resources!(,);
+  |                             ^ no rules expected this token in macro call
+  |
+note: while trying to match meta-variable `$resource:ty`
+ --> src/resource/mod.rs
+  |
+  |     ($resource:ty $(,$resources:ty)* $(,)?) => {
+  |      ^^^^^^^^^^^^

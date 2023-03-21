@@ -2,8 +2,10 @@ pub(crate) mod decision;
 
 mod get;
 mod inverse;
+mod merger;
 mod verifier;
 
+pub(crate) use merger::Merger;
 pub(crate) use verifier::Verifier;
 
 use crate::hlist::define_null;

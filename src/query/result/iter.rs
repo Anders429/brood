@@ -53,7 +53,7 @@ use core::{
 /// let mut world = World::<Registry>::new();
 /// world.insert(entity!(Foo(42), Bar(true)));
 ///
-/// for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar)>::new()) {
+/// for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar)>::new()).iter {
 ///     if bar.0 {
 ///         foo.0 += 1;
 ///     }

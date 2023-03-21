@@ -1,6 +1,7 @@
 mod impl_clone;
 mod impl_debug;
 mod impl_drop;
+#[cfg(test)]
 mod impl_eq;
 mod impl_send;
 #[cfg(feature = "serde")]
@@ -37,6 +38,7 @@ use crate::{
         Views,
         ViewsSealed,
     },
+    registry,
     registry::{
         contains::views::{
             ContainsViewsOuter,
@@ -744,5 +746,59 @@ where
 
     pub(crate) fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+}
+
+impl<R> Archetype<R>
+where
+    R: registry::PartialEq,
+{
+    /// Compare two `Archetype<R>`s.
+    ///
+    /// This compares the entities stored within the archetype, including entity identifiers.
+    /// Archetype identifiers are explicitly *not* compared; these should be compared prior to
+    /// calling this method.
+    ///
+    /// # Safety
+    /// `self.identifier()` must be equal to `other.identifier()`.
+    pub(crate) unsafe fn component_eq(&self, other: &Self) -> bool {
+        self.length == other.length
+            && ManuallyDrop::new(
+                // SAFETY: `self.entity_identifiers` is guaranteed to contain the raw parts for a
+                // valid `Vec` of size `self.length`.
+                unsafe {
+                Vec::from_raw_parts(
+                    self.entity_identifiers.0,
+                    self.length,
+                    self.entity_identifiers.1,
+                )
+            }) == ManuallyDrop::new(
+                // SAFETY: `other.entity_identifiers` is guaranteed to contain the raw parts for a
+                // valid `Vec` of size `other.length`.
+                unsafe {
+                Vec::from_raw_parts(
+                    other.entity_identifiers.0,
+                    other.length,
+                    other.entity_identifiers.1,
+                )
+            })
+            &&
+            // SAFETY: Since `self.identifier` is equal to `other.identifier`, the components Vecs
+            // will contain the same number of values as there are bits in `self.identifier`.
+            //
+            // `self.components` and `other.components` both contain raw parts for valid `Vec<C>`s
+            // for each identified component `C` of size `self.length` (since `self.length` and
+            // `other.length` are equal).
+            //
+            // `self.identifier` is generic over the same `R` upon which this function is being
+            // called.
+            unsafe {
+                R::component_eq(
+                    &self.components,
+                    &other.components,
+                    self.length,
+                    self.identifier.iter(),
+                )
+            }
     }
 }

@@ -62,6 +62,7 @@ use rayon::iter::{
 ///
 /// world
 ///     .par_query(Query::<Views!(&mut Foo, &Bar)>::new())
+///     .iter
 ///     .for_each(|result!(foo, bar)| {
 ///         if bar.0 {
 ///             foo.0 += 1;

@@ -47,6 +47,10 @@
 //! [`Views!`]: crate::query::Views!
 //! [`World`]: crate::world::World.
 
+#[cfg(feature = "rayon")]
+pub(crate) mod claim;
+pub(crate) mod resource;
+
 mod get;
 #[cfg(feature = "rayon")]
 mod par;
@@ -59,6 +63,11 @@ pub use par::{
     ParViews,
 };
 
+#[cfg(feature = "rayon")]
+pub(crate) use claim::{
+    Claim,
+    Claims,
+};
 pub(crate) use get::Get;
 #[cfg(feature = "rayon")]
 pub(crate) use par::{
