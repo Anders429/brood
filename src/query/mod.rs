@@ -61,7 +61,10 @@ pub use result::{
 #[doc(inline)]
 pub use view::inner::Views;
 
-use core::marker::PhantomData;
+use core::{
+    fmt,
+    marker::PhantomData,
+};
 
 /// Defines a query to be run over a world.
 ///
@@ -136,4 +139,36 @@ impl<Views, Filters, ResourceViews> Clone for Query<Views, Filters, ResourceView
     }
 }
 
+impl<Views, Filters, ResourceViews> PartialEq for Query<Views, Filters, ResourceViews> {
+    fn eq(&self, _other: &Self) -> bool {
+        true
+    }
+}
+
+impl<Views, Filters, ResourceViews> Eq for Query<Views, Filters, ResourceViews> {}
+
 impl<Views, Filters, ResourceViews> Copy for Query<Views, Filters, ResourceViews> {}
+
+impl<Views, Filters, ResourceViews> fmt::Debug for Query<Views, Filters, ResourceViews> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.debug_struct("Query").finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Query;
+    use crate::query::Views;
+
+    #[test]
+    fn query_default() {
+        assert_eq!(Query::<Views!()>::default(), Query::<Views!()>::new());
+    }
+
+    #[test]
+    fn query_clone() {
+        let query = Query::<Views!()>::new();
+
+        assert_eq!(query.clone(), query);
+    }
+}
