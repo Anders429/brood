@@ -456,6 +456,64 @@ mod tests {
     }
 
     #[test]
+    fn null_resources() {
+        assert_eq!(
+            TypeId::of::<
+                <task::Null as Schedule<
+                    '_,
+                    Registry!(),
+                    Resources!(A, B, C, D, E),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<stages::Null>()
+        );
+    }
+
+    #[test]
+    fn null_components_and_resources() {
+        assert_eq!(
+            TypeId::of::<
+                <task::Null as Schedule<
+                    '_,
+                    Registry,
+                    Resources!(A, B, C, D, E),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<stages::Null>()
+        );
+    }
+
+    #[test]
     fn single_system_immut_a() {
         struct ImmutA;
 
