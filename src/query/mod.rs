@@ -159,6 +159,7 @@ impl<Views, Filters, ResourceViews> fmt::Debug for Query<Views, Filters, Resourc
 mod tests {
     use super::Query;
     use crate::query::Views;
+    use alloc::format;
 
     #[test]
     fn query_default() {
@@ -170,5 +171,10 @@ mod tests {
         let query = Query::<Views!()>::new();
 
         assert_eq!(query.clone(), query);
+    }
+
+    #[test]
+    fn query_debug() {
+        assert_eq!(format!("{:?}", Query::<Views!()>::new()), "Query");
     }
 }
