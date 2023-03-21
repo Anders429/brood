@@ -499,12 +499,12 @@ where
     /// impl System for MySystem {
     ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
-    ///     type ResourceViews = Views!();
+    ///     type ResourceViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-    ///         _resources: Self::ResourceViews,
+    ///         _resources: Self::ResourceViews<'a>,
     ///     ) where
     ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
@@ -542,14 +542,14 @@ where
         R: ContainsQuery<'a, S::Filter, FI, S::Views<'a>, VI, P, I, Q>,
         Resources: ContainsViews<
             'a,
-            S::ResourceViews,
+            S::ResourceViews<'a>,
             ResourceViewsContainments,
             ResourceViewsIndices,
             ResourceViewsCanonicalContainments,
             ResourceViewsReshapeIndices,
         >,
     {
-        let result = self.query(Query::<S::Views<'a>, S::Filter, S::ResourceViews>::new());
+        let result = self.query(Query::<S::Views<'a>, S::Filter, S::ResourceViews<'a>>::new());
         system.run(result.iter, result.resources);
     }
 
@@ -584,12 +584,12 @@ where
     /// impl ParSystem for MySystem {
     ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
-    ///     type ResourceViews = Views!();
+    ///     type ResourceViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
     ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-    ///         _resources: Self::ResourceViews,
+    ///         _resources: Self::ResourceViews<'a>,
     ///     ) where
     ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
@@ -626,14 +626,14 @@ where
         R: ContainsParQuery<'a, S::Filter, FI, S::Views<'a>, VI, P, I, Q>,
         Resources: ContainsViews<
             'a,
-            S::ResourceViews,
+            S::ResourceViews<'a>,
             ResourceViewsContainments,
             ResourceViewsIndices,
             ResourceViewsCanonicalContainments,
             ResourceViewsReshapeIndices,
         >,
     {
-        let result = self.par_query(Query::<S::Views<'a>, S::Filter, S::ResourceViews>::new());
+        let result = self.par_query(Query::<S::Views<'a>, S::Filter, S::ResourceViews<'a>>::new());
         par_system.run(result.iter, result.resources);
     }
 
@@ -673,12 +673,12 @@ where
     /// impl System for SystemA {
     ///     type Views<'a> = Views!(&'a mut Foo);
     ///     type Filter = filter::None;
-    ///     type ResourceViews = Views!();
+    ///     type ResourceViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-    ///         _resources: Self::ResourceViews,
+    ///         _resources: Self::ResourceViews<'a>,
     ///     ) where
     ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
@@ -691,12 +691,12 @@ where
     /// impl System for SystemB {
     ///     type Views<'a> = Views!(&'a mut Bar);
     ///     type Filter = filter::None;
-    ///     type ResourceViews = Views!();
+    ///     type ResourceViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-    ///         _resources: Self::ResourceViews,
+    ///         _resources: Self::ResourceViews<'a>,
     ///     ) where
     ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
@@ -1410,6 +1410,32 @@ mod tests {
         assert_eq!(result, vec![(1, 'a')]);
     }
 
+    #[test]
+    fn query_resources() {
+        let mut world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a')));
+
+        let result!(a, b) = world
+            .query(Query::<Views!(), filter::None, Views!(&A, &mut B)>::new())
+            .resources;
+        b.0 = 'b';
+
+        assert_eq!(a, &A(42));
+        assert_eq!(b, &mut B('b'));
+    }
+
+    #[test]
+    fn query_resources_reshaped() {
+        let mut world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a')));
+
+        let result!(b, a) = world
+            .query(Query::<Views!(), filter::None, Views!(&B, &mut A)>::new())
+            .resources;
+        a.0 = 100;
+
+        assert_eq!(a, &A(100));
+        assert_eq!(b, &mut B('a'));
+    }
+
     #[cfg(feature = "rayon")]
     #[test]
     fn par_query_refs() {
@@ -1586,6 +1612,34 @@ mod tests {
         assert_eq!(result, vec![1, 2]);
     }
 
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn par_query_resources() {
+        let mut world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a')));
+
+        let result!(a, b) = world
+            .par_query(Query::<Views!(), filter::None, Views!(&A, &mut B)>::new())
+            .resources;
+        b.0 = 'b';
+
+        assert_eq!(a, &A(42));
+        assert_eq!(b, &mut B('b'));
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn par_query_resources_reshaped() {
+        let mut world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a')));
+
+        let result!(b, a) = world
+            .par_query(Query::<Views!(), filter::None, Views!(&B, &mut A)>::new())
+            .resources;
+        a.0 = 100;
+
+        assert_eq!(a, &A(100));
+        assert_eq!(b, &mut B('a'));
+    }
+
     #[test]
     fn system_refs() {
         struct TestSystem;
@@ -1593,12 +1647,12 @@ mod tests {
         impl System for TestSystem {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::None;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1625,12 +1679,12 @@ mod tests {
         impl System for TestSystem {
             type Views<'a> = Views!(&'a mut B);
             type Filter = filter::None;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1657,12 +1711,12 @@ mod tests {
         impl System for TestSystem {
             type Views<'a> = Views!(Option<&'a A>);
             type Filter = filter::None;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1691,12 +1745,12 @@ mod tests {
         impl System for TestSystem {
             type Views<'a> = Views!(Option<&'a mut B>);
             type Filter = filter::None;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1727,12 +1781,12 @@ mod tests {
         impl System for TestSystem {
             type Views<'a> = Views!(entity::Identifier);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1760,12 +1814,12 @@ mod tests {
         impl System for TestSystem {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::Has<B>;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1791,12 +1845,12 @@ mod tests {
         impl System for TestSystem {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::Not<filter::Has<B>>;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1822,12 +1876,12 @@ mod tests {
         impl System for TestSystem {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1853,12 +1907,12 @@ mod tests {
         impl System for TestSystem {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::Or<filter::Has<A>, filter::Has<B>>;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1878,6 +1932,40 @@ mod tests {
         world.run_system(&mut TestSystem);
     }
 
+    #[test]
+    fn system_resource_views() {
+        struct Counter(usize);
+
+        struct TestSystem;
+
+        impl System for TestSystem {
+            type Views<'a> = Views!(&'a A, &'a B);
+            type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
+            type ResourceViews<'a> = Views!(&'a mut Counter);
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                result!(counter): Self::ResourceViews<'a>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                counter.0 = query_results.count();
+            }
+        }
+
+        let mut world = World::<Registry, _>::with_resources(resources!(Counter(0)));
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.run_system(&mut TestSystem);
+
+        assert_eq!(world.get::<Counter, _>().0, 1);
+    }
+
     #[cfg(feature = "rayon")]
     #[test]
     fn par_system_refs() {
@@ -1886,7 +1974,7 @@ mod tests {
         impl ParSystem for TestSystem {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::None;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1901,7 +1989,7 @@ mod tests {
                     I,
                     Q,
                 >,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1929,7 +2017,7 @@ mod tests {
         impl ParSystem for TestSystem {
             type Views<'a> = Views!(&'a mut B);
             type Filter = filter::None;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1944,7 +2032,7 @@ mod tests {
                     I,
                     Q,
                 >,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -1972,7 +2060,7 @@ mod tests {
         impl ParSystem for TestSystem {
             type Views<'a> = Views!(Option<&'a A>);
             type Filter = filter::None;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1987,7 +2075,7 @@ mod tests {
                     I,
                     Q,
                 >,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2017,7 +2105,7 @@ mod tests {
         impl ParSystem for TestSystem {
             type Views<'a> = Views!(Option<&'a mut B>);
             type Filter = filter::None;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2032,7 +2120,7 @@ mod tests {
                     I,
                     Q,
                 >,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2064,7 +2152,7 @@ mod tests {
         impl ParSystem for TestSystem {
             type Views<'a> = Views!(entity::Identifier);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2079,7 +2167,7 @@ mod tests {
                     I,
                     Q,
                 >,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2108,7 +2196,7 @@ mod tests {
         impl ParSystem for TestSystem {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::Has<B>;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2123,7 +2211,7 @@ mod tests {
                     I,
                     Q,
                 >,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2150,7 +2238,7 @@ mod tests {
         impl ParSystem for TestSystem {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::Not<filter::Has<B>>;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2165,7 +2253,7 @@ mod tests {
                     I,
                     Q,
                 >,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2192,7 +2280,7 @@ mod tests {
         impl ParSystem for TestSystem {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2207,7 +2295,7 @@ mod tests {
                     I,
                     Q,
                 >,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2234,7 +2322,7 @@ mod tests {
         impl ParSystem for TestSystem {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::Or<filter::Has<A>, filter::Has<B>>;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2249,7 +2337,7 @@ mod tests {
                     I,
                     Q,
                 >,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2271,33 +2359,15 @@ mod tests {
 
     #[cfg(feature = "rayon")]
     #[test]
-    fn schedule() {
+    fn par_system_resource_views() {
+        struct Counter(usize);
+
         struct TestSystem;
 
-        impl System for TestSystem {
-            type Views<'a> = Views!(&'a A);
-            type Filter = filter::None;
-            type ResourceViews = Views!();
-
-            fn run<'a, R, FI, VI, P, I, Q>(
-                &mut self,
-                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
-            ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-            {
-                let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
-                result.sort();
-                assert_eq!(result, vec![1, 2]);
-            }
-        }
-
-        struct TestParSystem;
-
-        impl ParSystem for TestParSystem {
-            type Views<'a> = Views!(&'a mut B);
-            type Filter = filter::None;
-            type ResourceViews = Views!();
+        impl ParSystem for TestSystem {
+            type Views<'a> = Views!(&'a A, &'a B);
+            type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
+            type ResourceViews<'a> = Views!(&'a mut Counter);
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2312,7 +2382,70 @@ mod tests {
                     I,
                     Q,
                 >,
-                _resources: Self::ResourceViews,
+                result!(counter): Self::ResourceViews<'a>,
+            ) where
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                counter.0 = query_results.count();
+            }
+        }
+
+        let mut world = World::<Registry, _>::with_resources(resources!(Counter(0)));
+
+        world.insert(entity!(A(1), B('a')));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        world.run_par_system(&mut TestSystem);
+
+        assert_eq!(world.get::<Counter, _>().0, 1);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn schedule() {
+        struct TestSystem;
+
+        impl System for TestSystem {
+            type Views<'a> = Views!(&'a A);
+            type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews<'a>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                let mut result = query_results.map(|result!(a)| a.0).collect::<Vec<_>>();
+                result.sort();
+                assert_eq!(result, vec![1, 2]);
+            }
+        }
+
+        struct TestParSystem;
+
+        impl ParSystem for TestParSystem {
+            type Views<'a> = Views!(&'a mut B);
+            type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2351,12 +2484,12 @@ mod tests {
         impl System for Foo {
             type Views<'a> = Views!(&'a mut A, &'a mut B);
             type Filter = filter::None;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2371,12 +2504,12 @@ mod tests {
         impl System for Bar {
             type Views<'a> = Views!(&'a mut A, &'a mut C);
             type Filter = filter::None;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2413,12 +2546,12 @@ mod tests {
         impl System for Foo {
             type Views<'a> = Views!(&'a mut A, &'a mut B);
             type Filter = filter::None;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2433,12 +2566,12 @@ mod tests {
         impl System for Bar {
             type Views<'a> = Views!(&'a mut A, &'a mut C);
             type Filter = filter::None;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -2453,12 +2586,12 @@ mod tests {
         impl System for Baz {
             type Views<'a> = Views!(&'a mut A, &'a mut B, &'a mut C);
             type Filter = filter::None;
-            type ResourceViews = Views!();
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-                _resources: Self::ResourceViews,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {

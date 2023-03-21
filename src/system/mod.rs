@@ -26,12 +26,12 @@
 //! impl System for MySystem {
 //!     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
-//!     type ResourceViews = Views!();
+//!     type ResourceViews<'a> = Views!();
 //!
 //!     fn run<'a, R, FI, VI, P, I, Q>(
 //!         &mut self,
 //!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-//!         _resources: Self::ResourceViews,
+//!         _resources: Self::ResourceViews<'a>,
 //!     ) where
 //!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 //!     {
@@ -109,12 +109,12 @@ use crate::{
 /// impl System for MySystem {
 ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
-///     type ResourceViews = Views!();
+///     type ResourceViews<'a> = Views!();
 ///
 ///     fn run<'a, R, FI, VI, P, I, Q>(
 ///         &mut self,
 ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-///         _resources: Self::ResourceViews,
+///         _resources: Self::ResourceViews<'a>,
 ///     ) where
 ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     {
@@ -137,7 +137,7 @@ pub trait System {
     /// Views on resources.
     ///
     /// The system will have access to the resources requested here when run.
-    type ResourceViews;
+    type ResourceViews<'a>;
 
     /// Logic to be run over the query result.
     ///
@@ -168,12 +168,12 @@ pub trait System {
     /// impl System for MySystem {
     ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
-    ///     type ResourceViews = Views!();
+    ///     type ResourceViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-    ///         _resources: Self::ResourceViews,
+    ///         _resources: Self::ResourceViews<'a>,
     ///     ) where
     ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
@@ -190,7 +190,7 @@ pub trait System {
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-        resources: Self::ResourceViews,
+        resources: Self::ResourceViews<'a>,
     ) where
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>;
 }

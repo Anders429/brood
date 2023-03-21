@@ -81,7 +81,7 @@ where
     Resources: 'a,
     Resources: ContainsViews<
         'a,
-        S::ResourceViews,
+        S::ResourceViews<'a>,
         ResourceViewsContainments,
         ResourceViewsIndices,
         ResourceViewsCanonicalContainments,
@@ -95,7 +95,7 @@ where
         // Query world using system.
         let result =
             // SAFETY: The access to the world's components follows Rust's borrowing rules.
-            unsafe { (*world.get()).query(Query::<S::Views<'a>, S::Filter, S::ResourceViews>::new()) };
+            unsafe { (*world.get()).query(Query::<S::Views<'a>, S::Filter, S::ResourceViews<'a>>::new()) };
         // Run system using the query result.
         self.0.run(result.iter, result.resources);
     }
@@ -136,7 +136,7 @@ where
     Resources: 'a,
     Resources: ContainsViews<
         'a,
-        P::ResourceViews,
+        P::ResourceViews<'a>,
         ResourceViewsContainments,
         ResourceViewsIndices,
         ResourceViewsCanonicalContainments,
@@ -150,7 +150,7 @@ where
         // Query world using system.
         let result =
             // SAFETY: The access to the world's components follows Rust's borrowing rules.
-            unsafe { (*world.get()).par_query(Query::<P::Views<'a>, P::Filter, P::ResourceViews>::new()) };
+            unsafe { (*world.get()).par_query(Query::<P::Views<'a>, P::Filter, P::ResourceViews<'a>>::new()) };
         // Run system using the query result.
         self.0.run(result.iter, result.resources);
     }

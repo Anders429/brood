@@ -105,9 +105,9 @@ mod tests {
     use super::World;
     use crate::{
         entity,
+        resources,
         Registry,
         Resources,
-        resources,
     };
     use alloc::vec;
     use claims::{

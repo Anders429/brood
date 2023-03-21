@@ -37,12 +37,12 @@ use crate::{
 /// impl ParSystem for MySystem {
 ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
-///     type ResourceViews = Views!();
+///     type ResourceViews<'a> = Views!();
 ///
 ///     fn run<'a, R, FI, VI, P, I, Q>(
 ///         &mut self,
 ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-///         _resources: Self::ResourceViews,
+///         _resources: Self::ResourceViews<'a>,
 ///     ) where
 ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     {
@@ -70,7 +70,7 @@ pub trait ParSystem {
     /// Views on resources.
     ///
     /// The system will have access to the resources requested here when run.
-    type ResourceViews;
+    type ResourceViews<'a>;
 
     /// Logic to be run over the parallel query result.
     ///
@@ -102,12 +102,12 @@ pub trait ParSystem {
     /// impl ParSystem for MySystem {
     ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
-    ///     type ResourceViews = Views!();
+    ///     type ResourceViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
     ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-    ///         _resources: Self::ResourceViews,
+    ///         _resources: Self::ResourceViews<'a>,
     ///     ) where
     ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
@@ -124,7 +124,7 @@ pub trait ParSystem {
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-        resources: Self::ResourceViews,
+        resources: Self::ResourceViews<'a>,
     ) where
         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>;
 }
