@@ -3,9 +3,10 @@ use crate::{
     world::World,
 };
 
-impl<R> Clone for World<R>
+impl<R, Resources> Clone for World<R, Resources>
 where
     R: registry::Clone,
+    Resources: Clone,
 {
     /// Performs a full clone of the `World` and all of its components.
     ///
@@ -23,6 +24,8 @@ where
             // in `self.entity_allocator`.
             entity_allocator: unsafe { self.entity_allocator.clone(&identifier_map) },
             len: self.len,
+
+            resources: self.resources.clone(),
         }
     }
 
@@ -46,6 +49,8 @@ where
                 .clone_from(&source.entity_allocator, &identifier_map);
         }
         self.len = source.len;
+
+        self.resources.clone_from(&source.resources);
     }
 }
 
@@ -54,7 +59,9 @@ mod tests {
     use crate::{
         entities,
         entity,
+        resources,
         Registry,
+        Resources,
         World,
     };
 
@@ -65,6 +72,7 @@ mod tests {
     struct B(char);
 
     type Registry = Registry!(A, B);
+    type Resources = Resources!(A, B);
 
     #[test]
     fn clone_empty() {
@@ -105,6 +113,24 @@ mod tests {
         world.clear();
         world.shrink_to_fit();
         world.insert(entity!(B('a')));
+
+        assert_eq!(world, world.clone());
+    }
+
+    #[test]
+    fn clone_resources() {
+        let world = World::<Registry, Resources>::with_resources(resources!(A(42), B('a')));
+
+        assert_eq!(world, world.clone());
+    }
+
+    #[test]
+    fn clone_components_and_resources() {
+        let mut world = World::<Registry, Resources>::with_resources(resources!(A(42), B('a')));
+
+        world.insert(entity!(A(42)));
+        world.extend(entities!((B('a')); 5));
+        world.extend(entities!((A(100), B('b')); 10));
 
         assert_eq!(world, world.clone());
     }

@@ -34,10 +34,12 @@
 //! impl System for SystemA {
 //!     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
+//!     type ResourceViews<'a> = Views!();
 //!
 //!     fn run<'a, R, FI, VI, P, I, Q>(
 //!         &mut self,
 //!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!         _resources: Self::ResourceViews<'a>,
 //!     ) where
 //!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 //!     {
@@ -52,10 +54,12 @@
 //! impl System for SystemB {
 //!     type Views<'a> = Views!(&'a mut Baz, &'a Bar);
 //!     type Filter = filter::None;
+//!     type ResourceViews<'a> = Views!();
 //!
 //!     fn run<'a, R, FI, VI, P, I, Q>(
 //!         &mut self,
 //!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!         _resources: Self::ResourceViews<'a>,
 //!     ) where
 //!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 //!     {
@@ -107,17 +111,113 @@ use task::Task;
 /// [`schedule!`]: crate::system::schedule!
 /// [`System`]: crate::system::System
 /// [`Views`]: trait@crate::query::view::Views
-pub trait Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>:
-    Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>
-where
+pub trait Schedule<
+    'a,
+    R,
+    Resources,
+    I,
+    P,
+    RI,
+    ResourcesIndicesLists,
+    ResourcesContainmentsLists,
+    ResourcesInverseIndicesLists,
+    SFI,
+    SVI,
+    SP,
+    SI,
+    SQ,
+    ResourceViewsContainmentsLists,
+    ResourceViewsIndicesLists,
+    ResourceViewsCanonicalContainmentsLists,
+    ResourceViewsReshapeIndicesLists,
+>:
+    Sealed<
+    'a,
+    R,
+    Resources,
+    I,
+    P,
+    RI,
+    ResourcesIndicesLists,
+    ResourcesContainmentsLists,
+    ResourcesInverseIndicesLists,
+    SFI,
+    SVI,
+    SP,
+    SI,
+    SQ,
+    ResourceViewsContainmentsLists,
+    ResourceViewsIndicesLists,
+    ResourceViewsCanonicalContainmentsLists,
+    ResourceViewsReshapeIndicesLists,
+> where
     R: Registry,
 {
 }
 
-impl<'a, R, T, I, P, RI, SFI, SVI, SP, SI, SQ> Schedule<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ> for T
+impl<
+        'a,
+        R,
+        Resources,
+        T,
+        I,
+        P,
+        RI,
+        ResourcesIndicesLists,
+        ResourcesContainmentsLists,
+        ResourcesInverseIndicesLists,
+        SFI,
+        SVI,
+        SP,
+        SI,
+        SQ,
+        ResourceViewsContainmentsLists,
+        ResourceViewsIndicesLists,
+        ResourceViewsCanonicalContainmentsLists,
+        ResourceViewsReshapeIndicesLists,
+    >
+    Schedule<
+        'a,
+        R,
+        Resources,
+        I,
+        P,
+        RI,
+        ResourcesIndicesLists,
+        ResourcesContainmentsLists,
+        ResourcesInverseIndicesLists,
+        SFI,
+        SVI,
+        SP,
+        SI,
+        SQ,
+        ResourceViewsContainmentsLists,
+        ResourceViewsIndicesLists,
+        ResourceViewsCanonicalContainmentsLists,
+        ResourceViewsReshapeIndicesLists,
+    > for T
 where
     R: Registry,
-    T: Sealed<'a, R, I, P, RI, SFI, SVI, SP, SI, SQ>,
+    T: Sealed<
+        'a,
+        R,
+        Resources,
+        I,
+        P,
+        RI,
+        ResourcesIndicesLists,
+        ResourcesContainmentsLists,
+        ResourcesInverseIndicesLists,
+        SFI,
+        SVI,
+        SP,
+        SI,
+        SQ,
+        ResourceViewsContainmentsLists,
+        ResourceViewsIndicesLists,
+        ResourceViewsCanonicalContainmentsLists,
+        ResourceViewsReshapeIndicesLists,
+    >,
 {
 }
 
@@ -158,10 +258,12 @@ doc::non_root_macro! {
     /// impl System for SystemA {
     ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
+    ///     type ResourceViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
     ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///         _resources: Self::ResourceViews<'a>,
     ///     ) where
     ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
@@ -174,10 +276,12 @@ doc::non_root_macro! {
     /// impl ParSystem for SystemB {
     ///     type Views<'a> = Views!(&'a mut Baz, &'a Bar);
     ///     type Filter = filter::None;
+    ///     type ResourceViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
     ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///         _resources: Self::ResourceViews<'a>,
     ///     ) where
     ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
@@ -240,10 +344,12 @@ pub(crate) mod inner {
         /// impl System for SystemA {
         ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
         ///     type Filter = filter::None;
+        ///     type ResourceViews<'a> = Views!();
         ///
         ///     fn run<'a, R, FI, VI, P, I, Q>(
         ///         &mut self,
         ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        ///         _resources: Self::ResourceViews<'a>,
         ///     ) where
         ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
         ///     {
@@ -256,10 +362,12 @@ pub(crate) mod inner {
         /// impl ParSystem for SystemB {
         ///     type Views<'a> = Views!(&'a mut Baz, &'a Bar);
         ///     type Filter = filter::None;
+        ///     type ResourceViews<'a> = Views!();
         ///
         ///     fn run<'a, R, FI, VI, P, I, Q>(
         ///         &mut self,
         ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        ///         _resources: Self::ResourceViews<'a>,
         ///     ) where
         ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
         ///     {
@@ -306,6 +414,7 @@ mod tests {
             System,
         },
         Registry,
+        Resources,
     };
     use core::any::TypeId;
 
@@ -320,7 +429,86 @@ mod tests {
     #[test]
     fn null() {
         assert_eq!(
-            TypeId::of::<<task::Null as Schedule<'_, Registry, _, _, _, _, _, _, _, _>>::Stages>(),
+            TypeId::of::<
+                <task::Null as Schedule<
+                    '_,
+                    Registry,
+                    Resources!(),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<stages::Null>()
+        );
+    }
+
+    #[test]
+    fn null_resources() {
+        assert_eq!(
+            TypeId::of::<
+                <task::Null as Schedule<
+                    '_,
+                    Registry!(),
+                    Resources!(A, B, C, D, E),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<stages::Null>()
+        );
+    }
+
+    #[test]
+    fn null_components_and_resources() {
+        assert_eq!(
+            TypeId::of::<
+                <task::Null as Schedule<
+                    '_,
+                    Registry,
+                    Resources!(A, B, C, D, E),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
             TypeId::of::<stages::Null>()
         );
     }
@@ -332,10 +520,12 @@ mod tests {
         impl System for ImmutA {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -348,6 +538,14 @@ mod tests {
                 <(task::System<ImmutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                     _,
                     _,
                     _,
@@ -369,10 +567,12 @@ mod tests {
         impl System for MutA {
             type Views<'a> = Views!(&'a mut A);
             type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -385,6 +585,14 @@ mod tests {
                 <(task::System<MutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                     _,
                     _,
                     _,
@@ -406,10 +614,12 @@ mod tests {
         impl System for OptionImmutA {
             type Views<'a> = Views!(Option<&'a A>);
             type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -422,6 +632,14 @@ mod tests {
                 <(task::System<OptionImmutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                     _,
                     _,
                     _,
@@ -443,10 +661,12 @@ mod tests {
         impl System for OptionMutA {
             type Views<'a> = Views!(Option<&'a mut A>);
             type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -459,6 +679,14 @@ mod tests {
                 <(task::System<OptionMutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                     _,
                     _,
                     _,
@@ -480,10 +708,12 @@ mod tests {
         impl System for EntityIdentifier {
             type Views<'a> = Views!(entity::Identifier);
             type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -496,6 +726,14 @@ mod tests {
                 <(task::System<EntityIdentifier>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                     _,
                     _,
                     _,
@@ -520,6 +758,7 @@ mod tests {
         impl ParSystem for ImmutA {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -534,6 +773,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -546,6 +786,14 @@ mod tests {
                 <(task::ParSystem<ImmutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                     _,
                     _,
                     _,
@@ -567,6 +815,7 @@ mod tests {
         impl ParSystem for MutA {
             type Views<'a> = Views!(&'a mut A);
             type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -581,6 +830,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -593,6 +843,14 @@ mod tests {
                 <(task::ParSystem<MutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                     _,
                     _,
                     _,
@@ -614,6 +872,7 @@ mod tests {
         impl ParSystem for OptionImmutA {
             type Views<'a> = Views!(Option<&'a A>);
             type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -628,6 +887,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -640,6 +900,14 @@ mod tests {
                 <(task::ParSystem<OptionImmutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                     _,
                     _,
                     _,
@@ -664,6 +932,7 @@ mod tests {
         impl ParSystem for OptionMutA {
             type Views<'a> = Views!(Option<&'a mut A>);
             type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -678,6 +947,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -690,6 +960,14 @@ mod tests {
                 <(task::ParSystem<OptionMutA>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                     _,
                     _,
                     _,
@@ -714,6 +992,7 @@ mod tests {
         impl ParSystem for EntityIdentifier {
             type Views<'a> = Views!(entity::Identifier);
             type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -728,6 +1007,7 @@ mod tests {
                     I,
                     Q,
                 >,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -740,6 +1020,14 @@ mod tests {
                 <(task::ParSystem<EntityIdentifier>, task::Null) as Schedule<
                     '_,
                     Registry,
+                    Resources!(),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                     _,
                     _,
                     _,
@@ -764,10 +1052,12 @@ mod tests {
         impl System for AB {
             type Views<'a> = Views!(&'a mut A, &'a mut B);
             type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -780,10 +1070,12 @@ mod tests {
         impl System for CD {
             type Views<'a> = Views!(&'a mut C, &'a mut D);
             type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -796,10 +1088,12 @@ mod tests {
         impl System for CE {
             type Views<'a> = Views!(&'a mut C, &'a mut E);
             type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
                 _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews<'a>,
             ) where
                 R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             {
@@ -812,11 +1106,213 @@ mod tests {
                 <(
                     task::System<AB>,
                     (task::System<CD>, (task::System<CE>, task::Null))
-                ) as Schedule<'_, Registry, _, _, _, _, _, _, _, _>>::Stages,
+                ) as Schedule<
+                    '_,
+                    Registry,
+                    Resources!(),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
             >(),
             TypeId::of::<(
                 (&mut task::System<AB>, (&mut task::System<CD>, stage::Null)),
                 ((&mut task::System<CE>, stage::Null), stages::Null)
+            )>()
+        );
+    }
+
+    #[test]
+    fn resources_single_stage() {
+        struct Foo;
+
+        impl System for Foo {
+            type Views<'a> = Views!();
+            type Filter = filter::None;
+            type ResourceViews<'a> = Views!(&'a A);
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews<'a>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unimplemented!()
+            }
+        }
+
+        struct Bar;
+
+        impl ParSystem for Bar {
+            type Views<'a> = Views!();
+            type Filter = filter::None;
+            type ResourceViews<'a> = Views!(&'a A, &'a B);
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
+                _resources: Self::ResourceViews<'a>,
+            ) where
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unimplemented!()
+            }
+        }
+
+        assert_eq!(
+            TypeId::of::<
+                <(task::System<Foo>, (task::ParSystem<Bar>, task::Null)) as Schedule<
+                    '_,
+                    Registry!(),
+                    Resources!(A, B),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<(
+                (
+                    &mut task::System<Foo>,
+                    (&mut task::ParSystem<Bar>, stage::Null)
+                ),
+                stages::Null
+            )>()
+        );
+    }
+
+    #[test]
+    fn resources_multiple_stage() {
+        struct Foo;
+
+        impl System for Foo {
+            type Views<'a> = Views!();
+            type Filter = filter::None;
+            type ResourceViews<'a> = Views!(&'a mut A);
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews<'a>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unimplemented!()
+            }
+        }
+
+        struct Bar;
+
+        impl ParSystem for Bar {
+            type Views<'a> = Views!();
+            type Filter = filter::None;
+            type ResourceViews<'a> = Views!(&'a mut A, &'a B);
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::ParIter<
+                    'a,
+                    R,
+                    Self::Filter,
+                    FI,
+                    Self::Views<'a>,
+                    VI,
+                    P,
+                    I,
+                    Q,
+                >,
+                _resources: Self::ResourceViews<'a>,
+            ) where
+                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unimplemented!()
+            }
+        }
+
+        struct Baz;
+
+        impl System for Baz {
+            type Views<'a> = Views!();
+            type Filter = filter::None;
+            type ResourceViews<'a> = Views!(&'a mut B, &'a C);
+
+            fn run<'a, R, FI, VI, P, I, Q>(
+                &mut self,
+                _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                _resources: Self::ResourceViews<'a>,
+            ) where
+                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            {
+                unimplemented!()
+            }
+        }
+
+        assert_eq!(
+            TypeId::of::<
+                <(
+                    task::System<Foo>,
+                    (task::ParSystem<Bar>, (task::System<Baz>, task::Null))
+                ) as Schedule<
+                    '_,
+                    Registry!(),
+                    Resources!(A, B, C),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<(
+                (&mut task::System<Foo>, stage::Null),
+                (
+                    (&mut task::ParSystem<Bar>, stage::Null),
+                    ((&mut task::System<Baz>, stage::Null), stages::Null)
+                )
             )>()
         );
     }

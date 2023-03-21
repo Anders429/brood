@@ -15,13 +15,26 @@ use crate::{
         ContainsQuery,
         Registry,
     },
+    resource::ContainsViews,
     system,
     system::schedule::sendable::SendableWorld,
 };
 
 /// A task that can be run in a schedule.
-pub trait Task<'a, R, SFI, SVI, SP, SI, SQ>
-where
+pub trait Task<
+    'a,
+    R,
+    Resources,
+    SFI,
+    SVI,
+    SP,
+    SI,
+    SQ,
+    ResourceViewsContainments,
+    ResourceViewsIndices,
+    ResourceViewsCanonicalContainments,
+    ResourceViewsReshapeIndices,
+> where
     R: Registry,
 {
     /// The components viewed by this task.
@@ -30,41 +43,115 @@ where
     type Filter: Filter;
 
     /// Executes the task over the given world.
-    fn run(&mut self, world: SendableWorld<R>);
+    fn run(&mut self, world: SendableWorld<R, Resources>);
 }
 
-impl<'a, R, S, SFI, SVI, SP, SI, SQ> Task<'a, R, SFI, SVI, SP, SI, SQ> for System<S>
+impl<
+        'a,
+        R,
+        Resources,
+        S,
+        SFI,
+        SVI,
+        SP,
+        SI,
+        SQ,
+        ResourceViewsContainments,
+        ResourceViewsIndices,
+        ResourceViewsCanonicalContainments,
+        ResourceViewsReshapeIndices,
+    >
+    Task<
+        'a,
+        R,
+        Resources,
+        SFI,
+        SVI,
+        SP,
+        SI,
+        SQ,
+        ResourceViewsContainments,
+        ResourceViewsIndices,
+        ResourceViewsCanonicalContainments,
+        ResourceViewsReshapeIndices,
+    > for System<S>
 where
     S: system::System + Send,
     R: ContainsQuery<'a, S::Filter, SFI, S::Views<'a>, SVI, SP, SI, SQ>,
+    Resources: 'a,
+    Resources: ContainsViews<
+        'a,
+        S::ResourceViews<'a>,
+        ResourceViewsContainments,
+        ResourceViewsIndices,
+        ResourceViewsCanonicalContainments,
+        ResourceViewsReshapeIndices,
+    >,
 {
     type Views = S::Views<'a>;
     type Filter = S::Filter;
 
-    fn run(&mut self, world: SendableWorld<R>) {
+    fn run(&mut self, world: SendableWorld<R, Resources>) {
         // Query world using system.
         let result =
             // SAFETY: The access to the world's components follows Rust's borrowing rules.
-            unsafe { (*world.get()).query(Query::<S::Views<'a>, S::Filter>::new()) };
+            unsafe { (*world.get()).query(Query::<S::Views<'a>, S::Filter, S::ResourceViews<'a>>::new()) };
         // Run system using the query result.
-        self.0.run(result);
+        self.0.run(result.iter, result.resources);
     }
 }
 
-impl<'a, P, R, SFI, SVI, SP, SI, SQ> Task<'a, R, SFI, SVI, SP, SI, SQ> for ParSystem<P>
+impl<
+        'a,
+        P,
+        R,
+        Resources,
+        SFI,
+        SVI,
+        SP,
+        SI,
+        SQ,
+        ResourceViewsContainments,
+        ResourceViewsIndices,
+        ResourceViewsCanonicalContainments,
+        ResourceViewsReshapeIndices,
+    >
+    Task<
+        'a,
+        R,
+        Resources,
+        SFI,
+        SVI,
+        SP,
+        SI,
+        SQ,
+        ResourceViewsContainments,
+        ResourceViewsIndices,
+        ResourceViewsCanonicalContainments,
+        ResourceViewsReshapeIndices,
+    > for ParSystem<P>
 where
     P: system::ParSystem + Send,
     R: ContainsParQuery<'a, P::Filter, SFI, P::Views<'a>, SVI, SP, SI, SQ>,
+    Resources: 'a,
+    Resources: ContainsViews<
+        'a,
+        P::ResourceViews<'a>,
+        ResourceViewsContainments,
+        ResourceViewsIndices,
+        ResourceViewsCanonicalContainments,
+        ResourceViewsReshapeIndices,
+    >,
 {
     type Views = P::Views<'a>;
     type Filter = P::Filter;
 
-    fn run(&mut self, world: SendableWorld<R>) {
+    fn run(&mut self, world: SendableWorld<R, Resources>) {
         // Query world using system.
         let result =
             // SAFETY: The access to the world's components follows Rust's borrowing rules.
-            unsafe { (*world.get()).par_query(Query::<P::Views<'a>, P::Filter>::new()) };
+            unsafe { (*world.get()).par_query(Query::<P::Views<'a>, P::Filter, P::ResourceViews<'a>>::new()) };
         // Run system using the query result.
-        self.0.run(result);
+        self.0.run(result.iter, result.resources);
     }
 }

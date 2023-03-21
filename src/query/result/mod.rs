@@ -36,7 +36,7 @@
 //! let mut world = World::<Registry>::new();
 //! world.insert(entity!(Foo(42), Bar(true)));
 //!
-//! for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar)>::new()) {
+//! for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar)>::new()).iter {
 //!     if bar.0 {
 //!         foo.0 += 1;
 //!     }
@@ -73,6 +73,49 @@ pub(crate) use sealed::Results;
 
 use crate::doc;
 
+/// The result of a query.
+///
+/// This struct contains both the iterator over the viewed entities, as well as the viewed
+/// resources.
+///
+/// # Example
+/// The example below iterates over the entities returned by a query and counts them using a shared
+/// counter resource.
+///
+/// ```
+/// use brood::{World, Registry, resources, Query, entities, query::{Views, filter, result}};
+///
+/// // Components
+/// #[derive(Clone)]
+/// struct A(u32);
+/// #[derive(Clone)]
+/// struct B(char);
+///
+/// // Resource
+/// #[derive(Debug, PartialEq)]
+/// struct Count(u32);
+///
+/// let mut world = World::<Registry!(A, B), _>::with_resources(resources!(Count(0)));
+///
+/// world.extend(entities!((A(42), B('a')); 100));
+///
+/// let query_result = world.query(Query::<Views!(&A, &B), filter::None, Views!(&mut Count)>::new());
+/// let result!(count) = query_result.resources;
+///
+/// for result!(_a, _b) in query_result.iter {
+///     count.0 += 1;
+/// }
+///
+/// assert_eq!(world.get::<Count, _>(), &Count(100));
+/// ```
+#[non_exhaustive]
+pub struct Result<Iterator, ResourceViews> {
+    /// The viewed entities.
+    pub iter: Iterator,
+    /// The viewed resources.
+    pub resources: ResourceViews,
+}
+
 doc::non_root_macro! {
     /// Defines identifiers to match items returned by a [`result::Iter`] iterator.
     ///
@@ -91,7 +134,7 @@ doc::non_root_macro! {
     /// let mut world = World::<Registry>::new();
     /// world.insert(entity!(Foo(42), Bar(true)));
     ///
-    /// for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar)>::new()) {
+    /// for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar)>::new()).iter {
     ///     // ...
     /// }
     /// ```

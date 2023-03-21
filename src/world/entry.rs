@@ -20,6 +20,7 @@ use crate::{
         ContainsQuery,
         Registry,
     },
+    resource,
     world::World,
 };
 use core::fmt;
@@ -52,19 +53,19 @@ use core::fmt;
 /// [`entity::Identifier`]: crate::entity::Identifier
 /// [`entry`]: crate::World::entry()
 /// [`World`]: crate::World
-pub struct Entry<'a, R>
+pub struct Entry<'a, R, Resources>
 where
     R: Registry,
 {
-    world: &'a mut World<R>,
+    world: &'a mut World<R, Resources>,
     location: Location<R>,
 }
 
-impl<'a, R> Entry<'a, R>
+impl<'a, R, Resources> Entry<'a, R, Resources>
 where
     R: Registry,
 {
-    pub(crate) fn new(world: &'a mut World<R>, location: Location<R>) -> Self {
+    pub(crate) fn new(world: &'a mut World<R, Resources>, location: Location<R>) -> Self {
         Self { world, location }
     }
 
@@ -342,9 +343,10 @@ where
     }
 }
 
-impl<'a, R> fmt::Debug for Entry<'a, R>
+impl<'a, R, Resources> fmt::Debug for Entry<'a, R, Resources>
 where
     R: registry::Debug,
+    Resources: resource::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Entry")

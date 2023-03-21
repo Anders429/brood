@@ -1,8 +1,33 @@
 # Changelog
 
 ## Unreleased
+### Added
+- `resource` module containing types related to resources.
+- `resource::Resource` trait to define a type as a resource.
+- `resource::Resources` trait to define a heterogeneous list of types as a list of resources.
+- `resources!` macro to define a heterogeneous list of resources.
+- `Resources!` macro to define the type of a heterogeneous list of resources.
+- `query::Result` struct containing the result of a query on a `World`.
+- `World::with_resources()` function to define a `World` containing resources.
+- `World::get()` method to get an immutable reference to a resource.
+- `World::get_mut()` method to get a mutable reference to a resource.
+- `World::view_resources()` to get references to any number of resources at once.
+- `resource::Null` type which defines the end of a heterogeneous list of resources.
+- `resource::ContainsResource` trait to indicate that a heterogeneous list of resources contains a given resource.
+- `resource::ContainsViews` trait to indicate that a heterogeneous list of resource views is contained in a list of resources.
+- `resource::Debug` trait, implemented on lists of resources that implement `core::fmt::Debug`.
+- `resource::Serialize` trait, implemented on lists of resources that implement `serde::Serialize`.
+- `resource::Deserialize` trait, implemented on lists of resources that implement `serde::Deserialize`.
 ### Changed
 - Running a schedule now performs optimizations at run-time. Tasks that can be are now run earlier than their compile-time scheduled stage.
+- `World::query()` and `World::par_query()` now return a `query::Result` struct.
+- `Query` has an added `ResourceViews` generic parameter to indicate the resources that should be viewed during the query.
+- `System` and `ParSystem` now have a `ResourceViews` associated type to indicate the resources that should be viewed when the system is run.
+- `System::run()` and `ParSystem::run()` have a new `Self::ViewResources` parameter to allow accessing those resources during execution.
+- Scheduling multiple systems now accounts for `ResourceViews` alongside component `Views` when creating stages.
+- The `Debug` implementation on `World` now requires the `World`'s resources to implement `resource::Debug`.
+- The `Serialize` and `Deserialize` implementations on `World` now require `World`'s resources to implement `resource::Serialize` and `resource::Deserialize`, respectively.
+- The `Clone`, `Default`, `PartialEq`, `Eq`, `Send`, and `Sync` implementations on `World` now require the `World's` resources to implement those same traits.
 
 ## 0.5.0 - 2023-01-18
 ### Added

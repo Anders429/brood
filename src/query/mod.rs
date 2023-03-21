@@ -35,7 +35,10 @@
 //! let mut world = World::<Registry>::new();
 //! world.insert(entity!(Foo(42), Bar(true), Baz(1.5)));
 //!
-//! for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar), filter::Has<Baz>>::new()) {
+//! for result!(foo, bar) in world
+//!     .query(Query::<Views!(&mut Foo, &Bar), filter::Has<Baz>>::new())
+//!     .iter
+//! {
 //!     // Do something.
 //! }
 //! ```
@@ -51,11 +54,17 @@ pub mod result;
 pub mod view;
 
 #[doc(inline)]
-pub use result::result;
+pub use result::{
+    result,
+    Result,
+};
 #[doc(inline)]
 pub use view::inner::Views;
 
-use core::marker::PhantomData;
+use core::{
+    fmt,
+    marker::PhantomData,
+};
 
 /// Defines a query to be run over a world.
 ///
@@ -87,18 +96,22 @@ use core::marker::PhantomData;
 /// let mut world = World::<Registry>::new();
 /// world.insert(entity!(Foo(42), Bar(true), Baz(1.5)));
 ///
-/// for result!(foo, bar) in world.query(Query::<Views!(&mut Foo, &Bar), filter::Has<Baz>>::new()) {
+/// for result!(foo, bar) in world
+///     .query(Query::<Views!(&mut Foo, &Bar), filter::Has<Baz>>::new())
+///     .iter
+/// {
 ///     // Do something.
 /// }
 /// ```
 ///
 /// [`query()`]: crate::world::World::query()
-pub struct Query<V, F = filter::None> {
-    view: PhantomData<V>,
-    filter: PhantomData<F>,
+pub struct Query<Views, Filters = filter::None, ResourceViews = view::Null> {
+    view: PhantomData<Views>,
+    filter: PhantomData<Filters>,
+    resource_views: PhantomData<ResourceViews>,
 }
 
-impl<V, F> Query<V, F> {
+impl<Views, Filters, ResourceViews> Query<Views, Filters, ResourceViews> {
     /// Creates a new `Query`.
     ///
     /// When creating a query, you must specify the views type `V`, and can optionally specify the
@@ -109,20 +122,59 @@ impl<V, F> Query<V, F> {
         Self {
             view: PhantomData,
             filter: PhantomData,
+            resource_views: PhantomData,
         }
     }
 }
 
-impl<V, F> Default for Query<V, F> {
+impl<Views, Filters, ResourceViews> Default for Query<Views, Filters, ResourceViews> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<V, F> Clone for Query<V, F> {
+impl<Views, Filters, ResourceViews> Clone for Query<Views, Filters, ResourceViews> {
     fn clone(&self) -> Self {
         Self::new()
     }
 }
 
-impl<V, F> Copy for Query<V, F> {}
+impl<Views, Filters, ResourceViews> PartialEq for Query<Views, Filters, ResourceViews> {
+    fn eq(&self, _other: &Self) -> bool {
+        true
+    }
+}
+
+impl<Views, Filters, ResourceViews> Eq for Query<Views, Filters, ResourceViews> {}
+
+impl<Views, Filters, ResourceViews> Copy for Query<Views, Filters, ResourceViews> {}
+
+impl<Views, Filters, ResourceViews> fmt::Debug for Query<Views, Filters, ResourceViews> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.debug_struct("Query").finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Query;
+    use crate::query::Views;
+    use alloc::format;
+
+    #[test]
+    fn query_default() {
+        assert_eq!(Query::<Views!()>::default(), Query::<Views!()>::new());
+    }
+
+    #[test]
+    fn query_clone() {
+        let query = Query::<Views!()>::new();
+
+        assert_eq!(query.clone(), query);
+    }
+
+    #[test]
+    fn query_debug() {
+        assert_eq!(format!("{:?}", Query::<Views!()>::new()), "Query");
+    }
+}

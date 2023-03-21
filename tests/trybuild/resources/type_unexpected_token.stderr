@@ -1,0 +1,11 @@
+error: no rules expected the token `+`
+ --> tests/trybuild/resources/type_unexpected_token.rs:7:32
+  |
+7 | type Resources = Resources!(A, + B);
+  |                                ^ no rules expected this token in macro call
+  |
+note: while trying to match meta-variable `$resources:ty`
+ --> src/resource/mod.rs
+  |
+  |     ($resource:ty $(,$resources:ty)* $(,)?) => {
+  |                      ^^^^^^^^^^^^^
