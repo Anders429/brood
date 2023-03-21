@@ -3012,4 +3012,15 @@ mod tests {
         assert_eq!(a, &A(100));
         assert_eq!(b, &mut B('a'));
     }
+
+    #[test]
+    fn view_resource_among_many_resources() {
+        struct C;
+
+        let mut world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a'), C));
+
+        let result!(b) = world.view_resources::<Views!(&B), _, _, _, _>();
+
+        assert_eq!(b, &B('a'));
+    }
 }
