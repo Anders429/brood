@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.6.0 - 2023-03-20
 ### Added
 - `resource` module containing types related to resources.
 - `resource::Resource` trait to define a type as a resource.
