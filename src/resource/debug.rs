@@ -37,6 +37,7 @@ where
 {
     fn debug(&self, debug_map: &mut DebugMap) {
         debug_map.entry(&type_name::<Resource>(), &self.0);
+        self.1.debug(debug_map);
     }
 }
 
@@ -50,5 +51,107 @@ where
         let mut debug_map = formatter.debug_map();
         self.0.debug(&mut debug_map);
         debug_map.finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Debugger;
+    use crate::resources;
+    use alloc::format;
+    use core::any::type_name;
+
+    #[derive(Debug)]
+    struct A(u32);
+    #[derive(Debug)]
+    struct B(char);
+    #[derive(Debug)]
+    struct C(bool);
+
+    #[test]
+    fn empty() {
+        let resources = resources!();
+        let debugger = Debugger(&resources);
+
+        assert_eq!(format!("{:?}", debugger), "{}");
+    }
+
+    #[test]
+    fn empty_pretty_print() {
+        let resources = resources!();
+        let debugger = Debugger(&resources);
+
+        assert_eq!(format!("{:#?}", debugger), "{}");
+    }
+
+    #[test]
+    fn single() {
+        let resources = resources!(A(42));
+        let debugger = Debugger(&resources);
+
+        assert_eq!(
+            format!("{:?}", debugger),
+            format!("{{\"{}\": A(42)}}", type_name::<A>())
+        );
+    }
+
+    #[test]
+    fn single_pretty_print() {
+        let resources = resources!(A(42));
+        let debugger = Debugger(&resources);
+
+        assert_eq!(
+            format!("{:#?}", debugger),
+            format!(
+                "{{
+    \"{}\": A(
+        42,
+    ),
+}}",
+                type_name::<A>()
+            )
+        );
+    }
+
+    #[test]
+    fn many() {
+        let resources = resources!(A(42), B('a'), C(true));
+        let debugger = Debugger(&resources);
+
+        assert_eq!(
+            format!("{:?}", debugger),
+            format!(
+                "{{\"{}\": A(42), \"{}\": B('a'), \"{}\": C(true)}}",
+                type_name::<A>(),
+                type_name::<B>(),
+                type_name::<C>()
+            )
+        );
+    }
+
+    #[test]
+    fn many_pretty_print() {
+        let resources = resources!(A(42), B('a'), C(true));
+        let debugger = Debugger(&resources);
+
+        assert_eq!(
+            format!("{:#?}", debugger),
+            format!(
+                "{{
+    \"{}\": A(
+        42,
+    ),
+    \"{}\": B(
+        'a',
+    ),
+    \"{}\": C(
+        true,
+    ),
+}}",
+                type_name::<A>(),
+                type_name::<B>(),
+                type_name::<C>()
+            )
+        );
     }
 }
