@@ -57,8 +57,14 @@ impl<
         CanonicalContainments,
         ReshapeIndices,
     >
-    Sealed<'a, Views, (NotContained, Containments), Indices, CanonicalContainments, ReshapeIndices>
-    for (Resource, Resources)
+    Sealed<
+        'a,
+        Views,
+        (NotContained, Containments),
+        Indices,
+        (NotContained, CanonicalContainments),
+        ReshapeIndices,
+    > for (Resource, Resources)
 where
     Resources: Sealed<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>,
 {
