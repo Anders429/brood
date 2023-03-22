@@ -13,8 +13,8 @@ pub trait Reshape<R, I> {
     fn reshape(self) -> R;
 }
 
-impl Reshape<iter::Repeat<view::Null>, Null> for iter::Repeat<view::Null> {
-    fn reshape(self) -> iter::Repeat<view::Null> {
+impl Reshape<iter::Take<iter::Repeat<view::Null>>, Null> for iter::Take<iter::Repeat<view::Null>> {
+    fn reshape(self) -> iter::Take<iter::Repeat<view::Null>> {
         self
     }
 }

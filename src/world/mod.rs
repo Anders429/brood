@@ -1436,6 +1436,20 @@ mod tests {
         assert_eq!(b, &mut B('a'));
     }
 
+    #[test]
+    fn query_empty() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(B('a'), A(1)));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let count = world.query(Query::<Views!()>::new()).iter.count();
+
+        assert_eq!(count, 4);
+    }
+
     #[cfg(feature = "rayon")]
     #[test]
     fn par_query_refs() {
@@ -1638,6 +1652,21 @@ mod tests {
 
         assert_eq!(a, &A(100));
         assert_eq!(b, &mut B('a'));
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn par_query_empty() {
+        let mut world = World::<Registry>::new();
+
+        world.insert(entity!(B('a'), A(1)));
+        world.insert(entity!(A(2)));
+        world.insert(entity!(B('b')));
+        world.insert(entity!());
+
+        let count = world.par_query(Query::<Views!()>::new()).iter.count();
+
+        assert_eq!(count, 4);
     }
 
     #[test]

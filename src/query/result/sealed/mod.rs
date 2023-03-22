@@ -14,7 +14,7 @@ pub trait Results {
     fn into_iterator(self) -> Self::Iterator;
 }
 
-impl Results for iter::Repeat<view::Null> {
+impl Results for iter::Take<iter::Repeat<view::Null>> {
     type View = view::Null;
     type Iterator = Self;
 
