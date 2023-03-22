@@ -59,7 +59,7 @@ pub trait ViewsSealed<'a> {
 }
 
 impl<'a> ViewsSealed<'a> for Null {
-    type Results = iter::Repeat<Null>;
+    type Results = iter::Take<iter::Repeat<Null>>;
 }
 
 impl<'a, V, W> ViewsSealed<'a> for (V, W)

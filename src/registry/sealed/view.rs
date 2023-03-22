@@ -69,13 +69,13 @@ where
 impl<'a> CanonicalViews<'a, view::Null, Null> for registry::Null {
     unsafe fn view<R>(
         _columns: &[(*mut u8, usize)],
-        _length: usize,
+        length: usize,
         _archetype_identifier: archetype::identifier::Iter<R>,
     ) -> <view::Null as ViewsSealed<'a>>::Results
     where
         R: Registry,
     {
-        iter::repeat(view::Null)
+        iter::repeat(view::Null).take(length)
     }
 
     unsafe fn view_one<R>(
