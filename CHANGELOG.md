@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+### Fixed
+- Querying with empty component views no longer iterates endlessly. It now iterates once for each entity filtered, despite no components being viewed.
 
 ## 0.6.0 - 2023-03-20
 ### Added
