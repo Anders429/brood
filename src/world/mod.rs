@@ -1448,8 +1448,7 @@ mod tests {
         let count = world
             .query(Query::<Views!()>::new())
             .iter
-            .collect::<Vec<_>>()
-            .len();
+            .count();
 
         assert_eq!(count, 4);
     }
