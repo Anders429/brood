@@ -49,13 +49,13 @@ where
 impl<'a> CanonicalParViews<'a, view::Null, Null> for registry::Null {
     unsafe fn par_view<R>(
         _columns: &[(*mut u8, usize)],
-        _length: usize,
+        length: usize,
         _archetype_identifier: archetype::identifier::Iter<R>,
     ) -> <view::Null as ParViewsSeal<'a>>::ParResults
     where
         R: Registry,
     {
-        iter::repeatn(view::Null, usize::MAX)
+        iter::repeatn(view::Null, length)
     }
 }
 
