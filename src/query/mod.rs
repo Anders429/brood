@@ -49,6 +49,7 @@
 //! [`Views`]: trait@crate::query::view::Views
 //! [`World`]: crate::world::World
 
+pub mod entries;
 pub mod filter;
 pub mod result;
 pub mod view;

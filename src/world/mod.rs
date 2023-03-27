@@ -103,8 +103,8 @@ pub struct World<R, Resources = resource::Null>
 where
     R: Registry,
 {
-    archetypes: Archetypes<R>,
-    entity_allocator: entity::Allocator<R>,
+    pub(crate) archetypes: Archetypes<R>,
+    pub(crate) entity_allocator: entity::Allocator<R>,
     len: usize,
 
     resources: Resources,

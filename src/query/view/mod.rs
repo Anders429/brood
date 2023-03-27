@@ -56,12 +56,14 @@ mod get;
 mod par;
 mod reshape;
 mod sealed;
+mod subset;
 
 #[cfg(feature = "rayon")]
 pub use par::{
     ParView,
     ParViews,
 };
+pub use subset::SubSet;
 
 #[cfg(feature = "rayon")]
 pub(crate) use claim::{
