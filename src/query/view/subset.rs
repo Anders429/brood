@@ -42,7 +42,7 @@ pub enum NotContained {}
 /// This `trait` is automatically implemented for any pair of views that meet the above conditions.
 /// It is never needed for a user to manually implement this `trait`.
 ///
-/// [`Views`]: crate::query::views::Views
+/// [`Views`]: trait@crate::query::view::Views
 pub trait SubSet<
     Registry,
     Views,
