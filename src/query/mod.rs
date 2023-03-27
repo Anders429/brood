@@ -133,29 +133,29 @@ impl<Views, Filters, ResourceViews, EntryViews> Query<Views, Filters, ResourceVi
     }
 }
 
-impl<Views, Filters, ResourceViews> Default for Query<Views, Filters, ResourceViews> {
+impl<Views, Filters, ResourceViews, EntryViews> Default for Query<Views, Filters, ResourceViews, EntryViews> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<Views, Filters, ResourceViews> Clone for Query<Views, Filters, ResourceViews> {
+impl<Views, Filters, ResourceViews, EntryViews> Clone for Query<Views, Filters, ResourceViews, EntryViews> {
     fn clone(&self) -> Self {
         Self::new()
     }
 }
 
-impl<Views, Filters, ResourceViews> PartialEq for Query<Views, Filters, ResourceViews> {
+impl<Views, Filters, ResourceViews, EntryViews> PartialEq for Query<Views, Filters, ResourceViews, EntryViews> {
     fn eq(&self, _other: &Self) -> bool {
         true
     }
 }
 
-impl<Views, Filters, ResourceViews> Eq for Query<Views, Filters, ResourceViews> {}
+impl<Views, Filters, ResourceViews, EntryViews> Eq for Query<Views, Filters, ResourceViews, EntryViews> {}
 
-impl<Views, Filters, ResourceViews> Copy for Query<Views, Filters, ResourceViews> {}
+impl<Views, Filters, ResourceViews, EntryViews> Copy for Query<Views, Filters, ResourceViews, EntryViews> {}
 
-impl<Views, Filters, ResourceViews> fmt::Debug for Query<Views, Filters, ResourceViews> {
+impl<Views, Filters, ResourceViews, EntryViews> fmt::Debug for Query<Views, Filters, ResourceViews, EntryViews> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.debug_struct("Query").finish()
     }
