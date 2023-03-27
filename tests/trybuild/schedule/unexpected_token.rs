@@ -12,6 +12,7 @@ impl System for A {
     type Views<'a> = Views!();
     type Filter = filter::None;
     type ResourceViews<'a> = Views!();
+    type EntryViews<'a> = Views!();
 
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
@@ -27,6 +28,7 @@ impl System for B {
     type Views<'a> = Views!();
     type Filter = filter::None;
     type ResourceViews<'a> = Views!();
+    type EntryViews<'a> = Views!();
 
     fn run<'a, R, FI, VI, P, I, Q>(
         &mut self,
