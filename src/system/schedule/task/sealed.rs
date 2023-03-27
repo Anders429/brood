@@ -7,6 +7,7 @@ use super::{
 use crate::{
     query::{
         filter::Filter,
+        view,
         view::Views,
         Query,
     },
@@ -34,6 +35,14 @@ pub trait Task<
     ResourceViewsIndices,
     ResourceViewsCanonicalContainments,
     ResourceViewsReshapeIndices,
+    EntryViewsContainments,
+    EntryViewsIndices,
+    EntryViewsReshapeIndices,
+    EntryViewsInverseIndices,
+    EntryViewsOppositeContainments,
+    EntryViewsOppositeIndices,
+    EntryViewsOppositeReshapeIndices,
+    EntryViewsOppositeInverseIndices,
 > where
     R: Registry,
 {
@@ -60,6 +69,14 @@ impl<
         ResourceViewsIndices,
         ResourceViewsCanonicalContainments,
         ResourceViewsReshapeIndices,
+        EntryViewsContainments,
+        EntryViewsIndices,
+        EntryViewsReshapeIndices,
+        EntryViewsInverseIndices,
+        EntryViewsOppositeContainments,
+        EntryViewsOppositeIndices,
+        EntryViewsOppositeReshapeIndices,
+        EntryViewsOppositeInverseIndices,
     >
     Task<
         'a,
@@ -74,6 +91,14 @@ impl<
         ResourceViewsIndices,
         ResourceViewsCanonicalContainments,
         ResourceViewsReshapeIndices,
+        EntryViewsContainments,
+        EntryViewsIndices,
+        EntryViewsReshapeIndices,
+        EntryViewsInverseIndices,
+        EntryViewsOppositeContainments,
+        EntryViewsOppositeIndices,
+        EntryViewsOppositeReshapeIndices,
+        EntryViewsOppositeInverseIndices,
     > for System<S>
 where
     S: system::System + Send,
@@ -87,6 +112,18 @@ where
         ResourceViewsCanonicalContainments,
         ResourceViewsReshapeIndices,
     >,
+    S::EntryViews<'a>: view::Disjoint<
+        S::Views<'a>,
+        R,
+        EntryViewsContainments,
+        EntryViewsIndices,
+        EntryViewsReshapeIndices,
+        EntryViewsInverseIndices,
+        EntryViewsOppositeContainments,
+        EntryViewsOppositeIndices,
+        EntryViewsOppositeReshapeIndices,
+        EntryViewsOppositeInverseIndices,
+    >,
 {
     type Views = S::Views<'a>;
     type Filter = S::Filter;
@@ -95,7 +132,7 @@ where
         // Query world using system.
         let result =
             // SAFETY: The access to the world's components follows Rust's borrowing rules.
-            unsafe { (*world.get()).query(Query::<S::Views<'a>, S::Filter, S::ResourceViews<'a>>::new()) };
+            unsafe { (*world.get()).query(Query::<S::Views<'a>, S::Filter, S::ResourceViews<'a>, S::EntryViews<'a>>::new()) };
         // Run system using the query result.
         self.0.run(result.iter, result.resources);
     }
@@ -115,6 +152,14 @@ impl<
         ResourceViewsIndices,
         ResourceViewsCanonicalContainments,
         ResourceViewsReshapeIndices,
+        EntryViewsContainments,
+        EntryViewsIndices,
+        EntryViewsReshapeIndices,
+        EntryViewsInverseIndices,
+        EntryViewsOppositeContainments,
+        EntryViewsOppositeIndices,
+        EntryViewsOppositeReshapeIndices,
+        EntryViewsOppositeInverseIndices,
     >
     Task<
         'a,
@@ -129,6 +174,14 @@ impl<
         ResourceViewsIndices,
         ResourceViewsCanonicalContainments,
         ResourceViewsReshapeIndices,
+        EntryViewsContainments,
+        EntryViewsIndices,
+        EntryViewsReshapeIndices,
+        EntryViewsInverseIndices,
+        EntryViewsOppositeContainments,
+        EntryViewsOppositeIndices,
+        EntryViewsOppositeReshapeIndices,
+        EntryViewsOppositeInverseIndices,
     > for ParSystem<P>
 where
     P: system::ParSystem + Send,
@@ -142,6 +195,18 @@ where
         ResourceViewsCanonicalContainments,
         ResourceViewsReshapeIndices,
     >,
+    P::EntryViews<'a>: view::Disjoint<
+        P::Views<'a>,
+        R,
+        EntryViewsContainments,
+        EntryViewsIndices,
+        EntryViewsReshapeIndices,
+        EntryViewsInverseIndices,
+        EntryViewsOppositeContainments,
+        EntryViewsOppositeIndices,
+        EntryViewsOppositeReshapeIndices,
+        EntryViewsOppositeInverseIndices,
+    >,
 {
     type Views = P::Views<'a>;
     type Filter = P::Filter;
@@ -150,7 +215,7 @@ where
         // Query world using system.
         let result =
             // SAFETY: The access to the world's components follows Rust's borrowing rules.
-            unsafe { (*world.get()).par_query(Query::<P::Views<'a>, P::Filter, P::ResourceViews<'a>>::new()) };
+            unsafe { (*world.get()).par_query(Query::<P::Views<'a>, P::Filter, P::ResourceViews<'a>, P::EntryViews<'a>>::new()) };
         // Run system using the query result.
         self.0.run(result.iter, result.resources);
     }

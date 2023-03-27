@@ -25,6 +25,14 @@ pub trait Sealed<
     ResourceViewsIndicesLists,
     ResourceViewsCanonicalContainmentsLists,
     ResourceViewsReshapeIndicesLists,
+    EntryViewsContainmentsLists,
+    EntryViewsIndicesLists,
+    EntryViewsReshapeIndicesLists,
+    EntryViewsInverseIndicesLists,
+    EntryViewsOppositeContainmentsLists,
+    EntryViewsOppositeIndicesLists,
+    EntryViewsOppositeReshapeIndicesLists,
+    EntryViewsOppositeInverseIndicesLists,
 > where
     R: Registry,
 {
@@ -41,6 +49,14 @@ pub trait Sealed<
         ResourceViewsIndicesLists,
         ResourceViewsCanonicalContainmentsLists,
         ResourceViewsReshapeIndicesLists,
+        EntryViewsContainmentsLists,
+        EntryViewsIndicesLists,
+        EntryViewsReshapeIndicesLists,
+        EntryViewsInverseIndicesLists,
+        EntryViewsOppositeContainmentsLists,
+        EntryViewsOppositeIndicesLists,
+        EntryViewsOppositeReshapeIndicesLists,
+        EntryViewsOppositeInverseIndicesLists,
     >;
 
     fn as_stages(&'a mut self) -> Self::Stages;
@@ -66,6 +82,14 @@ impl<
         ResourceViewsIndicesLists,
         ResourceViewsCanonicalContainmentsLists,
         ResourceViewsReshapeIndicesLists,
+        EntryViewsContainmentsLists,
+        EntryViewsIndicesLists,
+        EntryViewsReshapeIndicesLists,
+        EntryViewsInverseIndicesLists,
+        EntryViewsOppositeContainmentsLists,
+        EntryViewsOppositeIndicesLists,
+        EntryViewsOppositeReshapeIndicesLists,
+        EntryViewsOppositeInverseIndicesLists,
     >
     Sealed<
         'a,
@@ -86,6 +110,14 @@ impl<
         ResourceViewsIndicesLists,
         ResourceViewsCanonicalContainmentsLists,
         ResourceViewsReshapeIndicesLists,
+        EntryViewsContainmentsLists,
+        EntryViewsIndicesLists,
+        EntryViewsReshapeIndicesLists,
+        EntryViewsInverseIndicesLists,
+        EntryViewsOppositeContainmentsLists,
+        EntryViewsOppositeIndicesLists,
+        EntryViewsOppositeReshapeIndicesLists,
+        EntryViewsOppositeInverseIndicesLists,
     > for T
 where
     R: Registry,
@@ -108,6 +140,14 @@ where
         ResourceViewsIndicesLists,
         ResourceViewsCanonicalContainmentsLists,
         ResourceViewsReshapeIndicesLists,
+        EntryViewsContainmentsLists,
+        EntryViewsIndicesLists,
+        EntryViewsReshapeIndicesLists,
+        EntryViewsInverseIndicesLists,
+        EntryViewsOppositeContainmentsLists,
+        EntryViewsOppositeIndicesLists,
+        EntryViewsOppositeReshapeIndicesLists,
+        EntryViewsOppositeInverseIndicesLists,
     >,
 {
     type Stages = <T as Scheduler<
@@ -129,6 +169,14 @@ where
         ResourceViewsIndicesLists,
         ResourceViewsCanonicalContainmentsLists,
         ResourceViewsReshapeIndicesLists,
+        EntryViewsContainmentsLists,
+        EntryViewsIndicesLists,
+        EntryViewsReshapeIndicesLists,
+        EntryViewsInverseIndicesLists,
+        EntryViewsOppositeContainmentsLists,
+        EntryViewsOppositeIndicesLists,
+        EntryViewsOppositeReshapeIndicesLists,
+        EntryViewsOppositeInverseIndicesLists,
     >>::Stages;
 
     #[inline]

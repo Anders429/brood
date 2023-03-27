@@ -27,6 +27,7 @@
 //!     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
 //!     type ResourceViews<'a> = Views!();
+//!     type EntryViews<'a> = Views!();
 //!
 //!     fn run<'a, R, FI, VI, P, I, Q>(
 //!         &mut self,
@@ -110,6 +111,7 @@ use crate::{
 ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///     type ResourceViews<'a> = Views!();
+///     type EntryViews<'a> = Views!();
 ///
 ///     fn run<'a, R, FI, VI, P, I, Q>(
 ///         &mut self,
@@ -138,6 +140,14 @@ pub trait System {
     ///
     /// The system will have access to the resources requested here when run.
     type ResourceViews<'a>;
+    /// Entry views.
+    ///
+    /// These views specify which components are accessible in entry lookups.
+    ///
+    /// The views here must be [`Disjoint`] with `Self::Views`
+    ///
+    /// [`Disjoint`]: crate::query::view::Disjoint
+    type EntryViews<'a>;
 
     /// Logic to be run over the query result.
     ///
@@ -169,6 +179,7 @@ pub trait System {
     ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///     type ResourceViews<'a> = Views!();
+    ///     type EntryViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,

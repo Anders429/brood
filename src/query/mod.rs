@@ -55,6 +55,8 @@ pub mod result;
 pub mod view;
 
 #[doc(inline)]
+pub use entries::Entries;
+#[doc(inline)]
 pub use result::{
     result,
     Result,
@@ -106,13 +108,15 @@ use core::{
 /// ```
 ///
 /// [`query()`]: crate::world::World::query()
-pub struct Query<Views, Filters = filter::None, ResourceViews = view::Null> {
+pub struct Query<Views, Filters = filter::None, ResourceViews = view::Null, EntryViews = view::Null>
+{
     view: PhantomData<Views>,
     filter: PhantomData<Filters>,
     resource_views: PhantomData<ResourceViews>,
+    entry_views: PhantomData<EntryViews>,
 }
 
-impl<Views, Filters, ResourceViews> Query<Views, Filters, ResourceViews> {
+impl<Views, Filters, ResourceViews, EntryViews> Query<Views, Filters, ResourceViews, EntryViews> {
     /// Creates a new `Query`.
     ///
     /// When creating a query, you must specify the views type `V`, and can optionally specify the
@@ -124,6 +128,7 @@ impl<Views, Filters, ResourceViews> Query<Views, Filters, ResourceViews> {
             view: PhantomData,
             filter: PhantomData,
             resource_views: PhantomData,
+            entry_views: PhantomData,
         }
     }
 }

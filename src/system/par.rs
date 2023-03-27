@@ -38,6 +38,7 @@ use crate::{
 ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///     type ResourceViews<'a> = Views!();
+///     type EntryViews<'a> = Views!();
 ///
 ///     fn run<'a, R, FI, VI, P, I, Q>(
 ///         &mut self,
@@ -71,6 +72,14 @@ pub trait ParSystem {
     ///
     /// The system will have access to the resources requested here when run.
     type ResourceViews<'a>;
+    /// Entry views.
+    ///
+    /// These views specify which components are accessible in entry lookups.
+    ///
+    /// The views here must be [`Disjoint`] with `Self::Views`
+    ///
+    /// [`Disjoint`]: crate::query::view::Disjoint
+    type EntryViews<'a>;
 
     /// Logic to be run over the parallel query result.
     ///
@@ -103,6 +112,7 @@ pub trait ParSystem {
     ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///     type ResourceViews<'a> = Views!();
+    ///     type EntryViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,

@@ -23,9 +23,11 @@ use crate::{
     entities::Entities,
     entity,
     entity::Entity,
+    query,
     query::{
         filter::Filter,
         result,
+        view,
         view::Views,
         Query,
         Result,
@@ -325,6 +327,7 @@ where
         V,
         F,
         ResourceViews,
+        EntryViews,
         VI,
         FI,
         P,
@@ -334,10 +337,18 @@ where
         ResourceViewsIndices,
         ResourceViewsCanonicalContainments,
         ResourceViewsReshapeIndices,
+        EntryViewsContainments,
+        EntryViewsIndices,
+        EntryViewsReshapeIndices,
+        EntryViewsInverseIndices,
+        EntryViewsOppositeContainments,
+        EntryViewsOppositeIndices,
+        EntryViewsOppositeReshapeIndices,
+        EntryViewsOppositeInverseIndices,
     >(
         &'a mut self,
-        #[allow(unused_variables)] query: Query<V, F, ResourceViews>,
-    ) -> Result<result::Iter<'a, R, F, FI, V, VI, P, I, Q>, ResourceViews>
+        #[allow(unused_variables)] query: Query<V, F, ResourceViews, EntryViews>,
+    ) -> Result<R, Resources, result::Iter<'a, R, F, FI, V, VI, P, I, Q>, ResourceViews, EntryViews>
     where
         V: Views<'a> + Filter,
         F: Filter,
@@ -350,10 +361,28 @@ where
             ResourceViewsCanonicalContainments,
             ResourceViewsReshapeIndices,
         >,
+        EntryViews: view::Disjoint<
+            V,
+            R,
+            EntryViewsContainments,
+            EntryViewsIndices,
+            EntryViewsReshapeIndices,
+            EntryViewsInverseIndices,
+            EntryViewsOppositeContainments,
+            EntryViewsOppositeIndices,
+            EntryViewsOppositeReshapeIndices,
+            EntryViewsOppositeInverseIndices,
+        >,
     {
+        let world = self as *mut Self;
         Result {
-            iter: result::Iter::new(self.archetypes.iter_mut()),
+            // SAFETY: The views used here are verified to not conflict with the views used for
+            // `entries`.
+            iter: result::Iter::new(unsafe { &mut *world }.archetypes.iter_mut()),
             resources: self.resources.view(),
+            // SAFETY: The views used here are verified to not conflict with the views used for
+            // `iter`.
+            entries: unsafe { query::Entries::new(world) },
         }
     }
 
@@ -417,6 +446,7 @@ where
         V,
         F,
         ResourceViews,
+        EntryViews,
         VI,
         FI,
         P,
@@ -426,10 +456,24 @@ where
         ResourceViewsIndices,
         ResourceViewsCanonicalContainments,
         ResourceViewsReshapeIndices,
+        EntryViewsContainments,
+        EntryViewsIndices,
+        EntryViewsReshapeIndices,
+        EntryViewsInverseIndices,
+        EntryViewsOppositeContainments,
+        EntryViewsOppositeIndices,
+        EntryViewsOppositeReshapeIndices,
+        EntryViewsOppositeInverseIndices,
     >(
         &'a mut self,
-        #[allow(unused_variables)] query: Query<V, F, ResourceViews>,
-    ) -> Result<result::ParIter<'a, R, F, FI, V, VI, P, I, Q>, ResourceViews>
+        #[allow(unused_variables)] query: Query<V, F, ResourceViews, EntryViews>,
+    ) -> Result<
+        R,
+        Resources,
+        result::ParIter<'a, R, F, FI, V, VI, P, I, Q>,
+        ResourceViews,
+        EntryViews,
+    >
     where
         V: ParViews<'a> + Filter,
         F: Filter,
@@ -442,10 +486,28 @@ where
             ResourceViewsCanonicalContainments,
             ResourceViewsReshapeIndices,
         >,
+        EntryViews: view::Disjoint<
+            V,
+            R,
+            EntryViewsContainments,
+            EntryViewsIndices,
+            EntryViewsReshapeIndices,
+            EntryViewsInverseIndices,
+            EntryViewsOppositeContainments,
+            EntryViewsOppositeIndices,
+            EntryViewsOppositeReshapeIndices,
+            EntryViewsOppositeInverseIndices,
+        >,
     {
+        let world = self as *mut Self;
         Result {
-            iter: result::ParIter::new(self.archetypes.par_iter_mut()),
+            // SAFETY: The views used here are verified to not conflict with the views used for
+            // `entries`.
+            iter: result::ParIter::new(unsafe { &mut *world }.archetypes.par_iter_mut()),
             resources: self.resources.view(),
+            // SAFETY: The views used here are verified to not conflict with the views used for
+            // `iter`.
+            entries: unsafe { query::Entries::new(world) },
         }
     }
 
@@ -500,6 +562,7 @@ where
     ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///     type ResourceViews<'a> = Views!();
+    ///     type EntryViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
@@ -534,6 +597,14 @@ where
         ResourceViewsIndices,
         ResourceViewsCanonicalContainments,
         ResourceViewsReshapeIndices,
+        EntryViewsContainments,
+        EntryViewsIndices,
+        EntryViewsReshapeIndices,
+        EntryViewsInverseIndices,
+        EntryViewsOppositeContainments,
+        EntryViewsOppositeIndices,
+        EntryViewsOppositeReshapeIndices,
+        EntryViewsOppositeInverseIndices,
     >(
         &'a mut self,
         system: &mut S,
@@ -548,8 +619,25 @@ where
             ResourceViewsCanonicalContainments,
             ResourceViewsReshapeIndices,
         >,
+        S::EntryViews<'a>: view::Disjoint<
+            S::Views<'a>,
+            R,
+            EntryViewsContainments,
+            EntryViewsIndices,
+            EntryViewsReshapeIndices,
+            EntryViewsInverseIndices,
+            EntryViewsOppositeContainments,
+            EntryViewsOppositeIndices,
+            EntryViewsOppositeReshapeIndices,
+            EntryViewsOppositeInverseIndices,
+        >,
     {
-        let result = self.query(Query::<S::Views<'a>, S::Filter, S::ResourceViews<'a>>::new());
+        let result = self.query(Query::<
+            S::Views<'a>,
+            S::Filter,
+            S::ResourceViews<'a>,
+            S::EntryViews<'a>,
+        >::new());
         system.run(result.iter, result.resources);
     }
 
@@ -585,6 +673,7 @@ where
     ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///     type ResourceViews<'a> = Views!();
+    ///     type EntryViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
@@ -618,6 +707,14 @@ where
         ResourceViewsIndices,
         ResourceViewsCanonicalContainments,
         ResourceViewsReshapeIndices,
+        EntryViewsContainments,
+        EntryViewsIndices,
+        EntryViewsReshapeIndices,
+        EntryViewsInverseIndices,
+        EntryViewsOppositeContainments,
+        EntryViewsOppositeIndices,
+        EntryViewsOppositeReshapeIndices,
+        EntryViewsOppositeInverseIndices,
     >(
         &'a mut self,
         par_system: &mut S,
@@ -632,8 +729,25 @@ where
             ResourceViewsCanonicalContainments,
             ResourceViewsReshapeIndices,
         >,
+        S::EntryViews<'a>: view::Disjoint<
+            S::Views<'a>,
+            R,
+            EntryViewsContainments,
+            EntryViewsIndices,
+            EntryViewsReshapeIndices,
+            EntryViewsInverseIndices,
+            EntryViewsOppositeContainments,
+            EntryViewsOppositeIndices,
+            EntryViewsOppositeReshapeIndices,
+            EntryViewsOppositeInverseIndices,
+        >,
     {
-        let result = self.par_query(Query::<S::Views<'a>, S::Filter, S::ResourceViews<'a>>::new());
+        let result = self.par_query(Query::<
+            S::Views<'a>,
+            S::Filter,
+            S::ResourceViews<'a>,
+            S::EntryViews<'a>,
+        >::new());
         par_system.run(result.iter, result.resources);
     }
 
@@ -674,6 +788,7 @@ where
     ///     type Views<'a> = Views!(&'a mut Foo);
     ///     type Filter = filter::None;
     ///     type ResourceViews<'a> = Views!();
+    ///     type EntryViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
@@ -692,6 +807,7 @@ where
     ///     type Views<'a> = Views!(&'a mut Bar);
     ///     type Filter = filter::None;
     ///     type ResourceViews<'a> = Views!();
+    ///     type EntryViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
@@ -736,6 +852,14 @@ where
         ResourceViewsIndicesLists,
         ResourceViewsCanonicalContainmentsLists,
         ResourceViewsReshapeIndicesLists,
+        EntryViewsContainmentsLists,
+        EntryViewsIndicesLists,
+        EntryViewsReshapeIndicesLists,
+        EntryViewsInverseIndicesLists,
+        EntryViewsOppositeContainmentsLists,
+        EntryViewsOppositeIndicesLists,
+        EntryViewsOppositeReshapeIndicesLists,
+        EntryViewsOppositeInverseIndicesLists,
     >(
         &mut self,
         schedule: &'a mut S,
@@ -759,6 +883,14 @@ where
             ResourceViewsIndicesLists,
             ResourceViewsCanonicalContainmentsLists,
             ResourceViewsReshapeIndicesLists,
+            EntryViewsContainmentsLists,
+            EntryViewsIndicesLists,
+            EntryViewsReshapeIndicesLists,
+            EntryViewsInverseIndicesLists,
+            EntryViewsOppositeContainmentsLists,
+            EntryViewsOppositeIndicesLists,
+            EntryViewsOppositeReshapeIndicesLists,
+            EntryViewsOppositeInverseIndicesLists,
         >,
     {
         schedule.as_stages().run(self, S::Stages::new_has_run());
@@ -1677,6 +1809,7 @@ mod tests {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1709,6 +1842,7 @@ mod tests {
             type Views<'a> = Views!(&'a mut B);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1741,6 +1875,7 @@ mod tests {
             type Views<'a> = Views!(Option<&'a A>);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1775,6 +1910,7 @@ mod tests {
             type Views<'a> = Views!(Option<&'a mut B>);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1811,6 +1947,7 @@ mod tests {
             type Views<'a> = Views!(entity::Identifier);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1844,6 +1981,7 @@ mod tests {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::Has<B>;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1875,6 +2013,7 @@ mod tests {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::Not<filter::Has<B>>;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1906,6 +2045,7 @@ mod tests {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1937,6 +2077,7 @@ mod tests {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::Or<filter::Has<A>, filter::Has<B>>;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1971,6 +2112,7 @@ mod tests {
             type Views<'a> = Views!(&'a A, &'a B);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
             type ResourceViews<'a> = Views!(&'a mut Counter);
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2004,6 +2146,7 @@ mod tests {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2047,6 +2190,7 @@ mod tests {
             type Views<'a> = Views!(&'a mut B);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2090,6 +2234,7 @@ mod tests {
             type Views<'a> = Views!(Option<&'a A>);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2135,6 +2280,7 @@ mod tests {
             type Views<'a> = Views!(Option<&'a mut B>);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2182,6 +2328,7 @@ mod tests {
             type Views<'a> = Views!(entity::Identifier);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2226,6 +2373,7 @@ mod tests {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::Has<B>;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2268,6 +2416,7 @@ mod tests {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::Not<filter::Has<B>>;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2310,6 +2459,7 @@ mod tests {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2352,6 +2502,7 @@ mod tests {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::Or<filter::Has<A>, filter::Has<B>>;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2397,6 +2548,7 @@ mod tests {
             type Views<'a> = Views!(&'a A, &'a B);
             type Filter = filter::And<filter::Has<A>, filter::Has<B>>;
             type ResourceViews<'a> = Views!(&'a mut Counter);
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2440,6 +2592,7 @@ mod tests {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2460,6 +2613,7 @@ mod tests {
             type Views<'a> = Views!(&'a mut B);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2514,6 +2668,7 @@ mod tests {
             type Views<'a> = Views!(&'a mut A, &'a mut B);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2534,6 +2689,7 @@ mod tests {
             type Views<'a> = Views!(&'a mut A, &'a mut C);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2576,6 +2732,7 @@ mod tests {
             type Views<'a> = Views!(&'a mut A, &'a mut B);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2596,6 +2753,7 @@ mod tests {
             type Views<'a> = Views!(&'a mut A, &'a mut C);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -2616,6 +2774,7 @@ mod tests {
             type Views<'a> = Views!(&'a mut A, &'a mut B, &'a mut C);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,

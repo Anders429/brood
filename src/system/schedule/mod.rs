@@ -35,6 +35,7 @@
 //!     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
 //!     type ResourceViews<'a> = Views!();
+//!     type EntryViews<'a> = Views!();
 //!
 //!     fn run<'a, R, FI, VI, P, I, Q>(
 //!         &mut self,
@@ -55,6 +56,7 @@
 //!     type Views<'a> = Views!(&'a mut Baz, &'a Bar);
 //!     type Filter = filter::None;
 //!     type ResourceViews<'a> = Views!();
+//!     type EntryViews<'a> = Views!();
 //!
 //!     fn run<'a, R, FI, VI, P, I, Q>(
 //!         &mut self,
@@ -130,6 +132,14 @@ pub trait Schedule<
     ResourceViewsIndicesLists,
     ResourceViewsCanonicalContainmentsLists,
     ResourceViewsReshapeIndicesLists,
+    EntryViewsContainmentsLists,
+    EntryViewsIndicesLists,
+    EntryViewsReshapeIndicesLists,
+    EntryViewsInverseIndicesLists,
+    EntryViewsOppositeContainmentsLists,
+    EntryViewsOppositeIndicesLists,
+    EntryViewsOppositeReshapeIndicesLists,
+    EntryViewsOppositeInverseIndicesLists,
 >:
     Sealed<
     'a,
@@ -150,6 +160,14 @@ pub trait Schedule<
     ResourceViewsIndicesLists,
     ResourceViewsCanonicalContainmentsLists,
     ResourceViewsReshapeIndicesLists,
+    EntryViewsContainmentsLists,
+    EntryViewsIndicesLists,
+    EntryViewsReshapeIndicesLists,
+    EntryViewsInverseIndicesLists,
+    EntryViewsOppositeContainmentsLists,
+    EntryViewsOppositeIndicesLists,
+    EntryViewsOppositeReshapeIndicesLists,
+    EntryViewsOppositeInverseIndicesLists,
 > where
     R: Registry,
 {
@@ -175,6 +193,14 @@ impl<
         ResourceViewsIndicesLists,
         ResourceViewsCanonicalContainmentsLists,
         ResourceViewsReshapeIndicesLists,
+        EntryViewsContainmentsLists,
+        EntryViewsIndicesLists,
+        EntryViewsReshapeIndicesLists,
+        EntryViewsInverseIndicesLists,
+        EntryViewsOppositeContainmentsLists,
+        EntryViewsOppositeIndicesLists,
+        EntryViewsOppositeReshapeIndicesLists,
+        EntryViewsOppositeInverseIndicesLists,
     >
     Schedule<
         'a,
@@ -195,6 +221,14 @@ impl<
         ResourceViewsIndicesLists,
         ResourceViewsCanonicalContainmentsLists,
         ResourceViewsReshapeIndicesLists,
+        EntryViewsContainmentsLists,
+        EntryViewsIndicesLists,
+        EntryViewsReshapeIndicesLists,
+        EntryViewsInverseIndicesLists,
+        EntryViewsOppositeContainmentsLists,
+        EntryViewsOppositeIndicesLists,
+        EntryViewsOppositeReshapeIndicesLists,
+        EntryViewsOppositeInverseIndicesLists,
     > for T
 where
     R: Registry,
@@ -217,6 +251,14 @@ where
         ResourceViewsIndicesLists,
         ResourceViewsCanonicalContainmentsLists,
         ResourceViewsReshapeIndicesLists,
+        EntryViewsContainmentsLists,
+        EntryViewsIndicesLists,
+        EntryViewsReshapeIndicesLists,
+        EntryViewsInverseIndicesLists,
+        EntryViewsOppositeContainmentsLists,
+        EntryViewsOppositeIndicesLists,
+        EntryViewsOppositeReshapeIndicesLists,
+        EntryViewsOppositeInverseIndicesLists,
     >,
 {
 }
@@ -259,6 +301,7 @@ doc::non_root_macro! {
     ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///     type ResourceViews<'a> = Views!();
+    ///     type EntryViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
@@ -277,6 +320,7 @@ doc::non_root_macro! {
     ///     type Views<'a> = Views!(&'a mut Baz, &'a Bar);
     ///     type Filter = filter::None;
     ///     type ResourceViews<'a> = Views!();
+    ///     type EntryViews<'a> = Views!();
     ///
     ///     fn run<'a, R, FI, VI, P, I, Q>(
     ///         &mut self,
@@ -345,6 +389,7 @@ pub(crate) mod inner {
         ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
         ///     type Filter = filter::None;
         ///     type ResourceViews<'a> = Views!();
+        ///     type EntryViews<'a> = Views!();
         ///
         ///     fn run<'a, R, FI, VI, P, I, Q>(
         ///         &mut self,
@@ -363,6 +408,7 @@ pub(crate) mod inner {
         ///     type Views<'a> = Views!(&'a mut Baz, &'a Bar);
         ///     type Filter = filter::None;
         ///     type ResourceViews<'a> = Views!();
+        ///     type EntryViews<'a> = Views!();
         ///
         ///     fn run<'a, R, FI, VI, P, I, Q>(
         ///         &mut self,
@@ -449,6 +495,14 @@ mod tests {
                     _,
                     _,
                     _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                 >>::Stages,
             >(),
             TypeId::of::<stages::Null>()
@@ -463,6 +517,14 @@ mod tests {
                     '_,
                     Registry!(),
                     Resources!(A, B, C, D, E),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                     _,
                     _,
                     _,
@@ -507,6 +569,14 @@ mod tests {
                     _,
                     _,
                     _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                 >>::Stages,
             >(),
             TypeId::of::<stages::Null>()
@@ -521,6 +591,7 @@ mod tests {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -554,6 +625,14 @@ mod tests {
                     _,
                     _,
                     _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                 >>::Stages,
             >(),
             TypeId::of::<((&mut task::System<ImmutA>, stage::Null), stages::Null)>()
@@ -568,6 +647,7 @@ mod tests {
             type Views<'a> = Views!(&'a mut A);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -601,6 +681,14 @@ mod tests {
                     _,
                     _,
                     _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                 >>::Stages,
             >(),
             TypeId::of::<((&mut task::System<MutA>, stage::Null), stages::Null)>()
@@ -615,6 +703,7 @@ mod tests {
             type Views<'a> = Views!(Option<&'a A>);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -648,6 +737,14 @@ mod tests {
                     _,
                     _,
                     _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                 >>::Stages,
             >(),
             TypeId::of::<((&mut task::System<OptionImmutA>, stage::Null), stages::Null)>()
@@ -662,6 +759,7 @@ mod tests {
             type Views<'a> = Views!(Option<&'a mut A>);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -695,6 +793,14 @@ mod tests {
                     _,
                     _,
                     _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                 >>::Stages,
             >(),
             TypeId::of::<((&mut task::System<OptionMutA>, stage::Null), stages::Null)>()
@@ -709,6 +815,7 @@ mod tests {
             type Views<'a> = Views!(entity::Identifier);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -742,6 +849,14 @@ mod tests {
                     _,
                     _,
                     _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                 >>::Stages,
             >(),
             TypeId::of::<(
@@ -759,6 +874,7 @@ mod tests {
             type Views<'a> = Views!(&'a A);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -802,6 +918,14 @@ mod tests {
                     _,
                     _,
                     _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                 >>::Stages,
             >(),
             TypeId::of::<((&mut task::ParSystem<ImmutA>, stage::Null), stages::Null)>()
@@ -816,6 +940,7 @@ mod tests {
             type Views<'a> = Views!(&'a mut A);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -859,6 +984,14 @@ mod tests {
                     _,
                     _,
                     _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                 >>::Stages,
             >(),
             TypeId::of::<((&mut task::ParSystem<MutA>, stage::Null), stages::Null)>()
@@ -873,6 +1006,7 @@ mod tests {
             type Views<'a> = Views!(Option<&'a A>);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -916,6 +1050,14 @@ mod tests {
                     _,
                     _,
                     _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                 >>::Stages,
             >(),
             TypeId::of::<(
@@ -933,6 +1075,7 @@ mod tests {
             type Views<'a> = Views!(Option<&'a mut A>);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -976,6 +1119,14 @@ mod tests {
                     _,
                     _,
                     _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                 >>::Stages,
             >(),
             TypeId::of::<(
@@ -993,6 +1144,7 @@ mod tests {
             type Views<'a> = Views!(entity::Identifier);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1036,6 +1188,14 @@ mod tests {
                     _,
                     _,
                     _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                 >>::Stages,
             >(),
             TypeId::of::<(
@@ -1053,6 +1213,7 @@ mod tests {
             type Views<'a> = Views!(&'a mut A, &'a mut B);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1071,6 +1232,7 @@ mod tests {
             type Views<'a> = Views!(&'a mut C, &'a mut D);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1089,6 +1251,7 @@ mod tests {
             type Views<'a> = Views!(&'a mut C, &'a mut E);
             type Filter = filter::None;
             type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1125,6 +1288,14 @@ mod tests {
                     _,
                     _,
                     _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                 >>::Stages,
             >(),
             TypeId::of::<(
@@ -1142,6 +1313,7 @@ mod tests {
             type Views<'a> = Views!();
             type Filter = filter::None;
             type ResourceViews<'a> = Views!(&'a A);
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1160,6 +1332,7 @@ mod tests {
             type Views<'a> = Views!();
             type Filter = filter::None;
             type ResourceViews<'a> = Views!(&'a A, &'a B);
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1203,6 +1376,14 @@ mod tests {
                     _,
                     _,
                     _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                 >>::Stages,
             >(),
             TypeId::of::<(
@@ -1223,6 +1404,7 @@ mod tests {
             type Views<'a> = Views!();
             type Filter = filter::None;
             type ResourceViews<'a> = Views!(&'a mut A);
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1241,6 +1423,7 @@ mod tests {
             type Views<'a> = Views!();
             type Filter = filter::None;
             type ResourceViews<'a> = Views!(&'a mut A, &'a B);
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1269,6 +1452,7 @@ mod tests {
             type Views<'a> = Views!();
             type Filter = filter::None;
             type ResourceViews<'a> = Views!(&'a mut B, &'a C);
+            type EntryViews<'a> = Views!();
 
             fn run<'a, R, FI, VI, P, I, Q>(
                 &mut self,
@@ -1290,6 +1474,14 @@ mod tests {
                     '_,
                     Registry!(),
                     Resources!(A, B, C),
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                     _,
                     _,
                     _,

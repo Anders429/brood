@@ -44,6 +44,14 @@ pub trait Stager<
     ResourceViewsIndicesList,
     ResourceViewsCanonicalContainmentsList,
     ResourceViewsReshapeIndicesList,
+    EntryViewsContainmentsList,
+    EntryViewsIndicesList,
+    EntryViewsReshapeIndicesList,
+    EntryViewsInverseIndicesList,
+    EntryViewsOppositeContainmentsList,
+    EntryViewsOppositeIndicesList,
+    EntryViewsOppositeReshapeIndicesList,
+    EntryViewsOppositeInverseIndicesList,
 > where
     R: Registry,
 {
@@ -60,6 +68,14 @@ pub trait Stager<
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     >;
     type Remainder;
 
@@ -79,6 +95,14 @@ impl<'a, R, Resources, C, ResourcesClaims>
         Null,
         Null,
         Null,
+        stage::Null,
+        stage::Null,
+        stage::Null,
+        stage::Null,
+        stage::Null,
+        stage::Null,
+        stage::Null,
+        stage::Null,
         stage::Null,
         stage::Null,
         stage::Null,
@@ -130,6 +154,14 @@ impl<
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     >
     Stager<
         'a,
@@ -152,6 +184,14 @@ impl<
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     > for (task::System<T>, U)
 where
     R: Registry,
@@ -208,6 +248,14 @@ where
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     >,
 {
     type Stage = <(task::System<T>, U) as Cutoff<
@@ -242,6 +290,14 @@ where
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     >>::Stage;
     type Remainder = <(task::System<T>, U) as Cutoff<
         'a,
@@ -275,6 +331,14 @@ where
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     >>::Remainder;
 
     #[inline]
@@ -312,6 +376,14 @@ impl<
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     >
     Stager<
         'a,
@@ -334,6 +406,14 @@ impl<
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     > for (task::ParSystem<T>, U)
 where
     R: Registry,
@@ -390,6 +470,14 @@ where
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     >,
 {
     type Stage = <(task::ParSystem<T>, U) as Cutoff<
@@ -424,6 +512,14 @@ where
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     >>::Stage;
     type Remainder = <(task::ParSystem<T>, U) as Cutoff<
         'a,
@@ -457,6 +553,14 @@ where
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     >>::Remainder;
 
     #[inline]
@@ -487,6 +591,14 @@ pub trait Cutoff<
     ResourceViewsIndicesList,
     ResourceViewsCanonicalContainmentsList,
     ResourceViewsReshapeIndicesList,
+    EntryViewsContainmentsList,
+    EntryViewsIndicesList,
+    EntryViewsReshapeIndicesList,
+    EntryViewsInverseIndicesList,
+    EntryViewsOppositeContainmentsList,
+    EntryViewsOppositeIndicesList,
+    EntryViewsOppositeReshapeIndicesList,
+    EntryViewsOppositeInverseIndicesList,
 > where
     R: Registry,
 {
@@ -503,6 +615,14 @@ pub trait Cutoff<
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     >;
     type Remainder;
 
@@ -523,6 +643,14 @@ impl<'a, R, Resources, T, C, ResourcesClaims>
         Null,
         Null,
         Null,
+        stage::Null,
+        stage::Null,
+        stage::Null,
+        stage::Null,
+        stage::Null,
+        stage::Null,
+        stage::Null,
+        stage::Null,
         stage::Null,
         stage::Null,
         stage::Null,
@@ -578,6 +706,22 @@ impl<
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndices,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainments,
+        EntryViewsContainmentsList,
+        EntryViewsIndices,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndices,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndices,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainments,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndices,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndices,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndices,
+        EntryViewsOppositeInverseIndicesList,
     >
     Cutoff<
         'a,
@@ -604,6 +748,23 @@ impl<
             ResourceViewsCanonicalContainmentsList,
         ),
         (ResourceViewsReshapeIndices, ResourceViewsReshapeIndicesList),
+        (EntryViewsContainments, EntryViewsContainmentsList),
+        (EntryViewsIndices, EntryViewsIndicesList),
+        (EntryViewsReshapeIndices, EntryViewsReshapeIndicesList),
+        (EntryViewsInverseIndices, EntryViewsInverseIndicesList),
+        (
+            EntryViewsOppositeContainments,
+            EntryViewsOppositeContainmentsList,
+        ),
+        (EntryViewsOppositeIndices, EntryViewsOppositeIndicesList),
+        (
+            EntryViewsOppositeReshapeIndices,
+            EntryViewsOppositeReshapeIndicesList,
+        ),
+        (
+            EntryViewsOppositeInverseIndices,
+            EntryViewsOppositeInverseIndicesList,
+        ),
     > for (T, U)
 where
     R: ContainsQuery<'a, T::Filter, SFI, T::Views, SVI, SP, SI, SQ>,
@@ -621,6 +782,14 @@ where
             ResourceViewsIndices,
             ResourceViewsCanonicalContainments,
             ResourceViewsReshapeIndices,
+            EntryViewsContainments,
+            EntryViewsIndices,
+            EntryViewsReshapeIndices,
+            EntryViewsInverseIndices,
+            EntryViewsOppositeContainments,
+            EntryViewsOppositeIndices,
+            EntryViewsOppositeReshapeIndices,
+            EntryViewsOppositeInverseIndices,
         > + Send
         + 'a,
     U: Stager<
@@ -644,6 +813,14 @@ where
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     >,
 {
     type Stage = (
@@ -669,6 +846,14 @@ where
             ResourceViewsIndicesList,
             ResourceViewsCanonicalContainmentsList,
             ResourceViewsReshapeIndicesList,
+            EntryViewsContainmentsList,
+            EntryViewsIndicesList,
+            EntryViewsReshapeIndicesList,
+            EntryViewsInverseIndicesList,
+            EntryViewsOppositeContainmentsList,
+            EntryViewsOppositeIndicesList,
+            EntryViewsOppositeReshapeIndicesList,
+            EntryViewsOppositeInverseIndicesList,
         >>::Stage,
     );
     type Remainder = <U as Stager<
@@ -692,6 +877,14 @@ where
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     >>::Remainder;
 
     #[inline]

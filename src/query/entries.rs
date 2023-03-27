@@ -161,7 +161,7 @@ where
     /// Entities must not be added or removed from the `World` while pointed at by `Entries`, nor
     /// should existing entities change shape (meaning, they shouldn't be moved between
     /// archetypes).
-    unsafe fn new(world: *mut World<Registry, Resources>) -> Self {
+    pub(crate) unsafe fn new(world: *mut World<Registry, Resources>) -> Self {
         Entries {
             world,
 
