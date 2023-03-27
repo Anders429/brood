@@ -157,6 +157,10 @@ where
     ///
     /// The components in `world` accessed by `Views` must not be accessed anywhere else (such as,
     /// for example, in a simultaneous query iteration).
+    ///
+    /// Entities must not be added or removed from the `World` while pointed at by `Entries`, nor
+    /// should existing entities change shape (meaning, they shouldn't be moved between
+    /// archetypes).
     unsafe fn new(world: *mut World<Registry, Resources>) -> Self {
         Entries {
             world,
@@ -175,6 +179,8 @@ where
         &'a mut self,
         entity_identifier: entity::Identifier,
     ) -> Option<Entry<'a, Registry, Resources, Views>> {
+        // SAFETY: The invariants of `Entries` guarantees that `World` won't have any entities
+        // added or removed, meaning the `entity_allocator` will not be mutated during this time.
         unsafe { &*self.world }
             .entity_allocator
             .get(entity_identifier)

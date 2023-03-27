@@ -196,7 +196,7 @@ where
 {
 }
 
-impl<'a, SubSetViews, Views, Containments>
+impl<SubSetViews, Views, Containments>
     CanonicalSubSet<(entity::Identifier, Views), (Contained, Containments)>
     for (entity::Identifier, SubSetViews)
 where
