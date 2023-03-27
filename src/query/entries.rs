@@ -365,13 +365,13 @@ mod tests {
         let identifier = world.insert(entity!(B('a'), C(3.14)));
 
         let mut entries =
-            unsafe { Entries::<_, _, Views!(&A, &mut C, entity::Identifier)>::new(&mut world) };
+            unsafe { Entries::<_, _, Views!(&A, &mut B, entity::Identifier)>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
-        let result!(queried_identifier, c, a) =
-            assert_some!(entry.query(Query::<Views!(entity::Identifier, &C, Option<&A>)>::new()));
+        let result!(queried_identifier, b, a) =
+            assert_some!(entry.query(Query::<Views!(entity::Identifier, &B, Option<&A>)>::new()));
         assert_eq!(queried_identifier, identifier);
         assert_eq!(a, None);
-        assert_eq!(c, &C(3.14));
+        assert_eq!(b, &B('a'));
     }
 }
