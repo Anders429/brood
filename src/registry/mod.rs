@@ -32,6 +32,7 @@ pub(crate) mod contains;
 mod clone;
 mod debug;
 mod eq;
+mod get;
 mod sealed;
 #[cfg(feature = "serde")]
 mod serde;
@@ -59,6 +60,7 @@ pub use eq::{
 #[cfg(feature = "rayon")]
 pub(crate) use contains::ContainsParViews;
 pub(crate) use contains::ContainsViews;
+pub(crate) use get::Get;
 #[cfg(feature = "rayon")]
 pub(crate) use sealed::CanonicalParViews;
 pub(crate) use sealed::{
