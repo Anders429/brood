@@ -10,6 +10,7 @@
 //!         filter,
 //!         filter::Filter,
 //!         result,
+//!         Result,
 //!         Views,
 //!     },
 //!     registry::ContainsQuery,
@@ -27,15 +28,21 @@
 //!     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 //!     type Filter = filter::None;
 //!     type ResourceViews<'a> = Views!();
+//!     type EntryViews<'a> = Views!();
 //!
-//!     fn run<'a, R, FI, VI, P, I, Q>(
+//!     fn run<'a, R, S, FI, VI, P, I, Q>(
 //!         &mut self,
-//!         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-//!         _resources: Self::ResourceViews<'a>,
+//!         query_results: Result<
+//!             R,
+//!             S,
+//!             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!             Self::ResourceViews<'a>,
+//!             Self::EntryViews<'a>,
+//!         >,
 //!     ) where
 //!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 //!     {
-//!         for result!(foo, bar) in query_results {
+//!         for result!(foo, bar) in query_results.iter {
 //!             if bar.0 {
 //!                 foo.0 += 1;
 //!             }
@@ -72,6 +79,7 @@ use crate::{
         filter::Filter,
         result,
         view::Views,
+        Result,
     },
     registry::ContainsQuery,
 };
@@ -93,6 +101,7 @@ use crate::{
 ///         filter,
 ///         filter::Filter,
 ///         result,
+///         Result,
 ///         Views,
 ///     },
 ///     registry::ContainsQuery,
@@ -110,15 +119,21 @@ use crate::{
 ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
 ///     type Filter = filter::None;
 ///     type ResourceViews<'a> = Views!();
+///     type EntryViews<'a> = Views!();
 ///
-///     fn run<'a, R, FI, VI, P, I, Q>(
+///     fn run<'a, R, S, FI, VI, P, I, Q>(
 ///         &mut self,
-///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-///         _resources: Self::ResourceViews<'a>,
+///         query_results: Result<
+///             R,
+///             S,
+///             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+///             Self::ResourceViews<'a>,
+///             Self::EntryViews<'a>,
+///         >,
 ///     ) where
 ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     {
-///         for result!(foo, bar) in query_results {
+///         for result!(foo, bar) in query_results.iter {
 ///             if bar.0 {
 ///                 foo.0 += 1;
 ///             }
@@ -138,6 +153,14 @@ pub trait System {
     ///
     /// The system will have access to the resources requested here when run.
     type ResourceViews<'a>;
+    /// Entry views.
+    ///
+    /// These views specify which components are accessible in entry lookups.
+    ///
+    /// The views here must be [`Disjoint`] with `Self::Views`
+    ///
+    /// [`Disjoint`]: crate::query::view::Disjoint
+    type EntryViews<'a>;
 
     /// Logic to be run over the query result.
     ///
@@ -152,6 +175,7 @@ pub trait System {
     ///         filter,
     ///         filter::Filter,
     ///         result,
+    ///         Result,
     ///         Views,
     ///     },
     ///     registry::ContainsQuery,
@@ -169,15 +193,21 @@ pub trait System {
     ///     type Views<'a> = Views!(&'a mut Foo, &'a Bar);
     ///     type Filter = filter::None;
     ///     type ResourceViews<'a> = Views!();
+    ///     type EntryViews<'a> = Views!();
     ///
-    ///     fn run<'a, R, FI, VI, P, I, Q>(
+    ///     fn run<'a, R, S, FI, VI, P, I, Q>(
     ///         &mut self,
-    ///         query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-    ///         _resources: Self::ResourceViews<'a>,
+    ///         query_results: Result<
+    ///             R,
+    ///             S,
+    ///             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///             Self::ResourceViews<'a>,
+    ///             Self::EntryViews<'a>,
+    ///         >,
     ///     ) where
     ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
-    ///         for result!(foo, bar) in query_results {
+    ///         for result!(foo, bar) in query_results.iter {
     ///             if bar.0 {
     ///                 foo.0 += 1;
     ///             }
@@ -187,10 +217,15 @@ pub trait System {
     /// ```
     ///
     /// [`World`]: crate::world::World
-    fn run<'a, R, FI, VI, P, I, Q>(
+    fn run<'a, R, S, FI, VI, P, I, Q>(
         &mut self,
-        query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-        resources: Self::ResourceViews<'a>,
+        query_result: Result<
+            R,
+            S,
+            result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            Self::ResourceViews<'a>,
+            Self::EntryViews<'a>,
+        >,
     ) where
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>;
 }

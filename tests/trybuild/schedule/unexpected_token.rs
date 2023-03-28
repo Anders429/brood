@@ -1,4 +1,4 @@
-use brood::{query::{Views, filter, result}, registry::ContainsQuery, system::{System, schedule}};
+use brood::{query::{Views, filter, result, Result}, registry::ContainsQuery, system::{System, schedule}};
 // This import is technically unused, since the macro fails to compile before it would be consumed.
 // I'm leaving it here, though, for completeness; user code would use this module, and these tests
 // should do their best to simulate user code.
@@ -12,11 +12,11 @@ impl System for A {
     type Views<'a> = Views!();
     type Filter = filter::None;
     type ResourceViews<'a> = Views!();
+    type EntryViews<'a> = Views!();
 
-    fn run<'a, R, FI, VI, P, I, Q>(
+    fn run<'a, R, S, FI, VI, P, I, Q>(
         &mut self,
-        _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-        _resources: Self::ResourceViews<'a>,
+        _query_results: Result<R, S, result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>, Self::ResourceViews<'a>, Self::EntryViews<'a>>,
     ) where
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> {}
 }
@@ -27,11 +27,11 @@ impl System for B {
     type Views<'a> = Views!();
     type Filter = filter::None;
     type ResourceViews<'a> = Views!();
+    type EntryViews<'a> = Views!();
 
-    fn run<'a, R, FI, VI, P, I, Q>(
+    fn run<'a, R, S, FI, VI, P, I, Q>(
         &mut self,
-        _query_results: result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-        _resources: Self::ResourceViews<'a>,
+        _query_results: Result<R, S, result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>, Self::ResourceViews<'a>, Self::EntryViews<'a>>,
     ) where
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> {}
 }

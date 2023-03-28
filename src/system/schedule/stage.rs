@@ -40,6 +40,14 @@ pub trait Stage<
     ResourceViewsIndicesList,
     ResourceViewsCanonicalContainmentsList,
     ResourceViewsReshapeIndicesList,
+    EntryViewsContainmentsList,
+    EntryViewsIndicesList,
+    EntryViewsReshapeIndicesList,
+    EntryViewsInverseIndicesList,
+    EntryViewsOppositeContainmentsList,
+    EntryViewsOppositeIndicesList,
+    EntryViewsOppositeReshapeIndicesList,
+    EntryViewsOppositeInverseIndicesList,
 >: Send where
     R: Registry,
 {
@@ -63,6 +71,14 @@ pub trait Stage<
         NextResourceViewsIndicesLists,
         NextResourceViewsCanonicalContainmentsLists,
         NextResourceViewsReshapeIndicesLists,
+        NextEntryViewsContainmentsList,
+        NextEntryViewsIndicesList,
+        NextEntryViewsReshapeIndicesList,
+        NextEntryViewsInverseIndicesList,
+        NextEntryViewsOppositeContainmentsList,
+        NextEntryViewsOppositeIndicesList,
+        NextEntryViewsOppositeReshapeIndicesList,
+        NextEntryViewsOppositeInverseIndicesList,
     >(
         &mut self,
         world: SendableWorld<R, Resources>,
@@ -84,6 +100,14 @@ pub trait Stage<
             NextResourceViewsIndicesLists,
             NextResourceViewsCanonicalContainmentsLists,
             NextResourceViewsReshapeIndicesLists,
+            NextEntryViewsContainmentsList,
+            NextEntryViewsIndicesList,
+            NextEntryViewsReshapeIndicesList,
+            NextEntryViewsInverseIndicesList,
+            NextEntryViewsOppositeContainmentsList,
+            NextEntryViewsOppositeIndicesList,
+            NextEntryViewsOppositeReshapeIndicesList,
+            NextEntryViewsOppositeInverseIndicesList,
         >;
 
     /// Attempt to run as many tasks within this stage as possible as add-ons to the previous
@@ -107,8 +131,29 @@ pub trait Stage<
     fn new_has_run() -> Self::HasRun;
 }
 
-impl<R, Resources> Stage<'_, R, Resources, Null, Null, Null, Null, Null, Null, Null, Null, Null>
-    for Null
+impl<R, Resources>
+    Stage<
+        '_,
+        R,
+        Resources,
+        Null,
+        Null,
+        Null,
+        Null,
+        Null,
+        Null,
+        Null,
+        Null,
+        Null,
+        Null,
+        Null,
+        Null,
+        Null,
+        Null,
+        Null,
+        Null,
+        Null,
+    > for Null
 where
     R: Registry,
 {
@@ -126,6 +171,14 @@ where
         NextResourceViewsIndicesLists,
         NextResourceViewsCanonicalContainmentsLists,
         NextResourceViewsReshapeIndicesLists,
+        NextEntryViewsContainmentsList,
+        NextEntryViewsIndicesList,
+        NextEntryViewsReshapeIndicesList,
+        NextEntryViewsInverseIndicesList,
+        NextEntryViewsOppositeContainmentsList,
+        NextEntryViewsOppositeIndicesList,
+        NextEntryViewsOppositeReshapeIndicesList,
+        NextEntryViewsOppositeInverseIndicesList,
     >(
         &mut self,
         world: SendableWorld<R, Resources>,
@@ -147,6 +200,14 @@ where
             NextResourceViewsIndicesLists,
             NextResourceViewsCanonicalContainmentsLists,
             NextResourceViewsReshapeIndicesLists,
+            NextEntryViewsContainmentsList,
+            NextEntryViewsIndicesList,
+            NextEntryViewsReshapeIndicesList,
+            NextEntryViewsInverseIndicesList,
+            NextEntryViewsOppositeContainmentsList,
+            NextEntryViewsOppositeIndicesList,
+            NextEntryViewsOppositeReshapeIndicesList,
+            NextEntryViewsOppositeInverseIndicesList,
         >,
     {
         // Check if borrowed_archetypes is empty.
@@ -188,6 +249,14 @@ fn query_archetype_identifiers<
     ResourceViewsIndices,
     ResourceViewsCanonicalContainments,
     ResourceViewsReshapeIndices,
+    EntryViewsContainments,
+    EntryViewsIndices,
+    EntryViewsReshapeIndices,
+    EntryViewsInverseIndices,
+    EntryViewsOppositeContainments,
+    EntryViewsOppositeIndices,
+    EntryViewsOppositeReshapeIndices,
+    EntryViewsOppositeInverseIndices,
 >(
     world: SendableWorld<R, Resources>,
     borrowed_archetypes: &mut HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
@@ -208,6 +277,14 @@ where
         ResourceViewsIndices,
         ResourceViewsCanonicalContainments,
         ResourceViewsReshapeIndices,
+        EntryViewsContainments,
+        EntryViewsIndices,
+        EntryViewsReshapeIndices,
+        EntryViewsInverseIndices,
+        EntryViewsOppositeContainments,
+        EntryViewsOppositeIndices,
+        EntryViewsOppositeReshapeIndices,
+        EntryViewsOppositeInverseIndices,
     >,
 {
     let mut merged_borrowed_archetypes = borrowed_archetypes.clone();
@@ -251,6 +328,14 @@ fn query_archetype_identifiers_unchecked<
     ResourceViewsIndices,
     ResourceViewsCanonicalContainments,
     ResourceViewsReshapeIndices,
+    EntryViewsContainments,
+    EntryViewsIndices,
+    EntryViewsReshapeIndices,
+    EntryViewsInverseIndices,
+    EntryViewsOppositeContainments,
+    EntryViewsOppositeIndices,
+    EntryViewsOppositeReshapeIndices,
+    EntryViewsOppositeInverseIndices,
 >(
     world: SendableWorld<R, Resources>,
     borrowed_archetypes: &mut HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
@@ -270,6 +355,14 @@ fn query_archetype_identifiers_unchecked<
         ResourceViewsIndices,
         ResourceViewsCanonicalContainments,
         ResourceViewsReshapeIndices,
+        EntryViewsContainments,
+        EntryViewsIndices,
+        EntryViewsReshapeIndices,
+        EntryViewsInverseIndices,
+        EntryViewsOppositeContainments,
+        EntryViewsOppositeIndices,
+        EntryViewsOppositeReshapeIndices,
+        EntryViewsOppositeInverseIndices,
     >,
 {
     for (identifier, claims) in
@@ -307,6 +400,22 @@ impl<
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndices,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainments,
+        EntryViewsContainmentsList,
+        EntryViewsIndices,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndices,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndices,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainments,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndices,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndices,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndices,
+        EntryViewsOppositeInverseIndicesList,
     >
     Stage<
         'a,
@@ -324,6 +433,23 @@ impl<
             ResourceViewsCanonicalContainmentsList,
         ),
         (ResourceViewsReshapeIndices, ResourceViewsReshapeIndicesList),
+        (EntryViewsContainments, EntryViewsContainmentsList),
+        (EntryViewsIndices, EntryViewsIndicesList),
+        (EntryViewsReshapeIndices, EntryViewsReshapeIndicesList),
+        (EntryViewsInverseIndices, EntryViewsInverseIndicesList),
+        (
+            EntryViewsOppositeContainments,
+            EntryViewsOppositeContainmentsList,
+        ),
+        (EntryViewsOppositeIndices, EntryViewsOppositeIndicesList),
+        (
+            EntryViewsOppositeReshapeIndices,
+            EntryViewsOppositeReshapeIndicesList,
+        ),
+        (
+            EntryViewsOppositeInverseIndices,
+            EntryViewsOppositeInverseIndicesList,
+        ),
     > for (&mut T, U)
 where
     R: ContainsQuery<'a, T::Filter, FI, T::Views, VI, P, I, Q>,
@@ -341,6 +467,14 @@ where
             ResourceViewsIndices,
             ResourceViewsCanonicalContainments,
             ResourceViewsReshapeIndices,
+            EntryViewsContainments,
+            EntryViewsIndices,
+            EntryViewsReshapeIndices,
+            EntryViewsInverseIndices,
+            EntryViewsOppositeContainments,
+            EntryViewsOppositeIndices,
+            EntryViewsOppositeReshapeIndices,
+            EntryViewsOppositeInverseIndices,
         > + Send,
     U: Stage<
         'a,
@@ -355,6 +489,14 @@ where
         ResourceViewsIndicesList,
         ResourceViewsCanonicalContainmentsList,
         ResourceViewsReshapeIndicesList,
+        EntryViewsContainmentsList,
+        EntryViewsIndicesList,
+        EntryViewsReshapeIndicesList,
+        EntryViewsInverseIndicesList,
+        EntryViewsOppositeContainmentsList,
+        EntryViewsOppositeIndicesList,
+        EntryViewsOppositeReshapeIndicesList,
+        EntryViewsOppositeInverseIndicesList,
     >,
 {
     type HasRun = (bool, U::HasRun);
@@ -371,6 +513,14 @@ where
         NextResourceViewsIndicesLists,
         NextResourceViewsCanonicalContainmentsLists,
         NextResourceViewsReshapeIndicesLists,
+        NextEntryViewsContainmentsList,
+        NextEntryViewsIndicesList,
+        NextEntryViewsReshapeIndicesList,
+        NextEntryViewsInverseIndicesList,
+        NextEntryViewsOppositeContainmentsList,
+        NextEntryViewsOppositeIndicesList,
+        NextEntryViewsOppositeReshapeIndicesList,
+        NextEntryViewsOppositeInverseIndicesList,
     >(
         &mut self,
         world: SendableWorld<R, Resources>,
@@ -392,6 +542,14 @@ where
             NextResourceViewsIndicesLists,
             NextResourceViewsCanonicalContainmentsLists,
             NextResourceViewsReshapeIndicesLists,
+            NextEntryViewsContainmentsList,
+            NextEntryViewsIndicesList,
+            NextEntryViewsReshapeIndicesList,
+            NextEntryViewsInverseIndicesList,
+            NextEntryViewsOppositeContainmentsList,
+            NextEntryViewsOppositeIndicesList,
+            NextEntryViewsOppositeReshapeIndicesList,
+            NextEntryViewsOppositeInverseIndicesList,
         >,
     {
         // Determine whether this task still needs to run, or if it has been run as part of a
@@ -418,6 +576,14 @@ where
                         ResourceViewsIndices,
                         ResourceViewsCanonicalContainments,
                         ResourceViewsReshapeIndices,
+                        EntryViewsContainments,
+                        EntryViewsIndices,
+                        EntryViewsReshapeIndices,
+                        EntryViewsInverseIndices,
+                        EntryViewsOppositeContainments,
+                        EntryViewsOppositeIndices,
+                        EntryViewsOppositeReshapeIndices,
+                        EntryViewsOppositeInverseIndices,
                     >(world, &mut borrowed_archetypes);
 
                     self.1
@@ -448,6 +614,14 @@ where
             ResourceViewsIndices,
             ResourceViewsCanonicalContainments,
             ResourceViewsReshapeIndices,
+            EntryViewsContainments,
+            EntryViewsIndices,
+            EntryViewsReshapeIndices,
+            EntryViewsInverseIndices,
+            EntryViewsOppositeContainments,
+            EntryViewsOppositeIndices,
+            EntryViewsOppositeReshapeIndices,
+            EntryViewsOppositeInverseIndices,
         >(world, &mut borrowed_archetypes)
         {
             rayon::join(

@@ -71,7 +71,11 @@ pub(crate) use reshape::Reshape;
 pub(crate) use sealed::ParResults;
 pub(crate) use sealed::Results;
 
-use crate::doc;
+use crate::{
+    doc,
+    query::Entries,
+    registry,
+};
 
 /// The result of a query.
 ///
@@ -109,11 +113,20 @@ use crate::doc;
 /// assert_eq!(world.get::<Count, _>(), &Count(100));
 /// ```
 #[non_exhaustive]
-pub struct Result<Iterator, ResourceViews> {
+pub struct Result<'a, Registry, Resources, Iterator, ResourceViews, EntryViews>
+where
+    Registry: registry::Registry,
+{
     /// The viewed entities.
     pub iter: Iterator,
     /// The viewed resources.
     pub resources: ResourceViews,
+    /// Entry access for the components specified by `EntryViews`.
+    ///
+    /// This allows entity [`Entry`] lookup while iterating over the entities viewed by this query.
+    ///
+    /// [`Entry`]: crate::query::entries::Entry
+    pub entries: Entries<'a, Registry, Resources, EntryViews>,
 }
 
 doc::non_root_macro! {

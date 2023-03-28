@@ -49,10 +49,13 @@
 //! [`Views`]: trait@crate::query::view::Views
 //! [`World`]: crate::world::World
 
+pub mod entries;
 pub mod filter;
 pub mod result;
 pub mod view;
 
+#[doc(inline)]
+pub use entries::Entries;
 #[doc(inline)]
 pub use result::{
     result,
@@ -105,13 +108,15 @@ use core::{
 /// ```
 ///
 /// [`query()`]: crate::world::World::query()
-pub struct Query<Views, Filters = filter::None, ResourceViews = view::Null> {
+pub struct Query<Views, Filters = filter::None, ResourceViews = view::Null, EntryViews = view::Null>
+{
     view: PhantomData<Views>,
     filter: PhantomData<Filters>,
     resource_views: PhantomData<ResourceViews>,
+    entry_views: PhantomData<EntryViews>,
 }
 
-impl<Views, Filters, ResourceViews> Query<Views, Filters, ResourceViews> {
+impl<Views, Filters, ResourceViews, EntryViews> Query<Views, Filters, ResourceViews, EntryViews> {
     /// Creates a new `Query`.
     ///
     /// When creating a query, you must specify the views type `V`, and can optionally specify the
@@ -123,33 +128,48 @@ impl<Views, Filters, ResourceViews> Query<Views, Filters, ResourceViews> {
             view: PhantomData,
             filter: PhantomData,
             resource_views: PhantomData,
+            entry_views: PhantomData,
         }
     }
 }
 
-impl<Views, Filters, ResourceViews> Default for Query<Views, Filters, ResourceViews> {
+impl<Views, Filters, ResourceViews, EntryViews> Default
+    for Query<Views, Filters, ResourceViews, EntryViews>
+{
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<Views, Filters, ResourceViews> Clone for Query<Views, Filters, ResourceViews> {
+impl<Views, Filters, ResourceViews, EntryViews> Clone
+    for Query<Views, Filters, ResourceViews, EntryViews>
+{
     fn clone(&self) -> Self {
         Self::new()
     }
 }
 
-impl<Views, Filters, ResourceViews> PartialEq for Query<Views, Filters, ResourceViews> {
+impl<Views, Filters, ResourceViews, EntryViews> PartialEq
+    for Query<Views, Filters, ResourceViews, EntryViews>
+{
     fn eq(&self, _other: &Self) -> bool {
         true
     }
 }
 
-impl<Views, Filters, ResourceViews> Eq for Query<Views, Filters, ResourceViews> {}
+impl<Views, Filters, ResourceViews, EntryViews> Eq
+    for Query<Views, Filters, ResourceViews, EntryViews>
+{
+}
 
-impl<Views, Filters, ResourceViews> Copy for Query<Views, Filters, ResourceViews> {}
+impl<Views, Filters, ResourceViews, EntryViews> Copy
+    for Query<Views, Filters, ResourceViews, EntryViews>
+{
+}
 
-impl<Views, Filters, ResourceViews> fmt::Debug for Query<Views, Filters, ResourceViews> {
+impl<Views, Filters, ResourceViews, EntryViews> fmt::Debug
+    for Query<Views, Filters, ResourceViews, EntryViews>
+{
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.debug_struct("Query").finish()
     }
