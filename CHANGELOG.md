@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.7.0 - 2023-03-27
 ### Added
 - `query::Entries` struct to allow access to certain component columns through an `Entry` API.
 - `query::Entry` struct to allow access to an individual entity's components, respecting a restricting superset of views.
