@@ -1,6 +1,17 @@
 # Changelog
 
 ## Unreleased
+### Added
+- `query::Entries` struct to allow access to certain component columns through an `Entry` API.
+- `query::Entry` struct to allow access to an individual entity's components, respecting a restricting superset of views.
+- `view::SubSet` trait, defining one `Views` as a subset of another.
+- `view::Disjoint` trait, defining two `Views` as being non-conflicting.
+### Changed
+- Queries can now contain an `EntryViews` parameter, specifying component columns that can be accessed through an `Entry` API.
+- `query::Result` now includes an `entries` field, containing a `query::Entries` struct giving entry access to the components queried with `EntryViews`.
+- `System` and `ParSystem` now each have an `EntryViews` associated type.
+- `System` and `ParSystem`'s `run()` method now takes one argument, which is simply a `query::Result`.
+- Scheduling now takes into account a system's `EntryViews` when creating stages.
 ### Fixed
 - Querying with empty component views no longer iterates endlessly. It now iterates once for each entity filtered, despite no components being viewed.
 
