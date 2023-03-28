@@ -161,6 +161,39 @@ where
     /// Entities must not be added or removed from the `World` while pointed at by `Entries`, nor
     /// should existing entities change shape (meaning, they shouldn't be moved between
     /// archetypes).
+    ///
+    /// # Example
+    /// ```
+    /// use brood::{
+    ///     entity,
+    ///     query::{
+    ///         filter,
+    ///         result,
+    ///         Views,
+    ///     },
+    ///     Query,
+    ///     Registry,
+    ///     World,
+    /// };
+    ///
+    /// #[derive(Debug, PartialEq)]
+    /// struct A(u32);
+    /// struct B(char);
+    ///
+    /// let mut world = World::<Registry!(A, B)>::new();
+    /// let entity_identifier = world.insert(entity!(A(42), B('a')));
+    ///
+    /// let mut query_result =
+    ///     world.query(Query::<Views!(), filter::None, Views!(), Views!(&A)>::new());
+    ///
+    /// let result!(a) = query_result
+    ///     .entries
+    ///     .entry(entity_identifier)
+    ///     .unwrap()
+    ///     .query(Query::<Views!(&A)>::new())
+    ///     .unwrap();
+    /// assert_eq!(a, &A(42));
+    /// ```
     pub(crate) unsafe fn new(world: *mut World<Registry, Resources>) -> Self {
         Entries {
             world,
