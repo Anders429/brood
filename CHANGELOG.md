@@ -12,6 +12,8 @@
 - `System` and `ParSystem` now each have an `EntryViews` associated type.
 - `System` and `ParSystem`'s `run()` method now takes one argument, which is simply a `query::Result`.
 - Scheduling now takes into account a system's `EntryViews` when creating stages.
+
+## 0.6.1 - 2023-03-21
 ### Fixed
 - Querying with empty component views no longer iterates endlessly. It now iterates once for each entity filtered, despite no components being viewed.
 
