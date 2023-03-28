@@ -3,6 +3,7 @@ use crate::{
         filter::Filter,
         result,
         view::ParViews,
+        Result,
     },
     registry::ContainsParQuery,
 };
@@ -20,6 +21,7 @@ use crate::{
 ///         filter,
 ///         filter::Filter,
 ///         result,
+///         Result,
 ///         Views,
 ///     },
 ///     registry::ContainsParQuery,
@@ -40,14 +42,19 @@ use crate::{
 ///     type ResourceViews<'a> = Views!();
 ///     type EntryViews<'a> = Views!();
 ///
-///     fn run<'a, R, FI, VI, P, I, Q>(
+///     fn run<'a, R, S, FI, VI, P, I, Q>(
 ///         &mut self,
-///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-///         _resources: Self::ResourceViews<'a>,
+///         query_results: Result<
+///             R,
+///             S,
+///             result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+///             Self::ResourceViews<'a>,
+///             Self::EntryViews<'a>,
+///         >,
 ///     ) where
 ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///     {
-///         query_results.for_each(|result!(foo, bar)| {
+///         query_results.iter.for_each(|result!(foo, bar)| {
 ///             if bar.0 {
 ///                 foo.0 += 1;
 ///             }
@@ -94,6 +101,7 @@ pub trait ParSystem {
     ///         filter,
     ///         filter::Filter,
     ///         result,
+    ///         Result,
     ///         Views,
     ///     },
     ///     registry::ContainsParQuery,
@@ -114,14 +122,19 @@ pub trait ParSystem {
     ///     type ResourceViews<'a> = Views!();
     ///     type EntryViews<'a> = Views!();
     ///
-    ///     fn run<'a, R, FI, VI, P, I, Q>(
+    ///     fn run<'a, R, S, FI, VI, P, I, Q>(
     ///         &mut self,
-    ///         query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-    ///         _resources: Self::ResourceViews<'a>,
+    ///         query_results: Result<
+    ///             R,
+    ///             S,
+    ///             result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///             Self::ResourceViews<'a>,
+    ///             Self::EntryViews<'a>,
+    ///         >,
     ///     ) where
     ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///     {
-    ///         query_results.for_each(|result!(foo, bar)| {
+    ///         query_results.iter.for_each(|result!(foo, bar)| {
     ///             if bar.0 {
     ///                 foo.0 += 1;
     ///             }
@@ -131,10 +144,15 @@ pub trait ParSystem {
     /// ```
     ///
     /// [`World`]: crate::world::World
-    fn run<'a, R, FI, VI, P, I, Q>(
+    fn run<'a, R, S, FI, VI, P, I, Q>(
         &mut self,
-        query_results: result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-        resources: Self::ResourceViews<'a>,
+        query_result: Result<
+            R,
+            S,
+            result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            Self::ResourceViews<'a>,
+            Self::EntryViews<'a>,
+        >,
     ) where
         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>;
 }

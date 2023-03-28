@@ -1,7 +1,7 @@
 error: no rules expected the token `+`
-  --> tests/trybuild/schedule/unexpected_token.rs:42:47
+  --> tests/trybuild/schedule/unexpected_token.rs:40:47
    |
-42 |     let schedule = schedule!(task::System(A), + task::System(B),);
+40 |     let schedule = schedule!(task::System(A), + task::System(B),);
    |                                               ^ no rules expected this token in macro call
    |
 note: while trying to match meta-variable `$tasks:expr`
