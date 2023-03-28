@@ -3213,4 +3213,33 @@ mod tests {
 
         assert_eq!(b, &B('a'));
     }
+
+    #[test]
+    fn query_with_entries() {
+        let mut world = World::<Registry>::new();
+        let entity_identifier = world.insert(entity!(A(42)));
+
+        let mut query_results =
+            world.query(Query::<Views!(&A), filter::None, Views!(), Views!(&A)>::new());
+        for result!() in query_results.iter {
+            let mut entry = assert_some!(query_results.entries.entry(entity_identifier));
+            let result!(a) = assert_some!(entry.query(Query::<Views!(&A)>::new()));
+            assert_eq!(a, &A(42));
+        }
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn par_query_with_entries() {
+        let mut world = World::<Registry>::new();
+        let entity_identifier = world.insert(entity!(A(42)));
+
+        let mut query_results =
+            world.par_query(Query::<Views!(&A), filter::None, Views!(), Views!(&A)>::new());
+
+        // Using the Entries during parallel iteration is not supported.
+        let mut entry = assert_some!(query_results.entries.entry(entity_identifier));
+        let result!(a) = assert_some!(entry.query(Query::<Views!(&A)>::new()));
+        assert_eq!(a, &A(42));
+    }
 }

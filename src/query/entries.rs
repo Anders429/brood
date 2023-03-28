@@ -30,20 +30,20 @@ use core::marker::PhantomData;
 /// A view into a single entity in a [`World`].
 ///
 /// [`World`]: crate::World
-pub struct Entry<'a, Registry, Resources, Views>
+pub struct Entry<'a, 'b, Registry, Resources, Views>
 where
     Registry: registry::Registry,
 {
-    entries: &'a mut Entries<'a, Registry, Resources, Views>,
+    entries: &'b mut Entries<'a, Registry, Resources, Views>,
     location: Location<Registry>,
 }
 
-impl<'a, Registry, Resources, Views> Entry<'a, Registry, Resources, Views>
+impl<'a, 'b, Registry, Resources, Views> Entry<'a, 'b, Registry, Resources, Views>
 where
     Registry: registry::Registry,
 {
     fn new(
-        entries: &'a mut Entries<'a, Registry, Resources, Views>,
+        entries: &'b mut Entries<'a, Registry, Resources, Views>,
         location: Location<Registry>,
     ) -> Self {
         Self { entries, location }
@@ -208,10 +208,10 @@ where
     /// If no such entry exists, [`None`] is returned.
     ///
     /// [`None`]: Option::None
-    pub fn entry(
-        &'a mut self,
+    pub fn entry<'b>(
+        &'b mut self,
         entity_identifier: entity::Identifier,
-    ) -> Option<Entry<'a, Registry, Resources, Views>> {
+    ) -> Option<Entry<'a, 'b, Registry, Resources, Views>> {
         // SAFETY: The invariants of `Entries` guarantees that `World` won't have any entities
         // added or removed, meaning the `entity_allocator` will not be mutated during this time.
         unsafe { &*self.world }
@@ -219,6 +219,20 @@ where
             .get(entity_identifier)
             .map(|location| Entry::new(self, location))
     }
+}
+
+// SAFETY: Since the access to the viewed components is unique, this can be sent between threads
+// safely.
+unsafe impl<'a, Registry, Resources, Views> Send for Entries<'a, Registry, Resources, Views> where
+    Registry: registry::Registry
+{
+}
+
+// SAFETY: Since the access to the viewed components is unique, this can be shared between threads
+// safely.
+unsafe impl<'a, Registry, Resources, Views> Sync for Entries<'a, Registry, Resources, Views> where
+    Registry: registry::Registry
+{
 }
 
 #[cfg(test)]
