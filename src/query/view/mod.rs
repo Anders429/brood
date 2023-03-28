@@ -54,6 +54,8 @@ pub(crate) mod resource;
 mod disjoint;
 mod get;
 #[cfg(feature = "rayon")]
+mod merge;
+#[cfg(feature = "rayon")]
 mod par;
 mod reshape;
 mod sealed;
@@ -73,6 +75,8 @@ pub(crate) use claim::{
     Claims,
 };
 pub(crate) use get::Get;
+#[cfg(feature = "rayon")]
+pub(crate) use merge::Merge;
 #[cfg(feature = "rayon")]
 pub(crate) use par::{
     ParViewsSeal,
