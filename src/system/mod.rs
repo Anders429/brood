@@ -30,7 +30,7 @@
 //!     type ResourceViews<'a> = Views!();
 //!     type EntryViews<'a> = Views!();
 //!
-//!     fn run<'a, R, S, FI, VI, P, I, Q>(
+//!     fn run<'a, R, S, FI, VI, P, I, Q, E>(
 //!         &mut self,
 //!         query_results: Result<
 //!             R,
@@ -38,6 +38,7 @@
 //!             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 //!             Self::ResourceViews<'a>,
 //!             Self::EntryViews<'a>,
+//!             E,
 //!         >,
 //!     ) where
 //!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
@@ -121,7 +122,7 @@ use crate::{
 ///     type ResourceViews<'a> = Views!();
 ///     type EntryViews<'a> = Views!();
 ///
-///     fn run<'a, R, S, FI, VI, P, I, Q>(
+///     fn run<'a, R, S, FI, VI, P, I, Q, E>(
 ///         &mut self,
 ///         query_results: Result<
 ///             R,
@@ -129,6 +130,7 @@ use crate::{
 ///             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///             Self::ResourceViews<'a>,
 ///             Self::EntryViews<'a>,
+///             E,
 ///         >,
 ///     ) where
 ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
@@ -195,7 +197,7 @@ pub trait System {
     ///     type ResourceViews<'a> = Views!();
     ///     type EntryViews<'a> = Views!();
     ///
-    ///     fn run<'a, R, S, FI, VI, P, I, Q>(
+    ///     fn run<'a, R, S, FI, VI, P, I, Q, E>(
     ///         &mut self,
     ///         query_results: Result<
     ///             R,
@@ -203,6 +205,7 @@ pub trait System {
     ///             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///             Self::ResourceViews<'a>,
     ///             Self::EntryViews<'a>,
+    ///             E,
     ///         >,
     ///     ) where
     ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
@@ -217,7 +220,7 @@ pub trait System {
     /// ```
     ///
     /// [`World`]: crate::world::World
-    fn run<'a, R, S, FI, VI, P, I, Q>(
+    fn run<'a, R, S, FI, VI, P, I, Q, E>(
         &mut self,
         query_result: Result<
             R,
@@ -225,6 +228,7 @@ pub trait System {
             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             Self::ResourceViews<'a>,
             Self::EntryViews<'a>,
+            E,
         >,
     ) where
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>;

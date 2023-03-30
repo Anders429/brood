@@ -7,7 +7,7 @@
 //! The basic algorithm here is to:
 //! - "Get" each view within the subview inside the superview.
 //! - The Get trait only is implemented for the subset relationship for each component.
-//! - End case is having null::Views in subset.
+//! - End case is having `null::Views` in subset.
 
 use crate::{
     entity,

@@ -27,10 +27,10 @@ pub use entity::ContainsEntity;
 #[cfg(feature = "rayon")]
 pub use par_query::ContainsParQuery;
 pub use query::ContainsQuery;
+pub use views::ContainsViews;
 
 #[cfg(feature = "rayon")]
 pub(crate) use par_views::ContainsParViews;
-pub(crate) use views::ContainsViews;
 
 use filter::ContainsFilter;
 

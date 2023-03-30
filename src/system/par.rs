@@ -42,7 +42,7 @@ use crate::{
 ///     type ResourceViews<'a> = Views!();
 ///     type EntryViews<'a> = Views!();
 ///
-///     fn run<'a, R, S, FI, VI, P, I, Q>(
+///     fn run<'a, R, S, FI, VI, P, I, Q, E>(
 ///         &mut self,
 ///         query_results: Result<
 ///             R,
@@ -50,6 +50,7 @@ use crate::{
 ///             result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///             Self::ResourceViews<'a>,
 ///             Self::EntryViews<'a>,
+///             E,
 ///         >,
 ///     ) where
 ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
@@ -122,7 +123,7 @@ pub trait ParSystem {
     ///     type ResourceViews<'a> = Views!();
     ///     type EntryViews<'a> = Views!();
     ///
-    ///     fn run<'a, R, S, FI, VI, P, I, Q>(
+    ///     fn run<'a, R, S, FI, VI, P, I, Q, E>(
     ///         &mut self,
     ///         query_results: Result<
     ///             R,
@@ -130,6 +131,7 @@ pub trait ParSystem {
     ///             result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///             Self::ResourceViews<'a>,
     ///             Self::EntryViews<'a>,
+    ///             E,
     ///         >,
     ///     ) where
     ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
@@ -144,7 +146,7 @@ pub trait ParSystem {
     /// ```
     ///
     /// [`World`]: crate::world::World
-    fn run<'a, R, S, FI, VI, P, I, Q>(
+    fn run<'a, R, S, FI, VI, P, I, Q, E>(
         &mut self,
         query_result: Result<
             R,
@@ -152,6 +154,7 @@ pub trait ParSystem {
             result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             Self::ResourceViews<'a>,
             Self::EntryViews<'a>,
+            E,
         >,
     ) where
         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>;

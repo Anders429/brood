@@ -30,25 +30,32 @@ use core::marker::PhantomData;
 /// A view into a single entity in a [`World`].
 ///
 /// [`World`]: crate::World
-pub struct Entry<'a, 'b, Registry, Resources, Views>
+pub struct Entry<'a, 'b, Registry, Resources, Views, Indices>
 where
     Registry: registry::Registry,
 {
-    entries: &'b mut Entries<'a, Registry, Resources, Views>,
+    entries: &'b mut Entries<'a, Registry, Resources, Views, Indices>,
     location: Location<Registry>,
 }
 
-impl<'a, 'b, Registry, Resources, Views> Entry<'a, 'b, Registry, Resources, Views>
+impl<'a, 'b, Registry, Resources, Views, Indices> Entry<'a, 'b, Registry, Resources, Views, Indices>
 where
     Registry: registry::Registry,
 {
     fn new(
-        entries: &'b mut Entries<'a, Registry, Resources, Views>,
+        entries: &'b mut Entries<'a, Registry, Resources, Views, Indices>,
         location: Location<Registry>,
     ) -> Self {
         Self { entries, location }
     }
+}
 
+impl<'a, 'b, Registry, Resources, Views, Containments, Indices, ReshapeIndices>
+    Entry<'a, 'b, Registry, Resources, Views, (Containments, Indices, ReshapeIndices)>
+where
+    Views: view::Views<'a>,
+    Registry: registry::ContainsViews<'a, Views, Containments, Indices, ReshapeIndices>,
+{
     /// Query for components contained within this entity using the given `SubViews` and `Filter`.
     ///
     /// Returns a `Some` value if the entity matches the `SubViews` and `Filter`, and returns a
@@ -61,9 +68,9 @@ where
         Filter,
         FilterIndices,
         SubViewsFilterIndices,
-        Containments,
-        Indices,
-        ReshapeIndices,
+        SubViewsContainments,
+        SubViewsIndices,
+        SubViewsReshapeIndices,
         SubSetIndices,
     >(
         &mut self,
@@ -77,9 +84,9 @@ where
             FilterIndices,
             SubViews,
             SubViewsFilterIndices,
-            Containments,
-            Indices,
-            ReshapeIndices,
+            SubViewsContainments,
+            SubViewsIndices,
+            SubViewsReshapeIndices,
         >,
     {
         // SAFETY: The `Registry` on which `filter()` is called is the same `Registry` over which
@@ -106,7 +113,7 @@ where
                     (*self.entries.world)
                         .archetypes
                         .get_mut(self.location.identifier)?
-                        .view_row_unchecked::<SubViews, Containments, Indices, ReshapeIndices>(
+                        .view_row_unchecked::<SubViews, SubViewsContainments, SubViewsIndices, SubViewsReshapeIndices>(
                             self.location.index,
                         )
                         .reshape()
@@ -121,7 +128,7 @@ where
 /// Access to entity [`Entry`]s.
 ///
 /// These entity `Entry`s allow access to the components viewed in `Views`.
-pub struct Entries<'a, Registry, Resources, Views>
+pub struct Entries<'a, Registry, Resources, Views, Indices>
 where
     Registry: registry::Registry,
 {
@@ -129,9 +136,10 @@ where
 
     lifetime: PhantomData<&'a ()>,
     views: PhantomData<Views>,
+    indices: PhantomData<Indices>,
 }
 
-impl<'a, Registry, Resources, Views> Entries<'a, Registry, Resources, Views>
+impl<'a, Registry, Resources, Views, Indices> Entries<'a, Registry, Resources, Views, Indices>
 where
     Registry: registry::Registry,
 {
@@ -187,6 +195,7 @@ where
 
             lifetime: PhantomData,
             views: PhantomData,
+            indices: PhantomData,
         }
     }
 
@@ -198,7 +207,7 @@ where
     pub fn entry<'b>(
         &'b mut self,
         entity_identifier: entity::Identifier,
-    ) -> Option<Entry<'a, 'b, Registry, Resources, Views>> {
+    ) -> Option<Entry<'a, 'b, Registry, Resources, Views, Indices>> {
         // SAFETY: The invariants of `Entries` guarantees that `World` won't have any entities
         // added or removed, meaning the `entity_allocator` will not be mutated during this time.
         unsafe { &*self.world }
@@ -210,15 +219,19 @@ where
 
 // SAFETY: Since the access to the viewed components is unique, this can be sent between threads
 // safely.
-unsafe impl<'a, Registry, Resources, Views> Send for Entries<'a, Registry, Resources, Views> where
-    Registry: registry::Registry
+unsafe impl<'a, Registry, Resources, Views, Indices> Send
+    for Entries<'a, Registry, Resources, Views, Indices>
+where
+    Registry: registry::Registry,
 {
 }
 
 // SAFETY: Since the access to the viewed components is unique, this can be shared between threads
 // safely.
-unsafe impl<'a, Registry, Resources, Views> Sync for Entries<'a, Registry, Resources, Views> where
-    Registry: registry::Registry
+unsafe impl<'a, Registry, Resources, Views, Indices> Sync
+    for Entries<'a, Registry, Resources, Views, Indices>
+where
+    Registry: registry::Registry,
 {
 }
 
@@ -256,7 +269,7 @@ mod tests {
         let mut world = World::<Registry!()>::new();
         let identifier = world.insert(entity!());
 
-        let mut entries = unsafe { Entries::<_, _, Views!()>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         assert_some!(entry.query(Query::<Views!()>::new()));
@@ -267,7 +280,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!()>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         assert_some!(entry.query(Query::<Views!(), filter::Has<A>>::new()));
@@ -278,7 +291,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!()>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         assert_none!(entry.query(Query::<Views!(), filter::Has<B>>::new()));
@@ -289,7 +302,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!());
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         assert_some!(entry.query(Query::<Views!()>::new()));
@@ -300,7 +313,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(a) = assert_some!(entry.query(Query::<Views!(&A)>::new()));
@@ -312,7 +325,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(c) = assert_some!(entry.query(Query::<Views!(&C)>::new()));
@@ -324,7 +337,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(c) = assert_some!(entry.query(Query::<Views!(&mut C)>::new()));
@@ -336,7 +349,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(a) = assert_some!(entry.query(Query::<Views!(Option<&A>)>::new()));
@@ -348,7 +361,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(c) = assert_some!(entry.query(Query::<Views!(Option<&C>)>::new()));
@@ -360,7 +373,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(c) = assert_some!(entry.query(Query::<Views!(Option<&mut C>)>::new()));
@@ -372,7 +385,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), C(3.14)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C, &B)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C, &B), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(b) = assert_some!(entry.query(Query::<Views!(Option<&B>)>::new()));
@@ -385,7 +398,7 @@ mod tests {
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
 
         let mut entries =
-            unsafe { Entries::<_, _, Views!(&A, &mut C, entity::Identifier)>::new(&mut world) };
+            unsafe { Entries::<_, _, Views!(&A, &mut C, entity::Identifier), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(queried_identifier) =
@@ -399,7 +412,7 @@ mod tests {
         let identifier = world.insert(entity!(B('a'), C(3.14)));
 
         let mut entries =
-            unsafe { Entries::<_, _, Views!(&A, &mut B, entity::Identifier)>::new(&mut world) };
+            unsafe { Entries::<_, _, Views!(&A, &mut B, entity::Identifier), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(queried_identifier, b, a) =

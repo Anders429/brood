@@ -48,6 +48,9 @@ pub trait Stage<
     EntryViewsOppositeIndicesList,
     EntryViewsOppositeReshapeIndicesList,
     EntryViewsOppositeInverseIndicesList,
+    EntryContainmentsList,
+    EntryIndicesList,
+    EntryReshapeIndicesList,
 >: Send where
     R: Registry,
 {
@@ -79,6 +82,9 @@ pub trait Stage<
         NextEntryViewsOppositeIndicesList,
         NextEntryViewsOppositeReshapeIndicesList,
         NextEntryViewsOppositeInverseIndicesList,
+        NextEntryContainmentsList,
+        NextEntryIndicesList,
+        NextEntryReshapeIndicesList,
     >(
         &mut self,
         world: SendableWorld<R, Resources>,
@@ -108,6 +114,9 @@ pub trait Stage<
             NextEntryViewsOppositeIndicesList,
             NextEntryViewsOppositeReshapeIndicesList,
             NextEntryViewsOppositeInverseIndicesList,
+            NextEntryContainmentsList,
+            NextEntryIndicesList,
+            NextEntryReshapeIndicesList,
         >;
 
     /// Attempt to run as many tasks within this stage as possible as add-ons to the previous
@@ -153,6 +162,9 @@ impl<R, Resources>
         Null,
         Null,
         Null,
+        Null,
+        Null,
+        Null,
     > for Null
 where
     R: Registry,
@@ -179,6 +191,9 @@ where
         NextEntryViewsOppositeIndicesList,
         NextEntryViewsOppositeReshapeIndicesList,
         NextEntryViewsOppositeInverseIndicesList,
+        NextEntryContainmentsList,
+        NextEntryIndicesList,
+        NextEntryReshapeIndicesList,
     >(
         &mut self,
         world: SendableWorld<R, Resources>,
@@ -208,6 +223,9 @@ where
             NextEntryViewsOppositeIndicesList,
             NextEntryViewsOppositeReshapeIndicesList,
             NextEntryViewsOppositeInverseIndicesList,
+            NextEntryContainmentsList,
+            NextEntryIndicesList,
+            NextEntryReshapeIndicesList,
         >,
     {
         // Check if borrowed_archetypes is empty.
@@ -257,6 +275,9 @@ fn query_archetype_identifiers<
     EntryViewsOppositeIndices,
     EntryViewsOppositeReshapeIndices,
     EntryViewsOppositeInverseIndices,
+    EntryContainments,
+    EntryIndices,
+    EntryReshapeIndices,
 >(
     world: SendableWorld<R, Resources>,
     borrowed_archetypes: &mut HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
@@ -285,6 +306,9 @@ where
         EntryViewsOppositeIndices,
         EntryViewsOppositeReshapeIndices,
         EntryViewsOppositeInverseIndices,
+        EntryContainments,
+        EntryIndices,
+        EntryReshapeIndices,
     >,
 {
     let mut merged_borrowed_archetypes = borrowed_archetypes.clone();
@@ -336,6 +360,9 @@ fn query_archetype_identifiers_unchecked<
     EntryViewsOppositeIndices,
     EntryViewsOppositeReshapeIndices,
     EntryViewsOppositeInverseIndices,
+    EntryContainments,
+    EntryIndices,
+    EntryReshapeIndices,
 >(
     world: SendableWorld<R, Resources>,
     borrowed_archetypes: &mut HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
@@ -363,6 +390,9 @@ fn query_archetype_identifiers_unchecked<
         EntryViewsOppositeIndices,
         EntryViewsOppositeReshapeIndices,
         EntryViewsOppositeInverseIndices,
+        EntryContainments,
+        EntryIndices,
+        EntryReshapeIndices,
     >,
 {
     for (identifier, claims) in
@@ -416,6 +446,12 @@ impl<
         EntryViewsOppositeReshapeIndicesList,
         EntryViewsOppositeInverseIndices,
         EntryViewsOppositeInverseIndicesList,
+        EntryContainments,
+        EntryContainmentsList,
+        EntryIndices,
+        EntryIndicesList,
+        EntryReshapeIndices,
+        EntryReshapeIndicesList,
     >
     Stage<
         'a,
@@ -450,6 +486,9 @@ impl<
             EntryViewsOppositeInverseIndices,
             EntryViewsOppositeInverseIndicesList,
         ),
+        (EntryContainments, EntryContainmentsList),
+        (EntryIndices, EntryIndicesList),
+        (EntryReshapeIndices, EntryReshapeIndicesList),
     > for (&mut T, U)
 where
     R: ContainsQuery<'a, T::Filter, FI, T::Views, VI, P, I, Q>,
@@ -475,6 +514,9 @@ where
             EntryViewsOppositeIndices,
             EntryViewsOppositeReshapeIndices,
             EntryViewsOppositeInverseIndices,
+            EntryContainments,
+            EntryIndices,
+            EntryReshapeIndices,
         > + Send,
     U: Stage<
         'a,
@@ -497,6 +539,9 @@ where
         EntryViewsOppositeIndicesList,
         EntryViewsOppositeReshapeIndicesList,
         EntryViewsOppositeInverseIndicesList,
+        EntryContainmentsList,
+        EntryIndicesList,
+        EntryReshapeIndicesList,
     >,
 {
     type HasRun = (bool, U::HasRun);
@@ -521,6 +566,9 @@ where
         NextEntryViewsOppositeIndicesList,
         NextEntryViewsOppositeReshapeIndicesList,
         NextEntryViewsOppositeInverseIndicesList,
+        NextEntryContainments,
+        NextEntryIndices,
+        NextEntryReshapeIndices,
     >(
         &mut self,
         world: SendableWorld<R, Resources>,
@@ -550,6 +598,9 @@ where
             NextEntryViewsOppositeIndicesList,
             NextEntryViewsOppositeReshapeIndicesList,
             NextEntryViewsOppositeInverseIndicesList,
+            NextEntryContainments,
+            NextEntryIndices,
+            NextEntryReshapeIndices,
         >,
     {
         // Determine whether this task still needs to run, or if it has been run as part of a
@@ -584,6 +635,9 @@ where
                         EntryViewsOppositeIndices,
                         EntryViewsOppositeReshapeIndices,
                         EntryViewsOppositeInverseIndices,
+                        EntryContainments,
+                        EntryIndices,
+                        EntryReshapeIndices,
                     >(world, &mut borrowed_archetypes);
 
                     self.1
@@ -622,6 +676,9 @@ where
             EntryViewsOppositeIndices,
             EntryViewsOppositeReshapeIndices,
             EntryViewsOppositeInverseIndices,
+            EntryContainments,
+            EntryIndices,
+            EntryReshapeIndices,
         >(world, &mut borrowed_archetypes)
         {
             rayon::join(
