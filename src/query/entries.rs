@@ -64,26 +64,13 @@ where
         Containments,
         Indices,
         ReshapeIndices,
-        ViewContainments,
-        ViewIndices,
-        ViewsReshapeIndices,
-        CanonicalContainments,
+        SubSetIndices,
     >(
         &mut self,
         #[allow(unused_variables)] query: Query<SubViews, Filter>,
     ) -> Option<SubViews>
     where
-        SubViews: SubSet<
-                Registry,
-                Views,
-                Containments,
-                Indices,
-                ReshapeIndices,
-                ViewContainments,
-                ViewIndices,
-                ViewsReshapeIndices,
-                CanonicalContainments,
-            > + view::Views<'a>,
+        SubViews: SubSet<Views, SubSetIndices> + view::Views<'a>,
         Registry: ContainsQuery<
             'a,
             Filter,
