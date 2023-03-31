@@ -64,6 +64,11 @@ where
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims;
+
+    /// Return the indices for each view into the registry.
+    fn indices<R>() -> V::Indices
+    where
+        R: registry::Length;
 }
 
 impl<'a> CanonicalViews<'a, view::Null, Null> for registry::Null {
@@ -94,6 +99,13 @@ impl<'a> CanonicalViews<'a, view::Null, Null> for registry::Null {
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims {
         claim::Null
+    }
+
+    fn indices<R>() -> view::Null
+    where
+        R: registry::Length,
+    {
+        view::Null
     }
 }
 
@@ -164,6 +176,13 @@ where
     fn claims() -> Self::Claims {
         (Claim::Immutable, R::claims())
     }
+
+    fn indices<R_>() -> (usize, V::Indices)
+    where
+        R_: registry::Length,
+    {
+        (R_::LEN - R::LEN - 1, R::indices::<R_>())
+    }
 }
 
 impl<'a, C, P, R, V> CanonicalViews<'a, (&'a mut C, V), (&'a mut Contained, P)> for (C, R)
@@ -232,6 +251,13 @@ where
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims {
         (Claim::Mutable, R::claims())
+    }
+
+    fn indices<R_>() -> (usize, V::Indices)
+    where
+        R_: registry::Length,
+    {
+        (R_::LEN - R::LEN - 1, R::indices::<R_>())
     }
 }
 
@@ -326,6 +352,13 @@ where
     fn claims() -> Self::Claims {
         (Claim::Immutable, R::claims())
     }
+
+    fn indices<R_>() -> (usize, V::Indices)
+    where
+        R_: registry::Length,
+    {
+        (R_::LEN - R::LEN - 1, R::indices::<R_>())
+    }
 }
 
 impl<'a, C, P, R, V> CanonicalViews<'a, (Option<&'a mut C>, V), (Option<&'a mut Contained>, P)>
@@ -419,6 +452,13 @@ where
     fn claims() -> Self::Claims {
         (Claim::Mutable, R::claims())
     }
+
+    fn indices<R_>() -> (usize, V::Indices)
+    where
+        R_: registry::Length,
+    {
+        (R_::LEN - R::LEN - 1, R::indices::<R_>())
+    }
 }
 
 impl<'a, C, P, R, V> CanonicalViews<'a, V, (NotContained, P)> for (C, R)
@@ -476,5 +516,12 @@ where
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims {
         (Claim::None, R::claims())
+    }
+
+    fn indices<R_>() -> V::Indices
+    where
+        R_: registry::Length,
+    {
+        R::indices::<R_>()
     }
 }

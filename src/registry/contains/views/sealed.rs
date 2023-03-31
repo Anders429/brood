@@ -6,6 +6,7 @@ use crate::{
         result,
         view,
         view::{
+            Reshape,
             Views,
             ViewsSealed,
         },
@@ -22,7 +23,10 @@ use crate::{
         Registry,
     },
 };
-use core::slice;
+use core::{
+    iter,
+    slice,
+};
 
 pub trait Sealed<'a, V, P, I, Q>: Registry
 where
@@ -111,6 +115,8 @@ where
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> <Self::Registry as registry::sealed::Claims>::Claims;
+
+    fn indices() -> V::Indices;
 }
 
 impl<'a, I, IS, P, V, R, Q> ContainsViewsOuter<'a, V, (Contained, P), (I, IS), Q>
@@ -144,7 +150,28 @@ where
             P,
             IS,
         >>::Canonical,
-    ): view::Reshape<'a, V, Q>,
+    ): view::Reshape<'a, V, Q>
+        + ViewsSealed<
+            'a,
+            Results = (
+                iter::Copied<slice::Iter<'a, entity::Identifier>>,
+                <<R as ContainsViewsInner<
+                    'a,
+                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    P,
+                    IS,
+                >>::Canonical as ViewsSealed<'a>>::Results,
+            ),
+            Indices = (
+                view::Null,
+                <<R as ContainsViewsInner<
+                    'a,
+                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    P,
+                    IS,
+                >>::Canonical as ViewsSealed<'a>>::Indices,
+            ),
+        >,
 {
     type Registry = R;
     type Canonical = (
@@ -212,6 +239,31 @@ where
     fn claims() -> <Self::Registry as registry::sealed::Claims>::Claims {
         R::claims()
     }
+
+    fn indices() -> V::Indices {
+        let canonical_indices = (
+            view::Null,
+            <R as CanonicalViews<
+                'a,
+                <R as ContainsViewsInner<
+                    'a,
+                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    P,
+                    IS,
+                >>::Canonical,
+                P,
+            >>::indices::<R>(),
+        );
+        <(
+            entity::Identifier,
+            <R as ContainsViewsInner<
+                'a,
+                <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                P,
+                IS,
+            >>::Canonical,
+        )>::reshape_indices(canonical_indices)
+    }
 }
 
 impl<'a, I, P, R, V, Q> ContainsViewsOuter<'a, V, (NotContained, P), I, Q>
@@ -263,6 +315,11 @@ where
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> <Self::Registry as registry::sealed::Claims>::Claims {
         R::claims()
+    }
+
+    fn indices() -> V::Indices {
+        let canonical_indices = R::indices::<R>();
+        Self::Canonical::reshape_indices(canonical_indices)
     }
 }
 

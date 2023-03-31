@@ -19,8 +19,11 @@ use crate::{
     },
     registry,
     registry::{
-        contains::filter::Sealed as ContainsFilterSealed,
-        ContainsQuery,
+        contains::views::{
+            ContainsViewsOuter,
+            Sealed as ContainsViewsSealed,
+        },
+        ContainsViews,
     },
     Query,
     World,
@@ -78,25 +81,26 @@ where
     ) -> Option<SubViews>
     where
         SubViews: SubSet<Views, SubSetIndices> + view::Views<'a>,
-        Registry: ContainsQuery<
+        Registry: ContainsViews<
             'a,
-            Filter,
-            FilterIndices,
             SubViews,
-            SubViewsFilterIndices,
             SubViewsContainments,
             SubViewsIndices,
             SubViewsReshapeIndices,
         >,
+        // Note: we currently can't filter on components outside of the `Views`. This is an
+        // unfortunate limitation of not being able to index directly into the `Registry` for an
+        // arbitrary `Filter`.
+        Views: view::ContainsFilter<
+            'a,
+            And<Filter, SubViews>,
+            And<FilterIndices, SubViewsFilterIndices>,
+        >,
     {
-        // SAFETY: The `Registry` on which `filter()` is called is the same `Registry` over which
-        // the identifier is generic over.
-        if unsafe {
-            <Registry as ContainsFilterSealed<
-                And<Filter, SubViews>,
-                And<FilterIndices, SubViewsFilterIndices>,
-            >>::filter(self.location.identifier)
-        } {
+        let indices = <<Registry as ContainsViewsSealed<'a, Views, Containments, Indices, ReshapeIndices>>::Viewable as ContainsViewsOuter<'a, Views, Containments, Indices, ReshapeIndices>>::indices();
+        // SAFETY: The `indices` provided here are the valid indices into `Registry`, and therefore
+        // into the `archetype::Identifier<Registry>` used here.
+        if unsafe { Views::filter(&indices, self.location.identifier) } {
             Some(
                 // SAFETY: Since the archetype wasn't filtered out by the views, then each
                 // component viewed by `SubViews` is also identified by the archetype's identifier.
@@ -280,7 +284,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(), _>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         assert_some!(entry.query(Query::<Views!(), filter::Has<A>>::new()));
@@ -291,7 +295,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(), _>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&B), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         assert_none!(entry.query(Query::<Views!(), filter::Has<B>>::new()));
