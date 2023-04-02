@@ -18,12 +18,9 @@ use crate::{
         },
     },
     registry,
-    registry::{
-        contains::views::{
-            ContainsViewsOuter,
-            Sealed as ContainsViewsSealed,
-        },
-        ContainsViews,
+    registry::contains::views::{
+        ContainsViewsOuter,
+        Sealed as ContainsViewsSealed,
     },
     Query,
     World,
@@ -66,28 +63,12 @@ where
     ///
     /// Note that `SubViews` must be a [`SubSet`] of `Views`. See the documentation for the
     /// `SubSet` trait for what exactly is required for a subset.
-    pub fn query<
-        SubViews,
-        Filter,
-        FilterIndices,
-        SubViewsFilterIndices,
-        SubViewsContainments,
-        SubViewsIndices,
-        SubViewsReshapeIndices,
-        SubSetIndices,
-    >(
+    pub fn query<SubViews, Filter, FilterIndices, SubViewsFilterIndices, SubSetIndices>(
         &mut self,
         #[allow(unused_variables)] query: Query<SubViews, Filter>,
     ) -> Option<SubViews>
     where
-        SubViews: SubSet<Views, SubSetIndices> + view::Views<'a>,
-        Registry: ContainsViews<
-            'a,
-            SubViews,
-            SubViewsContainments,
-            SubViewsIndices,
-            SubViewsReshapeIndices,
-        >,
+        SubViews: SubSet<'a, Views, SubSetIndices> + view::Views<'a>,
         // Note: we currently can't filter on components outside of the `Views`. This is an
         // unfortunate limitation of not being able to index directly into the `Registry` for an
         // arbitrary `Filter`.
@@ -101,28 +82,36 @@ where
         // SAFETY: The `indices` provided here are the valid indices into `Registry`, and therefore
         // into the `archetype::Identifier<Registry>` used here.
         if unsafe { Views::filter(&indices, self.location.identifier) } {
-            Some(
-                // SAFETY: Since the archetype wasn't filtered out by the views, then each
-                // component viewed by `SubViews` is also identified by the archetype's identifier.
-                //
-                // `self.world.entity_allocator` contains entries for entities stored in
-                // `self.world.archetypes`. As such, `self.location.index` is guaranteed to be a
-                // valid index to a row within this archetype, since they share the same archetype
-                // identifier.
-                //
-                // Finally, the components viewed by `SubViews` are guaranteed to be viewed
-                // following Rust's borrowing rules, since they are shown to be a `SubSet` of
-                // `Views` which are also viewed following Rust's borrowing rules.
-                unsafe {
-                    (*self.entries.world)
-                        .archetypes
-                        .get_mut(self.location.identifier)?
-                        .view_row_unchecked::<SubViews, SubViewsContainments, SubViewsIndices, SubViewsReshapeIndices>(
-                            self.location.index,
-                        )
-                        .reshape()
-                },
-            )
+            // Since we can't view with the subviews directly on the registry, we instead view on
+            // the super-views `Views` first, and then mask it with the `SubViews`.
+            //
+            // This is necessary because callers can't guarantee that every possible `Registry` is
+            // viewable by every possible `SubViews` (for example, in a `System` where the
+            // `Registry` is generic). Therefore, we instead prove that the `Views` can be viewed
+            // by the `SubViews`.
+            let super_views = <<Registry as ContainsViewsSealed<
+                                                        Views,
+                                                        Containments,
+                                                        Indices,
+                                                        ReshapeIndices
+                                                    >>::Viewable as ContainsViewsOuter<
+                                                        Views,
+                                                        Containments,
+                                                        Indices,
+                                                        ReshapeIndices
+                                                    >>::Canonical::reshape_maybe_uninit(
+                                                        unsafe {
+                                                            (*self.entries.world).archetypes
+                                                                .get_mut(self.location.identifier)?
+                                                                .view_row_maybe_uninit_unchecked::<
+                                                                    Views,
+                                                                    Containments,
+                                                                    Indices,
+                                                                    ReshapeIndices
+                                                                >(self.location.index)
+                                                            });
+
+            Some(unsafe { SubViews::view(super_views, indices, self.location.identifier) })
         } else {
             None
         }

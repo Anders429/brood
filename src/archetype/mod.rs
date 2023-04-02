@@ -344,6 +344,31 @@ where
         }
     }
 
+    pub(crate) unsafe fn view_row_maybe_uninit_unchecked<'a, V, P, I, Q>(
+        &mut self,
+        index: usize,
+    ) -> <<<R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable as ContainsViewsOuter<
+        'a,
+        V,
+        P,
+        I,
+        Q,
+    >>::Canonical as ViewsSealed<'a>>::MaybeUninit
+    where
+        V: Views<'a>,
+        R: ContainsViews<'a, V, P, I, Q>,
+    {
+        unsafe {
+            <R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable::view_one_maybe_uninit(
+                index,
+                &self.components,
+                self.entity_identifiers,
+                self.length,
+                self.identifier.iter(),
+            )
+        }
+    }
+
     /// # Safety
     /// `C` must be a component type that is contained within this archetype, meaning the
     /// archetype's `Identifier` must have the `C` bit set.

@@ -11,14 +11,22 @@ use crate::{
         },
     },
 };
+use core::mem::MaybeUninit;
 
-pub trait Get<'a, T, I>: Views<'a>
+pub trait Get<'a, T, I>: Views<'a> + Sized
 where
     T: View<'a>,
 {
     type Remainder: Views<'a>;
 
     fn get(self) -> (T, Self::Remainder);
+
+    fn get_maybe_uninit(
+        views: Self::MaybeUninit,
+    ) -> (
+        T::MaybeUninit,
+        <Self::Remainder as ViewsSealed<'a>>::MaybeUninit,
+    );
 
     fn get_index(
         indices: Self::Indices,
@@ -34,6 +42,15 @@ where
 
     fn get(self) -> (&'a T, Self::Remainder) {
         self
+    }
+
+    fn get_maybe_uninit(
+        views: Self::MaybeUninit,
+    ) -> (
+        MaybeUninit<&'a T>,
+        <Self::Remainder as ViewsSealed<'a>>::MaybeUninit,
+    ) {
+        views
     }
 
     fn get_index(indices: Self::Indices) -> (usize, <Self::Remainder as ViewsSealed<'a>>::Indices) {
@@ -52,6 +69,15 @@ where
         self
     }
 
+    fn get_maybe_uninit(
+        views: Self::MaybeUninit,
+    ) -> (
+        MaybeUninit<&'a mut T>,
+        <Self::Remainder as ViewsSealed<'a>>::MaybeUninit,
+    ) {
+        views
+    }
+
     fn get_index(indices: Self::Indices) -> (usize, <Self::Remainder as ViewsSealed<'a>>::Indices) {
         indices
     }
@@ -66,6 +92,15 @@ where
 
     fn get(self) -> (Option<&'a T>, Self::Remainder) {
         self
+    }
+
+    fn get_maybe_uninit(
+        views: Self::MaybeUninit,
+    ) -> (
+        Option<&'a T>,
+        <Self::Remainder as ViewsSealed<'a>>::MaybeUninit,
+    ) {
+        views
     }
 
     fn get_index(indices: Self::Indices) -> (usize, <Self::Remainder as ViewsSealed<'a>>::Indices) {
@@ -84,6 +119,15 @@ where
         self
     }
 
+    fn get_maybe_uninit(
+        views: Self::MaybeUninit,
+    ) -> (
+        Option<&'a mut T>,
+        <Self::Remainder as ViewsSealed<'a>>::MaybeUninit,
+    ) {
+        views
+    }
+
     fn get_index(indices: Self::Indices) -> (usize, <Self::Remainder as ViewsSealed<'a>>::Indices) {
         indices
     }
@@ -97,6 +141,15 @@ where
 
     fn get(self) -> (entity::Identifier, Self::Remainder) {
         self
+    }
+
+    fn get_maybe_uninit(
+        views: Self::MaybeUninit,
+    ) -> (
+        entity::Identifier,
+        <Self::Remainder as ViewsSealed<'a>>::MaybeUninit,
+    ) {
+        views
     }
 
     fn get_index(
@@ -117,6 +170,16 @@ where
     fn get(self) -> (T, Self::Remainder) {
         let (target, remainder) = self.1.get();
         (target, (self.0, remainder))
+    }
+
+    fn get_maybe_uninit(
+        views: Self::MaybeUninit,
+    ) -> (
+        T::MaybeUninit,
+        <(V, <W as Get<'a, T, I>>::Remainder) as ViewsSealed<'a>>::MaybeUninit,
+    ) {
+        let (target, remainder) = W::get_maybe_uninit(views.1);
+        (target, (views.0, remainder))
     }
 
     fn get_index(

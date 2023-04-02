@@ -111,6 +111,16 @@ where
     where
         R: Registry;
 
+    unsafe fn view_one_maybe_uninit<R>(
+        index: usize,
+        columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R>,
+    ) -> <Self::Canonical as ViewsSealed<'a>>::MaybeUninit
+    where
+        R: Registry;
+
     /// Return the dynamic claims over the components borrowed by the `Views`.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
@@ -170,6 +180,15 @@ where
                     P,
                     IS,
                 >>::Canonical as ViewsSealed<'a>>::Indices,
+            ),
+            MaybeUninit = (
+                entity::Identifier,
+                <<R as ContainsViewsInner<
+                    'a,
+                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    P,
+                    IS,
+                >>::Canonical as ViewsSealed<'a>>::MaybeUninit,
             ),
         >,
 {
@@ -231,6 +250,31 @@ where
             // `Vec<C>`s of length `length` for each of the components identified by
             // `archetype_identifier`. `index` is guaranteed to be less than `length`.
             unsafe { R::view_one(index, columns, length, archetype_identifier) },
+        )
+    }
+
+    unsafe fn view_one_maybe_uninit<R_>(
+        index: usize,
+        columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> <Self::Canonical as ViewsSealed<'a>>::MaybeUninit
+    where
+        R_: Registry,
+    {
+        (
+            // SAFETY: `entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec<entity::Identifier>` of size `length`. Consequentially, `index` is guaranteed
+            // to be a valid index into the `Vec<entity::Identifier>`.
+            *unsafe {
+                slice::from_raw_parts_mut::<'a, entity::Identifier>(entity_identifiers.0, length)
+                    .get_unchecked(index)
+            },
+            // SAFETY: The components in `columns` are guaranteed to contain raw parts for valid
+            // `Vec<C>`s of length `length` for each of the components identified by
+            // `archetype_identifier`. `index` is guaranteed to be less than `length`.
+            unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) },
         )
     }
 
@@ -309,6 +353,19 @@ where
         // `Vec<C>`s of length `length` for each of the components identified by
         // `archetype_identifier`. `index` is guaranteed to be less than `length`.
         unsafe { R::view_one(index, columns, length, archetype_identifier) }
+    }
+
+    unsafe fn view_one_maybe_uninit<R_>(
+        index: usize,
+        columns: &[(*mut u8, usize)],
+        _entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> <Self::Canonical as ViewsSealed<'a>>::MaybeUninit
+    where
+        R_: Registry,
+    {
+        unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) }
     }
 
     #[cfg(feature = "rayon")]
