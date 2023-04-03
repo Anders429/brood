@@ -1,8 +1,6 @@
 # Changelog
 
 ## Unreleased
-
-## 0.7.0 - 2023-03-27
 ### Added
 - `view::ContainsFilter` trait to indicate that a filter can be expressed over a view.
 ### Changed
@@ -12,6 +10,7 @@
 ### Fixed
 - Entries can now be accessed from within `System::run()` and `ParSystem::run()`.
 
+## 0.7.0 - 2023-03-27
 ### Added
 - `query::Entries` struct to allow access to certain component columns through an `Entry` API.
 - `query::Entry` struct to allow access to an individual entity's components, respecting a restricting superset of views.
