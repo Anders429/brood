@@ -307,14 +307,14 @@ where
     /// ```
     ///
     /// [`Views`]: trait@crate::query::view::Views
-    pub fn query<V, F, VI, FI, P, I, Q>(
-        &'a mut self,
+    pub fn query<'b, V, F, VI, FI, P, I, Q>(
+        &'b mut self,
         #[allow(unused_variables)] query: Query<V, F>,
     ) -> Option<V>
     where
-        V: Views<'a> + Filter,
+        V: Views<'b> + Filter,
         F: Filter,
-        R: ContainsQuery<'a, F, FI, V, VI, P, I, Q>,
+        R: ContainsQuery<'b, F, FI, V, VI, P, I, Q>,
     {
         // SAFETY: The `R` on which `filter()` is called is the same `R` over which the identifier
         // is generic over.
