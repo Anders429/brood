@@ -2,6 +2,15 @@
 
 ## Unreleased
 ### Added
+- `view::ContainsFilter` trait to indicate that a filter can be expressed over a view.
+### Changed
+- `query::Entry::query()` is now bound on `Registry` implementing `ContainsViews<Views>` over the superview `Views`, instead of the `SubViews`.
+- `query::Entry::query()` is now bound on `Views` implementing `view::ContainsFilter<Filter`.
+- `view::SubSet` is no longer required to be generic over `Registry`. 
+### Fixed
+- Entries can now be accessed from within `System::run()` and `ParSystem::run()`.
+
+### Added
 - `query::Entries` struct to allow access to certain component columns through an `Entry` API.
 - `query::Entry` struct to allow access to an individual entity's components, respecting a restricting superset of views.
 - `view::SubSet` trait, defining one `Views` as a subset of another.
