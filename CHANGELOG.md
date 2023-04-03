@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.8.2 - 2023-04-02
 ### Fixed
 - `Entry::query()` now requires a less-strict lifetime.
 
