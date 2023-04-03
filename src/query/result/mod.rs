@@ -113,7 +113,7 @@ use crate::{
 /// assert_eq!(world.get::<Count, _>(), &Count(100));
 /// ```
 #[non_exhaustive]
-pub struct Result<'a, Registry, Resources, Iterator, ResourceViews, EntryViews>
+pub struct Result<'a, Registry, Resources, Iterator, ResourceViews, EntryViews, EntryIndices>
 where
     Registry: registry::Registry,
 {
@@ -126,7 +126,7 @@ where
     /// This allows entity [`Entry`] lookup while iterating over the entities viewed by this query.
     ///
     /// [`Entry`]: crate::query::entries::Entry
-    pub entries: Entries<'a, Registry, Resources, EntryViews>,
+    pub entries: Entries<'a, Registry, Resources, EntryViews, EntryIndices>,
 }
 
 doc::non_root_macro! {

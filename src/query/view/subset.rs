@@ -5,27 +5,27 @@
 //! the same restriction does not apply to immutable views.
 //!
 //! The basic algorithm here is to:
-//! - Obtain the canonical version of both `Views`.
-//! - Proceed through each view one by one.
-//! - If they do not match, proceed to the next view in the superset, but keep the subset view the
-//! same.
-//! - If both `Views` get to `Null`, then it is a subset. Otherwise, it is not, and the trait is
-//! not implemented.
+//! - "Get" each view within the subview inside the superview.
+//! - The Get trait only is implemented for the subset relationship for each component.
+//! - End case is having `null::Views` in subset.
 
 use crate::{
+    archetype,
     entity,
     hlist::define_null,
     query::view,
-    registry::contains::views::{
-        ContainsViewsOuter,
-        Sealed as ContainsViewsSealed,
-    },
+    registry,
+};
+use core::{
+    mem,
+    mem::MaybeUninit,
 };
 
 define_null!();
 
-pub enum Contained {}
-pub enum NotContained {}
+mod index {
+    pub enum Index {}
+}
 
 /// Defines one set of [`Views`] as a subset of another.
 ///
@@ -43,165 +43,593 @@ pub enum NotContained {}
 /// It is never needed for a user to manually implement this `trait`.
 ///
 /// [`Views`]: trait@crate::query::view::Views
-pub trait SubSet<
-    Registry,
-    Views,
-    Containments,
-    Indices,
-    ReshapeIndices,
-    ViewsContainments,
-    ViewsIndices,
-    ViewsReshapeIndices,
-    CanonicalContainments,
->:
-    Sealed<
-    Registry,
-    Views,
-    Containments,
-    Indices,
-    ReshapeIndices,
-    ViewsContainments,
-    ViewsIndices,
-    ViewsReshapeIndices,
-    CanonicalContainments,
->
-{
-}
-
-impl<
-        T,
-        Registry,
-        Views,
-        Containments,
-        Indices,
-        ReshapeIndices,
-        ViewsContainments,
-        ViewsIndices,
-        ViewsReshapeIndices,
-        CanonicalContainments,
-    >
-    SubSet<
-        Registry,
-        Views,
-        Containments,
-        Indices,
-        ReshapeIndices,
-        ViewsContainments,
-        ViewsIndices,
-        ViewsReshapeIndices,
-        CanonicalContainments,
-    > for T
+pub trait SubSet<'a, Views, Indices>: Sealed<'a, Views, Indices>
 where
-    T: Sealed<
-        Registry,
-        Views,
-        Containments,
-        Indices,
-        ReshapeIndices,
-        ViewsContainments,
-        ViewsIndices,
-        ViewsReshapeIndices,
-        CanonicalContainments,
-    >,
-{
-}
-
-pub trait Sealed<
-    Registry,
-    Views,
-    Containments,
-    Indices,
-    ReshapeIndices,
-    ViewsContainments,
-    ViewsIndices,
-    ViewsReshapeIndices,
-    CanonicalContainments,
->
-{
-}
-
-impl<'a, SubSetViews, Registry, Views, Containments, Indices, ReshapeIndices, ViewsContainments, ViewsIndices, ViewsReshapeIndices, CanonicalContainments> Sealed<Registry, Views, Containments, Indices, ReshapeIndices, ViewsContainments, ViewsIndices, ViewsReshapeIndices, CanonicalContainments> for SubSetViews
-where
-    SubSetViews: view::Views<'a>,
     Views: view::Views<'a>,
-    Registry: ContainsViewsSealed<'a, SubSetViews, Containments, Indices, ReshapeIndices> + ContainsViewsSealed<'a, Views, ViewsContainments, ViewsIndices, ViewsReshapeIndices>,
-    <<Registry as ContainsViewsSealed<'a, SubSetViews, Containments, Indices, ReshapeIndices>>::Viewable as ContainsViewsOuter<'a, SubSetViews, Containments, Indices, ReshapeIndices>>::Canonical: CanonicalSubSet<<<Registry as ContainsViewsSealed<'a, Views, ViewsContainments, ViewsIndices, ViewsReshapeIndices>>::Viewable as ContainsViewsOuter<'a, Views, ViewsContainments, ViewsIndices, ViewsReshapeIndices>>::Canonical, CanonicalContainments>,
-{
-
-}
-
-/// This trait is implemented only on canonical forms of views.
-///
-/// This is used within the `Sealed` trait after converting the views to their canonical form. This
-/// ensures the views contain components in the same order, which allows for a very
-/// straight-forward implementation here.
-///
-/// This is where the actual subset detection is implemented. The other traits are just helper
-/// traits to get the views in the form needed (canonical form) for this trait to do the heavy
-/// lifting.
-pub trait CanonicalSubSet<Views, Containments> {}
-
-impl CanonicalSubSet<view::Null, Null> for view::Null {}
-
-impl<SubSetViews, View, Views, Containments>
-    CanonicalSubSet<(View, Views), (NotContained, Containments)> for SubSetViews
-where
-    SubSetViews: CanonicalSubSet<Views, Containments>,
 {
 }
 
-impl<'a, SubSetViews, View, Views, Containments>
-    CanonicalSubSet<(&'a View, Views), (Contained, Containments)> for (&'a View, SubSetViews)
+impl<'a, SubViews, Views, Indices> SubSet<'a, Views, Indices> for SubViews
 where
-    SubSetViews: CanonicalSubSet<Views, Containments>,
+    SubViews: Sealed<'a, Views, Indices>,
+    Views: view::Views<'a>,
 {
 }
 
-impl<'a, SubSetViews, View, Views, Containments>
-    CanonicalSubSet<(&'a mut View, Views), (Contained, Containments)> for (&'a View, SubSetViews)
+pub trait Sealed<'a, Views, Indices>
 where
-    SubSetViews: CanonicalSubSet<Views, Containments>,
+    Views: view::Views<'a>,
 {
+    /// # Safety
+    /// `views` must be a view on the archetype identified by `identifier`. `indices` must
+    /// correspond to the `Registry` components.
+    ///
+    /// The current subview must have already been filtered for this archetype.
+    unsafe fn view<Registry>(
+        views: Views::MaybeUninit,
+        indices: Views::Indices,
+        identifier: archetype::IdentifierRef<Registry>,
+    ) -> Self
+    where
+        Registry: registry::Registry;
 }
 
-impl<'a, SubSetViews, View, Views, Containments>
-    CanonicalSubSet<(&'a mut View, Views), (Contained, Containments)>
-    for (&'a mut View, SubSetViews)
+impl<'a, Views> Sealed<'a, Views, Null> for view::Null
 where
-    SubSetViews: CanonicalSubSet<Views, Containments>,
+    Views: view::Views<'a>,
 {
+    unsafe fn view<Registry>(
+        _views: Views::MaybeUninit,
+        _indices: Views::Indices,
+        _identifier: archetype::IdentifierRef<Registry>,
+    ) -> view::Null
+    where
+        Registry: registry::Registry,
+    {
+        view::Null
+    }
 }
 
-impl<'a, SubSetViews, View, Views, Containments>
-    CanonicalSubSet<(&'a View, Views), (Contained, Containments)>
-    for (Option<&'a View>, SubSetViews)
+impl<'a, SubView, SubViews, Views, Index, Indices> Sealed<'a, Views, (Index, Indices)>
+    for (SubView, SubViews)
 where
-    SubSetViews: CanonicalSubSet<Views, Containments>,
+    Views: Get<'a, SubView, Index> + view::Views<'a>,
+    <Views as Get<'a, SubView, Index>>::Remainder: view::Views<'a>,
+    SubViews: Sealed<'a, Views::Remainder, Indices>,
 {
+    unsafe fn view<Registry>(
+        views: Views::MaybeUninit,
+        indices: Views::Indices,
+        identifier: archetype::IdentifierRef<Registry>,
+    ) -> (SubView, SubViews)
+    where
+        Registry: registry::Registry,
+    {
+        let (target, (remainder, remainder_indices)) =
+            // SAFETY: The safety contract of this method applies to the safety contract of this
+            // call.
+            unsafe { Views::view(views, indices, identifier) };
+
+        (
+            target,
+            // SAFETY: The safety contract of this method applies to the safety contract of this
+            // call.
+            unsafe { SubViews::view(remainder, remainder_indices, identifier) },
+        )
+    }
 }
 
-impl<'a, SubSetViews, View, Views, Containments>
-    CanonicalSubSet<(&'a mut View, Views), (Contained, Containments)>
-    for (Option<&'a View>, SubSetViews)
-where
-    SubSetViews: CanonicalSubSet<Views, Containments>,
-{
+/// This `Get` implementation follows the "subset" rules defined for views. If the subview is
+/// contained within the superview, it can be found with this `Get` implementation.
+pub trait Get<'a, View, Index>: view::Views<'a> + Sized {
+    type Remainder: view::Views<'a>;
+
+    /// # Safety
+    /// `views` must be a view on the archetype identified by `identifier`. `indices` must
+    /// correspond to the `Registry` components.
+    ///
+    /// The current subview must have already been filtered for this archetype.
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        View,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry;
 }
 
-impl<'a, SubSetViews, View, Views, Containments>
-    CanonicalSubSet<(&'a mut View, Views), (Contained, Containments)>
-    for (Option<&'a mut View>, SubSetViews)
+impl<'a, Component, Views> Get<'a, &'a Component, index::Index> for (&'a Component, Views)
 where
-    SubSetViews: CanonicalSubSet<Views, Containments>,
+    Self: view::Views<
+        'a,
+        MaybeUninit = (MaybeUninit<&'a Component>, Views::MaybeUninit),
+        Indices = (usize, Views::Indices),
+    >,
+    Views: view::Views<'a>,
 {
+    type Remainder = Views;
+
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        _identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        &'a Component,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry,
+    {
+        (
+            // SAFETY: This view has already been filtered for the archetype, so this component is
+            // guaranteed to exist.
+            unsafe { views.0.assume_init() },
+            (views.1, indices.1),
+        )
+    }
 }
 
-impl<SubSetViews, Views, Containments>
-    CanonicalSubSet<(entity::Identifier, Views), (Contained, Containments)>
-    for (entity::Identifier, SubSetViews)
+impl<'a, Component, Views> Get<'a, &'a Component, index::Index> for (&'a mut Component, Views)
 where
-    SubSetViews: CanonicalSubSet<Views, Containments>,
+    Self: view::Views<
+        'a,
+        MaybeUninit = (MaybeUninit<&'a mut Component>, Views::MaybeUninit),
+        Indices = (usize, Views::Indices),
+    >,
+    Views: view::Views<'a>,
 {
+    type Remainder = Views;
+
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        _identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        &'a Component,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry,
+    {
+        (
+            // SAFETY: This view has already been filtered for the archetype, so this component is
+            // guaranteed to exist.
+            unsafe { views.0.assume_init() },
+            (views.1, indices.1),
+        )
+    }
+}
+
+impl<'a, Component, Views> Get<'a, &'a Component, index::Index> for (Option<&'a Component>, Views)
+where
+    Self: view::Views<
+        'a,
+        MaybeUninit = (Option<&'a Component>, Views::MaybeUninit),
+        Indices = (usize, Views::Indices),
+    >,
+    Views: view::Views<'a>,
+{
+    type Remainder = Views;
+
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        _identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        &'a Component,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry,
+    {
+        (
+            // SAFETY: This view has already been filtered for the archetype, so this component is
+            // guaranteed to exist.
+            unsafe { views.0.unwrap_unchecked() },
+            (views.1, indices.1),
+        )
+    }
+}
+
+impl<'a, Component, Views> Get<'a, &'a Component, index::Index>
+    for (Option<&'a mut Component>, Views)
+where
+    Self: view::Views<
+        'a,
+        MaybeUninit = (Option<&'a mut Component>, Views::MaybeUninit),
+        Indices = (usize, Views::Indices),
+    >,
+    Views: view::Views<'a>,
+{
+    type Remainder = Views;
+
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        _identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        &'a Component,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry,
+    {
+        (
+            // SAFETY: This view has already been filtered for the archetype, so this component is
+            // guaranteed to exist.
+            unsafe { views.0.unwrap_unchecked() },
+            (views.1, indices.1),
+        )
+    }
+}
+
+impl<'a, Component, Views> Get<'a, &'a mut Component, index::Index> for (&'a mut Component, Views)
+where
+    Self: view::Views<
+        'a,
+        MaybeUninit = (MaybeUninit<&'a mut Component>, Views::MaybeUninit),
+        Indices = (usize, Views::Indices),
+    >,
+    Views: view::Views<'a>,
+{
+    type Remainder = Views;
+
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        _identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        &'a mut Component,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry,
+    {
+        (
+            // SAFETY: This view has already been filtered for the archetype, so this component is
+            // guaranteed to exist.
+            unsafe { views.0.assume_init() },
+            (views.1, indices.1),
+        )
+    }
+}
+
+impl<'a, Component, Views> Get<'a, &'a mut Component, index::Index>
+    for (Option<&'a mut Component>, Views)
+where
+    Self: view::Views<
+        'a,
+        MaybeUninit = (Option<&'a mut Component>, Views::MaybeUninit),
+        Indices = (usize, Views::Indices),
+    >,
+    Views: view::Views<'a>,
+{
+    type Remainder = Views;
+
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        _identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        &'a mut Component,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry,
+    {
+        (
+            // SAFETY: This view has already been filtered for the archetype, so this component is
+            // guaranteed to exist.
+            unsafe { views.0.unwrap_unchecked() },
+            (views.1, indices.1),
+        )
+    }
+}
+
+impl<'a, Component, Views> Get<'a, Option<&'a Component>, index::Index> for (&'a Component, Views)
+where
+    Self: view::Views<
+        'a,
+        MaybeUninit = (MaybeUninit<&'a Component>, Views::MaybeUninit),
+        Indices = (usize, Views::Indices),
+    >,
+    Views: view::Views<'a>,
+{
+    type Remainder = Views;
+
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        Option<&'a Component>,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry,
+    {
+        (
+            // SAFETY: `indices.0` is guaranteed to be a valid index in `identifier`. If it is set,
+            // the component possibly viewed by `views.0` is guaranteed to exist.
+            unsafe {
+                if identifier.get_unchecked(indices.0) {
+                    Some(views.0.assume_init())
+                } else {
+                    None
+                }
+            },
+            (views.1, indices.1),
+        )
+    }
+}
+
+impl<'a, Component, Views> Get<'a, Option<&'a Component>, index::Index>
+    for (&'a mut Component, Views)
+where
+    Self: view::Views<
+        'a,
+        MaybeUninit = (MaybeUninit<&'a mut Component>, Views::MaybeUninit),
+        Indices = (usize, Views::Indices),
+    >,
+    Views: view::Views<'a>,
+{
+    type Remainder = Views;
+
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        Option<&'a Component>,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry,
+    {
+        (
+            // SAFETY: `indices.0` is guaranteed to be a valid index in `identifier`. If it is set,
+            // the component possibly viewed by `views.0` is guaranteed to exist.
+            unsafe {
+                if identifier.get_unchecked(indices.0) {
+                    Some(views.0.assume_init())
+                } else {
+                    None
+                }
+            },
+            (views.1, indices.1),
+        )
+    }
+}
+
+impl<'a, Component, Views> Get<'a, Option<&'a Component>, index::Index>
+    for (Option<&'a Component>, Views)
+where
+    Self: view::Views<
+        'a,
+        MaybeUninit = (Option<&'a Component>, Views::MaybeUninit),
+        Indices = (usize, Views::Indices),
+    >,
+    Views: view::Views<'a>,
+{
+    type Remainder = Views;
+
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        _identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        Option<&'a Component>,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry,
+    {
+        (views.0, (views.1, indices.1))
+    }
+}
+
+impl<'a, Component, Views> Get<'a, Option<&'a Component>, index::Index>
+    for (Option<&'a mut Component>, Views)
+where
+    Self: view::Views<
+        'a,
+        MaybeUninit = (Option<&'a mut Component>, Views::MaybeUninit),
+        Indices = (usize, Views::Indices),
+    >,
+    Views: view::Views<'a>,
+{
+    type Remainder = Views;
+
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        _identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        Option<&'a Component>,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry,
+    {
+        (
+            // SAFETY: Transmuting Option<&mut T> as Option<&T> is a safe conversion.
+            unsafe { mem::transmute(views.0) },
+            (views.1, indices.1),
+        )
+    }
+}
+
+impl<'a, Component, Views> Get<'a, Option<&'a mut Component>, index::Index>
+    for (&'a mut Component, Views)
+where
+    Self: view::Views<
+        'a,
+        MaybeUninit = (MaybeUninit<&'a mut Component>, Views::MaybeUninit),
+        Indices = (usize, Views::Indices),
+    >,
+    Views: view::Views<'a>,
+{
+    type Remainder = Views;
+
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        Option<&'a mut Component>,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry,
+    {
+        (
+            // SAFETY: `indices.0` is guaranteed to be a valid index in `identifier`. If it is set,
+            // the component possibly viewed by `views.0` is guaranteed to exist.
+            unsafe {
+                if identifier.get_unchecked(indices.0) {
+                    Some(views.0.assume_init())
+                } else {
+                    None
+                }
+            },
+            (views.1, indices.1),
+        )
+    }
+}
+
+impl<'a, Component, Views> Get<'a, Option<&'a mut Component>, index::Index>
+    for (Option<&'a mut Component>, Views)
+where
+    Self: view::Views<
+        'a,
+        MaybeUninit = (Option<&'a mut Component>, Views::MaybeUninit),
+        Indices = (usize, Views::Indices),
+    >,
+    Views: view::Views<'a>,
+{
+    type Remainder = Views;
+
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        _identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        Option<&'a mut Component>,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry,
+    {
+        (views.0, (views.1, indices.1))
+    }
+}
+
+impl<'a, Views> Get<'a, entity::Identifier, index::Index> for (entity::Identifier, Views)
+where
+    Self: view::Views<
+        'a,
+        MaybeUninit = (entity::Identifier, Views::MaybeUninit),
+        Indices = (view::Null, Views::Indices),
+    >,
+    Views: view::Views<'a>,
+{
+    type Remainder = Views;
+
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        _identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        entity::Identifier,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry,
+    {
+        (views.0, (views.1, indices.1))
+    }
+}
+
+impl<'a, View, OtherView, Views, Index> Get<'a, View, (Index,)> for (OtherView, Views)
+where
+    Self: view::Views<
+        'a,
+        MaybeUninit = (OtherView::MaybeUninit, Views::MaybeUninit),
+        Indices = (OtherView::Index, Views::Indices),
+    >,
+    Views: Get<'a, View, Index> + view::Views<'a>,
+    OtherView: view::View<'a>,
+{
+    type Remainder = (OtherView, <Views as Get<'a, View, Index>>::Remainder);
+
+    unsafe fn view<Registry>(
+        views: Self::MaybeUninit,
+        indices: Self::Indices,
+        identifier: archetype::IdentifierRef<Registry>,
+    ) -> (
+        View,
+        (
+            <Self::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+            <Self::Remainder as view::ViewsSealed<'a>>::Indices,
+        ),
+    )
+    where
+        Registry: registry::Registry,
+    {
+        let (target, (remainder, remainder_indices)) =
+            // SAFETY: The invariants are guaranteed to be upheld by the safety contract of this
+            // function.
+            unsafe { Views::view(views.1, indices.1, identifier) };
+        (
+            target,
+            ((views.0, remainder), (indices.0, remainder_indices)),
+        )
+    }
 }
 
 #[cfg(test)]
@@ -209,8 +637,10 @@ mod tests {
     use super::SubSet;
     use crate::{
         entity,
-        query::Views,
-        Registry,
+        query::{
+            view,
+            Views,
+        },
     };
 
     // Components.
@@ -218,110 +648,66 @@ mod tests {
     struct B;
     struct C;
 
-    type Registry = Registry!(A, B, C);
-
-    fn is_subset<
-        ViewsSubSet,
-        Views,
-        Registry,
-        Containments,
-        Indices,
-        ReshapeIndices,
-        ViewsContainments,
-        ViewsIndices,
-        ViewsReshapeIndices,
-        CanonicalContainments,
-    >()
+    fn is_subset<'a, ViewsSubSet, Views, Indices>()
     where
-        ViewsSubSet: SubSet<
-            Registry,
-            Views,
-            Containments,
-            Indices,
-            ReshapeIndices,
-            ViewsContainments,
-            ViewsIndices,
-            ViewsReshapeIndices,
-            CanonicalContainments,
-        >,
+        ViewsSubSet: SubSet<'a, Views, Indices>,
+        Views: view::Views<'a>,
     {
     }
 
     #[test]
     fn empty() {
-        is_subset::<Views!(), Views!(), Registry!(), _, _, _, _, _, _, _>();
+        is_subset::<Views!(), Views!(), _>();
     }
 
     #[test]
     fn empty_nonempty_registry() {
-        is_subset::<Views!(), Views!(), Registry, _, _, _, _, _, _, _>();
+        is_subset::<Views!(), Views!(), _>();
     }
 
     #[test]
     fn empty_nonempty_views() {
-        is_subset::<Views!(), Views!(&A, &mut B), Registry, _, _, _, _, _, _, _>();
+        is_subset::<Views!(), Views!(&A, &mut B), _>();
     }
 
     #[test]
     fn immutable_subset_of_immutable() {
-        is_subset::<Views!(&A), Views!(&A, &mut B), Registry, _, _, _, _, _, _, _>();
+        is_subset::<Views!(&A), Views!(&A, &mut B), _>();
     }
 
     #[test]
     fn immutable_subset_of_mutable() {
-        is_subset::<Views!(&B), Views!(&A, &mut B), Registry, _, _, _, _, _, _, _>();
+        is_subset::<Views!(&B), Views!(&A, &mut B), _>();
     }
 
     #[test]
     fn mutable_subset_of_mutable() {
-        is_subset::<Views!(&mut B), Views!(&A, &mut B), Registry, _, _, _, _, _, _, _>();
+        is_subset::<Views!(&mut B), Views!(&A, &mut B), _>();
     }
 
     #[test]
     fn optional_immutable_subset_of_immutable() {
-        is_subset::<Views!(Option<&A>), Views!(&A, &mut B), Registry, _, _, _, _, _, _, _>();
+        is_subset::<Views!(Option<&A>), Views!(&A, &mut B), _>();
     }
 
     #[test]
     fn optional_immutable_subset_of_mutable() {
-        is_subset::<Views!(Option<&B>), Views!(&A, &mut B), Registry, _, _, _, _, _, _, _>();
+        is_subset::<Views!(Option<&B>), Views!(&A, &mut B), _>();
     }
 
     #[test]
     fn optional_mutable_subset_of_mutable() {
-        is_subset::<Views!(Option<&mut B>), Views!(&A, &mut B), Registry, _, _, _, _, _, _, _>();
+        is_subset::<Views!(Option<&mut B>), Views!(&A, &mut B), _>();
     }
 
     #[test]
     fn entity_identifier() {
-        is_subset::<
-            Views!(entity::Identifier),
-            Views!(&A, entity::Identifier, &C),
-            Registry,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-        >();
+        is_subset::<Views!(entity::Identifier), Views!(&A, entity::Identifier, &C), _>();
     }
 
     #[test]
     fn multiple_subset_views() {
-        is_subset::<
-            Views!(&A, Option<&mut B>, &mut C),
-            Views!(&A, &mut B, &mut C),
-            Registry,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-        >();
+        is_subset::<Views!(&A, Option<&mut B>, &mut C), Views!(&A, &mut B, &mut C), _>();
     }
 
     #[test]
@@ -329,13 +715,6 @@ mod tests {
         is_subset::<
             Views!(&mut B, &C, Option<&A>, entity::Identifier),
             Views!(&mut C, &A, entity::Identifier, &mut B),
-            Registry,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
             _,
         >();
     }

@@ -40,6 +40,9 @@ pub trait Scheduler<
     EntryViewsOppositeIndicesLists,
     EntryViewsOppositeReshapeIndicesLists,
     EntryViewsOppositeInverseIndicesLists,
+    EntryContainmentsLists,
+    EntryIndicesLists,
+    EntryReshapeIndicesLists,
 > where
     R: Registry,
 {
@@ -64,6 +67,9 @@ pub trait Scheduler<
         EntryViewsOppositeIndicesLists,
         EntryViewsOppositeReshapeIndicesLists,
         EntryViewsOppositeInverseIndicesLists,
+        EntryContainmentsLists,
+        EntryIndicesLists,
+        EntryReshapeIndicesLists,
     >;
 
     fn as_stages(&'a mut self) -> Self::Stages;
@@ -81,6 +87,9 @@ impl<'a, R, Resources>
         Null,
         Null,
         Null,
+        stages::Null,
+        stages::Null,
+        stages::Null,
         stages::Null,
         stages::Null,
         stages::Null,
@@ -164,6 +173,12 @@ impl<
         EntryViewsOppositeReshapeIndicesLists,
         EntryViewsOppositeInverseIndicesList,
         EntryViewsOppositeInverseIndicesLists,
+        EntryContainmentsList,
+        EntryContainmentsLists,
+        EntryIndicesList,
+        EntryIndicesLists,
+        EntryReshapeIndicesList,
+        EntryReshapeIndicesLists,
     >
     Scheduler<
         'a,
@@ -214,6 +229,9 @@ impl<
             EntryViewsOppositeInverseIndicesList,
             EntryViewsOppositeInverseIndicesLists,
         ),
+        (EntryContainmentsList, EntryContainmentsLists),
+        (EntryIndicesList, EntryIndicesLists),
+        (EntryReshapeIndicesList, EntryReshapeIndicesLists),
     > for (T, U)
 where
     (T, U): Stager<
@@ -246,6 +264,9 @@ where
         EntryViewsOppositeIndicesList,
         EntryViewsOppositeReshapeIndicesList,
         EntryViewsOppositeInverseIndicesList,
+        EntryContainmentsList,
+        EntryIndicesList,
+        EntryReshapeIndicesList,
     >,
     <(T, U) as Stager<
         'a,
@@ -277,6 +298,9 @@ where
         EntryViewsOppositeIndicesList,
         EntryViewsOppositeReshapeIndicesList,
         EntryViewsOppositeInverseIndicesList,
+        EntryContainmentsList,
+        EntryIndicesList,
+        EntryReshapeIndicesList,
     >>::Remainder: Scheduler<
         'a,
         R,
@@ -305,6 +329,9 @@ where
         EntryViewsOppositeIndicesLists,
         EntryViewsOppositeReshapeIndicesLists,
         EntryViewsOppositeInverseIndicesLists,
+        EntryContainmentsLists,
+        EntryIndicesLists,
+        EntryReshapeIndicesLists,
     >,
     R: Registry + 'a,
     Resources: 'a,
@@ -332,6 +359,9 @@ where
     EntryViewsOppositeIndicesList: 'a,
     EntryViewsOppositeReshapeIndicesList: 'a,
     EntryViewsOppositeInverseIndicesList: 'a,
+    EntryContainmentsList: 'a,
+    EntryIndicesList: 'a,
+    EntryReshapeIndicesList: 'a,
 {
     type Stages = (
         <(T, U) as Stager<
@@ -364,6 +394,9 @@ where
             EntryViewsOppositeIndicesList,
             EntryViewsOppositeReshapeIndicesList,
             EntryViewsOppositeInverseIndicesList,
+            EntryContainmentsList,
+            EntryIndicesList,
+            EntryReshapeIndicesList,
         >>::Stage,
         <<(T, U) as Stager<
             'a,
@@ -395,6 +428,9 @@ where
             EntryViewsOppositeIndicesList,
             EntryViewsOppositeReshapeIndicesList,
             EntryViewsOppositeInverseIndicesList,
+            EntryContainmentsList,
+            EntryIndicesList,
+            EntryReshapeIndicesList,
         >>::Remainder as Scheduler<
             'a,
             R,
@@ -423,6 +459,9 @@ where
             EntryViewsOppositeIndicesLists,
             EntryViewsOppositeReshapeIndicesLists,
             EntryViewsOppositeInverseIndicesLists,
+            EntryContainmentsLists,
+            EntryIndicesLists,
+            EntryReshapeIndicesLists,
         >>::Stages,
     );
 

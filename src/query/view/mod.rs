@@ -51,6 +51,7 @@
 pub(crate) mod claim;
 pub(crate) mod resource;
 
+mod contains;
 mod disjoint;
 mod get;
 #[cfg(feature = "rayon")]
@@ -61,6 +62,7 @@ mod reshape;
 mod sealed;
 mod subset;
 
+pub use contains::ContainsFilter;
 pub use disjoint::Disjoint;
 #[cfg(feature = "rayon")]
 pub use par::{

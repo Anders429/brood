@@ -35,6 +35,9 @@ pub trait Stages<
     EntryViewsOppositeIndicesLists,
     EntryViewsOppositeReshapeIndicesLists,
     EntryViewsOppositeInverseIndicesLists,
+    EntryContainmentsLists,
+    EntryIndicesLists,
+    EntryReshapeIndicesLists,
 >: Send where
     R: Registry,
 {
@@ -79,6 +82,9 @@ impl<R, Resources>
         '_,
         R,
         Resources,
+        Null,
+        Null,
+        Null,
         Null,
         Null,
         Null,
@@ -157,6 +163,12 @@ impl<
         EntryViewsOppositeReshapeIndicesLists,
         EntryViewsOppositeInverseIndicesList,
         EntryViewsOppositeInverseIndicesLists,
+        EntryContainmentsList,
+        EntryContainmentsLists,
+        EntryIndicesList,
+        EntryIndicesLists,
+        EntryReshapeIndicesList,
+        EntryReshapeIndicesLists,
     >
     Stages<
         'a,
@@ -200,6 +212,9 @@ impl<
             EntryViewsOppositeInverseIndicesList,
             EntryViewsOppositeInverseIndicesLists,
         ),
+        (EntryContainmentsList, EntryContainmentsLists),
+        (EntryIndicesList, EntryIndicesLists),
+        (EntryReshapeIndicesList, EntryReshapeIndicesLists),
     > for (T, U)
 where
     R: Registry,
@@ -224,6 +239,9 @@ where
         EntryViewsOppositeIndicesList,
         EntryViewsOppositeReshapeIndicesList,
         EntryViewsOppositeInverseIndicesList,
+        EntryContainmentsList,
+        EntryIndicesList,
+        EntryReshapeIndicesList,
     >,
     U: Stages<
         'a,
@@ -246,6 +264,9 @@ where
         EntryViewsOppositeIndicesLists,
         EntryViewsOppositeReshapeIndicesLists,
         EntryViewsOppositeInverseIndicesLists,
+        EntryContainmentsLists,
+        EntryIndicesLists,
+        EntryReshapeIndicesLists,
     >,
 {
     type HasRun = T::HasRun;
