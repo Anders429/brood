@@ -195,7 +195,7 @@ where
         Registry: registry::Registry,
     {
         // SAFETY: `indices` is guaranteed to contain valid indices into `Registry`.
-        unsafe { Views::filter(indices, identifier) }
+        !unsafe { Views::filter(indices, identifier) }
     }
 }
 
