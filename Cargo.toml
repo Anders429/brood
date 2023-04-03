@@ -1,6 +1,6 @@
 [package]
 name = "brood"
-version = "0.8.1"
+version = "0.8.2"
 authors = ["Anders Evensen"]
 edition = "2021"
 rust-version = "1.65.0"
