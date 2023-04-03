@@ -2,10 +2,16 @@ use crate::{
     query::{
         filter::Filter,
         result,
-        view::ParViews,
+        view::{
+            ParViews,
+            Views,
+        },
         Result,
     },
-    registry::ContainsParQuery,
+    registry::{
+        ContainsParQuery,
+        ContainsViews,
+    },
 };
 
 /// An executable type which operates over the entities within a [`World`] in parallel.
@@ -42,7 +48,7 @@ use crate::{
 ///     type ResourceViews<'a> = Views!();
 ///     type EntryViews<'a> = Views!();
 ///
-///     fn run<'a, R, S, FI, VI, P, I, Q, E>(
+///     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
 ///         &mut self,
 ///         query_results: Result<
 ///             R,
@@ -50,7 +56,7 @@ use crate::{
 ///             result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///             Self::ResourceViews<'a>,
 ///             Self::EntryViews<'a>,
-///             E,
+///             (EP, EI, EQ),
 ///         >,
 ///     ) where
 ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
@@ -87,7 +93,7 @@ pub trait ParSystem {
     /// The views here must be [`Disjoint`] with `Self::Views`
     ///
     /// [`Disjoint`]: crate::query::view::Disjoint
-    type EntryViews<'a>;
+    type EntryViews<'a>: Views<'a>;
 
     /// Logic to be run over the parallel query result.
     ///
@@ -123,7 +129,7 @@ pub trait ParSystem {
     ///     type ResourceViews<'a> = Views!();
     ///     type EntryViews<'a> = Views!();
     ///
-    ///     fn run<'a, R, S, FI, VI, P, I, Q, E>(
+    ///     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
     ///         &mut self,
     ///         query_results: Result<
     ///             R,
@@ -131,7 +137,7 @@ pub trait ParSystem {
     ///             result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///             Self::ResourceViews<'a>,
     ///             Self::EntryViews<'a>,
-    ///             E,
+    ///             (EP, EI, EQ),
     ///         >,
     ///     ) where
     ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
@@ -146,16 +152,18 @@ pub trait ParSystem {
     /// ```
     ///
     /// [`World`]: crate::world::World
-    fn run<'a, R, S, FI, VI, P, I, Q, E>(
+    fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
         &mut self,
         query_result: Result<
+            'a,
             R,
             S,
             result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             Self::ResourceViews<'a>,
             Self::EntryViews<'a>,
-            E,
+            (EP, EI, EQ),
         >,
     ) where
-        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>;
+        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
+            + ContainsViews<'a, Self::EntryViews<'a>, EP, EI, EQ>;
 }

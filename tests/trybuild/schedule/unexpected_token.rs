@@ -14,9 +14,9 @@ impl System for A {
     type ResourceViews<'a> = Views!();
     type EntryViews<'a> = Views!();
 
-    fn run<'a, R, S, FI, VI, P, I, Q, E>(
+    fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
         &mut self,
-        _query_results: Result<R, S, result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
+        _query_results: Result<R, S, result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>, Self::ResourceViews<'a>, Self::EntryViews<'a>, (EP, EI, EQ)>,
     ) where
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> {}
 }
@@ -29,9 +29,9 @@ impl System for B {
     type ResourceViews<'a> = Views!();
     type EntryViews<'a> = Views!();
 
-    fn run<'a, R, S, FI, VI, P, I, Q, E>(
+    fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
         &mut self,
-        _query_results: Result<R, S, result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
+        _query_results: Result<R, S, result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>, Self::ResourceViews<'a>, Self::EntryViews<'a>, (EP, EI, EQ)>,
     ) where
         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q> {}
 }
