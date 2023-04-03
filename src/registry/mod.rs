@@ -50,6 +50,7 @@ pub use contains::{
     ContainsEntities,
     ContainsEntity,
     ContainsQuery,
+    ContainsViews,
 };
 pub use debug::Debug;
 pub use eq::{
@@ -59,7 +60,6 @@ pub use eq::{
 
 #[cfg(feature = "rayon")]
 pub(crate) use contains::ContainsParViews;
-pub(crate) use contains::ContainsViews;
 pub(crate) use get::Get;
 #[cfg(feature = "rayon")]
 pub(crate) use sealed::CanonicalParViews;
