@@ -462,6 +462,18 @@ mod tests {
     }
 
     #[test]
+    fn query_optional_immutable_superset_mutable_not_present() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42), B('a')));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        let result!(c) = assert_some!(entry.query(Query::<Views!(Option<&C>)>::new()));
+        assert_eq!(c, None);
+    }
+
+    #[test]
     fn query_optional_mutable_superset_mutable() {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
@@ -471,6 +483,18 @@ mod tests {
 
         let result!(c) = assert_some!(entry.query(Query::<Views!(Option<&mut C>)>::new()));
         assert_eq!(c, Some(&mut C(3.14)));
+    }
+
+    #[test]
+    fn query_optional_mutable_superset_mutable_not_present() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42), B('a')));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        let result!(c) = assert_some!(entry.query(Query::<Views!(Option<&mut C>)>::new()));
+        assert_eq!(c, None);
     }
 
     #[test]
@@ -549,5 +573,41 @@ mod tests {
 
         let result!(a) = assert_some!(entry.query(Query::<Views!(&mut A)>::new()));
         assert_eq!(a, &mut A(42));
+    }
+
+    #[test]
+    fn query_optional_with_optional_super_view() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(Option<&A>), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        let result!(a) = assert_some!(entry.query(Query::<Views!(Option<&A>)>::new()));
+        assert_eq!(a, Some(&A(42)));
+    }
+
+    #[test]
+    fn query_optional_with_optional_mutable_super_view() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(Option<&mut A>), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        let result!(a) = assert_some!(entry.query(Query::<Views!(Option<&A>)>::new()));
+        assert_eq!(a, Some(&A(42)));
+    }
+
+    #[test]
+    fn query_optional_mutable_with_optional_mutable_super_view() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(Option<&mut A>), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        let result!(a) = assert_some!(entry.query(Query::<Views!(Option<&mut A>)>::new()));
+        assert_eq!(a, Some(&mut A(42)));
     }
 }
