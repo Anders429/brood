@@ -354,6 +354,19 @@ mod tests {
     }
 
     #[test]
+    fn empty_query_with_or_filter_second() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &B), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        assert_some!(
+            entry.query(Query::<Views!(), filter::Or<filter::Has<B>, filter::Has<A>>>::new())
+        );
+    }
+
+    #[test]
     fn empty_query_with_and_filter() {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), B('a')));
