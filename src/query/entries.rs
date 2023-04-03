@@ -100,6 +100,9 @@ where
                                                         Indices,
                                                         ReshapeIndices
                                                     >>::Canonical::reshape_maybe_uninit(
+                                                        // SAFETY: `self.location.index` is a valid
+                                                        // index into this archetype, as guaranteed
+                                                        // by the entity allocator.
                                                         unsafe {
                                                             (*self.entries.world).archetypes
                                                                 .get_mut(self.location.identifier)?
@@ -111,6 +114,9 @@ where
                                                                 >(self.location.index)
                                                             });
 
+            // SAFETY: `super_views` is viewed on the archetype identified by
+            // `self.location.identifier`. The `indices` also correspond to the registry the
+            // archetype is generic over. Finally, the `SubViews` filter has already been applied.
             Some(unsafe { SubViews::view(super_views, indices, self.location.identifier) })
         } else {
             None

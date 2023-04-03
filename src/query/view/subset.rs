@@ -106,11 +106,16 @@ where
         Registry: registry::Registry,
     {
         let (target, (remainder, remainder_indices)) =
+            // SAFETY: The safety contract of this method applies to the safety contract of this
+            // call.
             unsafe { Views::view(views, indices, identifier) };
 
-        (target, unsafe {
-            SubViews::view(remainder, remainder_indices, identifier)
-        })
+        (
+            target,
+            // SAFETY: The safety contract of this method applies to the safety contract of this
+            // call.
+            unsafe { SubViews::view(remainder, remainder_indices, identifier) },
+        )
     }
 }
 
@@ -616,9 +621,9 @@ where
     where
         Registry: registry::Registry,
     {
-        // SAFETY: The invariants are guaranteed to be upheld by the safety contract of this
-        // function.
         let (target, (remainder, remainder_indices)) =
+            // SAFETY: The invariants are guaranteed to be upheld by the safety contract of this
+            // function.
             unsafe { Views::view(views.1, indices.1, identifier) };
         (
             target,

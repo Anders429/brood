@@ -365,6 +365,7 @@ where
     where
         R_: Registry,
     {
+        // SAFETY: The safety contract of this function applies to this function call.
         unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) }
     }
 
