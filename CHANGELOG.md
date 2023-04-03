@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.8.1 - 2023-04-02
 ### Fixed
 - `registry::ContainsViews` is now a public trait.
 
