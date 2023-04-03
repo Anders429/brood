@@ -3463,5 +3463,10 @@ mod tests {
                 assert_eq!(a, &A(42));
             }
         }
+
+        let mut world = World::<Registry>::new();
+        let entity_identifier = world.insert(entity!(A(42)));
+
+        world.run_par_system(&mut EntrySystem { entity_identifier });
     }
 }
