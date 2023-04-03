@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.8.0 - 2023-04-02
 ### Added
 - `view::ContainsFilter` trait to indicate that a filter can be expressed over a view.
 ### Changed
