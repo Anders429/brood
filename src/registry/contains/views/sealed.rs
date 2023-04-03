@@ -6,6 +6,7 @@ use crate::{
         result,
         view,
         view::{
+            Reshape,
             Views,
             ViewsSealed,
         },
@@ -22,7 +23,10 @@ use crate::{
         Registry,
     },
 };
-use core::slice;
+use core::{
+    iter,
+    slice,
+};
 
 pub trait Sealed<'a, V, P, I, Q>: Registry
 where
@@ -107,10 +111,22 @@ where
     where
         R: Registry;
 
+    unsafe fn view_one_maybe_uninit<R>(
+        index: usize,
+        columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R>,
+    ) -> <Self::Canonical as ViewsSealed<'a>>::MaybeUninit
+    where
+        R: Registry;
+
     /// Return the dynamic claims over the components borrowed by the `Views`.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> <Self::Registry as registry::sealed::Claims>::Claims;
+
+    fn indices() -> V::Indices;
 }
 
 impl<'a, I, IS, P, V, R, Q> ContainsViewsOuter<'a, V, (Contained, P), (I, IS), Q>
@@ -144,7 +160,37 @@ where
             P,
             IS,
         >>::Canonical,
-    ): view::Reshape<'a, V, Q>,
+    ): view::Reshape<'a, V, Q>
+        + ViewsSealed<
+            'a,
+            Results = (
+                iter::Copied<slice::Iter<'a, entity::Identifier>>,
+                <<R as ContainsViewsInner<
+                    'a,
+                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    P,
+                    IS,
+                >>::Canonical as ViewsSealed<'a>>::Results,
+            ),
+            Indices = (
+                view::Null,
+                <<R as ContainsViewsInner<
+                    'a,
+                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    P,
+                    IS,
+                >>::Canonical as ViewsSealed<'a>>::Indices,
+            ),
+            MaybeUninit = (
+                entity::Identifier,
+                <<R as ContainsViewsInner<
+                    'a,
+                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    P,
+                    IS,
+                >>::Canonical as ViewsSealed<'a>>::MaybeUninit,
+            ),
+        >,
 {
     type Registry = R;
     type Canonical = (
@@ -207,10 +253,60 @@ where
         )
     }
 
+    unsafe fn view_one_maybe_uninit<R_>(
+        index: usize,
+        columns: &[(*mut u8, usize)],
+        entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> <Self::Canonical as ViewsSealed<'a>>::MaybeUninit
+    where
+        R_: Registry,
+    {
+        (
+            // SAFETY: `entity_identifiers` is guaranteed to contain the raw parts for a valid
+            // `Vec<entity::Identifier>` of size `length`. Consequentially, `index` is guaranteed
+            // to be a valid index into the `Vec<entity::Identifier>`.
+            *unsafe {
+                slice::from_raw_parts_mut::<'a, entity::Identifier>(entity_identifiers.0, length)
+                    .get_unchecked(index)
+            },
+            // SAFETY: The components in `columns` are guaranteed to contain raw parts for valid
+            // `Vec<C>`s of length `length` for each of the components identified by
+            // `archetype_identifier`. `index` is guaranteed to be less than `length`.
+            unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) },
+        )
+    }
+
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> <Self::Registry as registry::sealed::Claims>::Claims {
         R::claims()
+    }
+
+    fn indices() -> V::Indices {
+        let canonical_indices = (
+            view::Null,
+            <R as CanonicalViews<
+                'a,
+                <R as ContainsViewsInner<
+                    'a,
+                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    P,
+                    IS,
+                >>::Canonical,
+                P,
+            >>::indices::<R>(),
+        );
+        <(
+            entity::Identifier,
+            <R as ContainsViewsInner<
+                'a,
+                <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                P,
+                IS,
+            >>::Canonical,
+        )>::reshape_indices(canonical_indices)
     }
 }
 
@@ -259,10 +355,29 @@ where
         unsafe { R::view_one(index, columns, length, archetype_identifier) }
     }
 
+    unsafe fn view_one_maybe_uninit<R_>(
+        index: usize,
+        columns: &[(*mut u8, usize)],
+        _entity_identifiers: (*mut entity::Identifier, usize),
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> <Self::Canonical as ViewsSealed<'a>>::MaybeUninit
+    where
+        R_: Registry,
+    {
+        // SAFETY: The safety contract of this function applies to this function call.
+        unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) }
+    }
+
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> <Self::Registry as registry::sealed::Claims>::Claims {
         R::claims()
+    }
+
+    fn indices() -> V::Indices {
+        let canonical_indices = R::indices::<R>();
+        Self::Canonical::reshape_indices(canonical_indices)
     }
 }
 

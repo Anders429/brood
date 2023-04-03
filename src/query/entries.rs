@@ -18,9 +18,9 @@ use crate::{
         },
     },
     registry,
-    registry::{
-        contains::filter::Sealed as ContainsFilterSealed,
-        ContainsQuery,
+    registry::contains::views::{
+        ContainsViewsOuter,
+        Sealed as ContainsViewsSealed,
     },
     Query,
     World,
@@ -30,25 +30,32 @@ use core::marker::PhantomData;
 /// A view into a single entity in a [`World`].
 ///
 /// [`World`]: crate::World
-pub struct Entry<'a, 'b, Registry, Resources, Views>
+pub struct Entry<'a, 'b, Registry, Resources, Views, Indices>
 where
     Registry: registry::Registry,
 {
-    entries: &'b mut Entries<'a, Registry, Resources, Views>,
+    entries: &'b mut Entries<'a, Registry, Resources, Views, Indices>,
     location: Location<Registry>,
 }
 
-impl<'a, 'b, Registry, Resources, Views> Entry<'a, 'b, Registry, Resources, Views>
+impl<'a, 'b, Registry, Resources, Views, Indices> Entry<'a, 'b, Registry, Resources, Views, Indices>
 where
     Registry: registry::Registry,
 {
     fn new(
-        entries: &'b mut Entries<'a, Registry, Resources, Views>,
+        entries: &'b mut Entries<'a, Registry, Resources, Views, Indices>,
         location: Location<Registry>,
     ) -> Self {
         Self { entries, location }
     }
+}
 
+impl<'a, 'b, Registry, Resources, Views, Containments, Indices, ReshapeIndices>
+    Entry<'a, 'b, Registry, Resources, Views, (Containments, Indices, ReshapeIndices)>
+where
+    Views: view::Views<'a>,
+    Registry: registry::ContainsViews<'a, Views, Containments, Indices, ReshapeIndices>,
+{
     /// Query for components contained within this entity using the given `SubViews` and `Filter`.
     ///
     /// Returns a `Some` value if the entity matches the `SubViews` and `Filter`, and returns a
@@ -56,75 +63,61 @@ where
     ///
     /// Note that `SubViews` must be a [`SubSet`] of `Views`. See the documentation for the
     /// `SubSet` trait for what exactly is required for a subset.
-    pub fn query<
-        SubViews,
-        Filter,
-        FilterIndices,
-        SubViewsFilterIndices,
-        Containments,
-        Indices,
-        ReshapeIndices,
-        ViewContainments,
-        ViewIndices,
-        ViewsReshapeIndices,
-        CanonicalContainments,
-    >(
+    pub fn query<SubViews, Filter, FilterIndices, SubViewsFilterIndices, SubSetIndices>(
         &mut self,
         #[allow(unused_variables)] query: Query<SubViews, Filter>,
     ) -> Option<SubViews>
     where
-        SubViews: SubSet<
-                Registry,
-                Views,
-                Containments,
-                Indices,
-                ReshapeIndices,
-                ViewContainments,
-                ViewIndices,
-                ViewsReshapeIndices,
-                CanonicalContainments,
-            > + view::Views<'a>,
-        Registry: ContainsQuery<
+        SubViews: SubSet<'a, Views, SubSetIndices> + view::Views<'a>,
+        // Note: we currently can't filter on components outside of the `Views`. This is an
+        // unfortunate limitation of not being able to index directly into the `Registry` for an
+        // arbitrary `Filter`.
+        Views: view::ContainsFilter<
             'a,
-            Filter,
-            FilterIndices,
-            SubViews,
-            SubViewsFilterIndices,
-            Containments,
-            Indices,
-            ReshapeIndices,
+            And<Filter, SubViews>,
+            And<FilterIndices, SubViewsFilterIndices>,
         >,
     {
-        // SAFETY: The `Registry` on which `filter()` is called is the same `Registry` over which
-        // the identifier is generic over.
-        if unsafe {
-            <Registry as ContainsFilterSealed<
-                And<Filter, SubViews>,
-                And<FilterIndices, SubViewsFilterIndices>,
-            >>::filter(self.location.identifier)
-        } {
-            Some(
-                // SAFETY: Since the archetype wasn't filtered out by the views, then each
-                // component viewed by `SubViews` is also identified by the archetype's identifier.
-                //
-                // `self.world.entity_allocator` contains entries for entities stored in
-                // `self.world.archetypes`. As such, `self.location.index` is guaranteed to be a
-                // valid index to a row within this archetype, since they share the same archetype
-                // identifier.
-                //
-                // Finally, the components viewed by `SubViews` are guaranteed to be viewed
-                // following Rust's borrowing rules, since they are shown to be a `SubSet` of
-                // `Views` which are also viewed following Rust's borrowing rules.
-                unsafe {
-                    (*self.entries.world)
-                        .archetypes
-                        .get_mut(self.location.identifier)?
-                        .view_row_unchecked::<SubViews, Containments, Indices, ReshapeIndices>(
-                            self.location.index,
-                        )
-                        .reshape()
-                },
-            )
+        let indices = <<Registry as ContainsViewsSealed<'a, Views, Containments, Indices, ReshapeIndices>>::Viewable as ContainsViewsOuter<'a, Views, Containments, Indices, ReshapeIndices>>::indices();
+        // SAFETY: The `indices` provided here are the valid indices into `Registry`, and therefore
+        // into the `archetype::Identifier<Registry>` used here.
+        if unsafe { Views::filter(&indices, self.location.identifier) } {
+            // Since we can't view with the subviews directly on the registry, we instead view on
+            // the super-views `Views` first, and then mask it with the `SubViews`.
+            //
+            // This is necessary because callers can't guarantee that every possible `Registry` is
+            // viewable by every possible `SubViews` (for example, in a `System` where the
+            // `Registry` is generic). Therefore, we instead prove that the `Views` can be viewed
+            // by the `SubViews`.
+            let super_views = <<Registry as ContainsViewsSealed<
+                                                        Views,
+                                                        Containments,
+                                                        Indices,
+                                                        ReshapeIndices
+                                                    >>::Viewable as ContainsViewsOuter<
+                                                        Views,
+                                                        Containments,
+                                                        Indices,
+                                                        ReshapeIndices
+                                                    >>::Canonical::reshape_maybe_uninit(
+                                                        // SAFETY: `self.location.index` is a valid
+                                                        // index into this archetype, as guaranteed
+                                                        // by the entity allocator.
+                                                        unsafe {
+                                                            (*self.entries.world).archetypes
+                                                                .get_mut(self.location.identifier)?
+                                                                .view_row_maybe_uninit_unchecked::<
+                                                                    Views,
+                                                                    Containments,
+                                                                    Indices,
+                                                                    ReshapeIndices
+                                                                >(self.location.index)
+                                                            });
+
+            // SAFETY: `super_views` is viewed on the archetype identified by
+            // `self.location.identifier`. The `indices` also correspond to the registry the
+            // archetype is generic over. Finally, the `SubViews` filter has already been applied.
+            Some(unsafe { SubViews::view(super_views, indices, self.location.identifier) })
         } else {
             None
         }
@@ -134,7 +127,7 @@ where
 /// Access to entity [`Entry`]s.
 ///
 /// These entity `Entry`s allow access to the components viewed in `Views`.
-pub struct Entries<'a, Registry, Resources, Views>
+pub struct Entries<'a, Registry, Resources, Views, Indices>
 where
     Registry: registry::Registry,
 {
@@ -142,9 +135,10 @@ where
 
     lifetime: PhantomData<&'a ()>,
     views: PhantomData<Views>,
+    indices: PhantomData<Indices>,
 }
 
-impl<'a, Registry, Resources, Views> Entries<'a, Registry, Resources, Views>
+impl<'a, Registry, Resources, Views, Indices> Entries<'a, Registry, Resources, Views, Indices>
 where
     Registry: registry::Registry,
 {
@@ -200,6 +194,7 @@ where
 
             lifetime: PhantomData,
             views: PhantomData,
+            indices: PhantomData,
         }
     }
 
@@ -211,7 +206,7 @@ where
     pub fn entry<'b>(
         &'b mut self,
         entity_identifier: entity::Identifier,
-    ) -> Option<Entry<'a, 'b, Registry, Resources, Views>> {
+    ) -> Option<Entry<'a, 'b, Registry, Resources, Views, Indices>> {
         // SAFETY: The invariants of `Entries` guarantees that `World` won't have any entities
         // added or removed, meaning the `entity_allocator` will not be mutated during this time.
         unsafe { &*self.world }
@@ -223,15 +218,19 @@ where
 
 // SAFETY: Since the access to the viewed components is unique, this can be sent between threads
 // safely.
-unsafe impl<'a, Registry, Resources, Views> Send for Entries<'a, Registry, Resources, Views> where
-    Registry: registry::Registry
+unsafe impl<'a, Registry, Resources, Views, Indices> Send
+    for Entries<'a, Registry, Resources, Views, Indices>
+where
+    Registry: registry::Registry,
 {
 }
 
 // SAFETY: Since the access to the viewed components is unique, this can be shared between threads
 // safely.
-unsafe impl<'a, Registry, Resources, Views> Sync for Entries<'a, Registry, Resources, Views> where
-    Registry: registry::Registry
+unsafe impl<'a, Registry, Resources, Views, Indices> Sync
+    for Entries<'a, Registry, Resources, Views, Indices>
+where
+    Registry: registry::Registry,
 {
 }
 
@@ -269,7 +268,7 @@ mod tests {
         let mut world = World::<Registry!()>::new();
         let identifier = world.insert(entity!());
 
-        let mut entries = unsafe { Entries::<_, _, Views!()>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         assert_some!(entry.query(Query::<Views!()>::new()));
@@ -280,7 +279,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!()>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         assert_some!(entry.query(Query::<Views!(), filter::Has<A>>::new()));
@@ -291,10 +290,104 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!()>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&B), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         assert_none!(entry.query(Query::<Views!(), filter::Has<B>>::new()));
+    }
+
+    #[test]
+    fn empty_query_with_filter_on_mutable_ref_in_super_views() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(&mut A), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        assert_some!(entry.query(Query::<Views!(), filter::Has<A>>::new()));
+    }
+
+    #[test]
+    fn empty_query_with_filter_on_optional_ref_in_super_views() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(Option<&A>), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        assert_some!(entry.query(Query::<Views!(), filter::Has<A>>::new()));
+    }
+
+    #[test]
+    fn empty_query_with_filter_on_optional_mutable_ref_in_super_views() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(Option<&mut A>), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        assert_some!(entry.query(Query::<Views!(), filter::Has<A>>::new()));
+    }
+
+    #[test]
+    fn empty_query_with_filter_on_second_view_in_super_views() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(&C, &A), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        assert_some!(entry.query(Query::<Views!(), filter::Has<A>>::new()));
+    }
+
+    #[test]
+    fn empty_query_with_or_filter() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &B), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        assert_some!(
+            entry.query(Query::<Views!(), filter::Or<filter::Has<A>, filter::Has<B>>>::new())
+        );
+    }
+
+    #[test]
+    fn empty_query_with_or_filter_second() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &B), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        assert_some!(
+            entry.query(Query::<Views!(), filter::Or<filter::Has<B>, filter::Has<A>>>::new())
+        );
+    }
+
+    #[test]
+    fn empty_query_with_and_filter() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42), B('a')));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &B), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        assert_some!(
+            entry.query(Query::<Views!(), filter::And<filter::Has<A>, filter::Has<B>>>::new())
+        );
+    }
+
+    #[test]
+    fn empty_query_with_not_filter() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(&B), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        assert_some!(entry.query(Query::<Views!(), filter::Not<filter::Has<B>>>::new()));
     }
 
     #[test]
@@ -302,7 +395,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!());
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         assert_some!(entry.query(Query::<Views!()>::new()));
@@ -313,7 +406,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(a) = assert_some!(entry.query(Query::<Views!(&A)>::new()));
@@ -325,7 +418,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(c) = assert_some!(entry.query(Query::<Views!(&C)>::new()));
@@ -337,7 +430,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(c) = assert_some!(entry.query(Query::<Views!(&mut C)>::new()));
@@ -349,7 +442,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(a) = assert_some!(entry.query(Query::<Views!(Option<&A>)>::new()));
@@ -361,7 +454,7 @@ mod tests {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(c) = assert_some!(entry.query(Query::<Views!(Option<&C>)>::new()));
@@ -369,11 +462,23 @@ mod tests {
     }
 
     #[test]
+    fn query_optional_immutable_superset_mutable_not_present() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42), B('a')));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        let result!(c) = assert_some!(entry.query(Query::<Views!(Option<&C>)>::new()));
+        assert_eq!(c, None);
+    }
+
+    #[test]
     fn query_optional_mutable_superset_mutable() {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(c) = assert_some!(entry.query(Query::<Views!(Option<&mut C>)>::new()));
@@ -381,11 +486,23 @@ mod tests {
     }
 
     #[test]
+    fn query_optional_mutable_superset_mutable_not_present() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42), B('a')));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        let result!(c) = assert_some!(entry.query(Query::<Views!(Option<&mut C>)>::new()));
+        assert_eq!(c, None);
+    }
+
+    #[test]
     fn query_optional_none() {
         let mut world = World::<Registry>::new();
         let identifier = world.insert(entity!(A(42), C(3.14)));
 
-        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C, &B)>::new(&mut world) };
+        let mut entries = unsafe { Entries::<_, _, Views!(&A, &mut C, &B), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(b) = assert_some!(entry.query(Query::<Views!(Option<&B>)>::new()));
@@ -398,7 +515,7 @@ mod tests {
         let identifier = world.insert(entity!(A(42), B('a'), C(3.14)));
 
         let mut entries =
-            unsafe { Entries::<_, _, Views!(&A, &mut C, entity::Identifier)>::new(&mut world) };
+            unsafe { Entries::<_, _, Views!(&A, &mut C, entity::Identifier), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(queried_identifier) =
@@ -412,7 +529,7 @@ mod tests {
         let identifier = world.insert(entity!(B('a'), C(3.14)));
 
         let mut entries =
-            unsafe { Entries::<_, _, Views!(&A, &mut B, entity::Identifier)>::new(&mut world) };
+            unsafe { Entries::<_, _, Views!(&A, &mut B, entity::Identifier), _>::new(&mut world) };
         let mut entry = assert_some!(entries.entry(identifier));
 
         let result!(queried_identifier, b, a) =
@@ -420,5 +537,77 @@ mod tests {
         assert_eq!(queried_identifier, identifier);
         assert_eq!(a, None);
         assert_eq!(b, &B('a'));
+    }
+
+    #[test]
+    fn query_ref_with_optional_super_view() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(Option<&A>), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        let result!(a) = assert_some!(entry.query(Query::<Views!(&A)>::new()));
+        assert_eq!(a, &A(42));
+    }
+
+    #[test]
+    fn query_ref_with_optional_mutable_super_view() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(Option<&mut A>), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        let result!(a) = assert_some!(entry.query(Query::<Views!(&A)>::new()));
+        assert_eq!(a, &A(42));
+    }
+
+    #[test]
+    fn query_mutable_ref_with_optional_mutable_super_view() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(Option<&mut A>), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        let result!(a) = assert_some!(entry.query(Query::<Views!(&mut A)>::new()));
+        assert_eq!(a, &mut A(42));
+    }
+
+    #[test]
+    fn query_optional_with_optional_super_view() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(Option<&A>), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        let result!(a) = assert_some!(entry.query(Query::<Views!(Option<&A>)>::new()));
+        assert_eq!(a, Some(&A(42)));
+    }
+
+    #[test]
+    fn query_optional_with_optional_mutable_super_view() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(Option<&mut A>), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        let result!(a) = assert_some!(entry.query(Query::<Views!(Option<&A>)>::new()));
+        assert_eq!(a, Some(&A(42)));
+    }
+
+    #[test]
+    fn query_optional_mutable_with_optional_mutable_super_view() {
+        let mut world = World::<Registry>::new();
+        let identifier = world.insert(entity!(A(42)));
+
+        let mut entries = unsafe { Entries::<_, _, Views!(Option<&mut A>), _>::new(&mut world) };
+        let mut entry = assert_some!(entries.entry(identifier));
+
+        let result!(a) = assert_some!(entry.query(Query::<Views!(Option<&mut A>)>::new()));
+        assert_eq!(a, Some(&mut A(42)));
     }
 }

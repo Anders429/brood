@@ -30,7 +30,7 @@
 //!     type ResourceViews<'a> = Views!();
 //!     type EntryViews<'a> = Views!();
 //!
-//!     fn run<'a, R, S, FI, VI, P, I, Q>(
+//!     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
 //!         &mut self,
 //!         query_results: Result<
 //!             R,
@@ -38,6 +38,7 @@
 //!             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 //!             Self::ResourceViews<'a>,
 //!             Self::EntryViews<'a>,
+//!             (EP, EI, EQ),
 //!         >,
 //!     ) where
 //!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
@@ -81,7 +82,10 @@ use crate::{
         view::Views,
         Result,
     },
-    registry::ContainsQuery,
+    registry::{
+        ContainsQuery,
+        ContainsViews,
+    },
 };
 
 /// An executable type which operates over the entities within a [`World`].
@@ -121,7 +125,7 @@ use crate::{
 ///     type ResourceViews<'a> = Views!();
 ///     type EntryViews<'a> = Views!();
 ///
-///     fn run<'a, R, S, FI, VI, P, I, Q>(
+///     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
 ///         &mut self,
 ///         query_results: Result<
 ///             R,
@@ -129,6 +133,7 @@ use crate::{
 ///             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
 ///             Self::ResourceViews<'a>,
 ///             Self::EntryViews<'a>,
+///             (EP, EI, EQ),
 ///         >,
 ///     ) where
 ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
@@ -160,7 +165,7 @@ pub trait System {
     /// The views here must be [`Disjoint`] with `Self::Views`
     ///
     /// [`Disjoint`]: crate::query::view::Disjoint
-    type EntryViews<'a>;
+    type EntryViews<'a>: Views<'a>;
 
     /// Logic to be run over the query result.
     ///
@@ -195,7 +200,7 @@ pub trait System {
     ///     type ResourceViews<'a> = Views!();
     ///     type EntryViews<'a> = Views!();
     ///
-    ///     fn run<'a, R, S, FI, VI, P, I, Q>(
+    ///     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
     ///         &mut self,
     ///         query_results: Result<
     ///             R,
@@ -203,6 +208,7 @@ pub trait System {
     ///             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
     ///             Self::ResourceViews<'a>,
     ///             Self::EntryViews<'a>,
+    ///             (EP, EI, EQ),
     ///         >,
     ///     ) where
     ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
@@ -217,15 +223,18 @@ pub trait System {
     /// ```
     ///
     /// [`World`]: crate::world::World
-    fn run<'a, R, S, FI, VI, P, I, Q>(
+    fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
         &mut self,
         query_result: Result<
+            'a,
             R,
             S,
             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
             Self::ResourceViews<'a>,
             Self::EntryViews<'a>,
+            (EP, EI, EQ),
         >,
     ) where
-        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>;
+        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
+            + ContainsViews<'a, Self::EntryViews<'a>, EP, EI, EQ>;
 }

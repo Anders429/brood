@@ -11,6 +11,7 @@ use crate::{
         view::Views,
         Query,
     },
+    registry,
     registry::{
         ContainsParQuery,
         ContainsQuery,
@@ -43,6 +44,9 @@ pub trait Task<
     EntryViewsOppositeIndices,
     EntryViewsOppositeReshapeIndices,
     EntryViewsOppositeInverseIndices,
+    EntryContainments,
+    EntryIndices,
+    EntryReshapeIndices,
 > where
     R: Registry,
 {
@@ -77,6 +81,9 @@ impl<
         EntryViewsOppositeIndices,
         EntryViewsOppositeReshapeIndices,
         EntryViewsOppositeInverseIndices,
+        EntryContainments,
+        EntryIndices,
+        EntryReshapeIndices,
     >
     Task<
         'a,
@@ -99,10 +106,20 @@ impl<
         EntryViewsOppositeIndices,
         EntryViewsOppositeReshapeIndices,
         EntryViewsOppositeInverseIndices,
+        EntryContainments,
+        EntryIndices,
+        EntryReshapeIndices,
     > for System<S>
 where
     S: system::System + Send,
-    R: ContainsQuery<'a, S::Filter, SFI, S::Views<'a>, SVI, SP, SI, SQ>,
+    R: ContainsQuery<'a, S::Filter, SFI, S::Views<'a>, SVI, SP, SI, SQ>
+        + registry::ContainsViews<
+            'a,
+            S::EntryViews<'a>,
+            EntryContainments,
+            EntryIndices,
+            EntryReshapeIndices,
+        >,
     Resources: 'a,
     Resources: ContainsViews<
         'a,
@@ -113,17 +130,17 @@ where
         ResourceViewsReshapeIndices,
     >,
     S::EntryViews<'a>: view::Disjoint<
-        S::Views<'a>,
-        R,
-        EntryViewsContainments,
-        EntryViewsIndices,
-        EntryViewsReshapeIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeContainments,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeReshapeIndices,
-        EntryViewsOppositeInverseIndices,
-    >,
+            S::Views<'a>,
+            R,
+            EntryViewsContainments,
+            EntryViewsIndices,
+            EntryViewsReshapeIndices,
+            EntryViewsInverseIndices,
+            EntryViewsOppositeContainments,
+            EntryViewsOppositeIndices,
+            EntryViewsOppositeReshapeIndices,
+            EntryViewsOppositeInverseIndices,
+        > + Views<'a>,
 {
     type Views = S::Views<'a>;
     type Filter = S::Filter;
@@ -160,6 +177,9 @@ impl<
         EntryViewsOppositeIndices,
         EntryViewsOppositeReshapeIndices,
         EntryViewsOppositeInverseIndices,
+        EntryContainments,
+        EntryIndices,
+        EntryReshapeIndices,
     >
     Task<
         'a,
@@ -182,10 +202,20 @@ impl<
         EntryViewsOppositeIndices,
         EntryViewsOppositeReshapeIndices,
         EntryViewsOppositeInverseIndices,
+        EntryContainments,
+        EntryIndices,
+        EntryReshapeIndices,
     > for ParSystem<P>
 where
     P: system::ParSystem + Send,
-    R: ContainsParQuery<'a, P::Filter, SFI, P::Views<'a>, SVI, SP, SI, SQ>,
+    R: ContainsParQuery<'a, P::Filter, SFI, P::Views<'a>, SVI, SP, SI, SQ>
+        + registry::ContainsViews<
+            'a,
+            P::EntryViews<'a>,
+            EntryContainments,
+            EntryIndices,
+            EntryReshapeIndices,
+        >,
     Resources: 'a,
     Resources: ContainsViews<
         'a,
@@ -196,17 +226,17 @@ where
         ResourceViewsReshapeIndices,
     >,
     P::EntryViews<'a>: view::Disjoint<
-        P::Views<'a>,
-        R,
-        EntryViewsContainments,
-        EntryViewsIndices,
-        EntryViewsReshapeIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeContainments,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeReshapeIndices,
-        EntryViewsOppositeInverseIndices,
-    >,
+            P::Views<'a>,
+            R,
+            EntryViewsContainments,
+            EntryViewsIndices,
+            EntryViewsReshapeIndices,
+            EntryViewsInverseIndices,
+            EntryViewsOppositeContainments,
+            EntryViewsOppositeIndices,
+            EntryViewsOppositeReshapeIndices,
+            EntryViewsOppositeInverseIndices,
+        > + Views<'a>,
 {
     type Views = P::Views<'a>;
     type Filter = P::Filter;

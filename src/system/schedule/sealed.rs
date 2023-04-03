@@ -34,6 +34,9 @@ pub trait Sealed<
     EntryViewsOppositeIndicesLists,
     EntryViewsOppositeReshapeIndicesLists,
     EntryViewsOppositeInverseIndicesLists,
+    EntryContainmentsLists,
+    EntryIndicesLists,
+    EntryReshapeIndicesLists,
 > where
     R: Registry,
 {
@@ -58,6 +61,9 @@ pub trait Sealed<
         EntryViewsOppositeIndicesLists,
         EntryViewsOppositeReshapeIndicesLists,
         EntryViewsOppositeInverseIndicesLists,
+        EntryContainmentsLists,
+        EntryIndicesLists,
+        EntryReshapeIndicesLists,
     >;
 
     fn as_stages(&'a mut self) -> Self::Stages;
@@ -92,6 +98,9 @@ impl<
         EntryViewsOppositeIndicesLists,
         EntryViewsOppositeReshapeIndicesLists,
         EntryViewsOppositeInverseIndicesLists,
+        EntryContainmentsLists,
+        EntryIndicesLists,
+        EntryReshapeIndicesLists,
     >
     Sealed<
         'a,
@@ -121,6 +130,9 @@ impl<
         EntryViewsOppositeIndicesLists,
         EntryViewsOppositeReshapeIndicesLists,
         EntryViewsOppositeInverseIndicesLists,
+        EntryContainmentsLists,
+        EntryIndicesLists,
+        EntryReshapeIndicesLists,
     > for T
 where
     R: Registry,
@@ -152,6 +164,9 @@ where
         EntryViewsOppositeIndicesLists,
         EntryViewsOppositeReshapeIndicesLists,
         EntryViewsOppositeInverseIndicesLists,
+        EntryContainmentsLists,
+        EntryIndicesLists,
+        EntryReshapeIndicesLists,
     >,
 {
     type Stages = <T as Scheduler<
@@ -182,6 +197,9 @@ where
         EntryViewsOppositeIndicesLists,
         EntryViewsOppositeReshapeIndicesLists,
         EntryViewsOppositeInverseIndicesLists,
+        EntryContainmentsLists,
+        EntryIndicesLists,
+        EntryReshapeIndicesLists,
     >>::Stages;
 
     #[inline]

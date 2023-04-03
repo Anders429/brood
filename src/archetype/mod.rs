@@ -345,6 +345,43 @@ where
     }
 
     /// # Safety
+    /// The index `index` must be a valid index into this archetype.
+    pub(crate) unsafe fn view_row_maybe_uninit_unchecked<'a, V, P, I, Q>(
+        &mut self,
+        index: usize,
+    ) -> <<<R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable as ContainsViewsOuter<
+        'a,
+        V,
+        P,
+        I,
+        Q,
+    >>::Canonical as ViewsSealed<'a>>::MaybeUninit
+    where
+        V: Views<'a>,
+        R: ContainsViews<'a, V, P, I, Q>,
+    {
+        // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`
+        // for each component `C` identified in `self.identifier` in the canonical order defined by
+        // the registry.
+        //
+        // `self.entity_identifiers` also contains the raw parts for a valid
+        // `Vec<entity::Identifier>` of size `self.length`.
+        //
+        // `index` is guaranteed by the safety contract of this method to be within the bounds of
+        // this archetype, and therefore within the bounds of each column and the entity
+        // identifiers of this archetype.
+        unsafe {
+            <R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable::view_one_maybe_uninit(
+                index,
+                &self.components,
+                self.entity_identifiers,
+                self.length,
+                self.identifier.iter(),
+            )
+        }
+    }
+
+    /// # Safety
     /// `C` must be a component type that is contained within this archetype, meaning the
     /// archetype's `Identifier` must have the `C` bit set.
     ///

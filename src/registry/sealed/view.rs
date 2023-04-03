@@ -25,6 +25,7 @@ use crate::{
 };
 use core::{
     iter,
+    mem::MaybeUninit,
     slice,
 };
 use either::Either;
@@ -60,10 +61,24 @@ where
     where
         R: Registry;
 
+    unsafe fn view_one_maybe_uninit<R>(
+        index: usize,
+        columns: &[(*mut u8, usize)],
+        length: usize,
+        archetype_identifier: archetype::identifier::Iter<R>,
+    ) -> V::MaybeUninit
+    where
+        R: Registry;
+
     /// Return the dynamic claims over the components borrowed by the `Views`.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims;
+
+    /// Return the indices for each view into the registry.
+    fn indices<R>() -> V::Indices
+    where
+        R: registry::Length;
 }
 
 impl<'a> CanonicalViews<'a, view::Null, Null> for registry::Null {
@@ -90,10 +105,29 @@ impl<'a> CanonicalViews<'a, view::Null, Null> for registry::Null {
         view::Null
     }
 
+    unsafe fn view_one_maybe_uninit<R>(
+        _index: usize,
+        _columns: &[(*mut u8, usize)],
+        _length: usize,
+        _archetype_identifier: archetype::identifier::Iter<R>,
+    ) -> view::Null
+    where
+        R: Registry,
+    {
+        view::Null
+    }
+
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims {
         claim::Null
+    }
+
+    fn indices<R>() -> view::Null
+    where
+        R: registry::Length,
+    {
+        view::Null
     }
 }
 
@@ -159,10 +193,56 @@ where
         )
     }
 
+    unsafe fn view_one_maybe_uninit<R_>(
+        index: usize,
+        mut columns: &[(*mut u8, usize)],
+        length: usize,
+        mut archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> (MaybeUninit<&'a C>, V::MaybeUninit)
+    where
+        R_: Registry,
+    {
+        (
+            // SAFETY: `archetype_identifier` is guaranteed to have at least one element remaining.
+            if unsafe { archetype_identifier.next().unwrap_unchecked() } {
+                // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of
+                // size `length` for the currently viewed component `C`. Consequentially, `index`
+                // is a valid index into this `Vec<C>`.
+                MaybeUninit::new(unsafe {
+                    slice::from_raw_parts(
+                        {
+                            let column = columns.get_unchecked(0);
+                            columns = columns.get_unchecked(1..);
+                            column
+                        }
+                        .0
+                        .cast::<C>(),
+                        length,
+                    )
+                    .get_unchecked(index)
+                })
+            } else {
+                MaybeUninit::uninit()
+            },
+            // SAFETY: The remaining components in `columns` are guaranteed to contain raw parts
+            // for valid `Vec<C>`s of length `length` for each of the remaining components
+            // identified by `archetype_identifier`. `index` is guaranteed to be less than
+            // `length`.
+            unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) },
+        )
+    }
+
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims {
         (Claim::Immutable, R::claims())
+    }
+
+    fn indices<R_>() -> (usize, V::Indices)
+    where
+        R_: registry::Length,
+    {
+        (R_::LEN - R::LEN - 1, R::indices::<R_>())
     }
 }
 
@@ -228,10 +308,56 @@ where
         )
     }
 
+    unsafe fn view_one_maybe_uninit<R_>(
+        index: usize,
+        mut columns: &[(*mut u8, usize)],
+        length: usize,
+        mut archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> (MaybeUninit<&'a mut C>, V::MaybeUninit)
+    where
+        R_: Registry,
+    {
+        (
+            // SAFETY: `archetype_identifier` is guaranteed to have at least one element remaining.
+            if unsafe { archetype_identifier.next().unwrap_unchecked() } {
+                // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of
+                // size `length` for the currently viewed component `C`. Consequentially, `index`
+                // is a valid index into this `Vec<C>`.
+                MaybeUninit::new(unsafe {
+                    slice::from_raw_parts_mut(
+                        {
+                            let column = columns.get_unchecked(0);
+                            columns = columns.get_unchecked(1..);
+                            column
+                        }
+                        .0
+                        .cast::<C>(),
+                        length,
+                    )
+                    .get_unchecked_mut(index)
+                })
+            } else {
+                MaybeUninit::uninit()
+            },
+            // SAFETY: The remaining components in `columns` are guaranteed to contain raw parts
+            // for valid `Vec<C>`s of length `length` for each of the remaining components
+            // identified by `archetype_identifier`. `index` is guaranteed to be less than
+            // `length`.
+            unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) },
+        )
+    }
+
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims {
         (Claim::Mutable, R::claims())
+    }
+
+    fn indices<R_>() -> (usize, V::Indices)
+    where
+        R_: registry::Length,
+    {
+        (R_::LEN - R::LEN - 1, R::indices::<R_>())
     }
 }
 
@@ -321,10 +447,53 @@ where
         )
     }
 
+    unsafe fn view_one_maybe_uninit<R_>(
+        index: usize,
+        mut columns: &[(*mut u8, usize)],
+        length: usize,
+        mut archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> (Option<&'a C>, V::MaybeUninit)
+    where
+        R_: Registry,
+    {
+        (
+            // SAFETY: `archetype_identifier` is guaranteed to have at least one element remaining.
+            unsafe { archetype_identifier.next().unwrap_unchecked() }.then(||
+                // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of
+                // size `length` for the currently viewed component `C`. Consequentially, `index`
+                // is a valid index into this `Vec<C>`.
+                unsafe {
+                slice::from_raw_parts(
+                    {
+                        let column = columns.get_unchecked(0);
+                        columns = columns.get_unchecked(1..);
+                        column
+                    }
+                    .0
+                    .cast::<C>(),
+                    length,
+                )
+                .get_unchecked(index)
+            }),
+            // SAFETY: The remaining components in `columns` are guaranteed to contain raw parts
+            // for valid `Vec<C>`s of length `length` for each of the remaining components
+            // identified by `archetype_identifier`. `index` is guaranteed to be less than
+            // `length`.
+            unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) },
+        )
+    }
+
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims {
         (Claim::Immutable, R::claims())
+    }
+
+    fn indices<R_>() -> (usize, V::Indices)
+    where
+        R_: registry::Length,
+    {
+        (R_::LEN - R::LEN - 1, R::indices::<R_>())
     }
 }
 
@@ -414,10 +583,53 @@ where
         )
     }
 
+    unsafe fn view_one_maybe_uninit<R_>(
+        index: usize,
+        mut columns: &[(*mut u8, usize)],
+        length: usize,
+        mut archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> (Option<&'a mut C>, V::MaybeUninit)
+    where
+        R_: Registry,
+    {
+        (
+            // SAFETY: `archetype_identifier` is guaranteed to have at least one element remaining.
+            unsafe { archetype_identifier.next().unwrap_unchecked() }.then(||
+                // SAFETY: `columns` is guaranteed to contain raw parts for a valid `Vec<C>` of
+                // size `length` for the currently viewed component `C`. Consequentially, `index`
+                // is a valid index into this `Vec<C>`.
+                unsafe {
+                    slice::from_raw_parts_mut(
+                        {
+                            let column = columns.get_unchecked(0);
+                            columns = columns.get_unchecked(1..);
+                            column
+                        }
+                        .0
+                        .cast::<C>(),
+                        length,
+                    )
+                    .get_unchecked_mut(index)
+                }),
+            // SAFETY: The remaining components in `columns` are guaranteed to contain raw parts
+            // for valid `Vec<C>`s of length `length` for each of the remaining components
+            // identified by `archetype_identifier`. `index` is guaranteed to be less than
+            // `length`.
+            unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) },
+        )
+    }
+
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims {
         (Claim::Mutable, R::claims())
+    }
+
+    fn indices<R_>() -> (usize, V::Indices)
+    where
+        R_: registry::Length,
+    {
+        (R_::LEN - R::LEN - 1, R::indices::<R_>())
     }
 }
 
@@ -472,9 +684,39 @@ where
         unsafe { R::view_one(index, columns, length, archetype_identifier) }
     }
 
+    unsafe fn view_one_maybe_uninit<R_>(
+        index: usize,
+        mut columns: &[(*mut u8, usize)],
+        length: usize,
+        mut archetype_identifier: archetype::identifier::Iter<R_>,
+    ) -> V::MaybeUninit
+    where
+        R_: Registry,
+    {
+        // SAFETY: `archetype_identifier` is guaranteed to have at least one element remaining.
+        if unsafe { archetype_identifier.next().unwrap_unchecked() } {
+            // SAFETY: Since `archetype_identifier` has this component set, there is guaranteed to
+            // be at least one entry in `columns`.
+            unsafe {
+                columns = columns.get_unchecked(1..);
+            }
+        }
+        // SAFETY: The remaining components in `columns` are guaranteed to contain raw parts
+        // for valid `Vec<C>`s of length `length` for each of the remaining components
+        // identified by `archetype_identifier`. `index` is guaranteed to be less than `length`.
+        unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) }
+    }
+
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims {
         (Claim::None, R::claims())
+    }
+
+    fn indices<R_>() -> V::Indices
+    where
+        R_: registry::Length,
+    {
+        R::indices::<R_>()
     }
 }
