@@ -20,7 +20,6 @@ pub use entry::Entry;
 use crate::{
     archetypes::Archetypes,
     entities,
-    entities::Entities,
     entity,
     query,
     query::{
@@ -248,7 +247,6 @@ where
     /// ```
     pub fn extend<E, I, P, Q>(&mut self, entities: entities::Batch<E>) -> Vec<entity::Identifier>
     where
-        E: Entities,
         R: ContainsEntities<E, P, Q, I>,
     {
         self.len += entities.len();
