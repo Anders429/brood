@@ -22,7 +22,6 @@ use crate::{
     entities,
     entities::Entities,
     entity,
-    entity::Entity,
     query,
     query::{
         filter::Filter,
@@ -207,22 +206,22 @@ where
     ///
     /// let entity_identifier = world.insert(entity!(Foo(42), Bar(false)));
     /// ```
-    pub fn insert<E, I, P, Q>(&mut self, entity: E) -> entity::Identifier
+    pub fn insert<Entity, Indices>(&mut self, entity: Entity) -> entity::Identifier
     where
-        R: ContainsEntity<E, P, Q, I>,
+        R: ContainsEntity<Entity, Indices>,
     {
         self.len += 1;
 
         let canonical_entity = R::canonical(entity);
 
         // SAFETY: Since the archetype was obtained using the `identifier_buffer` created from the
-        // entity `E`, then the entity is guaranteed to be made up of componpents identified by the
-        // archetype's identifier.
+        // entity `Entity`, then the entity is guaranteed to be made up of componpents identified
+        // by the archetype's identifier.
         //
         // `self.entity_allocator` is guaranteed to live as long as the archetype.
         unsafe {
             self.archetypes
-                .get_mut_or_insert_new_for_entity::<<R as contains::entity::Sealed<E, P, Q, I>>::Canonical, Q>()
+                .get_mut_or_insert_new_for_entity::<<R as contains::entity::Sealed<Entity, Indices>>::Canonical, <R as contains::entity::Sealed<Entity, Indices>>::CanonicalContainments>()
                 .push(canonical_entity, &mut self.entity_allocator)
         }
     }
@@ -1174,23 +1173,22 @@ where
     ///
     /// let mut world = World::<Registry>::new();
     ///
-    /// world.reserve::<Entity!(Foo, Bar), _, _, _>(10);
+    /// world.reserve::<Entity!(Foo, Bar), _>(10);
     /// ```
-    pub fn reserve<E, I, P, Q>(&mut self, additional: usize)
+    pub fn reserve<Entity, Indices>(&mut self, additional: usize)
     where
-        E: Entity,
-        R: ContainsEntity<E, P, Q, I>,
+        R: ContainsEntity<Entity, Indices>,
     {
         // SAFETY: Since the canonical entity form is used, the archetype obtained is guaranteed to
-        // be the unique archetype for entities of type `E`.
+        // be the unique archetype for entities of type `Entity`.
         //
         // Additionally, the same entity type is used for the call to `reserve`, meaning that the
         // set of components in the entity are guaranteed to be the same set as those in the
         // archetype.
         unsafe {
             self.archetypes
-                .get_mut_or_insert_new_for_entity::<<R as contains::entity::Sealed<E, P, Q, I>>::Canonical, Q>()
-                .reserve::<<R as contains::entity::Sealed<E, P, Q, I>>::Canonical>(additional);
+                .get_mut_or_insert_new_for_entity::<<R as contains::entity::Sealed<Entity, Indices>>::Canonical, <R as contains::entity::Sealed<Entity, Indices>>::CanonicalContainments>()
+                .reserve::<<R as contains::entity::Sealed<Entity, Indices>>::Canonical>(additional);
         }
     }
 
@@ -3161,7 +3159,7 @@ mod tests {
     fn reserve() {
         let mut world = World::<Registry>::new();
 
-        world.reserve::<Entity!(A, B), _, _, _>(10);
+        world.reserve::<Entity!(A, B), _>(10);
     }
 
     #[test]
@@ -3169,11 +3167,11 @@ mod tests {
         let mut world = World::<Registry>::new();
 
         world.insert(entity!(A(1)));
-        world.reserve::<Entity!(A), _, _, _>(10);
+        world.reserve::<Entity!(A), _>(10);
     }
 
     #[test]
-    fn reserve_creates_new_archetyps() {
+    fn reserve_creates_new_archetypes() {
         let mut world = World::<Registry>::new();
         world.insert(entity!(A(42)));
         world.extend(entities!((B('a')); 5));
@@ -3182,9 +3180,9 @@ mod tests {
 
         world.clone_from(&source_world);
 
-        source_world.reserve::<Entity!(A), _, _, _>(0);
-        source_world.reserve::<Entity!(B), _, _, _>(0);
-        source_world.reserve::<Entity!(A, B), _, _, _>(0);
+        source_world.reserve::<Entity!(A), _>(0);
+        source_world.reserve::<Entity!(B), _>(0);
+        source_world.reserve::<Entity!(A, B), _>(0);
 
         assert_eq!(world, source_world);
     }
