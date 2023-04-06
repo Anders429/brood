@@ -334,10 +334,7 @@ where
         P,
         I,
         Q,
-        ResourceViewsContainments,
         ResourceViewsIndices,
-        ResourceViewsCanonicalContainments,
-        ResourceViewsReshapeIndices,
         EntryViewsContainments,
         EntryViewsIndices,
         EntryViewsReshapeIndices,
@@ -371,14 +368,7 @@ where
                 EntryIndices,
                 EntryReshapeIndices,
             >,
-        Resources: ContainsViews<
-            'a,
-            ResourceViews,
-            ResourceViewsContainments,
-            ResourceViewsIndices,
-            ResourceViewsCanonicalContainments,
-            ResourceViewsReshapeIndices,
-        >,
+        Resources: ContainsViews<'a, ResourceViews, ResourceViewsIndices>,
         EntryViews: view::Disjoint<
                 V,
                 R,
@@ -470,10 +460,7 @@ where
         P,
         I,
         Q,
-        ResourceViewsContainments,
         ResourceViewsIndices,
-        ResourceViewsCanonicalContainments,
-        ResourceViewsReshapeIndices,
         EntryViewsContainments,
         EntryViewsIndices,
         EntryViewsReshapeIndices,
@@ -507,14 +494,7 @@ where
                 EntryIndices,
                 EntryReshapeIndices,
             >,
-        Resources: ContainsViews<
-            'a,
-            ResourceViews,
-            ResourceViewsContainments,
-            ResourceViewsIndices,
-            ResourceViewsCanonicalContainments,
-            ResourceViewsReshapeIndices,
-        >,
+        Resources: ContainsViews<'a, ResourceViews, ResourceViewsIndices>,
         EntryViews: view::Disjoint<
                 V,
                 R,
@@ -629,10 +609,7 @@ where
         P,
         I,
         Q,
-        ResourceViewsContainments,
         ResourceViewsIndices,
-        ResourceViewsCanonicalContainments,
-        ResourceViewsReshapeIndices,
         EntryViewsContainments,
         EntryViewsIndices,
         EntryViewsReshapeIndices,
@@ -657,14 +634,7 @@ where
                 EntryIndices,
                 EntryReshapeIndices,
             >,
-        Resources: ContainsViews<
-            'a,
-            S::ResourceViews<'a>,
-            ResourceViewsContainments,
-            ResourceViewsIndices,
-            ResourceViewsCanonicalContainments,
-            ResourceViewsReshapeIndices,
-        >,
+        Resources: ContainsViews<'a, S::ResourceViews<'a>, ResourceViewsIndices>,
         S::EntryViews<'a>: view::Disjoint<
                 S::Views<'a>,
                 R,
@@ -758,10 +728,7 @@ where
         P,
         I,
         Q,
-        ResourceViewsContainments,
         ResourceViewsIndices,
-        ResourceViewsCanonicalContainments,
-        ResourceViewsReshapeIndices,
         EntryViewsContainments,
         EntryViewsIndices,
         EntryViewsReshapeIndices,
@@ -786,14 +753,7 @@ where
                 EntryIndices,
                 EntryReshapeIndices,
             >,
-        Resources: ContainsViews<
-            'a,
-            S::ResourceViews<'a>,
-            ResourceViewsContainments,
-            ResourceViewsIndices,
-            ResourceViewsCanonicalContainments,
-            ResourceViewsReshapeIndices,
-        >,
+        Resources: ContainsViews<'a, S::ResourceViews<'a>, ResourceViewsIndices>,
         S::EntryViews<'a>: view::Disjoint<
                 S::Views<'a>,
                 R,
@@ -927,10 +887,7 @@ where
         SP,
         SI,
         SQ,
-        ResourceViewsContainmentsLists,
         ResourceViewsIndicesLists,
-        ResourceViewsCanonicalContainmentsLists,
-        ResourceViewsReshapeIndicesLists,
         EntryViewsContainmentsLists,
         EntryViewsIndicesLists,
         EntryViewsReshapeIndicesLists,
@@ -962,10 +919,7 @@ where
             SP,
             SI,
             SQ,
-            ResourceViewsContainmentsLists,
             ResourceViewsIndicesLists,
-            ResourceViewsCanonicalContainmentsLists,
-            ResourceViewsReshapeIndicesLists,
             EntryViewsContainmentsLists,
             EntryViewsIndicesLists,
             EntryViewsReshapeIndicesLists,
@@ -1319,19 +1273,16 @@ where
     /// let mut world =
     ///     World::<Registry!(), _>::with_resources(resources!(ResourceA(0), ResourceB('a')));
     ///
-    /// let result!(a, b) = world.view_resources::<Views!(&ResourceA, &mut ResourceB), _, _, _, _>();
+    /// let result!(a, b) = world.view_resources::<Views!(&ResourceA, &mut ResourceB), _>();
     ///
     /// assert_eq!(a, &ResourceA(0));
     ///
     /// b.0 = 'b';
     /// assert_eq!(b, &mut ResourceB('b'));
     /// ```
-    pub fn view_resources<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>(
-        &'a mut self,
-    ) -> Views
+    pub fn view_resources<'a, Views, Indices>(&'a mut self) -> Views
     where
-        Resources:
-            ContainsViews<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>,
+        Resources: ContainsViews<'a, Views, Indices>,
     {
         self.resources.view()
     }
@@ -3275,7 +3226,7 @@ mod tests {
     fn view_no_resources() {
         let mut world = World::<Registry!()>::new();
 
-        let null = world.view_resources::<Views!(), _, _, _, _>();
+        let null = world.view_resources::<Views!(), _>();
         assert_eq!(null, view::Null);
     }
 
@@ -3283,7 +3234,7 @@ mod tests {
     fn view_resource_immutably() {
         let mut world = World::<Registry!(), _>::with_resources(resources!(A(42)));
 
-        let result!(a) = world.view_resources::<Views!(&A), _, _, _, _>();
+        let result!(a) = world.view_resources::<Views!(&A), _>();
         assert_eq!(a, &A(42));
     }
 
@@ -3291,7 +3242,7 @@ mod tests {
     fn view_resource_mutably() {
         let mut world = World::<Registry!(), _>::with_resources(resources!(A(42)));
 
-        let result!(a) = world.view_resources::<Views!(&mut A), _, _, _, _>();
+        let result!(a) = world.view_resources::<Views!(&mut A), _>();
         assert_eq!(a, &mut A(42));
     }
 
@@ -3299,7 +3250,7 @@ mod tests {
     fn view_resource_mutably_modifying() {
         let mut world = World::<Registry!(), _>::with_resources(resources!(A(42)));
 
-        let result!(a) = world.view_resources::<Views!(&mut A), _, _, _, _>();
+        let result!(a) = world.view_resources::<Views!(&mut A), _>();
         a.0 = 100;
 
         assert_eq!(a, &mut A(100));
@@ -3309,7 +3260,7 @@ mod tests {
     fn view_multiple_resources() {
         let mut world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a')));
 
-        let result!(a, b) = world.view_resources::<Views!(&A, &mut B), _, _, _, _>();
+        let result!(a, b) = world.view_resources::<Views!(&A, &mut B), _>();
 
         assert_eq!(a, &A(42));
         assert_eq!(b, &mut B('a'));
@@ -3319,7 +3270,7 @@ mod tests {
     fn view_multiple_resources_reshaped() {
         let mut world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a')));
 
-        let result!(b, a) = world.view_resources::<Views!(&B, &mut A), _, _, _, _>();
+        let result!(b, a) = world.view_resources::<Views!(&B, &mut A), _>();
 
         assert_eq!(a, &A(42));
         assert_eq!(b, &mut B('a'));
@@ -3329,7 +3280,7 @@ mod tests {
     fn view_multiple_resources_modifying() {
         let mut world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a')));
 
-        let result!(a, b) = world.view_resources::<Views!(&A, &mut B), _, _, _, _>();
+        let result!(a, b) = world.view_resources::<Views!(&A, &mut B), _>();
         b.0 = 'b';
 
         assert_eq!(a, &A(42));
@@ -3340,7 +3291,7 @@ mod tests {
     fn view_multiple_resources_modifying_reshaped() {
         let mut world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a')));
 
-        let result!(b, a) = world.view_resources::<Views!(&B, &mut A), _, _, _, _>();
+        let result!(b, a) = world.view_resources::<Views!(&B, &mut A), _>();
         a.0 = 100;
 
         assert_eq!(a, &A(100));
@@ -3353,7 +3304,7 @@ mod tests {
 
         let mut world = World::<Registry!(), _>::with_resources(resources!(A(42), B('a'), C));
 
-        let result!(b) = world.view_resources::<Views!(&B), _, _, _, _>();
+        let result!(b) = world.view_resources::<Views!(&B), _>();
 
         assert_eq!(b, &B('a'));
     }
