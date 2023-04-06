@@ -209,7 +209,6 @@ where
     /// ```
     pub fn insert<E, I, P, Q>(&mut self, entity: E) -> entity::Identifier
     where
-        E: Entity,
         R: ContainsEntity<E, P, Q, I>,
     {
         self.len += 1;
