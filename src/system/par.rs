@@ -1,6 +1,5 @@
 use crate::{
     query::{
-        filter::Filter,
         result,
         view::{
             ParViews,
@@ -79,9 +78,9 @@ use crate::{
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub trait ParSystem {
     /// The filter to apply to queries run by this system.
-    type Filter: Filter;
+    type Filter;
     /// The views on components this system should operate on.
-    type Views<'a>: ParViews<'a> + Filter;
+    type Views<'a>: ParViews<'a>;
     /// Views on resources.
     ///
     /// The system will have access to the resources requested here when run.

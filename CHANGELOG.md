@@ -10,6 +10,10 @@
 - `World::extend()` now only requires a single generic parameter for indices.
 - `World::insert()` no longer requires `E` to implement `Entity`.
 - `World::extend()` no longer requires `E` to implement `Entities`.
+- `World::query()` and `World::par_query()` both no longer require `V` and `F` to implement `Filter`.
+- `System` and `ParSystem` both no longer require `Filter` and `Views` to implement `Filter`.
+- `result::Iter` no longer requires `V` and `F` to implement `Filter`.
+- `Entry::query()` no longer requires `V` and `F` to implement `Filter`.
 
 ## 0.8.2 - 2023-04-02
 ### Fixed

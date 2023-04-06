@@ -3,10 +3,7 @@ use crate::{
     component::Component,
     entity::allocator::Location,
     query::{
-        filter::{
-            And,
-            Filter,
-        },
+        filter::And,
         view::{
             Reshape,
             Views,
@@ -312,8 +309,7 @@ where
         #[allow(unused_variables)] query: Query<V, F>,
     ) -> Option<V>
     where
-        V: Views<'b> + Filter,
-        F: Filter,
+        V: Views<'b>,
         R: ContainsQuery<'b, F, FI, V, VI, P, I, Q>,
     {
         // SAFETY: The `R` on which `filter()` is called is the same `R` over which the identifier

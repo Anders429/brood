@@ -6,7 +6,6 @@ use super::{
 };
 use crate::{
     query::{
-        filter::Filter,
         view,
         view::Views,
         Query,
@@ -48,9 +47,9 @@ pub trait Task<
     R: Registry,
 {
     /// The components viewed by this task.
-    type Views: Views<'a> + Filter;
+    type Views: Views<'a>;
     /// A filter applied to the components viewed by this task.
-    type Filter: Filter;
+    type Filter;
 
     /// Executes the task over the given world.
     fn run(&mut self, world: SendableWorld<R, Resources>);

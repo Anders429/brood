@@ -23,7 +23,6 @@ use crate::{
     entity,
     query,
     query::{
-        filter::Filter,
         result,
         view,
         view::Views,
@@ -357,8 +356,7 @@ where
         (EntryContainments, EntryIndices, EntryReshapeIndices),
     >
     where
-        V: Views<'a> + Filter,
-        F: Filter,
+        V: Views<'a>,
         R: ContainsQuery<'a, F, FI, V, VI, P, I, Q>
             + registry::ContainsViews<
                 'a,
@@ -483,8 +481,7 @@ where
         (EntryContainments, EntryIndices, EntryReshapeIndices),
     >
     where
-        V: ParViews<'a> + Filter,
-        F: Filter,
+        V: ParViews<'a>,
         R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>
             + registry::ContainsViews<
                 'a,
@@ -531,8 +528,7 @@ where
         #[allow(unused_variables)] query: Query<V, F>,
     ) -> result::ArchetypeClaims<'a, R, F, FI, V, VI, P, I, Q>
     where
-        V: Views<'a> + Filter,
-        F: Filter,
+        V: Views<'a>,
         R: ContainsFilter<And<F, V>, And<FI, VI>>,
     {
         // SAFETY: The safety contract here is upheld by the safety contract of this method.

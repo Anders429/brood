@@ -4,10 +4,7 @@ use crate::{
     archetype,
     archetypes,
     query::{
-        filter::{
-            And,
-            Filter,
-        },
+        filter::And,
         view::Views,
     },
     registry::{
@@ -63,8 +60,7 @@ where
 
 impl<'a, R, F, FI, V, VI, P, I, Q> Iterator for ArchetypeClaims<'a, R, F, FI, V, VI, P, I, Q>
 where
-    F: Filter,
-    V: Views<'a> + Filter,
+    V: Views<'a>,
     R: ContainsQuery<'a, F, FI, V, VI, P, I, Q>,
 {
     type Item = (archetype::IdentifierRef<R>, R::Claims);

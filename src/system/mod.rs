@@ -77,7 +77,6 @@ pub use schedule::{
 
 use crate::{
     query::{
-        filter::Filter,
         result,
         view::Views,
         Result,
@@ -151,9 +150,9 @@ use crate::{
 /// [`World`]: crate::world::World
 pub trait System {
     /// The filter to apply to queries run by this system.
-    type Filter: Filter;
+    type Filter;
     /// The views on components this system should operate on.
-    type Views<'a>: Views<'a> + Filter;
+    type Views<'a>: Views<'a>;
     /// Views on resources.
     ///
     /// The system will have access to the resources requested here when run.

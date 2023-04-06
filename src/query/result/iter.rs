@@ -1,10 +1,7 @@
 use crate::{
     archetypes,
     query::{
-        filter::{
-            And,
-            Filter,
-        },
+        filter::And,
         result::{
             Reshape,
             Results,
@@ -106,8 +103,7 @@ where
 
 impl<'a, R, F, FI, V, VI, P, I, Q> Iterator for Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
-    F: Filter,
-    V: Views<'a> + Filter,
+    V: Views<'a>,
     R: ContainsQuery<'a, F, FI, V, VI, P, I, Q>,
 {
     type Item = V;
@@ -184,8 +180,7 @@ where
 
 impl<'a, R, F, FI, V, VI, P, I, Q> FusedIterator for Iter<'a, R, F, FI, V, VI, P, I, Q>
 where
-    F: Filter,
-    V: Views<'a> + Filter,
+    V: Views<'a>,
     R: ContainsQuery<'a, F, FI, V, VI, P, I, Q>,
 {
 }
