@@ -245,9 +245,12 @@ where
     ///
     /// let entity_identiifers = world.extend(entities![(Foo(1), Bar(false)), (Foo(2), Bar(true))]);
     /// ```
-    pub fn extend<E, I, P, Q>(&mut self, entities: entities::Batch<E>) -> Vec<entity::Identifier>
+    pub fn extend<Entities, Indices>(
+        &mut self,
+        entities: entities::Batch<Entities>,
+    ) -> Vec<entity::Identifier>
     where
-        R: ContainsEntities<E, P, Q, I>,
+        R: ContainsEntities<Entities, Indices>,
     {
         self.len += entities.len();
 
@@ -264,7 +267,7 @@ where
         // `self.entity_allocator` is guaranteed to live as long as the archetype.
         unsafe {
             self.archetypes
-                .get_mut_or_insert_new_for_entity::<<<R as contains::entities::Sealed<E, P, Q, I>>::Canonical as entities::Contains>::Entity, Q>()
+                .get_mut_or_insert_new_for_entity::<<<R as contains::entities::Sealed<Entities, Indices>>::Canonical as entities::Contains>::Entity, <R as contains::entities::Sealed<Entities, Indices>>::CanonicalContainments>()
                 .extend(canonical_entities, &mut self.entity_allocator)
         }
     }

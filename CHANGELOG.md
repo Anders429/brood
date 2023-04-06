@@ -5,6 +5,9 @@
 - `resource::ContainsViews` now only requires a single generic parameter for indices.
 - `World::view_resources()` now only requires a single generic parameter for indices.
 - `registry::ContainsEntity` now only requires a single generic parameter for indices.
+- `World::insert()` now only requires a single generic parameter for indices.
+- `registry::ContainsEntities` now only requires a single generic parameter for indices.
+- `World::extend()` now only requires a single generic parameter for indices.
 - `World::insert()` no longer requires `E` to implement `Entity`.
 - `World::extend()` no longer requires `E` to implement `Entities`.
 
