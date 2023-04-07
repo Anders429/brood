@@ -17,7 +17,7 @@
 //!         Result,
 //!         Views,
 //!     },
-//!     registry::ContainsQuery,
+//!     registry,
 //!     system::{
 //!         schedule,
 //!         schedule::task,
@@ -38,18 +38,19 @@
 //!     type ResourceViews<'a> = Views!();
 //!     type EntryViews<'a> = Views!();
 //!
-//!     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+//!     fn run<'a, R, S, I, EP, EI, EQ>(
 //!         &mut self,
 //!         query_results: Result<
 //!             R,
 //!             S,
-//!             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!             I,
 //!             Self::ResourceViews<'a>,
 //!             Self::EntryViews<'a>,
 //!             (EP, EI, EQ),
 //!         >,
 //!     ) where
-//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!         R: registry::Registry,
+//!         I: Iterator<Item = Self::Views<'a>>,
 //!     {
 //!         for result!(foo, bar) in query_results.iter {
 //!             // Do something...
@@ -65,18 +66,19 @@
 //!     type ResourceViews<'a> = Views!();
 //!     type EntryViews<'a> = Views!();
 //!
-//!     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+//!     fn run<'a, R, S, I, EP, EI, EQ>(
 //!         &mut self,
 //!         query_results: Result<
 //!             R,
 //!             S,
-//!             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!             I,
 //!             Self::ResourceViews<'a>,
 //!             Self::EntryViews<'a>,
 //!             (EP, EI, EQ),
 //!         >,
 //!     ) where
-//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!         R: registry::Registry,
+//!         I: Iterator<Item = Self::Views<'a>>,
 //!     {
 //!         for result!(baz, bar) in query_results.iter {
 //!             // Do something...
@@ -137,11 +139,7 @@ pub trait Schedule<
     ResourcesIndicesLists,
     ResourcesContainmentsLists,
     ResourcesInverseIndicesLists,
-    SFI,
-    SVI,
-    SP,
-    SI,
-    SQ,
+    QueryIndicesLists,
     ResourceViewsIndicesLists,
     EntryViewsContainmentsLists,
     EntryViewsIndicesLists,
@@ -166,11 +164,7 @@ pub trait Schedule<
     ResourcesIndicesLists,
     ResourcesContainmentsLists,
     ResourcesInverseIndicesLists,
-    SFI,
-    SVI,
-    SP,
-    SI,
-    SQ,
+    QueryIndicesLists,
     ResourceViewsIndicesLists,
     EntryViewsContainmentsLists,
     EntryViewsIndicesLists,
@@ -200,11 +194,7 @@ impl<
         ResourcesIndicesLists,
         ResourcesContainmentsLists,
         ResourcesInverseIndicesLists,
-        SFI,
-        SVI,
-        SP,
-        SI,
-        SQ,
+        QueryIndicesLists,
         ResourceViewsIndicesLists,
         EntryViewsContainmentsLists,
         EntryViewsIndicesLists,
@@ -229,11 +219,7 @@ impl<
         ResourcesIndicesLists,
         ResourcesContainmentsLists,
         ResourcesInverseIndicesLists,
-        SFI,
-        SVI,
-        SP,
-        SI,
-        SQ,
+        QueryIndicesLists,
         ResourceViewsIndicesLists,
         EntryViewsContainmentsLists,
         EntryViewsIndicesLists,
@@ -260,11 +246,7 @@ where
         ResourcesIndicesLists,
         ResourcesContainmentsLists,
         ResourcesInverseIndicesLists,
-        SFI,
-        SVI,
-        SP,
-        SI,
-        SQ,
+        QueryIndicesLists,
         ResourceViewsIndicesLists,
         EntryViewsContainmentsLists,
         EntryViewsIndicesLists,
@@ -297,10 +279,8 @@ doc::non_root_macro! {
     ///         Result,
     ///         Views,
     ///     },
-    ///     registry::{
-    ///         ContainsParQuery,
-    ///         ContainsQuery,
-    ///     },
+    ///     registry,
+    ///     registry::ContainsParQuery,
     ///     system::{
     ///         schedule,
     ///         schedule::task,
@@ -322,11 +302,12 @@ doc::non_root_macro! {
     ///     type ResourceViews<'a> = Views!();
     ///     type EntryViews<'a> = Views!();
     ///
-    ///     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+    ///     fn run<'a, R, S, I, EP, EI, EQ>(
     ///         &mut self,
-    ///         query_results: Result<R, S, result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>, Self::ResourceViews<'a>, Self::EntryViews<'a>, (EP, EI, EQ)>,
+    ///         query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, (EP, EI, EQ)>,
     ///     ) where
-    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///         R: registry::Registry,
+    ///            I: Iterator<Item = Self::Views<'a>>,
     ///     {
     ///         // Do something..
     ///     }
@@ -384,9 +365,9 @@ pub(crate) mod inner {
         ///         Result,
         ///         Views,
         ///     },
+        ///     registry,
         ///     registry::{
         ///         ContainsParQuery,
-        ///         ContainsQuery,
         ///     },
         ///     system::{
         ///         schedule::task,
@@ -409,11 +390,12 @@ pub(crate) mod inner {
         ///     type ResourceViews<'a> = Views!();
         ///     type EntryViews<'a> = Views!();
         ///
-        ///     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+        ///     fn run<'a, R, S, I, EP, EI, EQ>(
         ///         &mut self,
-        ///         query_results: Result<R, S, result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>, Self::ResourceViews<'a>, Self::EntryViews<'a>, (EP, EI, EQ)>,
+        ///         query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, (EP, EI, EQ)>,
         ///     ) where
-        ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        ///         R: registry::Registry,
+        ///         I: Iterator<Item = Self::Views<'a>>,
         ///     {
         ///         // Do something..
         ///     }
@@ -463,10 +445,8 @@ mod tests {
             Result,
             Views,
         },
-        registry::{
-            ContainsParQuery,
-            ContainsQuery,
-        },
+        registry,
+        registry::ContainsParQuery,
         system::{
             schedule::{
                 stage,
@@ -497,10 +477,6 @@ mod tests {
                     '_,
                     Registry,
                     Resources!(),
-                    _,
-                    _,
-                    _,
-                    _,
                     _,
                     _,
                     _,
@@ -555,10 +531,6 @@ mod tests {
                     _,
                     _,
                     _,
-                    _,
-                    _,
-                    _,
-                    _,
                 >>::Stages,
             >(),
             TypeId::of::<stages::Null>()
@@ -573,10 +545,6 @@ mod tests {
                     '_,
                     Registry,
                     Resources!(A, B, C, D, E),
-                    _,
-                    _,
-                    _,
-                    _,
                     _,
                     _,
                     _,
@@ -613,18 +581,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unreachable!()
             }
@@ -636,10 +605,6 @@ mod tests {
                     '_,
                     Registry,
                     Resources!(),
-                    _,
-                    _,
-                    _,
-                    _,
                     _,
                     _,
                     _,
@@ -676,18 +641,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unreachable!()
             }
@@ -699,10 +665,6 @@ mod tests {
                     '_,
                     Registry,
                     Resources!(),
-                    _,
-                    _,
-                    _,
-                    _,
                     _,
                     _,
                     _,
@@ -739,18 +701,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unreachable!()
             }
@@ -762,10 +725,6 @@ mod tests {
                     '_,
                     Registry,
                     Resources!(),
-                    _,
-                    _,
-                    _,
-                    _,
                     _,
                     _,
                     _,
@@ -802,18 +761,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unreachable!()
             }
@@ -825,10 +785,6 @@ mod tests {
                     '_,
                     Registry,
                     Resources!(),
-                    _,
-                    _,
-                    _,
-                    _,
                     _,
                     _,
                     _,
@@ -865,18 +821,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unreachable!()
             }
@@ -888,10 +845,6 @@ mod tests {
                     '_,
                     Registry,
                     Resources!(),
-                    _,
-                    _,
-                    _,
-                    _,
                     _,
                     _,
                     _,
@@ -974,10 +927,6 @@ mod tests {
                     _,
                     _,
                     _,
-                    _,
-                    _,
-                    _,
-                    _,
                 >>::Stages,
             >(),
             TypeId::of::<((&mut task::ParSystem<ImmutA>, stage::Null), stages::Null)>()
@@ -1037,10 +986,6 @@ mod tests {
                     _,
                     _,
                     _,
-                    _,
-                    _,
-                    _,
-                    _,
                 >>::Stages,
             >(),
             TypeId::of::<((&mut task::ParSystem<MutA>, stage::Null), stages::Null)>()
@@ -1080,10 +1025,6 @@ mod tests {
                     '_,
                     Registry,
                     Resources!(),
-                    _,
-                    _,
-                    _,
-                    _,
                     _,
                     _,
                     _,
@@ -1166,10 +1107,6 @@ mod tests {
                     _,
                     _,
                     _,
-                    _,
-                    _,
-                    _,
-                    _,
                 >>::Stages,
             >(),
             TypeId::of::<(
@@ -1232,10 +1169,6 @@ mod tests {
                     _,
                     _,
                     _,
-                    _,
-                    _,
-                    _,
-                    _,
                 >>::Stages,
             >(),
             TypeId::of::<(
@@ -1255,18 +1188,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unimplemented!()
             }
@@ -1280,18 +1214,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unimplemented!()
             }
@@ -1305,18 +1240,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unimplemented!()
             }
@@ -1331,10 +1267,6 @@ mod tests {
                     '_,
                     Registry,
                     Resources!(),
-                    _,
-                    _,
-                    _,
-                    _,
                     _,
                     _,
                     _,
@@ -1374,18 +1306,19 @@ mod tests {
             type ResourceViews<'a> = Views!(&'a A);
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unimplemented!()
             }
@@ -1442,10 +1375,6 @@ mod tests {
                     _,
                     _,
                     _,
-                    _,
-                    _,
-                    _,
-                    _,
                 >>::Stages,
             >(),
             TypeId::of::<(
@@ -1468,18 +1397,19 @@ mod tests {
             type ResourceViews<'a> = Views!(&'a mut A);
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unimplemented!()
             }
@@ -1518,18 +1448,19 @@ mod tests {
             type ResourceViews<'a> = Views!(&'a mut B, &'a C);
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unimplemented!()
             }
@@ -1544,10 +1475,6 @@ mod tests {
                     '_,
                     Registry!(),
                     Resources!(A, B, C),
-                    _,
-                    _,
-                    _,
-                    _,
                     _,
                     _,
                     _,
@@ -1590,18 +1517,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!(&'a A);
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unimplemented!()
             }
@@ -1658,10 +1586,6 @@ mod tests {
                     _,
                     _,
                     _,
-                    _,
-                    _,
-                    _,
-                    _,
                 >>::Stages,
             >(),
             TypeId::of::<(
@@ -1684,18 +1608,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!(&'a A);
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unimplemented!()
             }
@@ -1752,10 +1677,6 @@ mod tests {
                     _,
                     _,
                     _,
-                    _,
-                    _,
-                    _,
-                    _,
                 >>::Stages,
             >(),
             TypeId::of::<(
@@ -1775,18 +1696,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!(&'a A);
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unimplemented!()
             }
@@ -1843,10 +1765,6 @@ mod tests {
                     _,
                     _,
                     _,
-                    _,
-                    _,
-                    _,
-                    _,
                 >>::Stages,
             >(),
             TypeId::of::<(
@@ -1869,18 +1787,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!(&'a A);
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 _query_results: Result<
                     R,
                     S,
-                    result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
             {
                 unimplemented!()
             }
@@ -1917,10 +1836,6 @@ mod tests {
                     '_,
                     Registry,
                     Resources!(),
-                    _,
-                    _,
-                    _,
-                    _,
                     _,
                     _,
                     _,

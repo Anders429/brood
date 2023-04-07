@@ -13,7 +13,7 @@
 //!         Result,
 //!         Views,
 //!     },
-//!     registry::ContainsQuery,
+//!     registry,
 //!     system::System,
 //! };
 //!
@@ -30,18 +30,19 @@
 //!     type ResourceViews<'a> = Views!();
 //!     type EntryViews<'a> = Views!();
 //!
-//!     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+//!     fn run<'a, R, S, I, EP, EI, EQ>(
 //!         &mut self,
 //!         query_results: Result<
 //!             R,
 //!             S,
-//!             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!             I,
 //!             Self::ResourceViews<'a>,
 //!             Self::EntryViews<'a>,
 //!             (EP, EI, EQ),
 //!         >,
 //!     ) where
-//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!         R: registry::Registry,
+//!         I: Iterator<Item = Self::Views<'a>>,
 //!     {
 //!         for result!(foo, bar) in query_results.iter {
 //!             if bar.0 {
@@ -77,14 +78,10 @@ pub use schedule::{
 
 use crate::{
     query::{
-        result,
         view::Views,
         Result,
     },
-    registry::{
-        ContainsQuery,
-        ContainsViews,
-    },
+    registry::ContainsViews,
 };
 
 /// An executable type which operates over the entities within a [`World`].
@@ -107,7 +104,7 @@ use crate::{
 ///         Result,
 ///         Views,
 ///     },
-///     registry::ContainsQuery,
+///     registry,
 ///     system::System,
 /// };
 ///
@@ -124,18 +121,19 @@ use crate::{
 ///     type ResourceViews<'a> = Views!();
 ///     type EntryViews<'a> = Views!();
 ///
-///     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+///     fn run<'a, R, S, I, EP, EI, EQ>(
 ///         &mut self,
 ///         query_results: Result<
 ///             R,
 ///             S,
-///             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+///             I,
 ///             Self::ResourceViews<'a>,
 ///             Self::EntryViews<'a>,
 ///             (EP, EI, EQ),
 ///         >,
 ///     ) where
-///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+///         R: registry::Registry,
+///         I: Iterator<Item = Self::Views<'a>>,
 ///     {
 ///         for result!(foo, bar) in query_results.iter {
 ///             if bar.0 {
@@ -182,7 +180,7 @@ pub trait System {
     ///         Result,
     ///         Views,
     ///     },
-    ///     registry::ContainsQuery,
+    ///     registry,
     ///     system::System,
     /// };
     ///
@@ -199,18 +197,19 @@ pub trait System {
     ///     type ResourceViews<'a> = Views!();
     ///     type EntryViews<'a> = Views!();
     ///
-    ///     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+    ///     fn run<'a, R, S, I, EP, EI, EQ>(
     ///         &mut self,
     ///         query_results: Result<
     ///             R,
     ///             S,
-    ///             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///             I,
     ///             Self::ResourceViews<'a>,
     ///             Self::EntryViews<'a>,
     ///             (EP, EI, EQ),
     ///         >,
     ///     ) where
-    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///         R: registry::Registry,
+    ///         I: Iterator<Item = Self::Views<'a>>,
     ///     {
     ///         for result!(foo, bar) in query_results.iter {
     ///             if bar.0 {
@@ -222,18 +221,18 @@ pub trait System {
     /// ```
     ///
     /// [`World`]: crate::world::World
-    fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+    fn run<'a, R, S, I, EP, EI, EQ>(
         &mut self,
         query_result: Result<
             'a,
             R,
             S,
-            result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            I,
             Self::ResourceViews<'a>,
             Self::EntryViews<'a>,
             (EP, EI, EQ),
         >,
     ) where
-        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
-            + ContainsViews<'a, Self::EntryViews<'a>, EP, EI, EQ>;
+        R: ContainsViews<'a, Self::EntryViews<'a>, EP, EI, EQ>,
+        I: Iterator<Item = Self::Views<'a>>;
 }
