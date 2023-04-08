@@ -443,15 +443,11 @@ where
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub fn par_query<
         'a,
-        V,
-        F,
+        Views,
+        Filter,
         ResourceViews,
         EntryViews,
-        VI,
-        FI,
-        P,
-        I,
-        Q,
+        QueryIndices,
         ResourceViewsIndices,
         EntryViewsContainments,
         EntryViewsIndices,
@@ -466,18 +462,18 @@ where
         EntryReshapeIndices,
     >(
         &'a mut self,
-        #[allow(unused_variables)] query: Query<V, F, ResourceViews, EntryViews>,
+        #[allow(unused_variables)] query: Query<Views, Filter, ResourceViews, EntryViews>,
     ) -> Result<
         R,
         Resources,
-        result::ParIter<'a, R, F, FI, V, VI, P, I, Q>,
+        result::ParIter<'a, R, Filter, Views, QueryIndices>,
         ResourceViews,
         EntryViews,
         (EntryContainments, EntryIndices, EntryReshapeIndices),
     >
     where
-        V: ParViews<'a>,
-        R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>
+        Views: ParViews<'a>,
+        R: ContainsParQuery<'a, Filter, Views, QueryIndices>
             + registry::ContainsViews<
                 'a,
                 EntryViews,
@@ -487,7 +483,7 @@ where
             >,
         Resources: ContainsViews<'a, ResourceViews, ResourceViewsIndices>,
         EntryViews: view::Disjoint<
-                V,
+                Views,
                 R,
                 EntryViewsContainments,
                 EntryViewsIndices,
@@ -657,7 +653,7 @@ where
     ///         Result,
     ///         Views,
     ///     },
-    ///     registry::ContainsParQuery,
+    ///     registry,
     ///     system::ParSystem,
     ///     Registry,
     ///     World,
@@ -679,18 +675,19 @@ where
     ///     type ResourceViews<'a> = Views!();
     ///     type EntryViews<'a> = Views!();
     ///
-    ///     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+    ///     fn run<'a, R, S, I, EP, EI, EQ>(
     ///         &mut self,
     ///         query_results: Result<
     ///             R,
     ///             S,
-    ///             result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///             I,
     ///             Self::ResourceViews<'a>,
     ///             Self::EntryViews<'a>,
     ///             (EP, EI, EQ),
     ///         >,
     ///     ) where
-    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///         R: registry::Registry,
+    ///         I: ParallelIterator<Item = Self::Views<'a>>,
     ///     {
     ///         query_results
     ///             .iter
@@ -710,11 +707,7 @@ where
     pub fn run_par_system<
         'a,
         S,
-        FI,
-        VI,
-        P,
-        I,
-        Q,
+        QueryIndices,
         ResourceViewsIndices,
         EntryViewsContainments,
         EntryViewsIndices,
@@ -732,7 +725,7 @@ where
         par_system: &mut S,
     ) where
         S: ParSystem,
-        R: ContainsParQuery<'a, S::Filter, FI, S::Views<'a>, VI, P, I, Q>
+        R: ContainsParQuery<'a, S::Filter, S::Views<'a>, QueryIndices>
             + registry::ContainsViews<
                 'a,
                 S::EntryViews<'a>,
@@ -2239,18 +2232,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 query_results: Result<
                     R,
                     S,
-                    result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: ParallelIterator<Item = Self::Views<'a>>,
             {
                 let mut result = query_results.iter.map(|result!(a)| a.0).collect::<Vec<_>>();
                 result.sort();
@@ -2279,18 +2273,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 query_results: Result<
                     R,
                     S,
-                    result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: ParallelIterator<Item = Self::Views<'a>>,
             {
                 let mut result = query_results.iter.map(|result!(b)| b.0).collect::<Vec<_>>();
                 result.sort();
@@ -2319,18 +2314,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 query_results: Result<
                     R,
                     S,
-                    result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: ParallelIterator<Item = Self::Views<'a>>,
             {
                 let mut result = query_results
                     .iter
@@ -2362,18 +2358,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 query_results: Result<
                     R,
                     S,
-                    result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: ParallelIterator<Item = Self::Views<'a>>,
             {
                 let mut result = query_results
                     .iter
@@ -2407,18 +2404,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 query_results: Result<
                     R,
                     S,
-                    result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: ParallelIterator<Item = Self::Views<'a>>,
             {
                 let result = query_results
                     .iter
@@ -2449,18 +2447,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 query_results: Result<
                     R,
                     S,
-                    result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: ParallelIterator<Item = Self::Views<'a>>,
             {
                 let result = query_results.iter.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![1]);
@@ -2488,18 +2487,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 query_results: Result<
                     R,
                     S,
-                    result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: ParallelIterator<Item = Self::Views<'a>>,
             {
                 let result = query_results.iter.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![2]);
@@ -2527,18 +2527,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 query_results: Result<
                     R,
                     S,
-                    result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: ParallelIterator<Item = Self::Views<'a>>,
             {
                 let result = query_results.iter.map(|result!(a)| a.0).collect::<Vec<_>>();
                 assert_eq!(result, vec![1]);
@@ -2566,18 +2567,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 query_results: Result<
                     R,
                     S,
-                    result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: ParallelIterator<Item = Self::Views<'a>>,
             {
                 let mut result = query_results.iter.map(|result!(a)| a.0).collect::<Vec<_>>();
                 result.sort();
@@ -2608,18 +2610,19 @@ mod tests {
             type ResourceViews<'a> = Views!(&'a mut Counter);
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 query_results: Result<
                     R,
                     S,
-                    result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: ParallelIterator<Item = Self::Views<'a>>,
             {
                 let result!(counter) = query_results.resources;
                 counter.0 = query_results.iter.count();
@@ -2677,18 +2680,19 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 query_results: Result<
                     R,
                     S,
-                    result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                R: registry::Registry,
+                I: ParallelIterator<Item = Self::Views<'a>>,
             {
                 let mut result = query_results.iter.map(|result!(b)| b.0).collect::<Vec<_>>();
                 result.sort();
@@ -3389,20 +3393,20 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!(&'a A);
 
-            fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+            fn run<'a, R, S, I, EP, EI, EQ>(
                 &mut self,
                 mut query_result: Result<
                     'a,
                     R,
                     S,
-                    result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+                    I,
                     Self::ResourceViews<'a>,
                     Self::EntryViews<'a>,
                     (EP, EI, EQ),
                 >,
             ) where
-                R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
-                    + registry::ContainsViews<'a, Self::EntryViews<'a>, EP, EI, EQ>,
+                R: registry::ContainsViews<'a, Self::EntryViews<'a>, EP, EI, EQ>,
+                I: ParallelIterator<Item = Self::Views<'a>>,
             {
                 // Using the Entries during parallel iteration is not supported.
                 let mut entry = assert_some!(query_result.entries.entry(self.entity_identifier));

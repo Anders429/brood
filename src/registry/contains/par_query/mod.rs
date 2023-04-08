@@ -5,15 +5,15 @@ use sealed::Sealed;
 
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 /// Indicates that a registry is queryable in parallel by the filter `F` and the views `V`.
-pub trait ContainsParQuery<'a, F, FI, V, VI, P, I, Q>: Sealed<'a, F, FI, V, VI, P, I, Q>
+pub trait ContainsParQuery<'a, Filter, Views, Indices>: Sealed<'a, Filter, Views, Indices>
 where
-    V: ParViews<'a>,
+    Views: ParViews<'a>,
 {
 }
 
-impl<'a, R, F, V, FI, VI, P, I, Q> ContainsParQuery<'a, F, FI, V, VI, P, I, Q> for R
+impl<'a, Registry, Filter, Views, Indices> ContainsParQuery<'a, Filter, Views, Indices> for Registry
 where
-    R: Sealed<'a, F, FI, V, VI, P, I, Q>,
-    V: ParViews<'a>,
+    Registry: Sealed<'a, Filter, Views, Indices>,
+    Views: ParViews<'a>,
 {
 }

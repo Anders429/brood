@@ -131,11 +131,7 @@ impl<
         P,
         R,
         Resources,
-        SFI,
-        SVI,
-        SP,
-        SI,
-        SQ,
+        QueryIndices,
         ResourceViewsIndices,
         EntryViewsContainments,
         EntryViewsIndices,
@@ -153,7 +149,7 @@ impl<
         'a,
         R,
         Resources,
-        (SFI, SVI, SP, SI, SQ),
+        QueryIndices,
         ResourceViewsIndices,
         EntryViewsContainments,
         EntryViewsIndices,
@@ -169,7 +165,7 @@ impl<
     > for ParSystem<P>
 where
     P: system::ParSystem + Send,
-    R: ContainsParQuery<'a, P::Filter, SFI, P::Views<'a>, SVI, SP, SI, SQ>
+    R: ContainsParQuery<'a, P::Filter, P::Views<'a>, QueryIndices>
         + registry::ContainsViews<
             'a,
             P::EntryViews<'a>,

@@ -1,17 +1,14 @@
 use crate::{
     query::{
-        result,
         view::{
             ParViews,
             Views,
         },
         Result,
     },
-    registry::{
-        ContainsParQuery,
-        ContainsViews,
-    },
+    registry::ContainsViews,
 };
+use rayon::iter::ParallelIterator;
 
 /// An executable type which operates over the entities within a [`World`] in parallel.
 ///
@@ -29,7 +26,7 @@ use crate::{
 ///         Result,
 ///         Views,
 ///     },
-///     registry::ContainsParQuery,
+///     registry,
 ///     system::ParSystem,
 /// };
 /// use rayon::iter::ParallelIterator;
@@ -47,18 +44,19 @@ use crate::{
 ///     type ResourceViews<'a> = Views!();
 ///     type EntryViews<'a> = Views!();
 ///
-///     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+///     fn run<'a, R, S, I, EP, EI, EQ>(
 ///         &mut self,
 ///         query_results: Result<
 ///             R,
 ///             S,
-///             result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+///             I,
 ///             Self::ResourceViews<'a>,
 ///             Self::EntryViews<'a>,
 ///             (EP, EI, EQ),
 ///         >,
 ///     ) where
-///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+///         R: registry::Registry,
+///         I: ParallelIterator<Item = Self::Views<'a>>,
 ///     {
 ///         query_results.iter.for_each(|result!(foo, bar)| {
 ///             if bar.0 {
@@ -110,7 +108,7 @@ pub trait ParSystem {
     ///         Result,
     ///         Views,
     ///     },
-    ///     registry::ContainsParQuery,
+    ///     registry,
     ///     system::ParSystem,
     /// };
     /// use rayon::iter::ParallelIterator;
@@ -128,18 +126,19 @@ pub trait ParSystem {
     ///     type ResourceViews<'a> = Views!();
     ///     type EntryViews<'a> = Views!();
     ///
-    ///     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+    ///     fn run<'a, R, S, I, EP, EI, EQ>(
     ///         &mut self,
     ///         query_results: Result<
     ///             R,
     ///             S,
-    ///             result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///             I,
     ///             Self::ResourceViews<'a>,
     ///             Self::EntryViews<'a>,
     ///             (EP, EI, EQ),
     ///         >,
     ///     ) where
-    ///         R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///         R: registry::Registry,
+    ///         I: ParallelIterator<Item = Self::Views<'a>>,
     ///     {
     ///         query_results.iter.for_each(|result!(foo, bar)| {
     ///             if bar.0 {
@@ -151,18 +150,18 @@ pub trait ParSystem {
     /// ```
     ///
     /// [`World`]: crate::world::World
-    fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+    fn run<'a, R, S, I, EP, EI, EQ>(
         &mut self,
         query_result: Result<
             'a,
             R,
             S,
-            result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+            I,
             Self::ResourceViews<'a>,
             Self::EntryViews<'a>,
             (EP, EI, EQ),
         >,
     ) where
-        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
-            + ContainsViews<'a, Self::EntryViews<'a>, EP, EI, EQ>;
+        R: ContainsViews<'a, Self::EntryViews<'a>, EP, EI, EQ>,
+        I: ParallelIterator<Item = Self::Views<'a>>;
 }
