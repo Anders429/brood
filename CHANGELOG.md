@@ -13,6 +13,7 @@
 - `World::query()` and `World::par_query()` both no longer require `V` and `F` to implement `Filter`.
 - `registry::ContainsQuery` now only requires a single generic parameter for indices.
 - `registry::ContainsParQuery` now only requires a single generic parameter for indices.
+- `registry::ContainsViews` now only requires a single generic parameter for indices.
 - `World::query()` now only requires a single parameter for query indices.
 - `Entry::query()` now only requires a single parameter for query indices.
 - `World::run_system()` now only requires a single parameter for query indices.

@@ -30,16 +30,9 @@
 //!     type ResourceViews<'a> = Views!();
 //!     type EntryViews<'a> = Views!();
 //!
-//!     fn run<'a, R, S, I, EP, EI, EQ>(
+//!     fn run<'a, R, S, I, E>(
 //!         &mut self,
-//!         query_results: Result<
-//!             R,
-//!             S,
-//!             I,
-//!             Self::ResourceViews<'a>,
-//!             Self::EntryViews<'a>,
-//!             (EP, EI, EQ),
-//!         >,
+//!         query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
 //!     ) where
 //!         R: registry::Registry,
 //!         I: Iterator<Item = Self::Views<'a>>,
@@ -121,16 +114,9 @@ use crate::{
 ///     type ResourceViews<'a> = Views!();
 ///     type EntryViews<'a> = Views!();
 ///
-///     fn run<'a, R, S, I, EP, EI, EQ>(
+///     fn run<'a, R, S, I, E>(
 ///         &mut self,
-///         query_results: Result<
-///             R,
-///             S,
-///             I,
-///             Self::ResourceViews<'a>,
-///             Self::EntryViews<'a>,
-///             (EP, EI, EQ),
-///         >,
+///         query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
 ///     ) where
 ///         R: registry::Registry,
 ///         I: Iterator<Item = Self::Views<'a>>,
@@ -197,16 +183,9 @@ pub trait System {
     ///     type ResourceViews<'a> = Views!();
     ///     type EntryViews<'a> = Views!();
     ///
-    ///     fn run<'a, R, S, I, EP, EI, EQ>(
+    ///     fn run<'a, R, S, I, E>(
     ///         &mut self,
-    ///         query_results: Result<
-    ///             R,
-    ///             S,
-    ///             I,
-    ///             Self::ResourceViews<'a>,
-    ///             Self::EntryViews<'a>,
-    ///             (EP, EI, EQ),
-    ///         >,
+    ///         query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
     ///     ) where
     ///         R: registry::Registry,
     ///         I: Iterator<Item = Self::Views<'a>>,
@@ -221,18 +200,10 @@ pub trait System {
     /// ```
     ///
     /// [`World`]: crate::world::World
-    fn run<'a, R, S, I, EP, EI, EQ>(
+    fn run<'a, R, S, I, E>(
         &mut self,
-        query_result: Result<
-            'a,
-            R,
-            S,
-            I,
-            Self::ResourceViews<'a>,
-            Self::EntryViews<'a>,
-            (EP, EI, EQ),
-        >,
+        query_result: Result<'a, R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
     ) where
-        R: ContainsViews<'a, Self::EntryViews<'a>, EP, EI, EQ>,
+        R: ContainsViews<'a, Self::EntryViews<'a>, E>,
         I: Iterator<Item = Self::Views<'a>>;
 }

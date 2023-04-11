@@ -123,9 +123,15 @@ where
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`,
                 // since the archetype was not removed by the `find()` method above which filters
                 // out archetypes that do not contain the viewed components.
-                unsafe { archetype.view::<Views, Registry::ViewsContainments, Registry::ViewsIndices, Registry::ViewsCanonicalContainments>() }
-                    .reshape()
-                    .into_iterator(),
+                unsafe {
+                    archetype.view::<Views, (
+                        Registry::ViewsContainments,
+                        Registry::ViewsIndices,
+                        Registry::ViewsCanonicalContainments,
+                    )>()
+                }
+                .reshape()
+                .into_iterator(),
             );
         }
     }
@@ -156,14 +162,23 @@ where
             // identifier is generic over. Additionally, the identifier reference created here will
             // not outlive `archetype`.
             if unsafe {
-                <Registry as ContainsFilterSealed<And<Views, Filter>, And<Registry::ViewsFilterIndices, Registry::FilterIndices>>>::filter(archetype.identifier())
+                <Registry as ContainsFilterSealed<
+                    And<Views, Filter>,
+                    And<Registry::ViewsFilterIndices, Registry::FilterIndices>,
+                >>::filter(archetype.identifier())
             } {
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`
                 // since the `filter` function in the if-statement returned `true`.
-                unsafe { archetype.view::<Views, Registry::ViewsContainments, Registry::ViewsIndices, Registry::ViewsCanonicalContainments>() }
-                    .reshape()
-                    .into_iterator()
-                    .fold(acc, &mut fold)
+                unsafe {
+                    archetype.view::<Views, (
+                        Registry::ViewsContainments,
+                        Registry::ViewsIndices,
+                        Registry::ViewsCanonicalContainments,
+                    )>()
+                }
+                .reshape()
+                .into_iterator()
+                .fold(acc, &mut fold)
             } else {
                 acc
             }

@@ -11,9 +11,11 @@ pub trait Sealed<'a, Filter, Views, Indices>:
     + ContainsViews<
         'a,
         Views,
-        Self::ViewsContainments,
-        Self::ViewsIndices,
-        Self::ViewsCanonicalContainments,
+        (
+            Self::ViewsContainments,
+            Self::ViewsIndices,
+            Self::ViewsCanonicalContainments,
+        ),
     >
 where
     Views: view::Views<'a>,
@@ -51,7 +53,7 @@ impl<
 where
     Registry: ContainsFilter<Filter, FilterIndices>
         + ContainsFilter<Views, ViewsFilterIndices>
-        + ContainsViews<'a, Views, ViewsContainments, ViewsIndices, ViewsCanonicalContainments>,
+        + ContainsViews<'a, Views, (ViewsContainments, ViewsIndices, ViewsCanonicalContainments)>,
     Views: view::Views<'a>,
 {
     type FilterIndices = FilterIndices;

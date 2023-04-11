@@ -330,7 +330,11 @@ where
                     self.world
                         .archetypes
                         .get_mut(self.location.identifier)?
-                        .view_row_unchecked::<Views, R::ViewsContainments, R::ViewsIndices, R::ViewsCanonicalContainments>(self.location.index)
+                        .view_row_unchecked::<Views, (
+                            R::ViewsContainments,
+                            R::ViewsIndices,
+                            R::ViewsCanonicalContainments,
+                        )>(self.location.index)
                         .reshape()
                 },
             )

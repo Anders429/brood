@@ -25,27 +25,12 @@ define_null!();
 pub trait Disjoint<
     OtherViews,
     Registry,
-    Containments,
     Indices,
-    ReshapeIndices,
     InverseIndices,
-    OppositeContainments,
     OppositeIndices,
-    OppositeReshapeIndices,
     OppositeInverseIndices,
 >:
-    Sealed<
-    OtherViews,
-    Registry,
-    Containments,
-    Indices,
-    ReshapeIndices,
-    InverseIndices,
-    OppositeContainments,
-    OppositeIndices,
-    OppositeReshapeIndices,
-    OppositeInverseIndices,
->
+    Sealed<OtherViews, Registry, Indices, InverseIndices, OppositeIndices, OppositeInverseIndices>
 {
 }
 
@@ -53,38 +38,20 @@ impl<
         Views,
         OtherViews,
         Registry,
-        Containments,
         Indices,
-        ReshapeIndices,
         InverseIndices,
-        OppositeContainments,
         OppositeIndices,
-        OppositeReshapeIndices,
         OppositeInverseIndices,
     >
-    Disjoint<
-        OtherViews,
-        Registry,
-        Containments,
-        Indices,
-        ReshapeIndices,
-        InverseIndices,
-        OppositeContainments,
-        OppositeIndices,
-        OppositeReshapeIndices,
-        OppositeInverseIndices,
-    > for Views
+    Disjoint<OtherViews, Registry, Indices, InverseIndices, OppositeIndices, OppositeInverseIndices>
+    for Views
 where
     Views: Sealed<
         OtherViews,
         Registry,
-        Containments,
         Indices,
-        ReshapeIndices,
         InverseIndices,
-        OppositeContainments,
         OppositeIndices,
-        OppositeReshapeIndices,
         OppositeInverseIndices,
     >,
 {
@@ -93,13 +60,9 @@ where
 pub trait Sealed<
     OtherViews,
     Registry,
-    Containments,
     Indices,
-    ReshapeIndices,
     InverseIndices,
-    OppositeContainments,
     OppositeIndices,
-    OppositeReshapeIndices,
     OppositeInverseIndices,
 >
 {
@@ -110,38 +73,17 @@ impl<
         Views,
         OtherViews,
         Registry,
-        Containments,
         Indices,
-        ReshapeIndices,
         InverseIndices,
-        OppositeContainments,
         OppositeIndices,
-        OppositeReshapeIndices,
         OppositeInverseIndices,
-    >
-    Sealed<
-        OtherViews,
-        Registry,
-        Containments,
-        Indices,
-        ReshapeIndices,
-        InverseIndices,
-        OppositeContainments,
-        OppositeIndices,
-        OppositeReshapeIndices,
-        OppositeInverseIndices,
-    > for Views
+    > Sealed<OtherViews, Registry, Indices, InverseIndices, OppositeIndices, OppositeInverseIndices>
+    for Views
 where
     OtherViews: view::Views<'a> + MutableInverse<Registry, InverseIndices>,
-    OtherViews::Result: ContainsViews<'a, Views, Containments, Indices, ReshapeIndices>,
+    OtherViews::Result: ContainsViews<'a, Views, Indices>,
     Views: view::Views<'a> + MutableInverse<Registry, OppositeInverseIndices>,
-    Views::Result: ContainsViews<
-        'a,
-        OtherViews,
-        OppositeContainments,
-        OppositeIndices,
-        OppositeReshapeIndices,
-    >,
+    Views::Result: ContainsViews<'a, OtherViews, OppositeIndices>,
 {
 }
 
@@ -212,26 +154,18 @@ mod tests {
         Views,
         OtherViews,
         Registry,
-        Containments,
         Indices,
-        ReshapeIndices,
         InverseIndices,
-        OppositeContainments,
         OppositeIndices,
-        OppositeReshapeIndices,
         OppositeInverseIndices,
     >()
     where
         Views: Disjoint<
             OtherViews,
             Registry,
-            Containments,
             Indices,
-            ReshapeIndices,
             InverseIndices,
-            OppositeContainments,
             OppositeIndices,
-            OppositeReshapeIndices,
             OppositeInverseIndices,
         >,
     {
@@ -246,22 +180,22 @@ mod tests {
 
     #[test]
     fn empty() {
-        is_disjoint::<Views!(), Views!(), Registry!(), _, _, _, _, _, _, _, _>();
+        is_disjoint::<Views!(), Views!(), Registry!(), _, _, _, _>();
     }
 
     #[test]
     fn empty_first_views() {
-        is_disjoint::<Views!(), Views!(&A, &mut B, Option<&C>), Registry, _, _, _, _, _, _, _, _>();
+        is_disjoint::<Views!(), Views!(&A, &mut B, Option<&C>), Registry, _, _, _, _>();
     }
 
     #[test]
     fn empty_second_views() {
-        is_disjoint::<Views!(&A, &mut B, Option<&C>), Views!(), Registry, _, _, _, _, _, _, _, _>();
+        is_disjoint::<Views!(&A, &mut B, Option<&C>), Views!(), Registry, _, _, _, _>();
     }
 
     #[test]
     fn shared_immutable_views() {
-        is_disjoint::<Views!(&A, &B, &C), Views!(&A, &B, &C), Registry, _, _, _, _, _, _, _, _>();
+        is_disjoint::<Views!(&A, &B, &C), Views!(&A, &B, &C), Registry, _, _, _, _>();
     }
 
     #[test]
@@ -270,10 +204,6 @@ mod tests {
             Views!(Option<&A>, Option<&B>, Option<&C>),
             Views!(Option<&A>, Option<&B>, Option<&C>),
             Registry,
-            _,
-            _,
-            _,
-            _,
             _,
             _,
             _,
@@ -291,10 +221,6 @@ mod tests {
             _,
             _,
             _,
-            _,
-            _,
-            _,
-            _,
         >();
     }
 
@@ -308,27 +234,12 @@ mod tests {
             _,
             _,
             _,
-            _,
-            _,
-            _,
-            _,
         >();
     }
 
     #[test]
     fn entity_identifier() {
-        is_disjoint::<
-            Views!(entity::Identifier),
-            Views!(entity::Identifier),
-            Registry,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-        >();
+        is_disjoint::<Views!(entity::Identifier), Views!(entity::Identifier), Registry, _, _, _, _>(
+        );
     }
 }

@@ -20,17 +20,11 @@ pub trait Stages<
     Resources,
     QueryIndicesLists,
     ResourceViewsIndicesLists,
-    EntryViewsContainmentsLists,
     EntryViewsIndicesLists,
-    EntryViewsReshapeIndicesLists,
     EntryViewsInverseIndicesLists,
-    EntryViewsOppositeContainmentsLists,
     EntryViewsOppositeIndicesLists,
-    EntryViewsOppositeReshapeIndicesLists,
     EntryViewsOppositeInverseIndicesLists,
-    EntryContainmentsLists,
     EntryIndicesLists,
-    EntryReshapeIndicesLists,
 >: Send where
     R: Registry,
 {
@@ -70,25 +64,7 @@ pub trait Stages<
     fn new_has_run() -> Self::HasRun;
 }
 
-impl<R, Resources>
-    Stages<
-        '_,
-        R,
-        Resources,
-        Null,
-        Null,
-        Null,
-        Null,
-        Null,
-        Null,
-        Null,
-        Null,
-        Null,
-        Null,
-        Null,
-        Null,
-        Null,
-    > for Null
+impl<R, Resources> Stages<'_, R, Resources, Null, Null, Null, Null, Null, Null, Null> for Null
 where
     R: Registry,
 {
@@ -119,28 +95,16 @@ impl<
         QueryIndicesLists,
         ResourceViewsIndicesList,
         ResourceViewsIndicesLists,
-        EntryViewsContainmentsList,
-        EntryViewsContainmentsLists,
         EntryViewsIndicesList,
         EntryViewsIndicesLists,
-        EntryViewsReshapeIndicesList,
-        EntryViewsReshapeIndicesLists,
         EntryViewsInverseIndicesList,
         EntryViewsInverseIndicesLists,
-        EntryViewsOppositeContainmentsList,
-        EntryViewsOppositeContainmentsLists,
         EntryViewsOppositeIndicesList,
         EntryViewsOppositeIndicesLists,
-        EntryViewsOppositeReshapeIndicesList,
-        EntryViewsOppositeReshapeIndicesLists,
         EntryViewsOppositeInverseIndicesList,
         EntryViewsOppositeInverseIndicesLists,
-        EntryContainmentsList,
-        EntryContainmentsLists,
         EntryIndicesList,
         EntryIndicesLists,
-        EntryReshapeIndicesList,
-        EntryReshapeIndicesLists,
     >
     Stages<
         'a,
@@ -148,29 +112,17 @@ impl<
         Resources,
         (QueryIndicesList, QueryIndicesLists),
         (ResourceViewsIndicesList, ResourceViewsIndicesLists),
-        (EntryViewsContainmentsList, EntryViewsContainmentsLists),
         (EntryViewsIndicesList, EntryViewsIndicesLists),
-        (EntryViewsReshapeIndicesList, EntryViewsReshapeIndicesLists),
         (EntryViewsInverseIndicesList, EntryViewsInverseIndicesLists),
-        (
-            EntryViewsOppositeContainmentsList,
-            EntryViewsOppositeContainmentsLists,
-        ),
         (
             EntryViewsOppositeIndicesList,
             EntryViewsOppositeIndicesLists,
         ),
         (
-            EntryViewsOppositeReshapeIndicesList,
-            EntryViewsOppositeReshapeIndicesLists,
-        ),
-        (
             EntryViewsOppositeInverseIndicesList,
             EntryViewsOppositeInverseIndicesLists,
         ),
-        (EntryContainmentsList, EntryContainmentsLists),
         (EntryIndicesList, EntryIndicesLists),
-        (EntryReshapeIndicesList, EntryReshapeIndicesLists),
     > for (T, U)
 where
     R: Registry,
@@ -180,17 +132,11 @@ where
         Resources,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsContainmentsList,
         EntryViewsIndicesList,
-        EntryViewsReshapeIndicesList,
         EntryViewsInverseIndicesList,
-        EntryViewsOppositeContainmentsList,
         EntryViewsOppositeIndicesList,
-        EntryViewsOppositeReshapeIndicesList,
         EntryViewsOppositeInverseIndicesList,
-        EntryContainmentsList,
         EntryIndicesList,
-        EntryReshapeIndicesList,
     >,
     U: Stages<
         'a,
@@ -198,17 +144,11 @@ where
         Resources,
         QueryIndicesLists,
         ResourceViewsIndicesLists,
-        EntryViewsContainmentsLists,
         EntryViewsIndicesLists,
-        EntryViewsReshapeIndicesLists,
         EntryViewsInverseIndicesLists,
-        EntryViewsOppositeContainmentsLists,
         EntryViewsOppositeIndicesLists,
-        EntryViewsOppositeReshapeIndicesLists,
         EntryViewsOppositeInverseIndicesLists,
-        EntryContainmentsLists,
         EntryIndicesLists,
-        EntryReshapeIndicesLists,
     >,
 {
     type HasRun = T::HasRun;

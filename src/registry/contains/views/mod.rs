@@ -5,21 +5,21 @@ pub(crate) use sealed::{
     Sealed,
 };
 
-use crate::query::view::Views;
+use crate::query::view;
 
 /// Indicates that all of the components viewed are contained in a registry.
 ///
 /// This allows reordering the components viewed into a canonical form, as well as reordering the
 /// results back to the originally requested form.
-pub trait ContainsViews<'a, V, P, I, Q>: Sealed<'a, V, P, I, Q>
+pub trait ContainsViews<'a, Views, Indices>: Sealed<'a, Views, Indices>
 where
-    V: Views<'a>,
+    Views: view::Views<'a>,
 {
 }
 
-impl<'a, T, V, P, I, Q> ContainsViews<'a, V, P, I, Q> for T
+impl<'a, Registry, Views, Indices> ContainsViews<'a, Views, Indices> for Registry
 where
-    T: Sealed<'a, V, P, I, Q>,
-    V: Views<'a>,
+    Registry: Sealed<'a, Views, Indices>,
+    Views: view::Views<'a>,
 {
 }

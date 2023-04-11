@@ -50,11 +50,10 @@ where
     }
 }
 
-impl<'a, 'b, Registry, Resources, Views, Containments, Indices, ReshapeIndices>
-    Entry<'a, 'b, Registry, Resources, Views, (Containments, Indices, ReshapeIndices)>
+impl<'a, 'b, Registry, Resources, Views, Indices> Entry<'a, 'b, Registry, Resources, Views, Indices>
 where
     Views: view::Views<'a>,
-    Registry: registry::ContainsViews<'a, Views, Containments, Indices, ReshapeIndices>,
+    Registry: registry::ContainsViews<'a, Views, Indices>,
 {
     /// Query for components contained within this entity using the given `SubViews` and `Filter`.
     ///
@@ -78,7 +77,7 @@ where
             And<FilterIndices, SubViewsFilterIndices>,
         >,
     {
-        let indices = <<Registry as ContainsViewsSealed<'a, Views, Containments, Indices, ReshapeIndices>>::Viewable as ContainsViewsOuter<'a, Views, Containments, Indices, ReshapeIndices>>::indices();
+        let indices = <<Registry as ContainsViewsSealed<'a, Views, Indices>>::Viewable as ContainsViewsOuter<'a, Views, <Registry as ContainsViewsSealed<'a, Views, Indices>>::Containments, <Registry as ContainsViewsSealed<'a, Views, Indices>>::Indices, <Registry as ContainsViewsSealed<'a, Views, Indices>>::ReshapeIndices>>::indices();
         // SAFETY: The `indices` provided here are the valid indices into `Registry`, and therefore
         // into the `archetype::Identifier<Registry>` used here.
         if unsafe { Views::filter(&indices, self.location.identifier) } {
@@ -91,14 +90,12 @@ where
             // by the `SubViews`.
             let super_views = <<Registry as ContainsViewsSealed<
                                                         Views,
-                                                        Containments,
                                                         Indices,
-                                                        ReshapeIndices
                                                     >>::Viewable as ContainsViewsOuter<
                                                         Views,
-                                                        Containments,
-                                                        Indices,
-                                                        ReshapeIndices
+                                                        Registry::Containments,
+                                                        Registry::Indices,
+                                                        Registry::ReshapeIndices
                                                     >>::Canonical::reshape_maybe_uninit(
                                                         // SAFETY: `self.location.index` is a valid
                                                         // index into this archetype, as guaranteed
@@ -108,9 +105,7 @@ where
                                                                 .get_mut(self.location.identifier)?
                                                                 .view_row_maybe_uninit_unchecked::<
                                                                     Views,
-                                                                    Containments,
                                                                     Indices,
-                                                                    ReshapeIndices
                                                                 >(self.location.index)
                                                             });
 
