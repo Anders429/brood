@@ -715,40 +715,9 @@ where
     /// [`Schedule`]: trait@crate::system::schedule::Schedule
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub fn run_schedule<
-        'a,
-        S,
-        I,
-        P,
-        RI,
-        MergeParametersList,
-        ResourcesIndicesLists,
-        ResourcesContainmentsLists,
-        ResourcesInverseIndicesLists,
-        QueryIndicesLists,
-        ResourceViewsIndicesLists,
-        DisjointIndicesLists,
-        EntryIndicesLists,
-    >(
-        &mut self,
-        schedule: &'a mut S,
-    ) where
-        S: Schedule<
-            'a,
-            R,
-            Resources,
-            I,
-            P,
-            RI,
-            MergeParametersList,
-            ResourcesIndicesLists,
-            ResourcesContainmentsLists,
-            ResourcesInverseIndicesLists,
-            QueryIndicesLists,
-            ResourceViewsIndicesLists,
-            DisjointIndicesLists,
-            EntryIndicesLists,
-        >,
+    pub fn run_schedule<'a, S, Indices>(&mut self, schedule: &'a mut S)
+    where
+        S: Schedule<'a, R, Resources, Indices>,
     {
         schedule.as_stages().run(self, S::Stages::new_has_run());
     }
