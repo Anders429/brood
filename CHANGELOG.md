@@ -19,6 +19,7 @@
 - `World::run_system()` now only requires a single parameter for query indices.
 - `World::run_par_system()` now only requires a single parameter for query indices.
 - `World::run_schedule()` now only requires a single parameter for query indices.
+- `query::view::Disjoint` now only requires a single parameter for indices.
 - `System::run()` now takes the results iterator as a generic parameter `I` to simplify the interface.
 - `ParSystem::run()` now takes the results parallel iterator as a generic parameter `I` to simplify the interface.
 - `System` and `ParSystem` both no longer require `Filter` and `Views` to implement `Filter`.

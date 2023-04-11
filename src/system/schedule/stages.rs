@@ -20,10 +20,7 @@ pub trait Stages<
     Resources,
     QueryIndicesLists,
     ResourceViewsIndicesLists,
-    EntryViewsIndicesLists,
-    EntryViewsInverseIndicesLists,
-    EntryViewsOppositeIndicesLists,
-    EntryViewsOppositeInverseIndicesLists,
+    DisjointIndicesLists,
     EntryIndicesLists,
 >: Send where
     R: Registry,
@@ -64,7 +61,7 @@ pub trait Stages<
     fn new_has_run() -> Self::HasRun;
 }
 
-impl<R, Resources> Stages<'_, R, Resources, Null, Null, Null, Null, Null, Null, Null> for Null
+impl<R, Resources> Stages<'_, R, Resources, Null, Null, Null, Null> for Null
 where
     R: Registry,
 {
@@ -95,14 +92,8 @@ impl<
         QueryIndicesLists,
         ResourceViewsIndicesList,
         ResourceViewsIndicesLists,
-        EntryViewsIndicesList,
-        EntryViewsIndicesLists,
-        EntryViewsInverseIndicesList,
-        EntryViewsInverseIndicesLists,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeIndicesLists,
-        EntryViewsOppositeInverseIndicesList,
-        EntryViewsOppositeInverseIndicesLists,
+        DisjointIndicesList,
+        DisjointIndicesLists,
         EntryIndicesList,
         EntryIndicesLists,
     >
@@ -112,16 +103,7 @@ impl<
         Resources,
         (QueryIndicesList, QueryIndicesLists),
         (ResourceViewsIndicesList, ResourceViewsIndicesLists),
-        (EntryViewsIndicesList, EntryViewsIndicesLists),
-        (EntryViewsInverseIndicesList, EntryViewsInverseIndicesLists),
-        (
-            EntryViewsOppositeIndicesList,
-            EntryViewsOppositeIndicesLists,
-        ),
-        (
-            EntryViewsOppositeInverseIndicesList,
-            EntryViewsOppositeInverseIndicesLists,
-        ),
+        (DisjointIndicesList, DisjointIndicesLists),
         (EntryIndicesList, EntryIndicesLists),
     > for (T, U)
 where
@@ -132,10 +114,7 @@ where
         Resources,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     >,
     U: Stages<
@@ -144,10 +123,7 @@ where
         Resources,
         QueryIndicesLists,
         ResourceViewsIndicesLists,
-        EntryViewsIndicesLists,
-        EntryViewsInverseIndicesLists,
-        EntryViewsOppositeIndicesLists,
-        EntryViewsOppositeInverseIndicesLists,
+        DisjointIndicesLists,
         EntryIndicesLists,
     >,
 {

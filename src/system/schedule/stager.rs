@@ -43,10 +43,7 @@ pub trait Stager<
     ResourcesInverseIndicesList,
     QueryIndicesList,
     ResourceViewsIndicesList,
-    EntryViewsIndicesList,
-    EntryViewsInverseIndicesList,
-    EntryViewsOppositeIndicesList,
-    EntryViewsOppositeInverseIndicesList,
+    DisjointIndicesList,
     EntryIndicesList,
 > where
     R: Registry,
@@ -57,10 +54,7 @@ pub trait Stager<
         Resources,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     >;
     type Remainder;
@@ -82,9 +76,6 @@ impl<'a, R, Resources, C, ResourcesClaims>
         Null,
         Null,
         Null,
-        stage::Null,
-        stage::Null,
-        stage::Null,
         stage::Null,
         stage::Null,
         stage::Null,
@@ -125,10 +116,7 @@ impl<
         ResourcesInverseIndicesList,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     >
     Stager<
@@ -146,10 +134,7 @@ impl<
         (ResourcesInverseIndices, ResourcesInverseIndicesList),
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     > for (task::System<T>, U)
 where
@@ -304,10 +289,7 @@ where
         ResourcesInverseIndicesList,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     >,
 {
@@ -349,10 +331,7 @@ where
         ResourcesInverseIndicesList,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     >>::Stage;
     type Remainder = <(task::System<T>, U) as Cutoff<
@@ -393,10 +372,7 @@ where
         ResourcesInverseIndicesList,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     >>::Remainder;
 
@@ -429,10 +405,7 @@ impl<
         ResourcesInverseIndicesList,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     >
     Stager<
@@ -450,10 +423,7 @@ impl<
         (ResourcesInverseIndices, ResourcesInverseIndicesList),
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     > for (task::ParSystem<T>, U)
 where
@@ -545,10 +515,7 @@ where
         ResourcesInverseIndicesList,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     >,
 {
@@ -590,10 +557,7 @@ where
         ResourcesInverseIndicesList,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     >>::Stage;
     type Remainder = <(task::ParSystem<T>, U) as Cutoff<
@@ -634,10 +598,7 @@ where
         ResourcesInverseIndicesList,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     >>::Remainder;
 
@@ -663,10 +624,7 @@ pub trait Cutoff<
     ResourcesInverseIndicesList,
     QueryIndicesList,
     ResourceViewsIndicesList,
-    EntryViewsIndicesList,
-    EntryViewsInverseIndicesList,
-    EntryViewsOppositeIndicesList,
-    EntryViewsOppositeInverseIndicesList,
+    DisjointIndicesList,
     EntryIndicesList,
 > where
     R: Registry,
@@ -677,10 +635,7 @@ pub trait Cutoff<
         Resources,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     >;
     type Remainder;
@@ -703,9 +658,6 @@ impl<'a, R, Resources, T, C, ResourcesClaims>
         Null,
         Null,
         Null,
-        stage::Null,
-        stage::Null,
-        stage::Null,
         stage::Null,
         stage::Null,
         stage::Null,
@@ -743,14 +695,8 @@ impl<
         QueryIndicesList,
         ResourceViewsIndices,
         ResourceViewsIndicesList,
-        EntryViewsIndices,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndices,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndices,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndices,
+        DisjointIndicesList,
         EntryIndices,
         EntryIndicesList,
     >
@@ -770,30 +716,14 @@ impl<
         ResourcesInverseIndicesList,
         (QueryIndices, QueryIndicesList),
         (ResourceViewsIndices, ResourceViewsIndicesList),
-        (EntryViewsIndices, EntryViewsIndicesList),
-        (EntryViewsInverseIndices, EntryViewsInverseIndicesList),
-        (EntryViewsOppositeIndices, EntryViewsOppositeIndicesList),
-        (
-            EntryViewsOppositeInverseIndices,
-            EntryViewsOppositeInverseIndicesList,
-        ),
+        (DisjointIndices, DisjointIndicesList),
         (EntryIndices, EntryIndicesList),
     > for (T, U)
 where
     R: ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
     Resources: 'a,
-    T: Task<
-            'a,
-            R,
-            Resources,
-            QueryIndices,
-            ResourceViewsIndices,
-            EntryViewsIndices,
-            EntryViewsInverseIndices,
-            EntryViewsOppositeIndices,
-            EntryViewsOppositeInverseIndices,
-            EntryIndices,
-        > + Send
+    T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
+        + Send
         + 'a,
     U: Stager<
         'a,
@@ -810,10 +740,7 @@ where
         ResourcesInverseIndicesList,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     >,
 {
@@ -834,10 +761,7 @@ where
             ResourcesInverseIndicesList,
             QueryIndicesList,
             ResourceViewsIndicesList,
-            EntryViewsIndicesList,
-            EntryViewsInverseIndicesList,
-            EntryViewsOppositeIndicesList,
-            EntryViewsOppositeInverseIndicesList,
+            DisjointIndicesList,
             EntryIndicesList,
         >>::Stage,
     );
@@ -856,10 +780,7 @@ where
         ResourcesInverseIndicesList,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     >>::Remainder;
 

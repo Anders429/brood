@@ -22,18 +22,8 @@ use crate::{
 };
 
 /// A task that can be run in a schedule.
-pub trait Task<
-    'a,
-    R,
-    Resources,
-    QueryIndices,
-    ResourceViewsIndices,
-    EntryViewsIndices,
-    EntryViewsInverseIndices,
-    EntryViewsOppositeIndices,
-    EntryViewsOppositeInverseIndices,
-    EntryIndices,
-> where
+pub trait Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
+where
     R: Registry,
 {
     /// The components viewed by this task.
@@ -45,45 +35,16 @@ pub trait Task<
     fn run(&mut self, world: SendableWorld<R, Resources>);
 }
 
-impl<
-        'a,
-        R,
-        Resources,
-        S,
-        QueryIndices,
-        ResourceViewsIndices,
-        EntryViewsIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeInverseIndices,
-        EntryIndices,
-    >
-    Task<
-        'a,
-        R,
-        Resources,
-        QueryIndices,
-        ResourceViewsIndices,
-        EntryViewsIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeInverseIndices,
-        EntryIndices,
-    > for System<S>
+impl<'a, R, Resources, S, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
+    Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
+    for System<S>
 where
     S: system::System + Send,
     R: ContainsQuery<'a, S::Filter, S::Views<'a>, QueryIndices>
         + registry::ContainsViews<'a, S::EntryViews<'a>, EntryIndices>,
     Resources: 'a,
     Resources: ContainsViews<'a, S::ResourceViews<'a>, ResourceViewsIndices>,
-    S::EntryViews<'a>: view::Disjoint<
-            S::Views<'a>,
-            R,
-            EntryViewsIndices,
-            EntryViewsInverseIndices,
-            EntryViewsOppositeIndices,
-            EntryViewsOppositeInverseIndices,
-        > + Views<'a>,
+    S::EntryViews<'a>: view::Disjoint<S::Views<'a>, R, DisjointIndices> + Views<'a>,
 {
     type Views = S::Views<'a>;
     type Filter = S::Filter;
@@ -98,45 +59,16 @@ where
     }
 }
 
-impl<
-        'a,
-        P,
-        R,
-        Resources,
-        QueryIndices,
-        ResourceViewsIndices,
-        EntryViewsIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeInverseIndices,
-        EntryIndices,
-    >
-    Task<
-        'a,
-        R,
-        Resources,
-        QueryIndices,
-        ResourceViewsIndices,
-        EntryViewsIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeInverseIndices,
-        EntryIndices,
-    > for ParSystem<P>
+impl<'a, P, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
+    Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
+    for ParSystem<P>
 where
     P: system::ParSystem + Send,
     R: ContainsParQuery<'a, P::Filter, P::Views<'a>, QueryIndices>
         + registry::ContainsViews<'a, P::EntryViews<'a>, EntryIndices>,
     Resources: 'a,
     Resources: ContainsViews<'a, P::ResourceViews<'a>, ResourceViewsIndices>,
-    P::EntryViews<'a>: view::Disjoint<
-            P::Views<'a>,
-            R,
-            EntryViewsIndices,
-            EntryViewsInverseIndices,
-            EntryViewsOppositeIndices,
-            EntryViewsOppositeInverseIndices,
-        > + Views<'a>,
+    P::EntryViews<'a>: view::Disjoint<P::Views<'a>, R, DisjointIndices> + Views<'a>,
 {
     type Views = P::Views<'a>;
     type Filter = P::Filter;

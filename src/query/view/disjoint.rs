@@ -22,51 +22,14 @@ define_null!();
 /// violating Rust's borrowing rules is what creates a conflict.
 ///
 /// [`Views`]: trait@crate::query::view::Views
-pub trait Disjoint<
-    OtherViews,
-    Registry,
-    Indices,
-    InverseIndices,
-    OppositeIndices,
-    OppositeInverseIndices,
->:
-    Sealed<OtherViews, Registry, Indices, InverseIndices, OppositeIndices, OppositeInverseIndices>
+pub trait Disjoint<OtherViews, Registry, Indices>: Sealed<OtherViews, Registry, Indices> {}
+
+impl<Views, OtherViews, Registry, Indices> Disjoint<OtherViews, Registry, Indices> for Views where
+    Views: Sealed<OtherViews, Registry, Indices>
 {
 }
 
-impl<
-        Views,
-        OtherViews,
-        Registry,
-        Indices,
-        InverseIndices,
-        OppositeIndices,
-        OppositeInverseIndices,
-    >
-    Disjoint<OtherViews, Registry, Indices, InverseIndices, OppositeIndices, OppositeInverseIndices>
-    for Views
-where
-    Views: Sealed<
-        OtherViews,
-        Registry,
-        Indices,
-        InverseIndices,
-        OppositeIndices,
-        OppositeInverseIndices,
-    >,
-{
-}
-
-pub trait Sealed<
-    OtherViews,
-    Registry,
-    Indices,
-    InverseIndices,
-    OppositeIndices,
-    OppositeInverseIndices,
->
-{
-}
+pub trait Sealed<OtherViews, Registry, Indices> {}
 
 impl<
         'a,
@@ -77,8 +40,17 @@ impl<
         InverseIndices,
         OppositeIndices,
         OppositeInverseIndices,
-    > Sealed<OtherViews, Registry, Indices, InverseIndices, OppositeIndices, OppositeInverseIndices>
-    for Views
+    >
+    Sealed<
+        OtherViews,
+        Registry,
+        (
+            Indices,
+            InverseIndices,
+            OppositeIndices,
+            OppositeInverseIndices,
+        ),
+    > for Views
 where
     OtherViews: view::Views<'a> + MutableInverse<Registry, InverseIndices>,
     OtherViews::Result: ContainsViews<'a, Views, Indices>,
@@ -150,24 +122,9 @@ mod tests {
         Registry,
     };
 
-    fn is_disjoint<
-        Views,
-        OtherViews,
-        Registry,
-        Indices,
-        InverseIndices,
-        OppositeIndices,
-        OppositeInverseIndices,
-    >()
+    fn is_disjoint<Views, OtherViews, Registry, Indices>()
     where
-        Views: Disjoint<
-            OtherViews,
-            Registry,
-            Indices,
-            InverseIndices,
-            OppositeIndices,
-            OppositeInverseIndices,
-        >,
+        Views: Disjoint<OtherViews, Registry, Indices>,
     {
     }
 
@@ -180,22 +137,22 @@ mod tests {
 
     #[test]
     fn empty() {
-        is_disjoint::<Views!(), Views!(), Registry!(), _, _, _, _>();
+        is_disjoint::<Views!(), Views!(), Registry!(), _>();
     }
 
     #[test]
     fn empty_first_views() {
-        is_disjoint::<Views!(), Views!(&A, &mut B, Option<&C>), Registry, _, _, _, _>();
+        is_disjoint::<Views!(), Views!(&A, &mut B, Option<&C>), Registry, _>();
     }
 
     #[test]
     fn empty_second_views() {
-        is_disjoint::<Views!(&A, &mut B, Option<&C>), Views!(), Registry, _, _, _, _>();
+        is_disjoint::<Views!(&A, &mut B, Option<&C>), Views!(), Registry, _>();
     }
 
     #[test]
     fn shared_immutable_views() {
-        is_disjoint::<Views!(&A, &B, &C), Views!(&A, &B, &C), Registry, _, _, _, _>();
+        is_disjoint::<Views!(&A, &B, &C), Views!(&A, &B, &C), Registry, _>();
     }
 
     #[test]
@@ -205,23 +162,12 @@ mod tests {
             Views!(Option<&A>, Option<&B>, Option<&C>),
             Registry,
             _,
-            _,
-            _,
-            _,
         >();
     }
 
     #[test]
     fn disjoint_mutable_views() {
-        is_disjoint::<
-            Views!(&mut A, &mut C),
-            Views!(&mut B, entity::Identifier),
-            Registry,
-            _,
-            _,
-            _,
-            _,
-        >();
+        is_disjoint::<Views!(&mut A, &mut C), Views!(&mut B, entity::Identifier), Registry, _>();
     }
 
     #[test]
@@ -231,15 +177,11 @@ mod tests {
             Views!(Option<&mut B>, entity::Identifier),
             Registry,
             _,
-            _,
-            _,
-            _,
         >();
     }
 
     #[test]
     fn entity_identifier() {
-        is_disjoint::<Views!(entity::Identifier), Views!(entity::Identifier), Registry, _, _, _, _>(
-        );
+        is_disjoint::<Views!(entity::Identifier), Views!(entity::Identifier), Registry, _>();
     }
 }

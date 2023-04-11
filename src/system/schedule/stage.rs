@@ -33,10 +33,7 @@ pub trait Stage<
     Resources,
     QueryIndicesList,
     ResourceViewsIndicesList,
-    EntryViewsIndicesList,
-    EntryViewsInverseIndicesList,
-    EntryViewsOppositeIndicesList,
-    EntryViewsOppositeInverseIndicesList,
+    DisjointIndicesList,
     EntryIndicesList,
 >: Send where
     R: Registry,
@@ -54,10 +51,7 @@ pub trait Stage<
         N,
         NextQueryIndicesLists,
         NextResourceViewsIndicesLists,
-        NextEntryViewsIndicesList,
-        NextEntryViewsInverseIndicesList,
-        NextEntryViewsOppositeIndicesList,
-        NextEntryViewsOppositeInverseIndicesList,
+        NextDisjointIndicesList,
         NextEntryIndicesList,
     >(
         &mut self,
@@ -73,10 +67,7 @@ pub trait Stage<
             Resources,
             NextQueryIndicesLists,
             NextResourceViewsIndicesLists,
-            NextEntryViewsIndicesList,
-            NextEntryViewsInverseIndicesList,
-            NextEntryViewsOppositeIndicesList,
-            NextEntryViewsOppositeInverseIndicesList,
+            NextDisjointIndicesList,
             NextEntryIndicesList,
         >;
 
@@ -101,7 +92,7 @@ pub trait Stage<
     fn new_has_run() -> Self::HasRun;
 }
 
-impl<R, Resources> Stage<'_, R, Resources, Null, Null, Null, Null, Null, Null, Null> for Null
+impl<R, Resources> Stage<'_, R, Resources, Null, Null, Null, Null> for Null
 where
     R: Registry,
 {
@@ -112,10 +103,7 @@ where
         N,
         NextQueryIndicesLists,
         NextResourceViewsIndicesLists,
-        NextEntryViewsIndicesList,
-        NextEntryViewsInverseIndicesList,
-        NextEntryViewsOppositeIndicesList,
-        NextEntryViewsOppositeInverseIndicesList,
+        NextDisjointIndicesList,
         NextEntryIndicesList,
     >(
         &mut self,
@@ -131,10 +119,7 @@ where
             Resources,
             NextQueryIndicesLists,
             NextResourceViewsIndicesLists,
-            NextEntryViewsIndicesList,
-            NextEntryViewsInverseIndicesList,
-            NextEntryViewsOppositeIndicesList,
-            NextEntryViewsOppositeInverseIndicesList,
+            NextDisjointIndicesList,
             NextEntryIndicesList,
         >,
     {
@@ -170,10 +155,7 @@ fn query_archetype_identifiers<
     T,
     QueryIndices,
     ResourceViewsIndices,
-    EntryViewsIndices,
-    EntryViewsInverseIndices,
-    EntryViewsOppositeIndices,
-    EntryViewsOppositeInverseIndices,
+    DisjointIndices,
     EntryIndices,
 >(
     world: SendableWorld<R, Resources>,
@@ -182,18 +164,7 @@ fn query_archetype_identifiers<
 where
     R: ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
     Resources: 'a,
-    T: Task<
-        'a,
-        R,
-        Resources,
-        QueryIndices,
-        ResourceViewsIndices,
-        EntryViewsIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeInverseIndices,
-        EntryIndices,
-    >,
+    T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>,
 {
     let mut merged_borrowed_archetypes = borrowed_archetypes.clone();
 
@@ -229,10 +200,7 @@ fn query_archetype_identifiers_unchecked<
     T,
     QueryIndices,
     ResourceViewsIndices,
-    EntryViewsIndices,
-    EntryViewsInverseIndices,
-    EntryViewsOppositeIndices,
-    EntryViewsOppositeInverseIndices,
+    DisjointIndices,
     EntryIndices,
 >(
     world: SendableWorld<R, Resources>,
@@ -240,18 +208,7 @@ fn query_archetype_identifiers_unchecked<
 ) where
     R: ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
     Resources: 'a,
-    T: Task<
-        'a,
-        R,
-        Resources,
-        QueryIndices,
-        ResourceViewsIndices,
-        EntryViewsIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeInverseIndices,
-        EntryIndices,
-    >,
+    T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>,
 {
     for (identifier, claims) in
         // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
@@ -274,14 +231,8 @@ impl<
         QueryIndicesList,
         ResourceViewsIndices,
         ResourceViewsIndicesList,
-        EntryViewsIndices,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndices,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndices,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndices,
+        DisjointIndicesList,
         EntryIndices,
         EntryIndicesList,
     >
@@ -291,40 +242,21 @@ impl<
         Resources,
         (QueryIndices, QueryIndicesList),
         (ResourceViewsIndices, ResourceViewsIndicesList),
-        (EntryViewsIndices, EntryViewsIndicesList),
-        (EntryViewsInverseIndices, EntryViewsInverseIndicesList),
-        (EntryViewsOppositeIndices, EntryViewsOppositeIndicesList),
-        (
-            EntryViewsOppositeInverseIndices,
-            EntryViewsOppositeInverseIndicesList,
-        ),
+        (DisjointIndices, DisjointIndicesList),
         (EntryIndices, EntryIndicesList),
     > for (&mut T, U)
 where
     R: ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
     Resources: 'a,
-    T: Task<
-            'a,
-            R,
-            Resources,
-            QueryIndices,
-            ResourceViewsIndices,
-            EntryViewsIndices,
-            EntryViewsInverseIndices,
-            EntryViewsOppositeIndices,
-            EntryViewsOppositeInverseIndices,
-            EntryIndices,
-        > + Send,
+    T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
+        + Send,
     U: Stage<
         'a,
         R,
         Resources,
         QueryIndicesList,
         ResourceViewsIndicesList,
-        EntryViewsIndicesList,
-        EntryViewsInverseIndicesList,
-        EntryViewsOppositeIndicesList,
-        EntryViewsOppositeInverseIndicesList,
+        DisjointIndicesList,
         EntryIndicesList,
     >,
 {
@@ -335,10 +267,7 @@ where
         N,
         NextQueryIndicesLists,
         NextResourceViewsIndicesLists,
-        NextEntryViewsIndicesList,
-        NextEntryViewsInverseIndicesList,
-        NextEntryViewsOppositeIndicesList,
-        NextEntryViewsOppositeInverseIndicesList,
+        NextDisjointIndicesList,
         NextEntryIndices,
     >(
         &mut self,
@@ -354,10 +283,7 @@ where
             Resources,
             NextQueryIndicesLists,
             NextResourceViewsIndicesLists,
-            NextEntryViewsIndicesList,
-            NextEntryViewsInverseIndicesList,
-            NextEntryViewsOppositeIndicesList,
-            NextEntryViewsOppositeInverseIndicesList,
+            NextDisjointIndicesList,
             NextEntryIndices,
         >,
     {
@@ -378,10 +304,7 @@ where
                         T,
                         QueryIndices,
                         ResourceViewsIndices,
-                        EntryViewsIndices,
-                        EntryViewsInverseIndices,
-                        EntryViewsOppositeIndices,
-                        EntryViewsOppositeInverseIndices,
+                        DisjointIndices,
                         EntryIndices,
                     >(world, &mut borrowed_archetypes);
 
@@ -406,10 +329,7 @@ where
             T,
             QueryIndices,
             ResourceViewsIndices,
-            EntryViewsIndices,
-            EntryViewsInverseIndices,
-            EntryViewsOppositeIndices,
-            EntryViewsOppositeInverseIndices,
+            DisjointIndices,
             EntryIndices,
         >(world, &mut borrowed_archetypes)
         {

@@ -328,10 +328,7 @@ where
         EntryViews,
         QueryIndices,
         ResourceViewsIndices,
-        EntryViewsIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeInverseIndices,
+        DisjointIndices,
         EntryIndices,
     >(
         &'a mut self,
@@ -349,14 +346,7 @@ where
         R: ContainsQuery<'a, Filter, Views, QueryIndices>
             + registry::ContainsViews<'a, EntryViews, EntryIndices>,
         Resources: ContainsViews<'a, ResourceViews, ResourceViewsIndices>,
-        EntryViews: view::Disjoint<
-                Views,
-                R,
-                EntryViewsIndices,
-                EntryViewsInverseIndices,
-                EntryViewsOppositeIndices,
-                EntryViewsOppositeInverseIndices,
-            > + view::Views<'a>,
+        EntryViews: view::Disjoint<Views, R, DisjointIndices> + view::Views<'a>,
     {
         let world = self as *mut Self;
         Result {
@@ -433,10 +423,7 @@ where
         EntryViews,
         QueryIndices,
         ResourceViewsIndices,
-        EntryViewsIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeInverseIndices,
+        DisjointIndices,
         EntryIndices,
     >(
         &'a mut self,
@@ -454,14 +441,7 @@ where
         R: ContainsParQuery<'a, Filter, Views, QueryIndices>
             + registry::ContainsViews<'a, EntryViews, EntryIndices>,
         Resources: ContainsViews<'a, ResourceViews, ResourceViewsIndices>,
-        EntryViews: view::Disjoint<
-                Views,
-                R,
-                EntryViewsIndices,
-                EntryViewsInverseIndices,
-                EntryViewsOppositeIndices,
-                EntryViewsOppositeInverseIndices,
-            > + view::Views<'a>,
+        EntryViews: view::Disjoint<Views, R, DisjointIndices> + view::Views<'a>,
     {
         let world = self as *mut Self;
         Result {
@@ -549,17 +529,7 @@ where
     /// ```
     ///
     /// [`System`]: crate::system::System
-    pub fn run_system<
-        'a,
-        S,
-        QueryIndices,
-        ResourceViewsIndices,
-        EntryViewsIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeInverseIndices,
-        EntryIndices,
-    >(
+    pub fn run_system<'a, S, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>(
         &'a mut self,
         system: &mut S,
     ) where
@@ -567,14 +537,7 @@ where
         R: ContainsQuery<'a, S::Filter, S::Views<'a>, QueryIndices>
             + registry::ContainsViews<'a, S::EntryViews<'a>, EntryIndices>,
         Resources: ContainsViews<'a, S::ResourceViews<'a>, ResourceViewsIndices>,
-        S::EntryViews<'a>: view::Disjoint<
-                S::Views<'a>,
-                R,
-                EntryViewsIndices,
-                EntryViewsInverseIndices,
-                EntryViewsOppositeIndices,
-                EntryViewsOppositeInverseIndices,
-            > + view::Views<'a>,
+        S::EntryViews<'a>: view::Disjoint<S::Views<'a>, R, DisjointIndices> + view::Views<'a>,
     {
         let result = self.query(Query::<
             S::Views<'a>,
@@ -647,10 +610,7 @@ where
         S,
         QueryIndices,
         ResourceViewsIndices,
-        EntryViewsIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeInverseIndices,
+        DisjointIndices,
         EntryIndices,
     >(
         &'a mut self,
@@ -660,14 +620,7 @@ where
         R: ContainsParQuery<'a, S::Filter, S::Views<'a>, QueryIndices>
             + registry::ContainsViews<'a, S::EntryViews<'a>, EntryIndices>,
         Resources: ContainsViews<'a, S::ResourceViews<'a>, ResourceViewsIndices>,
-        S::EntryViews<'a>: view::Disjoint<
-                S::Views<'a>,
-                R,
-                EntryViewsIndices,
-                EntryViewsInverseIndices,
-                EntryViewsOppositeIndices,
-                EntryViewsOppositeInverseIndices,
-            > + view::Views<'a>,
+        S::EntryViews<'a>: view::Disjoint<S::Views<'a>, R, DisjointIndices> + view::Views<'a>,
     {
         let result = self.par_query(Query::<
             S::Views<'a>,
@@ -774,10 +727,7 @@ where
         ResourcesInverseIndicesLists,
         QueryIndicesLists,
         ResourceViewsIndicesLists,
-        EntryViewsIndicesLists,
-        EntryViewsInverseIndicesLists,
-        EntryViewsOppositeIndicesLists,
-        EntryViewsOppositeInverseIndicesLists,
+        DisjointIndicesLists,
         EntryIndicesLists,
     >(
         &mut self,
@@ -796,10 +746,7 @@ where
             ResourcesInverseIndicesLists,
             QueryIndicesLists,
             ResourceViewsIndicesLists,
-            EntryViewsIndicesLists,
-            EntryViewsInverseIndicesLists,
-            EntryViewsOppositeIndicesLists,
-            EntryViewsOppositeInverseIndicesLists,
+            DisjointIndicesLists,
             EntryIndicesLists,
         >,
     {

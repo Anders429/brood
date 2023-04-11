@@ -19,10 +19,7 @@ pub trait Sealed<
     ResourcesInverseIndicesLists,
     QueryIndicesLists,
     ResourceViewsIndicesLists,
-    EntryViewsIndicesLists,
-    EntryViewsInverseIndicesLists,
-    EntryViewsOppositeIndicesLists,
-    EntryViewsOppositeInverseIndicesLists,
+    DisjointIndicesLists,
     EntryIndicesLists,
 > where
     R: Registry,
@@ -33,10 +30,7 @@ pub trait Sealed<
         Resources,
         QueryIndicesLists,
         ResourceViewsIndicesLists,
-        EntryViewsIndicesLists,
-        EntryViewsInverseIndicesLists,
-        EntryViewsOppositeIndicesLists,
-        EntryViewsOppositeInverseIndicesLists,
+        DisjointIndicesLists,
         EntryIndicesLists,
     >;
 
@@ -57,10 +51,7 @@ impl<
         ResourcesInverseIndicesLists,
         QueryIndicesLists,
         ResourceViewsIndicesLists,
-        EntryViewsIndicesLists,
-        EntryViewsInverseIndicesLists,
-        EntryViewsOppositeIndicesLists,
-        EntryViewsOppositeInverseIndicesLists,
+        DisjointIndicesLists,
         EntryIndicesLists,
     >
     Sealed<
@@ -76,10 +67,7 @@ impl<
         ResourcesInverseIndicesLists,
         QueryIndicesLists,
         ResourceViewsIndicesLists,
-        EntryViewsIndicesLists,
-        EntryViewsInverseIndicesLists,
-        EntryViewsOppositeIndicesLists,
-        EntryViewsOppositeInverseIndicesLists,
+        DisjointIndicesLists,
         EntryIndicesLists,
     > for T
 where
@@ -97,10 +85,7 @@ where
         ResourcesInverseIndicesLists,
         QueryIndicesLists,
         ResourceViewsIndicesLists,
-        EntryViewsIndicesLists,
-        EntryViewsInverseIndicesLists,
-        EntryViewsOppositeIndicesLists,
-        EntryViewsOppositeInverseIndicesLists,
+        DisjointIndicesLists,
         EntryIndicesLists,
     >,
 {
@@ -117,10 +102,7 @@ where
         ResourcesInverseIndicesLists,
         QueryIndicesLists,
         ResourceViewsIndicesLists,
-        EntryViewsIndicesLists,
-        EntryViewsInverseIndicesLists,
-        EntryViewsOppositeIndicesLists,
-        EntryViewsOppositeInverseIndicesLists,
+        DisjointIndicesLists,
         EntryIndicesLists,
     >>::Stages;
 
