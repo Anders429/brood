@@ -189,7 +189,9 @@ where
             entities,
         }
     }
+}
 
+impl<E> Batch<E> {
     pub(crate) fn len(&self) -> usize {
         self.len
     }

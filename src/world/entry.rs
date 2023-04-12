@@ -3,14 +3,9 @@ use crate::{
     component::Component,
     entity::allocator::Location,
     query::{
-        filter::{
-            And,
-            Filter,
-        },
-        view::{
-            Reshape,
-            Views,
-        },
+        filter::And,
+        view,
+        view::Reshape,
         Query,
     },
     registry,
@@ -306,20 +301,23 @@ where
     /// assert_eq!(bar.0, true);
     /// ```
     ///
+    /// [`Filter`]: crate::query::filter::Filter
     /// [`Views`]: trait@crate::query::view::Views
-    pub fn query<'b, V, F, VI, FI, P, I, Q>(
+    pub fn query<'b, Views, Filter, Indices>(
         &'b mut self,
-        #[allow(unused_variables)] query: Query<V, F>,
-    ) -> Option<V>
+        #[allow(unused_variables)] query: Query<Views, Filter>,
+    ) -> Option<Views>
     where
-        V: Views<'b> + Filter,
-        F: Filter,
-        R: ContainsQuery<'b, F, FI, V, VI, P, I, Q>,
+        Views: view::Views<'b>,
+        R: ContainsQuery<'b, Filter, Views, Indices>,
     {
         // SAFETY: The `R` on which `filter()` is called is the same `R` over which the identifier
         // is generic over.
         if unsafe {
-            <R as ContainsFilterSealed<And<F, V>, And<FI, VI>>>::filter(self.location.identifier)
+            <R as ContainsFilterSealed<
+                And<Filter, Views>,
+                And<R::FilterIndices, R::ViewsFilterIndices>,
+            >>::filter(self.location.identifier)
         } {
             Some(
                 // SAFETY: Since the archetype wasn't filtered out by the views, then each
@@ -333,7 +331,11 @@ where
                     self.world
                         .archetypes
                         .get_mut(self.location.identifier)?
-                        .view_row_unchecked::<V, P, I, Q>(self.location.index)
+                        .view_row_unchecked::<Views, (
+                            R::ViewsContainments,
+                            R::ViewsIndices,
+                            R::ViewsCanonicalContainments,
+                        )>(self.location.index)
                         .reshape()
                 },
             )

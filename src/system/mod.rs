@@ -13,7 +13,7 @@
 //!         Result,
 //!         Views,
 //!     },
-//!     registry::ContainsQuery,
+//!     registry,
 //!     system::System,
 //! };
 //!
@@ -30,18 +30,12 @@
 //!     type ResourceViews<'a> = Views!();
 //!     type EntryViews<'a> = Views!();
 //!
-//!     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+//!     fn run<'a, R, S, I, E>(
 //!         &mut self,
-//!         query_results: Result<
-//!             R,
-//!             S,
-//!             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-//!             Self::ResourceViews<'a>,
-//!             Self::EntryViews<'a>,
-//!             (EP, EI, EQ),
-//!         >,
+//!         query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
 //!     ) where
-//!         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+//!         R: registry::Registry,
+//!         I: Iterator<Item = Self::Views<'a>>,
 //!     {
 //!         for result!(foo, bar) in query_results.iter {
 //!             if bar.0 {
@@ -77,15 +71,10 @@ pub use schedule::{
 
 use crate::{
     query::{
-        filter::Filter,
-        result,
         view::Views,
         Result,
     },
-    registry::{
-        ContainsQuery,
-        ContainsViews,
-    },
+    registry::ContainsViews,
 };
 
 /// An executable type which operates over the entities within a [`World`].
@@ -108,7 +97,7 @@ use crate::{
 ///         Result,
 ///         Views,
 ///     },
-///     registry::ContainsQuery,
+///     registry,
 ///     system::System,
 /// };
 ///
@@ -125,18 +114,12 @@ use crate::{
 ///     type ResourceViews<'a> = Views!();
 ///     type EntryViews<'a> = Views!();
 ///
-///     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+///     fn run<'a, R, S, I, E>(
 ///         &mut self,
-///         query_results: Result<
-///             R,
-///             S,
-///             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-///             Self::ResourceViews<'a>,
-///             Self::EntryViews<'a>,
-///             (EP, EI, EQ),
-///         >,
+///         query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
 ///     ) where
-///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+///         R: registry::Registry,
+///         I: Iterator<Item = Self::Views<'a>>,
 ///     {
 ///         for result!(foo, bar) in query_results.iter {
 ///             if bar.0 {
@@ -151,9 +134,9 @@ use crate::{
 /// [`World`]: crate::world::World
 pub trait System {
     /// The filter to apply to queries run by this system.
-    type Filter: Filter;
+    type Filter;
     /// The views on components this system should operate on.
-    type Views<'a>: Views<'a> + Filter;
+    type Views<'a>: Views<'a>;
     /// Views on resources.
     ///
     /// The system will have access to the resources requested here when run.
@@ -183,7 +166,7 @@ pub trait System {
     ///         Result,
     ///         Views,
     ///     },
-    ///     registry::ContainsQuery,
+    ///     registry,
     ///     system::System,
     /// };
     ///
@@ -200,18 +183,12 @@ pub trait System {
     ///     type ResourceViews<'a> = Views!();
     ///     type EntryViews<'a> = Views!();
     ///
-    ///     fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+    ///     fn run<'a, R, S, I, E>(
     ///         &mut self,
-    ///         query_results: Result<
-    ///             R,
-    ///             S,
-    ///             result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-    ///             Self::ResourceViews<'a>,
-    ///             Self::EntryViews<'a>,
-    ///             (EP, EI, EQ),
-    ///         >,
+    ///         query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
     ///     ) where
-    ///         R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+    ///         R: registry::Registry,
+    ///         I: Iterator<Item = Self::Views<'a>>,
     ///     {
     ///         for result!(foo, bar) in query_results.iter {
     ///             if bar.0 {
@@ -223,18 +200,10 @@ pub trait System {
     /// ```
     ///
     /// [`World`]: crate::world::World
-    fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+    fn run<'a, R, S, I, E>(
         &mut self,
-        query_result: Result<
-            'a,
-            R,
-            S,
-            result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
-            Self::ResourceViews<'a>,
-            Self::EntryViews<'a>,
-            (EP, EI, EQ),
-        >,
+        query_result: Result<'a, R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
     ) where
-        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>
-            + ContainsViews<'a, Self::EntryViews<'a>, EP, EI, EQ>;
+        R: ContainsViews<'a, Self::EntryViews<'a>, E>,
+        I: Iterator<Item = Self::Views<'a>>;
 }

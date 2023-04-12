@@ -28,23 +28,37 @@ use core::{
     slice,
 };
 
-pub trait Sealed<'a, V, P, I, Q>: Registry
+pub trait Sealed<'a, Views, Indices>: Registry
 where
-    V: Views<'a>,
+    Views: view::Views<'a>,
 {
-    type Viewable: ContainsViewsOuter<'a, V, P, I, Q>;
+    type Containments;
+    type Indices;
+    type ReshapeIndices;
+    type Viewable: ContainsViewsOuter<
+        'a,
+        Views,
+        Self::Containments,
+        Self::Indices,
+        Self::ReshapeIndices,
+    >;
 
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims;
 }
 
-impl<'a, T, V, P, I, Q> Sealed<'a, V, P, I, Q> for T
+impl<'a, Registry, Views, Containments, Indices, ReshapeIndices>
+    Sealed<'a, Views, (Containments, Indices, ReshapeIndices)> for Registry
 where
-    T: Registry,
-    V: Views<'a>,
-    (EntityIdentifierMarker, T): ContainsViewsOuter<'a, V, P, I, Q, Registry = T>,
+    Registry: registry::Registry,
+    Views: view::Views<'a>,
+    (EntityIdentifierMarker, Registry):
+        ContainsViewsOuter<'a, Views, Containments, Indices, ReshapeIndices, Registry = Registry>,
 {
+    type Containments = Containments;
+    type Indices = Indices;
+    type ReshapeIndices = ReshapeIndices;
     type Viewable = (EntityIdentifierMarker, Self);
 
     /// Return the dynamic claims over the components borrowed by the `Views`.

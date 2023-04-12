@@ -1,6 +1,32 @@
 # Changelog
 
 ## Unreleased
+### Changed
+- `resource::ContainsViews` now only requires a single generic parameter for indices.
+- `World::view_resources()` now only requires a single generic parameter for indices.
+- `registry::ContainsEntity` now only requires a single generic parameter for indices.
+- `World::insert()` now only requires a single generic parameter for indices.
+- `registry::ContainsEntities` now only requires a single generic parameter for indices.
+- `World::extend()` now only requires a single generic parameter for indices.
+- `World::insert()` no longer requires `E` to implement `Entity`.
+- `World::extend()` no longer requires `E` to implement `Entities`.
+- `World::query()` and `World::par_query()` both no longer require `V` and `F` to implement `Filter`.
+- `registry::ContainsQuery` now only requires a single generic parameter for indices.
+- `registry::ContainsParQuery` now only requires a single generic parameter for indices.
+- `registry::ContainsViews` now only requires a single generic parameter for indices.
+- `World::query()` now only requires a single parameter for query indices.
+- `Entry::query()` now only requires a single parameter for query indices.
+- `World::run_system()` now only requires a single parameter for query indices.
+- `World::run_par_system()` now only requires a single parameter for query indices.
+- `World::run_schedule()` now only requires a single parameter for query indices.
+- `query::view::Disjoint` now only requires a single parameter for indices.
+- `System::run()` now takes the results iterator as a generic parameter `I` to simplify the interface.
+- `ParSystem::run()` now takes the results parallel iterator as a generic parameter `I` to simplify the interface.
+- `System` and `ParSystem` both no longer require `Filter` and `Views` to implement `Filter`.
+- `result::Iter` no longer requires `V` and `F` to implement `Filter`.
+- `Entry::query()` no longer requires `V` and `F` to implement `Filter`.
+- `system::schedule::Schedule` now only requires a single parameter for indices.
+- `World::run_system()` now only requires a single parameter for schedule indices.
 
 ## 0.8.2 - 2023-04-02
 ### Fixed

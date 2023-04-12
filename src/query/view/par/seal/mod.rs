@@ -66,7 +66,7 @@ impl<'a> ParViewSeal<'a> for entity::Identifier {
 }
 
 pub trait ParViewsSeal<'a>: Views<'a> {
-    type ParResults: ParResults;
+    type ParResults: ParResults<View = Self>;
 }
 
 impl<'a> ParViewsSeal<'a> for Null {
