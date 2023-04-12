@@ -367,10 +367,7 @@ mod tests {
                 Token::StructEnd,
             ])
         );
-        let mut deserializer = Deserializer::builder()
-            .tokens(tokens)
-            .self_describing(false)
-            .build();
+        let mut deserializer = Deserializer::builder().tokens(tokens).build();
         assert_ok_eq!(
             DeserializeAllocator::new(&Archetypes::<Registry>::new())
                 .deserialize(&mut deserializer),
@@ -432,10 +429,7 @@ mod tests {
                 Token::StructEnd,
             ])
         );
-        let mut deserializer = Deserializer::builder()
-            .tokens(tokens)
-            .self_describing(false)
-            .build();
+        let mut deserializer = Deserializer::builder().tokens(tokens).build();
         let archetypes = {
             let mut archetypes = Archetypes::<Registry>::new();
             let mut allocator = Allocator::new();
@@ -511,10 +505,7 @@ mod tests {
                 Token::SeqEnd,
             ])
         );
-        let mut deserializer = Deserializer::builder()
-            .tokens(tokens)
-            .self_describing(false)
-            .build();
+        let mut deserializer = Deserializer::builder().tokens(tokens).build();
         let archetypes = {
             let mut archetypes = Archetypes::<Registry>::new();
             let mut allocator = Allocator::new();
@@ -557,7 +548,6 @@ mod tests {
                 Token::SeqEnd,
                 Token::StructEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -579,7 +569,6 @@ mod tests {
                 Token::U64(0),
                 Token::StructEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -605,7 +594,6 @@ mod tests {
                 Token::Field("length"),
                 Token::U64(0),
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -631,7 +619,6 @@ mod tests {
                 Token::Field("free"),
                 Token::Seq { len: Some(0) },
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -665,7 +652,6 @@ mod tests {
                 Token::SeqEnd,
                 Token::StructEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -708,7 +694,6 @@ mod tests {
                 Token::SeqEnd,
                 Token::StructEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -746,7 +731,6 @@ mod tests {
                 Token::SeqEnd,
                 Token::StructEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -792,7 +776,6 @@ mod tests {
                 Token::SeqEnd,
                 Token::StructEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -816,7 +799,6 @@ mod tests {
                 Token::SeqEnd,
                 Token::StructEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(

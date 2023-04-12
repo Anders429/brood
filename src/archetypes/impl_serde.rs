@@ -166,10 +166,7 @@ mod tests {
             Tokens(vec![Token::Seq { len: Some(0) }, Token::SeqEnd])
         );
         let mut len = 0;
-        let mut deserializer = Deserializer::builder()
-            .tokens(tokens)
-            .self_describing(false)
-            .build();
+        let mut deserializer = Deserializer::builder().tokens(tokens).build();
         assert_ok_eq!(
             DeserializeArchetypes::<Registry>::new(&mut len).deserialize(&mut deserializer),
             archetypes
@@ -375,7 +372,6 @@ mod tests {
         let mut deserializer = Deserializer::builder()
             .tokens(tokens)
             .is_human_readable(false)
-            .self_describing(false)
             .build();
         assert_ok_eq!(
             DeserializeArchetypes::<Registry>::new(&mut len).deserialize(&mut deserializer),
@@ -429,7 +425,6 @@ mod tests {
                 Token::TupleEnd,
             ]))
             .is_human_readable(false)
-            .self_describing(false)
             .build();
 
         let mut len = 0;

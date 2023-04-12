@@ -168,10 +168,7 @@ mod tests {
                 Token::TupleEnd,
             ])
         );
-        let mut deserializer = Deserializer::builder()
-            .tokens(tokens)
-            .self_describing(false)
-            .build();
+        let mut deserializer = Deserializer::builder().tokens(tokens).build();
         assert_ok_eq!(
             World::<Registry, Resources!()>::deserialize(&mut deserializer),
             world
@@ -388,7 +385,6 @@ mod tests {
         let mut deserializer = Deserializer::builder()
             .tokens(tokens)
             .is_human_readable(false)
-            .self_describing(false)
             .build();
         assert_ok_eq!(
             World::<Registry, Resources!()>::deserialize(&mut deserializer),
@@ -429,10 +425,7 @@ mod tests {
                 Token::TupleEnd,
             ])
         );
-        let mut deserializer = Deserializer::builder()
-            .tokens(tokens)
-            .self_describing(false)
-            .build();
+        let mut deserializer = Deserializer::builder().tokens(tokens).build();
         assert_ok_eq!(
             World::<Registry!(), _>::deserialize(&mut deserializer),
             world
@@ -444,7 +437,6 @@ mod tests {
         let mut deserializer = Deserializer::builder()
             .tokens(Tokens(vec![Token::Tuple { len: 0 }, Token::TupleEnd]))
             .is_human_readable(false)
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -464,7 +456,6 @@ mod tests {
                 Token::TupleEnd,
             ]))
             .is_human_readable(false)
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -495,7 +486,6 @@ mod tests {
                 Token::TupleEnd,
             ]))
             .is_human_readable(false)
-            .self_describing(false)
             .build();
 
         assert_err_eq!(

@@ -948,7 +948,6 @@ mod tests {
         let mut deserializer = Deserializer::builder()
             .tokens(tokens)
             .is_human_readable(false)
-            .self_describing(false)
             .build();
         assert_ok_eq!(
             Archetype::<Registry>::deserialize(&mut deserializer),
@@ -986,7 +985,6 @@ mod tests {
                 Token::TupleEnd,
             ]))
             .is_human_readable(false)
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -1062,7 +1060,6 @@ mod tests {
                 Token::TupleEnd,
             ]))
             .is_human_readable(false)
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -1089,7 +1086,6 @@ mod tests {
                 Token::TupleEnd,
             ]))
             .is_human_readable(false)
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -1163,7 +1159,6 @@ mod tests {
                 Token::TupleEnd,
             ]))
             .is_human_readable(false)
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -1189,7 +1184,6 @@ mod tests {
                 Token::TupleEnd,
             ]))
             .is_human_readable(false)
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -1211,7 +1205,6 @@ mod tests {
                 Token::TupleEnd,
             ]))
             .is_human_readable(false)
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -1235,7 +1228,6 @@ mod tests {
                 Token::TupleEnd,
             ]))
             .is_human_readable(false)
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -1320,10 +1312,7 @@ mod tests {
                 Token::TupleEnd,
             ])
         );
-        let mut deserializer = Deserializer::builder()
-            .tokens(tokens)
-            .self_describing(false)
-            .build();
+        let mut deserializer = Deserializer::builder().tokens(tokens).build();
         assert_ok_eq!(
             Archetype::<Registry>::deserialize(&mut deserializer),
             archetype
@@ -1350,7 +1339,6 @@ mod tests {
                 Token::TupleEnd,
                 Token::TupleEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -1398,7 +1386,6 @@ mod tests {
                 Token::TupleEnd,
                 Token::TupleEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -1432,7 +1419,6 @@ mod tests {
                 Token::TupleEnd,
                 Token::TupleEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -1482,7 +1468,6 @@ mod tests {
                 Token::TupleEnd,
                 Token::TupleEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -1507,7 +1492,6 @@ mod tests {
                 Token::Tuple { len: 0 },
                 Token::TupleEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -1528,7 +1512,6 @@ mod tests {
                 Token::TupleEnd,
                 Token::TupleEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -1551,7 +1534,6 @@ mod tests {
                 Token::U64(3),
                 Token::TupleEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
