@@ -27,7 +27,7 @@ where
     R: Registry,
 {
     /// The components viewed by this task.
-    type Views: Views<'a>;
+    type Views: Views<'a> + Send;
     /// A filter applied to the components viewed by this task.
     type Filter;
 
@@ -44,6 +44,7 @@ where
         + registry::ContainsViews<'a, S::EntryViews<'a>, EntryIndices>,
     Resources: 'a,
     Resources: ContainsViews<'a, S::ResourceViews<'a>, ResourceViewsIndices>,
+    S::Views<'a>: Send,
     S::EntryViews<'a>: view::Disjoint<S::Views<'a>, R, DisjointIndices> + Views<'a>,
 {
     type Views = S::Views<'a>;
@@ -68,6 +69,7 @@ where
         + registry::ContainsViews<'a, P::EntryViews<'a>, EntryIndices>,
     Resources: 'a,
     Resources: ContainsViews<'a, P::ResourceViews<'a>, ResourceViewsIndices>,
+    P::Views<'a>: Send,
     P::EntryViews<'a>: view::Disjoint<P::Views<'a>, R, DisjointIndices> + Views<'a>,
 {
     type Views = P::Views<'a>;
