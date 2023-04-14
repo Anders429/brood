@@ -27,6 +27,8 @@
 - `Entry::query()` no longer requires `V` and `F` to implement `Filter`.
 - `system::schedule::Schedule` now only requires a single parameter for indices.
 - `World::run_system()` now only requires a single parameter for schedule indices.
+### Fixed
+- `Schedule`s can now no longer access non-`Sync` components.
 
 ## 0.8.2 - 2023-04-02
 ### Fixed

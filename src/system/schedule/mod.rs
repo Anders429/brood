@@ -1149,4 +1149,40 @@ mod tests {
             )>()
         );
     }
+
+    /// This test verifies that the schedule compiles just fine even when the registry contains a
+    /// non-`Sync` component, so long as the schedule itself doesn't borrow said component.
+    #[test]
+    fn registry_contains_non_sync_component() {
+        struct Foo;
+
+        impl System for Foo {
+            type Views<'a> = Views!();
+            type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!();
+
+            fn run<'a, R, S, I, E>(
+                &mut self,
+                _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
+            ) where
+                R: registry::Registry,
+                I: Iterator<Item = Self::Views<'a>>,
+            {
+                unimplemented!()
+            }
+        }
+
+        assert_eq!(
+            TypeId::of::<
+                <(task::System<Foo>, task::Null) as Schedule<
+                    '_,
+                    (alloc::rc::Rc<A>, Registry),
+                    Resources!(),
+                    _,
+                >>::Stages,
+            >(),
+            TypeId::of::<((&mut task::System<Foo>, stage::Null), stages::Null)>()
+        );
+    }
 }
