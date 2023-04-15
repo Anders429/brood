@@ -370,6 +370,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -377,7 +378,7 @@ mod tests {
                 R: registry::Registry,
                 I: Iterator<Item = Self::Views<'a>>,
             {
-                unreachable!()
+                unimplemented!()
             }
         }
 
@@ -404,6 +405,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -411,7 +413,7 @@ mod tests {
                 R: registry::Registry,
                 I: Iterator<Item = Self::Views<'a>>,
             {
-                unreachable!()
+                unimplemented!()
             }
         }
 
@@ -438,6 +440,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -445,7 +448,7 @@ mod tests {
                 R: registry::Registry,
                 I: Iterator<Item = Self::Views<'a>>,
             {
-                unreachable!()
+                unimplemented!()
             }
         }
 
@@ -472,6 +475,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -479,7 +483,7 @@ mod tests {
                 R: registry::Registry,
                 I: Iterator<Item = Self::Views<'a>>,
             {
-                unreachable!()
+                unimplemented!()
             }
         }
 
@@ -506,6 +510,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -513,7 +518,7 @@ mod tests {
                 R: registry::Registry,
                 I: Iterator<Item = Self::Views<'a>>,
             {
-                unreachable!()
+                unimplemented!()
             }
         }
 
@@ -543,6 +548,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -550,7 +556,7 @@ mod tests {
                 R: registry::Registry,
                 I: ParallelIterator<Item = Self::Views<'a>>,
             {
-                unreachable!()
+                unimplemented!()
             }
         }
 
@@ -577,6 +583,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -584,7 +591,7 @@ mod tests {
                 R: registry::Registry,
                 I: ParallelIterator<Item = Self::Views<'a>>,
             {
-                unreachable!()
+                unimplemented!()
             }
         }
 
@@ -611,6 +618,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -618,7 +626,7 @@ mod tests {
                 R: registry::Registry,
                 I: ParallelIterator<Item = Self::Views<'a>>,
             {
-                unreachable!()
+                unimplemented!()
             }
         }
 
@@ -648,6 +656,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -655,7 +664,7 @@ mod tests {
                 R: registry::Registry,
                 I: ParallelIterator<Item = Self::Views<'a>>,
             {
-                unreachable!()
+                unimplemented!()
             }
         }
 
@@ -685,6 +694,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -692,7 +702,7 @@ mod tests {
                 R: registry::Registry,
                 I: ParallelIterator<Item = Self::Views<'a>>,
             {
-                unreachable!()
+                unimplemented!()
             }
         }
 
@@ -722,6 +732,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -741,6 +752,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -760,6 +772,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -795,6 +808,7 @@ mod tests {
             type ResourceViews<'a> = Views!(&'a A);
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -814,6 +828,7 @@ mod tests {
             type ResourceViews<'a> = Views!(&'a A, &'a B);
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -854,6 +869,7 @@ mod tests {
             type ResourceViews<'a> = Views!(&'a mut A);
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -873,6 +889,7 @@ mod tests {
             type ResourceViews<'a> = Views!(&'a mut A, &'a B);
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -892,6 +909,7 @@ mod tests {
             type ResourceViews<'a> = Views!(&'a mut B, &'a C);
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -930,6 +948,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!(&'a A);
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -949,6 +968,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!(&'a A, &'a B);
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -989,6 +1009,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!(&'a A);
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -1008,6 +1029,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!(&'a mut A, &'a B);
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -1045,6 +1067,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!(&'a A);
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -1064,6 +1087,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!(&'a A, &'a C);
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -1104,6 +1128,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!(&'a A);
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -1123,6 +1148,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!(&'a A, &'a B);
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
@@ -1162,6 +1188,7 @@ mod tests {
             type ResourceViews<'a> = Views!();
             type EntryViews<'a> = Views!();
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn run<'a, R, S, I, E>(
                 &mut self,
                 _query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
