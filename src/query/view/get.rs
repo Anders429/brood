@@ -1,8 +1,8 @@
 use crate::{
     component,
     entity,
+    hlist::Index,
     query::{
-        result::get::Index,
         view,
         view::{
             sealed::ViewsSealed,

@@ -1,6 +1,8 @@
 mod get;
 
 pub(crate) use get::Get;
+// TODO: Remove this when hlist::Get migration is complete.
+pub(crate) use get::Index;
 
 macro_rules! define_null {
     () => {
