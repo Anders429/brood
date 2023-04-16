@@ -1,3 +1,7 @@
+mod get;
+
+pub(crate) use get::Get;
+
 macro_rules! define_null {
     () => {
         /// Represents the end of a heterogeneous list.
