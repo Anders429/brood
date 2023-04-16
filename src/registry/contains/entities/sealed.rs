@@ -1,6 +1,7 @@
 use crate::{
     component,
     entities,
+    hlist::Get,
     registry,
     registry::{
         contains::{
@@ -98,7 +99,7 @@ where
         <(
             Vec<Component>,
             <Registry as Expanded<
-                <Entities as entities::Get<Component, Index>>::Remainder,
+                <Entities as Get<Vec<Component>, Index>>::Remainder,
                 Containments,
                 CanonicalContainments,
                 Indices,
@@ -107,18 +108,18 @@ where
         (CanonicalContainment, CanonicalContainments),
     >,
     Registry: Expanded<
-        <Entities as entities::Get<Component, Index>>::Remainder,
+        <Entities as Get<Vec<Component>, Index>>::Remainder,
         Containments,
         CanonicalContainments,
         Indices,
     >,
-    Entities: entities::Get<Component, Index>,
+    Entities: Get<Vec<Component>, Index>,
     Component: component::Component,
 {
     type Canonical = (
         Vec<Component>,
         <Registry as Expanded<
-            <Entities as entities::Get<Component, Index>>::Remainder,
+            <Entities as Get<Vec<Component>, Index>>::Remainder,
             Containments,
             CanonicalContainments,
             Indices,
