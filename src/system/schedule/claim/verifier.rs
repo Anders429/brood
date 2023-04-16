@@ -1,13 +1,13 @@
 use crate::{
     entity,
-    hlist::define_null,
+    hlist::{
+        define_null,
+        Get,
+    },
     query::view,
     system::schedule::claim::{
         decision,
-        get::{
-            registry,
-            views,
-        },
+        get::views,
     },
 };
 
@@ -44,7 +44,7 @@ impl<'a, R, C> Verifier<'a, R, C, Null, Null> for view::Null {
 /// Not present in the claims.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (NotPresent, P)> for (&'a T, U)
 where
-    R: registry::Get<T, I>,
+    R: Get<T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = <U as Verifier<'a, R, C, IS, P>>::Decision;
@@ -53,7 +53,7 @@ where
 /// Not present in the claims.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (NotPresent, P)> for (&'a mut T, U)
 where
-    R: registry::Get<T, I>,
+    R: Get<T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = <U as Verifier<'a, R, C, IS, P>>::Decision;
@@ -62,7 +62,7 @@ where
 /// Not present in the claims.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (NotPresent, P)> for (Option<&'a T>, U)
 where
-    R: registry::Get<T, I>,
+    R: Get<T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = <U as Verifier<'a, R, C, IS, P>>::Decision;
@@ -72,7 +72,7 @@ where
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (NotPresent, P)>
     for (Option<&'a mut T>, U)
 where
-    R: registry::Get<T, I>,
+    R: Get<T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = <U as Verifier<'a, R, C, IS, P>>::Decision;

@@ -1,8 +1,10 @@
 use crate::{
     entity,
-    hlist::define_null,
+    hlist::{
+        define_null,
+        Get,
+    },
     query::view,
-    system::schedule::claim::get::registry::Get,
 };
 
 define_null!();
