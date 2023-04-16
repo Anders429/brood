@@ -1,5 +1,5 @@
 //! Type extraction from heterogeneous lists.
-//! 
+//!
 //! This logic is implemented generically for any 2-tuple heterogeneous list. Extracting a type
 //! from a heterogeneous list is a fundamental operation, and it is used in many type definitions
 //! throughout this library.
@@ -14,6 +14,10 @@ pub enum Index {}
 ///
 /// This defines generic extraction for any 2-tuple heterogeneous list. The `Target` type is
 /// extracted and the `Remainder` is the heterogeneous list without the `Target` type.
+///
+/// `Index` can always be elided when used on a proper heterogeneous list (meaning that each type
+/// within the list is unique), and can actually never be specified by an external user as `Index`
+/// isn't exposed publicly.
 pub trait Get<Target, Index> {
     /// The heterogeneous list with `Target` removed.
     type Remainder;
