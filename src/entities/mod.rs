@@ -39,10 +39,8 @@
 //! [`Registry`]: crate::registry::Registry
 //! [`World`]: crate::world::World
 
-mod get;
 mod sealed;
 
-pub(crate) use get::Get;
 pub(crate) use sealed::Contains;
 
 use crate::{

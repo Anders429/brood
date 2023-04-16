@@ -2,6 +2,7 @@ use crate::{
     archetype,
     component::Component,
     entity,
+    hlist::Get,
     query::{
         result,
         view,
@@ -79,23 +80,23 @@ where
 impl<'a, I, IS, P, V, R, Q> ContainsParViewsOuter<'a, V, (Contained, P), (I, IS), Q>
     for (EntityIdentifierMarker, R)
 where
-    R: ContainsParViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>
+    R: ContainsParViewsInner<'a, <V as Get<entity::Identifier, I>>::Remainder, P, IS>
         + CanonicalParViews<
             'a,
             <R as ContainsParViewsInner<
                 'a,
-                <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                <V as Get<entity::Identifier, I>>::Remainder,
                 P,
                 IS,
             >>::Canonical,
             P,
         >,
-    V: ParViews<'a> + view::Get<'a, entity::Identifier, I>,
+    V: ParViews<'a> + Get<entity::Identifier, I>,
     (
         rayon::iter::Cloned<rayon::slice::Iter<'a, entity::Identifier>>,
         <<R as ContainsParViewsInner<
             'a,
-            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            <V as Get<entity::Identifier, I>>::Remainder,
             P,
             IS,
         >>::Canonical as ParViewsSeal<'a>>::ParResults,
@@ -105,7 +106,7 @@ where
         entity::Identifier,
         <R as ContainsParViewsInner<
             'a,
-            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            <V as Get<entity::Identifier, I>>::Remainder,
             P,
             IS,
         >>::Canonical,
@@ -180,48 +181,37 @@ impl ContainsParViewsInner<'_, view::Null, Null, Null> for registry::Null {
 impl<'a, C, I, IS, P, R, V> ContainsParViewsInner<'a, V, (&'a Contained, P), (I, IS)> for (C, R)
 where
     C: Component + Sync,
-    R: ContainsParViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>,
-    V: view::Get<'a, &'a C, I>,
+    R: ContainsParViewsInner<'a, <V as Get<&'a C, I>>::Remainder, P, IS>,
+    V: Get<&'a C, I>,
 {
     type Canonical = (
         &'a C,
-        <R as ContainsParViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>>::Canonical,
+        <R as ContainsParViewsInner<'a, <V as Get<&'a C, I>>::Remainder, P, IS>>::Canonical,
     );
 }
 
 impl<'a, C, I, IS, P, R, V> ContainsParViewsInner<'a, V, (&'a mut Contained, P), (I, IS)> for (C, R)
 where
     C: Component + Send,
-    R: ContainsParViewsInner<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>,
-    V: view::Get<'a, &'a mut C, I>,
+    R: ContainsParViewsInner<'a, <V as Get<&'a mut C, I>>::Remainder, P, IS>,
+    V: Get<&'a mut C, I>,
 {
-    type Canonical =
-        (
-            &'a mut C,
-            <R as ContainsParViewsInner<
-                'a,
-                <V as view::Get<'a, &'a mut C, I>>::Remainder,
-                P,
-                IS,
-            >>::Canonical,
-        );
+    type Canonical = (
+        &'a mut C,
+        <R as ContainsParViewsInner<'a, <V as Get<&'a mut C, I>>::Remainder, P, IS>>::Canonical,
+    );
 }
 
 impl<'a, C, I, IS, P, R, V> ContainsParViewsInner<'a, V, (Option<&'a Contained>, P), (I, IS)>
     for (C, R)
 where
     C: Component + Sync,
-    R: ContainsParViewsInner<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS>,
-    V: view::Get<'a, Option<&'a C>, I>,
+    R: ContainsParViewsInner<'a, <V as Get<Option<&'a C>, I>>::Remainder, P, IS>,
+    V: Get<Option<&'a C>, I>,
 {
     type Canonical = (
         Option<&'a C>,
-        <R as ContainsParViewsInner<
-            'a,
-            <V as view::Get<'a, Option<&'a C>, I>>::Remainder,
-            P,
-            IS,
-        >>::Canonical,
+        <R as ContainsParViewsInner<'a, <V as Get<Option<&'a C>, I>>::Remainder, P, IS>>::Canonical,
     );
 }
 
@@ -229,14 +219,14 @@ impl<'a, C, I, IS, P, R, V> ContainsParViewsInner<'a, V, (Option<&'a mut Contain
     for (C, R)
 where
     C: Component + Send,
-    R: ContainsParViewsInner<'a, <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder, P, IS>,
-    V: view::Get<'a, Option<&'a mut C>, I>,
+    R: ContainsParViewsInner<'a, <V as Get<Option<&'a mut C>, I>>::Remainder, P, IS>,
+    V: Get<Option<&'a mut C>, I>,
 {
     type Canonical = (
         Option<&'a mut C>,
         <R as ContainsParViewsInner<
             'a,
-            <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder,
+            <V as Get<Option<&'a mut C>, I>>::Remainder,
             P,
             IS,
         >>::Canonical,

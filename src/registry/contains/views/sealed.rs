@@ -2,6 +2,7 @@ use crate::{
     archetype,
     component::Component,
     entity,
+    hlist::Get,
     query::{
         result,
         view,
@@ -150,18 +151,19 @@ where
             'a,
             <R as ContainsViewsInner<
                 'a,
-                <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                <V as Get<entity::Identifier, I>>::Remainder,
                 P,
                 IS,
             >>::Canonical,
             P,
-        > + ContainsViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>,
-    V: Views<'a> + view::Get<'a, entity::Identifier, I>,
+        > + ContainsViewsInner<'a, <V as Get<entity::Identifier, I>>::Remainder, P, IS>,
+    V: Views<'a> + Get<entity::Identifier, I>,
+    V::Remainder: Views<'a>,
     <(
         entity::Identifier,
         <R as ContainsViewsInner<
             'a,
-            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            <V as Get<entity::Identifier, I>>::Remainder,
             P,
             IS,
         >>::Canonical,
@@ -170,7 +172,7 @@ where
         entity::Identifier,
         <R as ContainsViewsInner<
             'a,
-            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            <V as Get<entity::Identifier, I>>::Remainder,
             P,
             IS,
         >>::Canonical,
@@ -181,7 +183,7 @@ where
                 iter::Copied<slice::Iter<'a, entity::Identifier>>,
                 <<R as ContainsViewsInner<
                     'a,
-                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    <V as Get<entity::Identifier, I>>::Remainder,
                     P,
                     IS,
                 >>::Canonical as ViewsSealed<'a>>::Results,
@@ -190,7 +192,7 @@ where
                 view::Null,
                 <<R as ContainsViewsInner<
                     'a,
-                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    <V as Get<entity::Identifier, I>>::Remainder,
                     P,
                     IS,
                 >>::Canonical as ViewsSealed<'a>>::Indices,
@@ -199,7 +201,7 @@ where
                 entity::Identifier,
                 <<R as ContainsViewsInner<
                     'a,
-                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    <V as Get<entity::Identifier, I>>::Remainder,
                     P,
                     IS,
                 >>::Canonical as ViewsSealed<'a>>::MaybeUninit,
@@ -211,7 +213,7 @@ where
         entity::Identifier,
         <R as ContainsViewsInner<
             'a,
-            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            <V as Get<entity::Identifier, I>>::Remainder,
             P,
             IS,
         >>::Canonical,
@@ -305,7 +307,7 @@ where
                 'a,
                 <R as ContainsViewsInner<
                     'a,
-                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    <V as Get<entity::Identifier, I>>::Remainder,
                     P,
                     IS,
                 >>::Canonical,
@@ -316,7 +318,7 @@ where
             entity::Identifier,
             <R as ContainsViewsInner<
                 'a,
-                <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                <V as Get<entity::Identifier, I>>::Remainder,
                 P,
                 IS,
             >>::Canonical,
@@ -409,24 +411,26 @@ impl<'a> ContainsViewsInner<'a, view::Null, Null, Null> for registry::Null {
 impl<'a, C, I, IS, P, R, V> ContainsViewsInner<'a, V, (&'a Contained, P), (I, IS)> for (C, R)
 where
     C: Component,
-    R: ContainsViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>,
-    V: Views<'a> + view::Get<'a, &'a C, I>,
+    R: ContainsViewsInner<'a, <V as Get<&'a C, I>>::Remainder, P, IS>,
+    V: Views<'a> + Get<&'a C, I>,
+    V::Remainder: Views<'a>,
 {
     type Canonical = (
         &'a C,
-        <R as ContainsViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>>::Canonical,
+        <R as ContainsViewsInner<'a, <V as Get<&'a C, I>>::Remainder, P, IS>>::Canonical,
     );
 }
 
 impl<'a, C, I, IS, P, R, V> ContainsViewsInner<'a, V, (&'a mut Contained, P), (I, IS)> for (C, R)
 where
     C: Component,
-    R: ContainsViewsInner<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>,
-    V: Views<'a> + view::Get<'a, &'a mut C, I>,
+    R: ContainsViewsInner<'a, <V as Get<&'a mut C, I>>::Remainder, P, IS>,
+    V: Views<'a> + Get<&'a mut C, I>,
+    V::Remainder: Views<'a>,
 {
     type Canonical = (
         &'a mut C,
-        <R as ContainsViewsInner<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>>::Canonical,
+        <R as ContainsViewsInner<'a, <V as Get<&'a mut C, I>>::Remainder, P, IS>>::Canonical,
     );
 }
 
@@ -434,33 +438,29 @@ impl<'a, C, I, IS, P, R, V> ContainsViewsInner<'a, V, (Option<&'a Contained>, P)
     for (C, R)
 where
     C: Component,
-    R: ContainsViewsInner<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS>,
-    V: Views<'a> + view::Get<'a, Option<&'a C>, I>,
+    R: ContainsViewsInner<'a, <V as Get<Option<&'a C>, I>>::Remainder, P, IS>,
+    V: Views<'a> + Get<Option<&'a C>, I>,
+    V::Remainder: Views<'a>,
 {
-    type Canonical =
-        (
-            Option<&'a C>,
-            <R as ContainsViewsInner<
-                'a,
-                <V as view::Get<'a, Option<&'a C>, I>>::Remainder,
-                P,
-                IS,
-            >>::Canonical,
-        );
+    type Canonical = (
+        Option<&'a C>,
+        <R as ContainsViewsInner<'a, <V as Get<Option<&'a C>, I>>::Remainder, P, IS>>::Canonical,
+    );
 }
 
 impl<'a, C, I, IS, P, R, V> ContainsViewsInner<'a, V, (Option<&'a mut Contained>, P), (I, IS)>
     for (C, R)
 where
     C: Component,
-    R: ContainsViewsInner<'a, <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder, P, IS>,
-    V: Views<'a> + view::Get<'a, Option<&'a mut C>, I>,
+    R: ContainsViewsInner<'a, <V as Get<Option<&'a mut C>, I>>::Remainder, P, IS>,
+    V: Views<'a> + Get<Option<&'a mut C>, I>,
+    V::Remainder: Views<'a>,
 {
     type Canonical = (
         Option<&'a mut C>,
         <R as ContainsViewsInner<
             'a,
-            <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder,
+            <V as Get<Option<&'a mut C>, I>>::Remainder,
             P,
             IS,
         >>::Canonical,
@@ -470,14 +470,15 @@ where
 impl<'a, I, IS, P, V, R> ContainsViewsInner<'a, V, (Contained, P), (I, IS)>
     for (EntityIdentifierMarker, R)
 where
-    R: ContainsViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>,
-    V: Views<'a> + view::Get<'a, entity::Identifier, I>,
+    R: ContainsViewsInner<'a, <V as Get<entity::Identifier, I>>::Remainder, P, IS>,
+    V: Views<'a> + Get<entity::Identifier, I>,
+    V::Remainder: Views<'a>,
 {
     type Canonical = (
         entity::Identifier,
         <R as ContainsViewsInner<
             'a,
-            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            <V as Get<entity::Identifier, I>>::Remainder,
             P,
             IS,
         >>::Canonical,

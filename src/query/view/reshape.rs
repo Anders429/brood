@@ -1,7 +1,9 @@
-use crate::query::{
-    result::reshape::Null,
-    view,
-    view::Get,
+use crate::{
+    hlist::Get,
+    query::{
+        result::reshape::Null,
+        view,
+    },
 };
 
 pub trait Reshape<'a, R, I>: view::Views<'a> + Sized
@@ -31,7 +33,17 @@ impl Reshape<'_, view::Null, Null> for view::Null {
 
 impl<'a, I, IS, R, S, T> Reshape<'a, (R, S), (I, IS)> for T
 where
-    T: Get<'a, R, I> + view::Views<'a>,
+    T: Get<R, I> + view::Views<'a>,
+    T::MaybeUninit: Get<
+        R::MaybeUninit,
+        I,
+        Remainder = <<T as Get<R, I>>::Remainder as view::ViewsSealed<'a>>::MaybeUninit,
+    >,
+    T::Indices: Get<
+        R::Index,
+        I,
+        Remainder = <<T as Get<R, I>>::Remainder as view::ViewsSealed<'a>>::Indices,
+    >,
     T::Remainder: Reshape<'a, S, IS>,
     R: view::View<'a>,
     (R, S): view::Views<'a>
@@ -56,12 +68,12 @@ where
     fn reshape_maybe_uninit(
         views: Self::MaybeUninit,
     ) -> <(R, S) as view::ViewsSealed<'a>>::MaybeUninit {
-        let (target, remainder) = T::get_maybe_uninit(views);
+        let (target, remainder) = views.get();
         (target, T::Remainder::reshape_maybe_uninit(remainder))
     }
 
     fn reshape_indices(indices: Self::Indices) -> <(R, S) as view::ViewsSealed<'a>>::Indices {
-        let (target, remainder) = T::get_index(indices);
+        let (target, remainder) = indices.get();
         (
             target,
             <T as Get<R, I>>::Remainder::reshape_indices(remainder),

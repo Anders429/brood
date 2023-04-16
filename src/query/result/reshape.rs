@@ -1,9 +1,9 @@
 use crate::{
-    hlist::define_null_uninstantiable,
-    query::{
-        result::Get,
-        view,
+    hlist::{
+        define_null_uninstantiable,
+        Get,
     },
+    query::view,
 };
 use core::iter;
 
