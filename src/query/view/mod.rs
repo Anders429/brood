@@ -53,7 +53,6 @@ pub(crate) mod resource;
 
 mod contains;
 mod disjoint;
-mod get;
 #[cfg(feature = "rayon")]
 mod merge;
 #[cfg(feature = "rayon")]
@@ -76,7 +75,6 @@ pub(crate) use claim::{
     Claim,
     Claims,
 };
-pub(crate) use get::Get;
 #[cfg(feature = "rayon")]
 pub(crate) use merge::Merge;
 #[cfg(feature = "rayon")]
