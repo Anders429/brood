@@ -7,9 +7,11 @@
 
 use crate::{
     entity,
-    hlist::define_null,
+    hlist::{
+        define_null,
+        Get,
+    },
     query::view,
-    registry,
     registry::ContainsViews,
 };
 
@@ -92,25 +94,21 @@ where
 impl<Component, Views, Registry, Index, Indices> MutableInverse<Registry, (Index, Indices)>
     for (&mut Component, Views)
 where
-    Registry: registry::Get<Component, Index>,
-    Views: MutableInverse<<Registry as registry::Get<Component, Index>>::Remainder, Indices>,
+    Registry: Get<Component, Index>,
+    Views: MutableInverse<<Registry as Get<Component, Index>>::Remainder, Indices>,
 {
-    type Result = <Views as MutableInverse<
-        <Registry as registry::Get<Component, Index>>::Remainder,
-        Indices,
-    >>::Result;
+    type Result =
+        <Views as MutableInverse<<Registry as Get<Component, Index>>::Remainder, Indices>>::Result;
 }
 
 impl<Component, Views, Registry, Index, Indices> MutableInverse<Registry, (Index, Indices)>
     for (Option<&mut Component>, Views)
 where
-    Registry: registry::Get<Component, Index>,
-    Views: MutableInverse<<Registry as registry::Get<Component, Index>>::Remainder, Indices>,
+    Registry: Get<Component, Index>,
+    Views: MutableInverse<<Registry as Get<Component, Index>>::Remainder, Indices>,
 {
-    type Result = <Views as MutableInverse<
-        <Registry as registry::Get<Component, Index>>::Remainder,
-        Indices,
-    >>::Result;
+    type Result =
+        <Views as MutableInverse<<Registry as Get<Component, Index>>::Remainder, Indices>>::Result;
 }
 
 #[cfg(test)]
