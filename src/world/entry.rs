@@ -1,6 +1,6 @@
 use crate::{
     archetype,
-    component::Component,
+    component,
     entity::allocator::Location,
     hlist::Reshape,
     query::{
@@ -90,10 +90,10 @@ where
     ///
     /// entry.add(Baz(1.5));
     /// ```
-    pub fn add<C, I>(&mut self, component: C)
+    pub fn add<Component, Index>(&mut self, component: Component)
     where
-        C: Component,
-        Registry: ContainsComponent<C, I>,
+        Component: component::Component,
+        Registry: ContainsComponent<Component, Index>,
     {
         let component_index = Registry::LEN - Registry::INDEX - 1;
         if
@@ -197,10 +197,10 @@ where
     ///
     /// entry.remove::<Foo, _>();
     /// ```
-    pub fn remove<C, I>(&mut self)
+    pub fn remove<Component, Index>(&mut self)
     where
-        C: Component,
-        Registry: ContainsComponent<C, I>,
+        Component: component::Component,
+        Registry: ContainsComponent<Component, Index>,
     {
         let component_index = Registry::LEN - Registry::INDEX - 1;
         if
@@ -249,7 +249,7 @@ where
                 // Also, the registry `R` is invariantly guaranteed by the invariants in `World` to
                 // not contain any duplicates.
                 unsafe {
-                archetype.push_from_buffer_skipping_component::<C>(
+                archetype.push_from_buffer_skipping_component::<Component>(
                     entity_identifier,
                     current_component_bytes.as_ptr(),
                 )
