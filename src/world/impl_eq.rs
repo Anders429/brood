@@ -2,9 +2,9 @@ use super::World;
 use crate::registry;
 use core::cmp;
 
-impl<R, Resources> cmp::PartialEq for World<R, Resources>
+impl<Registry, Resources> cmp::PartialEq for World<Registry, Resources>
 where
-    R: registry::PartialEq,
+    Registry: registry::PartialEq,
     Resources: cmp::PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
@@ -15,9 +15,9 @@ where
     }
 }
 
-impl<R, Resources> cmp::Eq for World<R, Resources>
+impl<Registry, Resources> cmp::Eq for World<Registry, Resources>
 where
-    R: registry::Eq,
+    Registry: registry::Eq,
     Resources: cmp::Eq,
 {
 }

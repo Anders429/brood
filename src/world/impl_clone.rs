@@ -3,9 +3,9 @@ use crate::{
     world::World,
 };
 
-impl<R, Resources> Clone for World<R, Resources>
+impl<Registry, Resources> Clone for World<Registry, Resources>
 where
-    R: registry::Clone,
+    Registry: registry::Clone,
     Resources: Clone,
 {
     /// Performs a full clone of the `World` and all of its components.
