@@ -114,14 +114,14 @@ where
 /// [`Entities`]: crate::entities::Entities
 /// [`entities!`]: crate::entities!
 #[derive(Debug, Eq, PartialEq)]
-pub struct Batch<E> {
-    pub(crate) entities: E,
+pub struct Batch<Entities> {
+    pub(crate) entities: Entities,
     len: usize,
 }
 
-impl<E> Batch<E>
+impl<Entities> Batch<Entities>
 where
-    E: Entities,
+    Entities: self::Entities,
 {
     /// Creates a new `Batch`, wrapping the given [`Entities`] heterogeneous list.
     ///
@@ -150,7 +150,7 @@ where
     ///
     /// # Panics
     /// Panics if the columns are not all the same length.
-    pub fn new(entities: E) -> Self {
+    pub fn new(entities: Entities) -> Self {
         assert!(entities.check_len());
         // SAFETY: We just guaranteed the lengths of all columns are equal.
         unsafe { Self::new_unchecked(entities) }
@@ -181,7 +181,7 @@ where
     /// ```
     /// [`Entities`]: crate::entities::Entities
     /// [`entities!`]: crate::entities!
-    pub unsafe fn new_unchecked(entities: E) -> Self {
+    pub unsafe fn new_unchecked(entities: Entities) -> Self {
         Self {
             len: entities.component_len(),
             entities,
@@ -189,7 +189,7 @@ where
     }
 }
 
-impl<E> Batch<E> {
+impl<Entities> Batch<Entities> {
     pub(crate) fn len(&self) -> usize {
         self.len
     }
