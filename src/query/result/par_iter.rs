@@ -1,12 +1,10 @@
 use crate::{
     archetype::Archetype,
     archetypes,
+    hlist::Reshape,
     query::{
         filter::And,
-        result::{
-            ParResults,
-            Reshape,
-        },
+        result::ParResults,
         view::ParViews,
     },
     registry,

@@ -2,12 +2,14 @@ use crate::{
     archetype,
     component::Component,
     entity,
-    hlist::Get,
+    hlist::{
+        Get,
+        Reshape,
+    },
     query::{
-        result,
         view,
         view::{
-            Reshape,
+            Reshape as _,
             Views,
             ViewsSealed,
         },
@@ -89,7 +91,7 @@ where
         + view::Reshape<'a, V, Q>;
     /// The canonical form of the results of the views `V`. Equivalent to
     /// `Self::Canonical::Results`.
-    type CanonicalResults: result::Reshape<V::Results, Q>;
+    type CanonicalResults: Reshape<V::Results, Q, iter::Take<iter::Repeat<view::Null>>>;
 
     /// # Safety
     ///
@@ -167,7 +169,7 @@ where
             P,
             IS,
         >>::Canonical,
-    ) as ViewsSealed<'a>>::Results: result::Reshape<<V as ViewsSealed<'a>>::Results, Q>,
+    ) as ViewsSealed<'a>>::Results: Reshape<<V as ViewsSealed<'a>>::Results, Q, iter::Take<iter::Repeat<view::Null>>>,
     (
         entity::Identifier,
         <R as ContainsViewsInner<
@@ -332,7 +334,7 @@ where
     R: CanonicalViews<'a, <R as ContainsViewsInner<'a, V, P, I>>::Canonical, P>
         + ContainsViewsInner<'a, V, P, I>,
     <<R as ContainsViewsInner<'a, V, P, I>>::Canonical as ViewsSealed<'a>>::Results:
-        result::Reshape<<V as ViewsSealed<'a>>::Results, Q>,
+        Reshape<<V as ViewsSealed<'a>>::Results, Q, iter::Take<iter::Repeat<view::Null>>>,
     <R as ContainsViewsInner<'a, V, P, I>>::Canonical: view::Reshape<'a, V, Q>,
     V: Views<'a>,
 {

@@ -2,9 +2,11 @@ use crate::{
     archetype,
     component::Component,
     entity,
-    hlist::Get,
+    hlist::{
+        Get,
+        Reshape,
+    },
     query::{
-        result,
         view,
         view::{
             ParViews,
@@ -23,9 +25,12 @@ use crate::{
         Registry,
     },
 };
-use rayon::iter::{
-    IntoParallelRefIterator,
-    ParallelIterator,
+use rayon::{
+    iter,
+    iter::{
+        IntoParallelRefIterator,
+        ParallelIterator,
+    },
 };
 
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
@@ -58,7 +63,7 @@ where
     type Canonical: ParViews<'a, ParResults = Self::CanonicalResults>;
     /// The canonical form of the results of the views `V`. Equivalent to
     /// `Self::Canonical::Results`.
-    type CanonicalResults: result::Reshape<V::ParResults, Q>;
+    type CanonicalResults: Reshape<V::ParResults, Q, iter::RepeatN<view::Null>>;
 
     /// # Safety
     ///
@@ -100,7 +105,7 @@ where
             P,
             IS,
         >>::Canonical as ParViewsSeal<'a>>::ParResults,
-    ): result::Reshape<<V as ParViewsSeal<'a>>::ParResults, Q>,
+    ): Reshape<<V as ParViewsSeal<'a>>::ParResults, Q, iter::RepeatN<view::Null>>,
 {
     type Canonical = (
         entity::Identifier,
@@ -148,7 +153,7 @@ where
         + CanonicalParViews<'a, <R as ContainsParViewsInner<'a, V, P, I>>::Canonical, P>,
     V: ParViews<'a>,
     <<R as ContainsParViewsInner<'a, V, P, I>>::Canonical as ParViewsSeal<'a>>::ParResults:
-        result::Reshape<<V as ParViewsSeal<'a>>::ParResults, Q>,
+        Reshape<<V as ParViewsSeal<'a>>::ParResults, Q, iter::RepeatN<view::Null>>,
 {
     type Canonical = <R as ContainsParViewsInner<'a, V, P, I>>::Canonical;
     type CanonicalResults = <Self::Canonical as ParViewsSeal<'a>>::ParResults;

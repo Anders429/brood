@@ -1,9 +1,9 @@
 use crate::{
-    hlist::Get,
-    query::{
-        result::reshape::Null,
-        view,
+    hlist::{
+        Get,
+        Null,
     },
+    query::view,
 };
 
 pub trait Reshape<'a, R, I>: view::Views<'a> + Sized
