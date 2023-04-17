@@ -40,7 +40,7 @@ use crate::{
         ContainsResource,
         ContainsViews,
     },
-    system::System,
+    system,
 };
 #[cfg(feature = "rayon")]
 use crate::{
@@ -55,7 +55,6 @@ use crate::{
     system::{
         schedule::Schedule,
         schedule::Stages,
-        ParSystem,
     },
 };
 use alloc::vec::Vec;
@@ -528,22 +527,29 @@ where
     /// ```
     ///
     /// [`System`]: crate::system::System
-    pub fn run_system<'a, S, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>(
+    pub fn run_system<
+        'a,
+        System,
+        QueryIndices,
+        ResourceViewsIndices,
+        DisjointIndices,
+        EntryIndices,
+    >(
         &'a mut self,
-        system: &mut S,
+        system: &mut System,
     ) where
-        S: System,
-        Registry: ContainsQuery<'a, S::Filter, S::Views<'a>, QueryIndices>
-            + registry::ContainsViews<'a, S::EntryViews<'a>, EntryIndices>,
-        Resources: ContainsViews<'a, S::ResourceViews<'a>, ResourceViewsIndices>,
-        S::EntryViews<'a>:
-            view::Disjoint<S::Views<'a>, Registry, DisjointIndices> + view::Views<'a>,
+        System: system::System,
+        Registry: ContainsQuery<'a, System::Filter, System::Views<'a>, QueryIndices>
+            + registry::ContainsViews<'a, System::EntryViews<'a>, EntryIndices>,
+        Resources: ContainsViews<'a, System::ResourceViews<'a>, ResourceViewsIndices>,
+        System::EntryViews<'a>:
+            view::Disjoint<System::Views<'a>, Registry, DisjointIndices> + view::Views<'a>,
     {
         let result = self.query(Query::<
-            S::Views<'a>,
-            S::Filter,
-            S::ResourceViews<'a>,
-            S::EntryViews<'a>,
+            System::Views<'a>,
+            System::Filter,
+            System::ResourceViews<'a>,
+            System::EntryViews<'a>,
         >::new());
         system.run(result);
     }
@@ -607,27 +613,27 @@ where
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub fn run_par_system<
         'a,
-        S,
+        ParSystem,
         QueryIndices,
         ResourceViewsIndices,
         DisjointIndices,
         EntryIndices,
     >(
         &'a mut self,
-        par_system: &mut S,
+        par_system: &mut ParSystem,
     ) where
-        S: ParSystem,
-        Registry: ContainsParQuery<'a, S::Filter, S::Views<'a>, QueryIndices>
-            + registry::ContainsViews<'a, S::EntryViews<'a>, EntryIndices>,
-        Resources: ContainsViews<'a, S::ResourceViews<'a>, ResourceViewsIndices>,
-        S::EntryViews<'a>:
-            view::Disjoint<S::Views<'a>, Registry, DisjointIndices> + view::Views<'a>,
+        ParSystem: system::ParSystem,
+        Registry: ContainsParQuery<'a, ParSystem::Filter, ParSystem::Views<'a>, QueryIndices>
+            + registry::ContainsViews<'a, ParSystem::EntryViews<'a>, EntryIndices>,
+        Resources: ContainsViews<'a, ParSystem::ResourceViews<'a>, ResourceViewsIndices>,
+        ParSystem::EntryViews<'a>:
+            view::Disjoint<ParSystem::Views<'a>, Registry, DisjointIndices> + view::Views<'a>,
     {
         let result = self.par_query(Query::<
-            S::Views<'a>,
-            S::Filter,
-            S::ResourceViews<'a>,
-            S::EntryViews<'a>,
+            ParSystem::Views<'a>,
+            ParSystem::Filter,
+            ParSystem::ResourceViews<'a>,
+            ParSystem::EntryViews<'a>,
         >::new());
         par_system.run(result);
     }
@@ -1079,7 +1085,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::World;
+    #[cfg(feature = "rayon")]
+    use crate::system::ParSystem;
     #[cfg(feature = "rayon")]
     use crate::system::{
         schedule,
@@ -1092,13 +1100,20 @@ mod tests {
             filter,
             result,
             view,
+            Result,
             Views,
         },
+        registry,
         resources,
+        system::System,
         Entity,
+        Query,
         Registry,
     };
-    use alloc::vec;
+    use alloc::{
+        vec,
+        vec::Vec,
+    };
     use claims::{
         assert_none,
         assert_some,
