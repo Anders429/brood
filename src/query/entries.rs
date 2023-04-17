@@ -12,10 +12,7 @@ use crate::{
     query::{
         filter::And,
         view,
-        view::{
-            Reshape,
-            SubSet,
-        },
+        view::SubSet,
     },
     registry,
     registry::contains::views::{
@@ -88,26 +85,15 @@ where
             // viewable by every possible `SubViews` (for example, in a `System` where the
             // `Registry` is generic). Therefore, we instead prove that the `Views` can be viewed
             // by the `SubViews`.
-            let super_views = <<Registry as ContainsViewsSealed<
-                                                        Views,
-                                                        Indices,
-                                                    >>::Viewable as ContainsViewsOuter<
-                                                        Views,
-                                                        Registry::Containments,
-                                                        Registry::Indices,
-                                                        Registry::ReshapeIndices
-                                                    >>::Canonical::reshape_maybe_uninit(
-                                                        // SAFETY: `self.location.index` is a valid
-                                                        // index into this archetype, as guaranteed
-                                                        // by the entity allocator.
-                                                        unsafe {
-                                                            (*self.entries.world).archetypes
-                                                                .get_mut(self.location.identifier)?
-                                                                .view_row_maybe_uninit_unchecked::<
-                                                                    Views,
-                                                                    Indices,
-                                                                >(self.location.index)
-                                                            });
+
+            // SAFETY: `self.location.index` is a valid index into this archetype, as guaranteed by
+            // the entity allocator.
+            let super_views = unsafe {
+                (*self.entries.world)
+                    .archetypes
+                    .get_mut(self.location.identifier)?
+                    .view_row_maybe_uninit_unchecked::<Views, Indices>(self.location.index)
+            };
 
             // SAFETY: `super_views` is viewed on the archetype identified by
             // `self.location.identifier`. The `indices` also correspond to the registry the

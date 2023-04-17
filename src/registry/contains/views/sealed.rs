@@ -9,7 +9,6 @@ use crate::{
     query::{
         view,
         view::{
-            Reshape as _,
             Views,
             ViewsSealed,
         },
@@ -88,7 +87,7 @@ where
     /// The canonical form of the views `V`.
     type Canonical: Views<'a>
         + ViewsSealed<'a, Results = Self::CanonicalResults>
-        + view::Reshape<'a, V, Q>;
+        + Reshape<V, Q, view::Null>;
     /// The canonical form of the results of the views `V`. Equivalent to
     /// `Self::Canonical::Results`.
     type CanonicalResults: Reshape<V::Results, Q, iter::Take<iter::Repeat<view::Null>>>;
@@ -134,7 +133,7 @@ where
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         archetype_identifier: archetype::identifier::Iter<R>,
-    ) -> <Self::Canonical as ViewsSealed<'a>>::MaybeUninit
+    ) -> V::MaybeUninit
     where
         R: Registry;
 
@@ -178,7 +177,7 @@ where
             P,
             IS,
         >>::Canonical,
-    ): view::Reshape<'a, V, Q>
+    ): Reshape<V, Q, view::Null>
         + ViewsSealed<
             'a,
             Results = (
@@ -209,6 +208,24 @@ where
                 >>::Canonical as ViewsSealed<'a>>::MaybeUninit,
             ),
         >,
+        <(
+            entity::Identifier,
+            <R as ContainsViewsInner<
+                'a,
+                <V as Get<entity::Identifier, I>>::Remainder,
+                P,
+                IS,
+            >>::Canonical,
+        ) as ViewsSealed<'a>>::Indices: Reshape<V::Indices, Q, view::Null>,
+        <(
+            entity::Identifier,
+            <R as ContainsViewsInner<
+                'a,
+                <V as Get<entity::Identifier, I>>::Remainder,
+                P,
+                IS,
+            >>::Canonical,
+        ) as ViewsSealed<'a>>::MaybeUninit: Reshape<V::MaybeUninit, Q, view::Null>,
 {
     type Registry = R;
     type Canonical = (
@@ -277,7 +294,7 @@ where
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         archetype_identifier: archetype::identifier::Iter<R_>,
-    ) -> <Self::Canonical as ViewsSealed<'a>>::MaybeUninit
+    ) -> V::MaybeUninit
     where
         R_: Registry,
     {
@@ -293,7 +310,7 @@ where
             // `Vec<C>`s of length `length` for each of the components identified by
             // `archetype_identifier`. `index` is guaranteed to be less than `length`.
             unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) },
-        )
+        ).reshape()
     }
 
     #[cfg(feature = "rayon")]
@@ -303,7 +320,7 @@ where
     }
 
     fn indices() -> V::Indices {
-        let canonical_indices = (
+        (
             view::Null,
             <R as CanonicalViews<
                 'a,
@@ -315,16 +332,7 @@ where
                 >>::Canonical,
                 P,
             >>::indices::<R>(),
-        );
-        <(
-            entity::Identifier,
-            <R as ContainsViewsInner<
-                'a,
-                <V as Get<entity::Identifier, I>>::Remainder,
-                P,
-                IS,
-            >>::Canonical,
-        )>::reshape_indices(canonical_indices)
+        ).reshape()
     }
 }
 
@@ -335,7 +343,11 @@ where
         + ContainsViewsInner<'a, V, P, I>,
     <<R as ContainsViewsInner<'a, V, P, I>>::Canonical as ViewsSealed<'a>>::Results:
         Reshape<<V as ViewsSealed<'a>>::Results, Q, iter::Take<iter::Repeat<view::Null>>>,
-    <R as ContainsViewsInner<'a, V, P, I>>::Canonical: view::Reshape<'a, V, Q>,
+    <R as ContainsViewsInner<'a, V, P, I>>::Canonical: Reshape<V, Q, view::Null>,
+    <<R as ContainsViewsInner<'a, V, P, I>>::Canonical as ViewsSealed<'a>>::Indices:
+        Reshape<V::Indices, Q, view::Null>,
+    <<R as ContainsViewsInner<'a, V, P, I>>::Canonical as ViewsSealed<'a>>::MaybeUninit:
+        Reshape<V::MaybeUninit, Q, view::Null>,
     V: Views<'a>,
 {
     type Registry = R;
@@ -379,12 +391,12 @@ where
         _entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         archetype_identifier: archetype::identifier::Iter<R_>,
-    ) -> <Self::Canonical as ViewsSealed<'a>>::MaybeUninit
+    ) -> V::MaybeUninit
     where
         R_: Registry,
     {
         // SAFETY: The safety contract of this function applies to this function call.
-        unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) }
+        unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) }.reshape()
     }
 
     #[cfg(feature = "rayon")]
@@ -394,8 +406,7 @@ where
     }
 
     fn indices() -> V::Indices {
-        let canonical_indices = R::indices::<R>();
-        Self::Canonical::reshape_indices(canonical_indices)
+        R::indices::<R>().reshape()
     }
 }
 

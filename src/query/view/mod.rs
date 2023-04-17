@@ -57,7 +57,6 @@ mod disjoint;
 mod merge;
 #[cfg(feature = "rayon")]
 mod par;
-mod reshape;
 mod sealed;
 mod subset;
 
@@ -82,7 +81,6 @@ pub(crate) use par::{
     ParViewsSeal,
     RepeatNone,
 };
-pub(crate) use reshape::Reshape;
 pub(crate) use sealed::ViewsSealed;
 
 use crate::{

@@ -349,13 +349,7 @@ where
     pub(crate) unsafe fn view_row_maybe_uninit_unchecked<'a, Views, Indices>(
         &mut self,
         index: usize,
-    ) -> <<<R as ContainsViewsSealed<'a, Views, Indices>>::Viewable as ContainsViewsOuter<
-        'a,
-        Views,
-        <R as ContainsViewsSealed<'a, Views, Indices>>::Containments,
-        <R as ContainsViewsSealed<'a, Views, Indices>>::Indices,
-        <R as ContainsViewsSealed<'a, Views, Indices>>::ReshapeIndices,
-    >>::Canonical as ViewsSealed<'a>>::MaybeUninit
+    ) -> Views::MaybeUninit
     where
         Views: view::Views<'a>,
         R: ContainsViews<'a, Views, Indices>,
