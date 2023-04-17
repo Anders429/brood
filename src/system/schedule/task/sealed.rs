@@ -45,7 +45,8 @@ where
     Resources: 'a,
     Resources: ContainsViews<'a, S::ResourceViews<'a>, ResourceViewsIndices>,
     S::Views<'a>: Send,
-    S::EntryViews<'a>: view::Disjoint<S::Views<'a>, R, DisjointIndices> + Views<'a>,
+    S::ResourceViews<'a>: Send,
+    S::EntryViews<'a>: view::Disjoint<S::Views<'a>, R, DisjointIndices> + Views<'a> + Send,
 {
     type Views = S::Views<'a>;
     type Filter = S::Filter;
@@ -70,7 +71,8 @@ where
     Resources: 'a,
     Resources: ContainsViews<'a, P::ResourceViews<'a>, ResourceViewsIndices>,
     P::Views<'a>: Send,
-    P::EntryViews<'a>: view::Disjoint<P::Views<'a>, R, DisjointIndices> + Views<'a>,
+    P::ResourceViews<'a>: Send,
+    P::EntryViews<'a>: view::Disjoint<P::Views<'a>, R, DisjointIndices> + Views<'a> + Send,
 {
     type Views = P::Views<'a>;
     type Filter = P::Filter;
