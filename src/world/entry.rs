@@ -2,10 +2,10 @@ use crate::{
     archetype,
     component::Component,
     entity::allocator::Location,
+    hlist::Reshape,
     query::{
         filter::And,
         view,
-        view::Reshape,
         Query,
     },
     registry,
