@@ -53,7 +53,7 @@ use crate::{
         ContainsParQuery,
     },
     system::{
-        schedule::Schedule,
+        schedule,
         schedule::Stages,
     },
 };
@@ -722,11 +722,13 @@ where
     /// [`Schedule`]: trait@crate::system::schedule::Schedule
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub fn run_schedule<'a, S, Indices>(&mut self, schedule: &'a mut S)
+    pub fn run_schedule<'a, Schedule, Indices>(&mut self, schedule: &'a mut Schedule)
     where
-        S: Schedule<'a, Registry, Resources, Indices>,
+        Schedule: schedule::Schedule<'a, Registry, Resources, Indices>,
     {
-        schedule.as_stages().run(self, S::Stages::new_has_run());
+        schedule
+            .as_stages()
+            .run(self, Schedule::Stages::new_has_run());
     }
 
     /// Returns `true` if the world contains an entity identified by `entity_identifier`.

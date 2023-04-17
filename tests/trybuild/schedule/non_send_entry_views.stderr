@@ -17,5 +17,5 @@ error[E0277]: `Rc<A>` cannot be shared between threads safely
 note: required by a bound in `World::<Registry, Resources>::run_schedule`
   --> src/world/mod.rs
    |
-   |         S: Schedule<'a, Registry, Resources, Indices>,
-   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `World::<Registry, Resources>::run_schedule`
+   |         Schedule: schedule::Schedule<'a, Registry, Resources, Indices>,
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `World::<Registry, Resources>::run_schedule`
