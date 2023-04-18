@@ -1,7 +1,7 @@
 mod sealed;
 
 use crate::{
-    component::Component,
+    component,
     registry::Null,
 };
 use core::fmt;
@@ -17,9 +17,9 @@ pub trait Debug: Sealed {}
 
 impl Debug for Null {}
 
-impl<C, R> Debug for (C, R)
+impl<Component, Registry> Debug for (Component, Registry)
 where
-    C: Component + fmt::Debug,
-    R: Debug,
+    Component: component::Component + fmt::Debug,
+    Registry: Debug,
 {
 }

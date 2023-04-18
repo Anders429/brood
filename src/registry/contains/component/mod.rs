@@ -4,7 +4,10 @@ mod sealed;
 
 use sealed::Sealed;
 
-/// Indicates that the component `C` is contained in the registry.
-pub trait ContainsComponent<C, I>: Sealed<C, I> {}
+/// Indicates that a component is contained in the registry.
+pub trait ContainsComponent<Component, Index>: Sealed<Component, Index> {}
 
-impl<T, C, I> ContainsComponent<C, I> for T where T: Sealed<C, I> {}
+impl<Registry, Component, Index> ContainsComponent<Component, Index> for Registry where
+    Registry: Sealed<Component, Index>
+{
+}
