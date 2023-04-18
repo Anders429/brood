@@ -94,7 +94,7 @@ pub(crate) use stages::Stages;
 
 use crate::{
     doc,
-    registry::Registry,
+    registry,
 };
 use scheduler::Scheduler;
 use sealed::Sealed;
@@ -114,16 +114,17 @@ use task::Task;
 /// [`schedule!`]: crate::system::schedule!
 /// [`System`]: crate::system::System
 /// [`Views`]: trait@crate::query::view::Views
-pub trait Schedule<'a, R, Resources, Indices>: Sealed<'a, R, Resources, Indices>
+pub trait Schedule<'a, Registry, Resources, Indices>:
+    Sealed<'a, Registry, Resources, Indices>
 where
-    R: Registry,
+    Registry: registry::Registry,
 {
 }
 
-impl<'a, R, Resources, T, Indices> Schedule<'a, R, Resources, Indices> for T
+impl<'a, T, Registry, Resources, Indices> Schedule<'a, Registry, Resources, Indices> for T
 where
-    R: Registry,
-    T: Sealed<'a, R, Resources, Indices>,
+    Registry: registry::Registry,
+    T: Sealed<'a, Registry, Resources, Indices>,
 {
 }
 
