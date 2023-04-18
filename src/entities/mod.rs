@@ -44,7 +44,7 @@ mod sealed;
 pub(crate) use sealed::Contains;
 
 use crate::{
-    component::Component,
+    component,
     hlist::define_null,
 };
 use alloc::vec::Vec;
@@ -84,10 +84,10 @@ pub trait Entities: Sealed {}
 
 impl Entities for Null {}
 
-impl<C, E> Entities for (Vec<C>, E)
+impl<Component, Entities> self::Entities for (Vec<Component>, Entities)
 where
-    C: Component,
-    E: Entities,
+    Component: component::Component,
+    Entities: self::Entities,
 {
 }
 
