@@ -267,8 +267,7 @@ where
         }
     }
 
-    /// Query for components contained within this entity using the given [`Views`] `V` and
-    /// [`Filter`] `F`.
+    /// Query for components contained within this entity using the given `Views` and `Filter`.
     ///
     /// Returns a `Some` value if the entity matches the views and filter combination, and returns
     /// a `None` value otherwise.
@@ -302,9 +301,6 @@ where
     /// assert_eq!(foo.0, 42);
     /// assert_eq!(bar.0, true);
     /// ```
-    ///
-    /// [`Filter`]: crate::query::filter::Filter
-    /// [`Views`]: trait@crate::query::view::Views
     pub fn query<'b, Views, Filter, Indices>(
         &'b mut self,
         #[allow(unused_variables)] query: Query<Views, Filter>,

@@ -8,7 +8,6 @@
 //! use brood::{
 //!     query::{
 //!         filter,
-//!         filter::Filter,
 //!         result,
 //!         Result,
 //!         Views,
@@ -92,7 +91,6 @@ use crate::{
 /// use brood::{
 ///     query::{
 ///         filter,
-///         filter::Filter,
 ///         result,
 ///         Result,
 ///         Views,
@@ -161,7 +159,6 @@ pub trait System {
     /// use brood::{
     ///     query::{
     ///         filter,
-    ///         filter::Filter,
     ///         result,
     ///         Result,
     ///         Views,

@@ -1,6 +1,6 @@
 //! Views over entities.
 //!
-//! Along with [`Filter`]s, [`Views`] are what make up a query over entities stored wihin a
+//! Along with [`filter`]s, [`Views`] are what make up a query over entities stored wihin a
 //! [`World`]. `Views` are how queries specify what [`Component`]s should be borrowed within query
 //! results.
 //!
@@ -39,7 +39,7 @@
 //!
 //! [`Component`]: crate::component::Component
 //! [`entity::Identifier`]: crate::entity::Identifier
-//! [`Filter`]: crate::query::filter::Filter
+//! [`filter`]: crate::query::filter
 //! [`query`]: crate::world::World::query()
 //! [`System`]: crate::system::System
 //! [`View`]: crate::query::view::View
@@ -150,7 +150,7 @@ define_null!();
 
 /// A heterogeneous list of [`View`]s.
 ///
-/// Along with [`Filter`]s, `Views` are what make up a query over entities stored wihin a
+/// Along with [`filter`]s, `Views` are what make up a query over entities stored wihin a
 /// [`World`]. `Views` are how queries specify what [`Component`]s should be borrowed within query
 /// results.
 ///
@@ -173,7 +173,7 @@ define_null!();
 /// ```
 ///
 /// [`Component`]: crate::component::Component
-/// [`Filter`]: crate::query::filter::Filter
+/// [`filter`]: crate::query::filter
 /// [`View`]: crate::query::view::View
 /// [`Views!`]: crate::query::Views!
 /// [`World`]: crate::world::World

@@ -26,7 +26,7 @@ use rayon::iter::{
 
 /// A [`ParallelIterator`] over the results of a query.
 ///
-/// Yields results based on the specified [`ParViews`] `V` and [`Filter`] `F`, return the
+/// Yields results based on the specified `Views` and `Filter`, returning the
 /// [`Component`]s viewed. The yielded views will be heterogeneous lists, so the [`result!`] macro
 /// is recommended to create identifiers for them.
 ///
@@ -66,10 +66,8 @@ use rayon::iter::{
 /// ```
 ///
 /// [`Component`]: crate::component::Component
-/// [`Filter`]: crate::query::filter::Filter
 /// [`ParallelIterator`]: rayon::iter::ParallelIterator
 /// [`par_query`]: crate::world::World::par_query()
-/// [`ParViews`]: crate::query::view::ParViews
 /// [`result!`]: crate::query::result!
 /// [`World`]: crate::world::World
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]

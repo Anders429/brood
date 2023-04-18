@@ -4,7 +4,7 @@
 //! heterogeneous lists of [`Component`]s. Therefore, queries can be executed to give [`Views`] of
 //! `Component`s within the entities stored in a `World`.
 //!
-//! Queries are made up of `Views`, giving access to `Component`s, and [`Filter`]s which can filter
+//! Queries are made up of `Views`, giving access to `Component`s, and [`filter`]s which can filter
 //! which entities are viewed. Query results are returned as heterogeneous lists, so the
 //! [`result!`] macro is provided to unpack the results.
 //!
@@ -44,7 +44,7 @@
 //! ```
 //!
 //! [`Component`]: crate::component::Component
-//! [`Filter`]: crate::query::filter::Filter
+//! [`filter`]: crate::query::filter
 //! [`result!`]: crate::query::result!
 //! [`Views`]: trait@crate::query::view::Views
 //! [`World`]: crate::world::World

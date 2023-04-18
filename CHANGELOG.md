@@ -27,6 +27,8 @@
 - `Entry::query()` no longer requires `V` and `F` to implement `Filter`.
 - `system::schedule::Schedule` now only requires a single parameter for indices.
 - `World::run_system()` now only requires a single parameter for schedule indices.
+### Removed
+- `Filter` trait.
 ### Fixed
 - `Schedule`s can now no longer access non-`Sync` components and resources.
 

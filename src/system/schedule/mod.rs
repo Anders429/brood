@@ -12,7 +12,6 @@
 //! use brood::{
 //!     query::{
 //!         filter,
-//!         filter::Filter,
 //!         result,
 //!         Result,
 //!         Views,
@@ -139,7 +138,6 @@ doc::non_root_macro! {
     /// use brood::{
     ///     query::{
     ///         filter,
-    ///         filter::Filter,
     ///         result,
     ///         Result,
     ///         Views,
@@ -226,7 +224,6 @@ pub(crate) mod inner {
         /// use brood::{
         ///     query::{
         ///         filter,
-        ///         filter::Filter,
         ///         result,
         ///         Result,
         ///         Views,

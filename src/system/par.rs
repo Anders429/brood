@@ -21,7 +21,6 @@ use rayon::iter::ParallelIterator;
 /// use brood::{
 ///     query::{
 ///         filter,
-///         filter::Filter,
 ///         result,
 ///         Result,
 ///         Views,
@@ -96,7 +95,6 @@ pub trait ParSystem {
     /// use brood::{
     ///     query::{
     ///         filter,
-    ///         filter::Filter,
     ///         result,
     ///         Result,
     ///         Views,

@@ -268,8 +268,8 @@ where
         }
     }
 
-    /// Query for components contained within the `World` using the given [`Views`] `V` and
-    /// [`Filter`] `F`, returning an [`Iterator`] over all components of entities matching the
+    /// Query for components contained within the `World` using the given `Views` and
+    /// `Filter`, returning an [`Iterator`] over all components of entities matching the
     /// query.
     ///
     /// Note that the order of the entities returned by a query is not specified.
@@ -314,10 +314,8 @@ where
     ///
     /// For more information about `Views` and `Filter`, see the [`query`] module documentaion.
     ///
-    /// [`Filter`]: crate::query::filter::Filter
     /// [`Iterator`]: core::iter::Iterator
     /// [`query`]: crate::query
-    /// [`Views`]: trait@crate::query::view::Views
     pub fn query<
         'a,
         Views,
@@ -358,8 +356,8 @@ where
         }
     }
 
-    /// Query for components contained within the `World` using the given [`ParViews`] `V` and
-    /// [`Filter`] `F`, returning a [`ParallelIterator`] over all components of entities matching
+    /// Query for components contained within the `World` using the given `Views` and
+    /// `Filter`, returning a [`ParallelIterator`] over all components of entities matching
     /// the query.
     ///
     /// The difference between this method and [`query()`] is that this method allow results to be
@@ -404,11 +402,9 @@ where
     ///     });
     /// ```
     ///
-    /// For more information about `ParViews` and `Filter`, see the [`query`] module documentaion.
+    /// For more information about `Views` and `Filter`, see the [`query`] module documentaion.
     ///
-    /// [`Filter`]: crate::query::filter::Filter
     /// [`ParallelIterator`]: rayon::iter::ParallelIterator
-    /// [`ParViews`]: crate::query::view::ParViews
     /// [`query`]: crate::query
     /// [`query()`]: World::query()
     #[cfg(feature = "rayon")]
@@ -480,7 +476,6 @@ where
     ///     entity,
     ///     query::{
     ///         filter,
-    ///         filter::Filter,
     ///         result,
     ///         Result,
     ///         Views,
@@ -562,7 +557,6 @@ where
     ///     entity,
     ///     query::{
     ///         filter,
-    ///         filter::Filter,
     ///         result,
     ///         Result,
     ///         Views,
@@ -646,7 +640,6 @@ where
     ///     entity,
     ///     query::{
     ///         filter,
-    ///         filter::Filter,
     ///         result,
     ///         Result,
     ///         Views,

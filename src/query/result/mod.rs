@@ -1,7 +1,7 @@
 //! Results of queries.
 //!
 //! The primary way to interact with entities stored within a [`World`] is to query their
-//! [`Component`]s using [`Views`] and [`Filter`]s. This module handles interaction with the
+//! [`Component`]s using [`Views`] and [`filter`]s. This module handles interaction with the
 //! results of those queries.
 //!
 //! As `Component`s should be allowed to be queried arbitrarily, with any amount of `Component`s
@@ -44,7 +44,7 @@
 //! ```
 //!
 //! [`Component`]: crate::component::Component
-//! [`Filter`]: crate::query::filter::Filter
+//! [`filter`]: crate::query::filter
 //! [`result!`]: crate::query::result!
 //! [`Views`]: trait@crate::query::view::Views
 //! [`World`]: crate::world::World
