@@ -18,7 +18,7 @@ pub trait Sealed {}
 
 impl Sealed for None {}
 
-impl<C> Sealed for Has<C> where C: Component {}
+impl<C> Sealed for Has<C> {}
 
 impl<F> Sealed for Not<F> where F: Filter {}
 
