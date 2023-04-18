@@ -35,6 +35,7 @@
 //! world.insert(entity!());
 //! ```
 //!
+//! [`Component`]: crate::component::Component
 //! [`Entity`]: crate::entity::Entity
 //! [`entity!`]: crate::entity!
 //! [`Identifier`]: crate::entity::Identifier
