@@ -6,7 +6,7 @@ pub(crate) use seal::{
 };
 
 use crate::{
-    component::Component,
+    component,
     entity,
     query::view::Null,
 };
@@ -40,13 +40,19 @@ use seal::ParViewSeal;
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub trait ParView<'a>: ParViewSeal<'a> + Send {}
 
-impl<'a, C> ParView<'a> for &'a C where C: Component + Sync {}
+impl<'a, Component> ParView<'a> for &'a Component where Component: component::Component + Sync {}
 
-impl<'a, C> ParView<'a> for &'a mut C where C: Component + Send {}
+impl<'a, Component> ParView<'a> for &'a mut Component where Component: component::Component + Send {}
 
-impl<'a, C> ParView<'a> for Option<&'a C> where C: Component + Sync {}
+impl<'a, Component> ParView<'a> for Option<&'a Component> where
+    Component: component::Component + Sync
+{
+}
 
-impl<'a, C> ParView<'a> for Option<&'a mut C> where C: Component + Send {}
+impl<'a, Component> ParView<'a> for Option<&'a mut Component> where
+    Component: component::Component + Send
+{
+}
 
 impl<'a> ParView<'a> for entity::Identifier {}
 
@@ -84,9 +90,9 @@ pub trait ParViews<'a>: ParViewsSeal<'a> + Send {}
 
 impl<'a> ParViews<'a> for Null {}
 
-impl<'a, V, W> ParViews<'a> for (V, W)
+impl<'a, ParView, ParViews> self::ParViews<'a> for (ParView, ParViews)
 where
-    V: ParView<'a>,
-    W: ParViews<'a>,
+    ParView: self::ParView<'a>,
+    ParViews: self::ParViews<'a>,
 {
 }

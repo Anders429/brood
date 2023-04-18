@@ -49,4 +49,4 @@ use core::any::Any;
 /// won't be able to implement this trait manually.
 pub trait Component: Any {}
 
-impl<C> Component for C where C: Any {}
+impl<Component> self::Component for Component where Component: Any {}

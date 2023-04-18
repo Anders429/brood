@@ -1,7 +1,7 @@
 mod sealed;
 
 use crate::{
-    component::Component,
+    component,
     registry::Null,
 };
 use sealed::Sealed;
@@ -17,9 +17,9 @@ pub trait Deserialize<'de>: Sealed<'de> {}
 
 impl<'de> Deserialize<'de> for Null {}
 
-impl<'de, C, R> Deserialize<'de> for (C, R)
+impl<'de, Component, Registry> Deserialize<'de> for (Component, Registry)
 where
-    C: Component + serde::Deserialize<'de>,
-    R: Deserialize<'de>,
+    Component: component::Component + serde::Deserialize<'de>,
+    Registry: Deserialize<'de>,
 {
 }

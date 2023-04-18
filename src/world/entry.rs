@@ -1,6 +1,6 @@
 use crate::{
     archetype,
-    component::Component,
+    component,
     entity::allocator::Location,
     hlist::Reshape,
     query::{
@@ -13,7 +13,6 @@ use crate::{
         contains::filter::Sealed as ContainsFilterSealed,
         ContainsComponent,
         ContainsQuery,
-        Registry,
     },
     resource,
     world::World,
@@ -48,19 +47,22 @@ use core::fmt;
 /// [`entity::Identifier`]: crate::entity::Identifier
 /// [`entry`]: crate::World::entry()
 /// [`World`]: crate::World
-pub struct Entry<'a, R, Resources>
+pub struct Entry<'a, Registry, Resources>
 where
-    R: Registry,
+    Registry: registry::Registry,
 {
-    world: &'a mut World<R, Resources>,
-    location: Location<R>,
+    world: &'a mut World<Registry, Resources>,
+    location: Location<Registry>,
 }
 
-impl<'a, R, Resources> Entry<'a, R, Resources>
+impl<'a, Registry, Resources> Entry<'a, Registry, Resources>
 where
-    R: Registry,
+    Registry: registry::Registry,
 {
-    pub(crate) fn new(world: &'a mut World<R, Resources>, location: Location<R>) -> Self {
+    pub(crate) fn new(
+        world: &'a mut World<Registry, Resources>,
+        location: Location<Registry>,
+    ) -> Self {
         Self { world, location }
     }
 
@@ -88,12 +90,12 @@ where
     ///
     /// entry.add(Baz(1.5));
     /// ```
-    pub fn add<C, I>(&mut self, component: C)
+    pub fn add<Component, Index>(&mut self, component: Component)
     where
-        C: Component,
-        R: ContainsComponent<C, I>,
+        Component: component::Component,
+        Registry: ContainsComponent<Component, Index>,
     {
-        let component_index = R::LEN - R::INDEX - 1;
+        let component_index = Registry::LEN - Registry::INDEX - 1;
         if
         // SAFETY: The `component_index` obtained from `R::LEN - R::INDEX - 1` is guaranteed to be
         // a valid index into `self.location.identifier`, since an identifier has `R::LEN` bits.
@@ -137,7 +139,7 @@ where
             let identifier_buffer =
                 // SAFETY: Since `raw_identifier_buffer` was obtained from a valid identifier, it
                 // is of the proper length (which is `(R::LEN + 7) / 8`).
-                unsafe { archetype::Identifier::<R>::new(raw_identifier_buffer) };
+                unsafe { archetype::Identifier::<Registry>::new(raw_identifier_buffer) };
 
             // Insert to the corresponding archetype using the bytes and the new component.
             let archetype = self
@@ -195,12 +197,12 @@ where
     ///
     /// entry.remove::<Foo, _>();
     /// ```
-    pub fn remove<C, I>(&mut self)
+    pub fn remove<Component, Index>(&mut self)
     where
-        C: Component,
-        R: ContainsComponent<C, I>,
+        Component: component::Component,
+        Registry: ContainsComponent<Component, Index>,
     {
-        let component_index = R::LEN - R::INDEX - 1;
+        let component_index = Registry::LEN - Registry::INDEX - 1;
         if
         // SAFETY: The `component_index` obtained from `R::LEN - R::INDEX - 1` is guaranteed to be
         // a valid index into `self.location.identifier`, since an identifier has `R::LEN` bits.
@@ -230,7 +232,7 @@ where
             let identifier_buffer =
                 // SAFETY: Since `raw_identifier_buffer` was obtained from a valid identifier, it
                 // is of the proper length (which is `(R::LEN + 7) / 8`).
-                unsafe { archetype::Identifier::<R>::new(raw_identifier_buffer) };
+                unsafe { archetype::Identifier::<Registry>::new(raw_identifier_buffer) };
 
             // Insert to the corresponding archetype using the bytes, skipping the removed
             // component.
@@ -247,7 +249,7 @@ where
                 // Also, the registry `R` is invariantly guaranteed by the invariants in `World` to
                 // not contain any duplicates.
                 unsafe {
-                archetype.push_from_buffer_skipping_component::<C>(
+                archetype.push_from_buffer_skipping_component::<Component>(
                     entity_identifier,
                     current_component_bytes.as_ptr(),
                 )
@@ -309,14 +311,14 @@ where
     ) -> Option<Views>
     where
         Views: view::Views<'b>,
-        R: ContainsQuery<'b, Filter, Views, Indices>,
+        Registry: ContainsQuery<'b, Filter, Views, Indices>,
     {
         // SAFETY: The `R` on which `filter()` is called is the same `R` over which the identifier
         // is generic over.
         if unsafe {
-            <R as ContainsFilterSealed<
+            <Registry as ContainsFilterSealed<
                 And<Filter, Views>,
-                And<R::FilterIndices, R::ViewsFilterIndices>,
+                And<Registry::FilterIndices, Registry::ViewsFilterIndices>,
             >>::filter(self.location.identifier)
         } {
             Some(
@@ -332,9 +334,9 @@ where
                         .archetypes
                         .get_mut(self.location.identifier)?
                         .view_row_unchecked::<Views, (
-                            R::ViewsContainments,
-                            R::ViewsIndices,
-                            R::ViewsCanonicalContainments,
+                            Registry::ViewsContainments,
+                            Registry::ViewsIndices,
+                            Registry::ViewsCanonicalContainments,
                         )>(self.location.index)
                         .reshape()
                 },
@@ -345,9 +347,9 @@ where
     }
 }
 
-impl<'a, R, Resources> fmt::Debug for Entry<'a, R, Resources>
+impl<'a, Registry, Resources> fmt::Debug for Entry<'a, Registry, Resources>
 where
-    R: registry::Debug,
+    Registry: registry::Debug,
     Resources: resource::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

@@ -34,14 +34,13 @@ use crate::{
         ContainsEntities,
         ContainsEntity,
         ContainsQuery,
-        Registry,
     },
     resource,
     resource::{
         ContainsResource,
         ContainsViews,
     },
-    system::System,
+    system,
 };
 #[cfg(feature = "rayon")]
 use crate::{
@@ -54,9 +53,8 @@ use crate::{
         ContainsParQuery,
     },
     system::{
-        schedule::Schedule,
+        schedule,
         schedule::Stages,
-        ParSystem,
     },
 };
 use alloc::vec::Vec;
@@ -98,20 +96,20 @@ use hashbrown::HashSet;
 /// [`query()`]: crate::World::query()
 /// [`Registry`]: crate::registry::Registry
 /// [`System`]: crate::system::System
-pub struct World<R, Resources = resource::Null>
+pub struct World<Registry, Resources = resource::Null>
 where
-    R: Registry,
+    Registry: registry::Registry,
 {
-    pub(crate) archetypes: Archetypes<R>,
-    pub(crate) entity_allocator: entity::Allocator<R>,
+    pub(crate) archetypes: Archetypes<Registry>,
+    pub(crate) entity_allocator: entity::Allocator<Registry>,
     len: usize,
 
     resources: Resources,
 }
 
-impl<R> World<R, resource::Null>
+impl<Registry> World<Registry, resource::Null>
 where
-    R: Registry,
+    Registry: registry::Registry,
 {
     /// Creates an empty `World`.
     ///
@@ -140,18 +138,18 @@ where
     }
 }
 
-impl<R, Resources> World<R, Resources>
+impl<Registry, Resources> World<Registry, Resources>
 where
-    R: Registry,
+    Registry: registry::Registry,
 {
     fn from_raw_parts(
-        archetypes: Archetypes<R>,
-        entity_allocator: entity::Allocator<R>,
+        archetypes: Archetypes<Registry>,
+        entity_allocator: entity::Allocator<Registry>,
         len: usize,
         resources: Resources,
     ) -> Self {
-        R::assert_no_duplicates(&mut HashSet::with_capacity_and_hasher(
-            R::LEN,
+        Registry::assert_no_duplicates(&mut HashSet::with_capacity_and_hasher(
+            Registry::LEN,
             FnvBuildHasher::default(),
         ));
 
@@ -205,11 +203,11 @@ where
     /// ```
     pub fn insert<Entity, Indices>(&mut self, entity: Entity) -> entity::Identifier
     where
-        R: ContainsEntity<Entity, Indices>,
+        Registry: ContainsEntity<Entity, Indices>,
     {
         self.len += 1;
 
-        let canonical_entity = R::canonical(entity);
+        let canonical_entity = Registry::canonical(entity);
 
         // SAFETY: Since the archetype was obtained using the `identifier_buffer` created from the
         // entity `Entity`, then the entity is guaranteed to be made up of componpents identified
@@ -218,7 +216,7 @@ where
         // `self.entity_allocator` is guaranteed to live as long as the archetype.
         unsafe {
             self.archetypes
-                .get_mut_or_insert_new_for_entity::<<R as contains::entity::Sealed<Entity, Indices>>::Canonical, <R as contains::entity::Sealed<Entity, Indices>>::CanonicalContainments>()
+                .get_mut_or_insert_new_for_entity::<<Registry as contains::entity::Sealed<Entity, Indices>>::Canonical, <Registry as contains::entity::Sealed<Entity, Indices>>::CanonicalContainments>()
                 .push(canonical_entity, &mut self.entity_allocator)
         }
     }
@@ -248,7 +246,7 @@ where
         entities: entities::Batch<Entities>,
     ) -> Vec<entity::Identifier>
     where
-        R: ContainsEntities<Entities, Indices>,
+        Registry: ContainsEntities<Entities, Indices>,
     {
         self.len += entities.len();
 
@@ -256,7 +254,7 @@ where
             // SAFETY: Since `entities` is already a `Batch`, then the canonical entities derived
             // from `entities` can safely be converted into a batch as well, since the components
             // will be of the same length.
-            unsafe { entities::Batch::new_unchecked(R::canonical(entities.entities)) };
+            unsafe { entities::Batch::new_unchecked(Registry::canonical(entities.entities)) };
 
         // SAFETY: Since the archetype was obtained using the `identifier_buffer` created from the
         // entities `E`, then the entities are guaranteed to be made up of componpents identified
@@ -265,7 +263,7 @@ where
         // `self.entity_allocator` is guaranteed to live as long as the archetype.
         unsafe {
             self.archetypes
-                .get_mut_or_insert_new_for_entity::<<<R as contains::entities::Sealed<Entities, Indices>>::Canonical as entities::Contains>::Entity, <R as contains::entities::Sealed<Entities, Indices>>::CanonicalContainments>()
+                .get_mut_or_insert_new_for_entity::<<<Registry as contains::entities::Sealed<Entities, Indices>>::Canonical as entities::Contains>::Entity, <Registry as contains::entities::Sealed<Entities, Indices>>::CanonicalContainments>()
                 .extend(canonical_entities, &mut self.entity_allocator)
         }
     }
@@ -334,19 +332,19 @@ where
         &'a mut self,
         #[allow(unused_variables)] query: Query<Views, Filter, ResourceViews, EntryViews>,
     ) -> Result<
-        R,
+        Registry,
         Resources,
-        result::Iter<'a, R, Filter, Views, QueryIndices>,
+        result::Iter<'a, Registry, Filter, Views, QueryIndices>,
         ResourceViews,
         EntryViews,
         EntryIndices,
     >
     where
         Views: view::Views<'a>,
-        R: ContainsQuery<'a, Filter, Views, QueryIndices>
+        Registry: ContainsQuery<'a, Filter, Views, QueryIndices>
             + registry::ContainsViews<'a, EntryViews, EntryIndices>,
         Resources: ContainsViews<'a, ResourceViews, ResourceViewsIndices>,
-        EntryViews: view::Disjoint<Views, R, DisjointIndices> + view::Views<'a>,
+        EntryViews: view::Disjoint<Views, Registry, DisjointIndices> + view::Views<'a>,
     {
         let world = self as *mut Self;
         Result {
@@ -429,19 +427,19 @@ where
         &'a mut self,
         #[allow(unused_variables)] query: Query<Views, Filter, ResourceViews, EntryViews>,
     ) -> Result<
-        R,
+        Registry,
         Resources,
-        result::ParIter<'a, R, Filter, Views, QueryIndices>,
+        result::ParIter<'a, Registry, Filter, Views, QueryIndices>,
         ResourceViews,
         EntryViews,
         EntryIndices,
     >
     where
         Views: ParViews<'a>,
-        R: ContainsParQuery<'a, Filter, Views, QueryIndices>
+        Registry: ContainsParQuery<'a, Filter, Views, QueryIndices>
             + registry::ContainsViews<'a, EntryViews, EntryIndices>,
         Resources: ContainsViews<'a, ResourceViews, ResourceViewsIndices>,
-        EntryViews: view::Disjoint<Views, R, DisjointIndices> + view::Views<'a>,
+        EntryViews: view::Disjoint<Views, Registry, DisjointIndices> + view::Views<'a>,
     {
         let world = self as *mut Self;
         Result {
@@ -465,10 +463,10 @@ where
     pub(crate) unsafe fn query_archetype_claims<'a, Views, Filter, FilterIndices, Indices>(
         &'a mut self,
         #[allow(unused_variables)] query: Query<Views, Filter>,
-    ) -> result::ArchetypeClaims<'a, R, Filter, Views, Indices>
+    ) -> result::ArchetypeClaims<'a, Registry, Filter, Views, Indices>
     where
         Views: view::Views<'a>,
-        R: ContainsFilter<And<Filter, Views>, FilterIndices>,
+        Registry: ContainsFilter<And<Filter, Views>, FilterIndices>,
     {
         // SAFETY: The safety contract here is upheld by the safety contract of this method.
         unsafe { result::ArchetypeClaims::new(self.archetypes.iter_mut()) }
@@ -529,21 +527,29 @@ where
     /// ```
     ///
     /// [`System`]: crate::system::System
-    pub fn run_system<'a, S, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>(
+    pub fn run_system<
+        'a,
+        System,
+        QueryIndices,
+        ResourceViewsIndices,
+        DisjointIndices,
+        EntryIndices,
+    >(
         &'a mut self,
-        system: &mut S,
+        system: &mut System,
     ) where
-        S: System,
-        R: ContainsQuery<'a, S::Filter, S::Views<'a>, QueryIndices>
-            + registry::ContainsViews<'a, S::EntryViews<'a>, EntryIndices>,
-        Resources: ContainsViews<'a, S::ResourceViews<'a>, ResourceViewsIndices>,
-        S::EntryViews<'a>: view::Disjoint<S::Views<'a>, R, DisjointIndices> + view::Views<'a>,
+        System: system::System,
+        Registry: ContainsQuery<'a, System::Filter, System::Views<'a>, QueryIndices>
+            + registry::ContainsViews<'a, System::EntryViews<'a>, EntryIndices>,
+        Resources: ContainsViews<'a, System::ResourceViews<'a>, ResourceViewsIndices>,
+        System::EntryViews<'a>:
+            view::Disjoint<System::Views<'a>, Registry, DisjointIndices> + view::Views<'a>,
     {
         let result = self.query(Query::<
-            S::Views<'a>,
-            S::Filter,
-            S::ResourceViews<'a>,
-            S::EntryViews<'a>,
+            System::Views<'a>,
+            System::Filter,
+            System::ResourceViews<'a>,
+            System::EntryViews<'a>,
         >::new());
         system.run(result);
     }
@@ -607,26 +613,27 @@ where
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub fn run_par_system<
         'a,
-        S,
+        ParSystem,
         QueryIndices,
         ResourceViewsIndices,
         DisjointIndices,
         EntryIndices,
     >(
         &'a mut self,
-        par_system: &mut S,
+        par_system: &mut ParSystem,
     ) where
-        S: ParSystem,
-        R: ContainsParQuery<'a, S::Filter, S::Views<'a>, QueryIndices>
-            + registry::ContainsViews<'a, S::EntryViews<'a>, EntryIndices>,
-        Resources: ContainsViews<'a, S::ResourceViews<'a>, ResourceViewsIndices>,
-        S::EntryViews<'a>: view::Disjoint<S::Views<'a>, R, DisjointIndices> + view::Views<'a>,
+        ParSystem: system::ParSystem,
+        Registry: ContainsParQuery<'a, ParSystem::Filter, ParSystem::Views<'a>, QueryIndices>
+            + registry::ContainsViews<'a, ParSystem::EntryViews<'a>, EntryIndices>,
+        Resources: ContainsViews<'a, ParSystem::ResourceViews<'a>, ResourceViewsIndices>,
+        ParSystem::EntryViews<'a>:
+            view::Disjoint<ParSystem::Views<'a>, Registry, DisjointIndices> + view::Views<'a>,
     {
         let result = self.par_query(Query::<
-            S::Views<'a>,
-            S::Filter,
-            S::ResourceViews<'a>,
-            S::EntryViews<'a>,
+            ParSystem::Views<'a>,
+            ParSystem::Filter,
+            ParSystem::ResourceViews<'a>,
+            ParSystem::EntryViews<'a>,
         >::new());
         par_system.run(result);
     }
@@ -715,11 +722,13 @@ where
     /// [`Schedule`]: trait@crate::system::schedule::Schedule
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub fn run_schedule<'a, S, Indices>(&mut self, schedule: &'a mut S)
+    pub fn run_schedule<'a, Schedule, Indices>(&mut self, schedule: &'a mut Schedule)
     where
-        S: Schedule<'a, R, Resources, Indices>,
+        Schedule: schedule::Schedule<'a, Registry, Resources, Indices>,
     {
-        schedule.as_stages().run(self, S::Stages::new_has_run());
+        schedule
+            .as_stages()
+            .run(self, Schedule::Stages::new_has_run());
     }
 
     /// Returns `true` if the world contains an entity identified by `entity_identifier`.
@@ -778,7 +787,10 @@ where
     /// [`Entry`]: crate::world::Entry
     /// [`None`]: Option::None
     #[must_use]
-    pub fn entry(&mut self, entity_identifier: entity::Identifier) -> Option<Entry<R, Resources>> {
+    pub fn entry(
+        &mut self,
+        entity_identifier: entity::Identifier,
+    ) -> Option<Entry<Registry, Resources>> {
         self.entity_allocator
             .get(entity_identifier)
             .map(|location| Entry::new(self, location))
@@ -965,7 +977,7 @@ where
     /// ```
     pub fn reserve<Entity, Indices>(&mut self, additional: usize)
     where
-        R: ContainsEntity<Entity, Indices>,
+        Registry: ContainsEntity<Entity, Indices>,
     {
         // SAFETY: Since the canonical entity form is used, the archetype obtained is guaranteed to
         // be the unique archetype for entities of type `Entity`.
@@ -975,8 +987,8 @@ where
         // archetype.
         unsafe {
             self.archetypes
-                .get_mut_or_insert_new_for_entity::<<R as contains::entity::Sealed<Entity, Indices>>::Canonical, <R as contains::entity::Sealed<Entity, Indices>>::CanonicalContainments>()
-                .reserve::<<R as contains::entity::Sealed<Entity, Indices>>::Canonical>(additional);
+                .get_mut_or_insert_new_for_entity::<<Registry as contains::entity::Sealed<Entity, Indices>>::Canonical, <Registry as contains::entity::Sealed<Entity, Indices>>::CanonicalContainments>()
+                .reserve::<<Registry as contains::entity::Sealed<Entity, Indices>>::Canonical>(additional);
         }
     }
 
@@ -1075,7 +1087,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::World;
+    #[cfg(feature = "rayon")]
+    use crate::system::ParSystem;
     #[cfg(feature = "rayon")]
     use crate::system::{
         schedule,
@@ -1088,13 +1102,20 @@ mod tests {
             filter,
             result,
             view,
+            Result,
             Views,
         },
+        registry,
         resources,
+        system::System,
         Entity,
+        Query,
         Registry,
     };
-    use alloc::vec;
+    use alloc::{
+        vec,
+        vec::Vec,
+    };
     use claims::{
         assert_none,
         assert_some,

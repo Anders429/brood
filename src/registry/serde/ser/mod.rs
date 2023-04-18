@@ -1,7 +1,7 @@
 mod sealed;
 
 use crate::{
-    component::Component,
+    component,
     registry::Null,
 };
 use sealed::Sealed;
@@ -17,9 +17,9 @@ pub trait Serialize: Sealed {}
 
 impl Serialize for Null {}
 
-impl<C, R> Serialize for (C, R)
+impl<Component, Registry> Serialize for (Component, Registry)
 where
-    C: Component + serde::Serialize,
-    R: Serialize,
+    Component: component::Component + serde::Serialize,
+    Registry: Serialize,
 {
 }

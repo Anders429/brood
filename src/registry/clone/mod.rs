@@ -1,7 +1,7 @@
 mod sealed;
 
 use crate::{
-    component::Component,
+    component,
     registry::Null,
 };
 use core::clone;
@@ -15,9 +15,9 @@ pub trait Clone: Sealed {}
 
 impl Clone for Null {}
 
-impl<C, R> Clone for (C, R)
+impl<Component, Registry> Clone for (Component, Registry)
 where
-    C: clone::Clone + Component,
-    R: Clone,
+    Component: clone::Clone + component::Component,
+    Registry: Clone,
 {
 }

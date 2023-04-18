@@ -68,7 +68,7 @@ pub(crate) use sealed::{
 };
 
 use crate::{
-    component::Component,
+    component,
     hlist::define_null_uninstantiable,
 };
 use sealed::Sealed;
@@ -103,10 +103,10 @@ pub trait Registry: Sealed + 'static {}
 
 impl Registry for Null {}
 
-impl<C, R> Registry for (C, R)
+impl<Component, Registry> self::Registry for (Component, Registry)
 where
-    C: Component,
-    R: Registry,
+    Component: component::Component,
+    Registry: self::Registry,
 {
 }
 
