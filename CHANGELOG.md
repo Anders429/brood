@@ -29,6 +29,7 @@
 - `World::run_system()` now only requires a single parameter for schedule indices.
 ### Fixed
 - `Schedule`s can now no longer access non-`Sync` components and resources.
+- Multiple calls to `Entry::add()` or `Entry::remove()` that change the shape of the entity now no longer accesses the wrong internal entity row, preventing potential undefined behavior.
 
 ## 0.8.2 - 2023-04-02
 ### Fixed

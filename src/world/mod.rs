@@ -2697,6 +2697,21 @@ mod tests {
     }
 
     #[test]
+    fn entry_multiple_shape_changes() {
+        let mut world = World::<Registry>::new();
+
+        let entity_identifier = world.insert(entity!(A(1), B('a')));
+        let mut entry = assert_some!(world.entry(entity_identifier));
+
+        entry.remove::<B, _>();
+        entry.remove::<A, _>();
+
+        assert_none!(
+            entry.query(Query::<Views!(), filter::Or<filter::Has<A>, filter::Has<B>>>::new())
+        );
+    }
+
+    #[test]
     fn remove() {
         let mut world = World::<Registry>::new();
 
