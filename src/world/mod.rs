@@ -2706,7 +2706,7 @@ mod tests {
         entry.remove::<B, _>();
         entry.remove::<A, _>();
 
-        assert_some!(
+        assert_none!(
             entry.query(Query::<Views!(), filter::Or<filter::Has<A>, filter::Has<B>>>::new())
         );
     }
