@@ -163,14 +163,18 @@ where
             };
 
             // Update the location.
+            // SAFETY: The archetype is guaranteed to outlive the location, as archetype is stored
+            // in the same world where the location is stored. Additionally, the location stored in
+            // this entry will be outlived by archetype due to its lifetime guarantees.
+            let location = Location::new(unsafe { archetype.identifier() }, index);
             // SAFETY: `entity_identifier` is guaranteed at creation of this `Entry` to be
             // contained in `self.world.entity_allocator`.
             unsafe {
-                self.world.entity_allocator.modify_location_unchecked(
-                    entity_identifier,
-                    Location::new(archetype.identifier(), index),
-                );
+                self.world
+                    .entity_allocator
+                    .modify_location_unchecked(entity_identifier, location);
             }
+            self.location = location;
         }
     }
 
@@ -256,14 +260,18 @@ where
             };
 
             // Update the location.
+            // SAFETY: The archetype is guaranteed to outlive the location, as archetype is stored
+            // in the same world where the location is stored. Additionally, the location stored in
+            // this entry will be outlived by archetype due to its lifetime guarantees.
+            let location = Location::new(unsafe { archetype.identifier() }, index);
             // SAFETY: `entity_identifier` is guaranteed at creation of this `Entry` to be
             // contained in `self.world.entity_allocator`.
             unsafe {
-                self.world.entity_allocator.modify_location_unchecked(
-                    entity_identifier,
-                    Location::new(archetype.identifier(), index),
-                );
+                self.world
+                    .entity_allocator
+                    .modify_location_unchecked(entity_identifier, location);
             }
+            self.location = location;
         }
     }
 
