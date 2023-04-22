@@ -1,7 +1,7 @@
 mod sealed;
 
 use crate::{
-    component::Component,
+    component,
     registry::Null,
 };
 use core::cmp;
@@ -17,10 +17,10 @@ pub trait PartialEq: Sealed {}
 
 impl PartialEq for Null {}
 
-impl<C, R> PartialEq for (C, R)
+impl<Component, Registry> PartialEq for (Component, Registry)
 where
-    C: Component + cmp::PartialEq,
-    R: PartialEq,
+    Component: component::Component + cmp::PartialEq,
+    Registry: PartialEq,
 {
 }
 
@@ -34,9 +34,9 @@ pub trait Eq: PartialEq {}
 
 impl Eq for Null {}
 
-impl<C, R> Eq for (C, R)
+impl<Component, Registry> Eq for (Component, Registry)
 where
-    C: Component + cmp::Eq,
-    R: Eq,
+    Component: component::Component + cmp::Eq,
+    Registry: Eq,
 {
 }

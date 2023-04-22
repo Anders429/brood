@@ -34,9 +34,9 @@ use crate::{
         },
         Entity,
     },
-    query::view::{
-        Views,
-        ViewsSealed,
+    query::{
+        view,
+        view::ViewsSealed,
     },
     registry,
     registry::{
@@ -238,18 +238,18 @@ where
 
     /// # Safety
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
-    pub(crate) unsafe fn view<'a, V, P, I, Q>(
+    pub(crate) unsafe fn view<'a, Views, Indices>(
         &mut self,
-    ) -> <<<R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable as ContainsViewsOuter<
+    ) -> <<<R as ContainsViewsSealed<'a, Views, Indices>>::Viewable as ContainsViewsOuter<
         'a,
-        V,
-        P,
-        I,
-        Q,
+        Views,
+        <R as ContainsViewsSealed<'a, Views, Indices>>::Containments,
+        <R as ContainsViewsSealed<'a, Views, Indices>>::Indices,
+        <R as ContainsViewsSealed<'a, Views, Indices>>::ReshapeIndices,
     >>::Canonical as ViewsSealed<'a>>::Results
     where
-        V: Views<'a>,
-        R: ContainsViews<'a, V, P, I, Q>,
+        Views: view::Views<'a>,
+        R: ContainsViews<'a, Views, Indices>,
     {
         // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`
         // for each component `C` identified in `self.identifier` in the canonical order defined by
@@ -258,7 +258,7 @@ where
         // `self.entity_identifiers` also contains the raw parts for a valid
         // `Vec<entity::Identifier>` of size `self.length`.
         unsafe {
-            <R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable::view(
+            <R as ContainsViewsSealed<'a, Views, Indices>>::Viewable::view(
                 &self.components,
                 self.entity_identifiers,
                 self.length,
@@ -309,19 +309,19 @@ where
     /// Each component viewed by `V` must also be identified by this archetype's `Identifier`.
     ///
     /// The index `index` must be a valid index into this archetype.
-    pub(crate) unsafe fn view_row_unchecked<'a, V, P, I, Q>(
+    pub(crate) unsafe fn view_row_unchecked<'a, Views, Indices>(
         &mut self,
         index: usize,
-    ) -> <<R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable as ContainsViewsOuter<
+    ) -> <<R as ContainsViewsSealed<'a, Views, Indices>>::Viewable as ContainsViewsOuter<
         'a,
-        V,
-        P,
-        I,
-        Q,
+        Views,
+        <R as ContainsViewsSealed<'a, Views, Indices>>::Containments,
+        <R as ContainsViewsSealed<'a, Views, Indices>>::Indices,
+        <R as ContainsViewsSealed<'a, Views, Indices>>::ReshapeIndices,
     >>::Canonical
     where
-        V: Views<'a>,
-        R: ContainsViews<'a, V, P, I, Q>,
+        Views: view::Views<'a>,
+        R: ContainsViews<'a, Views, Indices>,
     {
         // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`
         // for each component `C` identified in `self.identifier` in the canonical order defined by
@@ -334,7 +334,7 @@ where
         // this archetype, and therefore within the bounds of each column and the entity
         // identifiers of this archetype.
         unsafe {
-            <R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable::view_one(
+            <R as ContainsViewsSealed<'a, Views, Indices>>::Viewable::view_one(
                 index,
                 &self.components,
                 self.entity_identifiers,
@@ -346,19 +346,13 @@ where
 
     /// # Safety
     /// The index `index` must be a valid index into this archetype.
-    pub(crate) unsafe fn view_row_maybe_uninit_unchecked<'a, V, P, I, Q>(
+    pub(crate) unsafe fn view_row_maybe_uninit_unchecked<'a, Views, Indices>(
         &mut self,
         index: usize,
-    ) -> <<<R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable as ContainsViewsOuter<
-        'a,
-        V,
-        P,
-        I,
-        Q,
-    >>::Canonical as ViewsSealed<'a>>::MaybeUninit
+    ) -> Views::MaybeUninit
     where
-        V: Views<'a>,
-        R: ContainsViews<'a, V, P, I, Q>,
+        Views: view::Views<'a>,
+        R: ContainsViews<'a, Views, Indices>,
     {
         // SAFETY: `self.components` contains the raw parts for `Vec<C>`s of size `self.length`
         // for each component `C` identified in `self.identifier` in the canonical order defined by
@@ -371,7 +365,7 @@ where
         // this archetype, and therefore within the bounds of each column and the entity
         // identifiers of this archetype.
         unsafe {
-            <R as ContainsViewsSealed<'a, V, P, I, Q>>::Viewable::view_one_maybe_uninit(
+            <R as ContainsViewsSealed<'a, Views, Indices>>::Viewable::view_one_maybe_uninit(
                 index,
                 &self.components,
                 self.entity_identifiers,

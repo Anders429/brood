@@ -1,21 +1,16 @@
 use crate::{
     archetype::Archetype,
     archetypes,
+    hlist::Reshape,
     query::{
         filter::And,
-        result::{
-            ParResults,
-            Reshape,
-        },
-        view::{
-            ParViews,
-            ParViewsSeal,
-        },
+        result::ParResults,
+        view::ParViews,
     },
+    registry,
     registry::{
         contains::filter::Sealed as ContainsFilterSealed,
         ContainsParQuery,
-        Registry,
     },
 };
 use core::marker::PhantomData;
@@ -78,118 +73,114 @@ use rayon::iter::{
 /// [`result!`]: crate::query::result!
 /// [`World`]: crate::world::World
 #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-pub struct ParIter<'a, R, F, FI, V, VI, P, I, Q>
+pub struct ParIter<'a, Registry, Filter, Views, Indices>
 where
-    R: Registry,
+    Registry: registry::Registry,
 {
-    archetypes_iter: archetypes::ParIterMut<'a, R>,
+    archetypes_iter: archetypes::ParIterMut<'a, Registry>,
 
-    filter: PhantomData<F>,
-    views: PhantomData<V>,
-    filter_indices: PhantomData<FI>,
-    view_filter_indices: PhantomData<VI>,
-    view_containments: PhantomData<P>,
-    view_indices: PhantomData<I>,
-    reshape_indices: PhantomData<Q>,
+    filter: PhantomData<Filter>,
+    views: PhantomData<Views>,
+    indices: PhantomData<Indices>,
 }
 
-impl<'a, R, F, FI, V, VI, P, I, Q> ParIter<'a, R, F, FI, V, VI, P, I, Q>
+impl<'a, Registry, Filter, Views, Indices> ParIter<'a, Registry, Filter, Views, Indices>
 where
-    R: Registry,
+    Registry: registry::Registry,
 {
-    pub(crate) fn new(archetypes_iter: archetypes::ParIterMut<'a, R>) -> Self {
+    pub(crate) fn new(archetypes_iter: archetypes::ParIterMut<'a, Registry>) -> Self {
         Self {
             archetypes_iter,
 
             filter: PhantomData,
             views: PhantomData,
-            filter_indices: PhantomData,
-            view_filter_indices: PhantomData,
-            view_containments: PhantomData,
-            view_indices: PhantomData,
-            reshape_indices: PhantomData,
+            indices: PhantomData,
         }
     }
 }
 
 // SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Send for ParIter<'a, R, F, FI, V, VI, P, I, Q> where
-    R: Registry
+unsafe impl<'a, Registry, Filter, Views, Indices> Send
+    for ParIter<'a, Registry, Filter, Views, Indices>
+where
+    Registry: registry::Registry,
 {
 }
 
 // SAFETY: This type is safe to share between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<'a, R, F, FI, V, VI, P, I, Q> Sync for ParIter<'a, R, F, FI, V, VI, P, I, Q> where
-    R: Registry
+unsafe impl<'a, Registry, Filter, Views, Indices> Sync
+    for ParIter<'a, Registry, Filter, Views, Indices>
+where
+    Registry: registry::Registry,
 {
 }
 
-impl<'a, R, F, FI, V, VI, P, I, Q> ParallelIterator for ParIter<'a, R, F, FI, V, VI, P, I, Q>
+impl<'a, Registry, Filter, Views, Indices> ParallelIterator
+    for ParIter<'a, Registry, Filter, Views, Indices>
 where
-    V: ParViews<'a>,
-    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>,
+    Views: ParViews<'a>,
+    Registry: ContainsParQuery<'a, Filter, Views, Indices>,
 {
-    type Item = <<V as ParViewsSeal<'a>>::ParResults as ParResults>::View;
+    type Item = <<Views::ParResults as ParResults>::Iterator as ParallelIterator>::Item;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
     where
         C: UnindexedConsumer<Self::Item>,
     {
-        let consumer = ResultsConsumer::<_, F, FI, V, VI, P, I, Q>::new(consumer);
+        let consumer = ResultsConsumer::<_, Filter, Views, Indices>::new(consumer);
         self.archetypes_iter.drive_unindexed(consumer)
     }
 }
 
-struct ResultsConsumer<C, F, FI, V, VI, P, I, Q> {
-    base: C,
+struct ResultsConsumer<Consumer, Filter, Views, Indices> {
+    base: Consumer,
 
-    filter: PhantomData<F>,
-    views: PhantomData<V>,
-    filter_indices: PhantomData<FI>,
-    view_filter_indices: PhantomData<VI>,
-    view_containments: PhantomData<P>,
-    view_indices: PhantomData<I>,
-    reshape_indices: PhantomData<Q>,
+    filter: PhantomData<Filter>,
+    views: PhantomData<Views>,
+    indices: PhantomData<Indices>,
 }
 
-impl<C, F, FI, V, VI, P, I, Q> ResultsConsumer<C, F, FI, V, VI, P, I, Q> {
-    fn new(base: C) -> Self {
+impl<Consumer, Filter, Views, Indices> ResultsConsumer<Consumer, Filter, Views, Indices> {
+    fn new(base: Consumer) -> Self {
         Self {
             base,
 
             filter: PhantomData,
             views: PhantomData,
-            filter_indices: PhantomData,
-            view_filter_indices: PhantomData,
-            view_containments: PhantomData,
-            view_indices: PhantomData,
-            reshape_indices: PhantomData,
+            indices: PhantomData,
         }
     }
 }
 
 // SAFETY: This type is safe to send between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<C, F, FI, V, VI, P, I, Q> Send for ResultsConsumer<C, F, FI, V, VI, P, I, Q> {}
+unsafe impl<Consumer, Filter, Views, Indices> Send
+    for ResultsConsumer<Consumer, Filter, Views, Indices>
+{
+}
 
 // SAFETY: This type is safe to share between threads, as its mutable views are guaranteed to be
 // exclusive.
-unsafe impl<C, F, FI, V, VI, P, I, Q> Sync for ResultsConsumer<C, F, FI, V, VI, P, I, Q> {}
-
-impl<'a, C, R, F, FI, V, VI, P, I, Q> Consumer<&'a mut Archetype<R>>
-    for ResultsConsumer<C, F, FI, V, VI, P, I, Q>
-where
-    C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
-    V: ParViews<'a>,
-    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>,
+unsafe impl<Consumer, Filter, Views, Indices> Sync
+    for ResultsConsumer<Consumer, Filter, Views, Indices>
 {
-    type Folder = ResultsFolder<C, C::Result, F, FI, V, VI, P, I, Q>;
-    type Reducer = C::Reducer;
-    type Result = C::Result;
+}
 
-    fn split_at(self, index: usize) -> (Self, Self, C::Reducer) {
+impl<'a, _Consumer, Registry, Filter, Views, Indices> Consumer<&'a mut Archetype<Registry>>
+    for ResultsConsumer<_Consumer, Filter, Views, Indices>
+where
+    _Consumer:
+        UnindexedConsumer<<<Views::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
+    Views: ParViews<'a>,
+    Registry: ContainsParQuery<'a, Filter, Views, Indices>,
+{
+    type Folder = ResultsFolder<_Consumer, _Consumer::Result, Filter, Views, Indices>;
+    type Reducer = _Consumer::Reducer;
+    type Result = _Consumer::Result;
+
+    fn split_at(self, index: usize) -> (Self, Self, _Consumer::Reducer) {
         let (left, right, reducer) = self.base.split_at(index);
         (
             ResultsConsumer::new(left),
@@ -205,11 +196,7 @@ where
 
             filter: PhantomData,
             views: PhantomData,
-            filter_indices: PhantomData,
-            view_filter_indices: PhantomData,
-            view_containments: PhantomData,
-            view_indices: PhantomData,
-            reshape_indices: PhantomData,
+            indices: PhantomData,
         }
     }
 
@@ -218,12 +205,13 @@ where
     }
 }
 
-impl<'a, C, R, F, FI, V, VI, P, I, Q> UnindexedConsumer<&'a mut Archetype<R>>
-    for ResultsConsumer<C, F, FI, V, VI, P, I, Q>
+impl<'a, Consumer, Registry, Filter, Views, Indices> UnindexedConsumer<&'a mut Archetype<Registry>>
+    for ResultsConsumer<Consumer, Filter, Views, Indices>
 where
-    C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
-    V: ParViews<'a>,
-    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>,
+    Consumer:
+        UnindexedConsumer<<<Views::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
+    Views: ParViews<'a>,
+    Registry: ContainsParQuery<'a, Filter, Views, Indices>,
 {
     fn split_off_left(&self) -> Self {
         ResultsConsumer::new(self.base.split_off_left())
@@ -234,40 +222,40 @@ where
     }
 }
 
-struct ResultsFolder<C, P, F, FI, V, VI, P_, I, Q> {
-    base: C,
-    previous: Option<P>,
+struct ResultsFolder<Consumer, Previous, Filter, Views, Indices> {
+    base: Consumer,
+    previous: Option<Previous>,
 
-    filter: PhantomData<F>,
-    views: PhantomData<V>,
-    filter_indices: PhantomData<FI>,
-    view_filter_indices: PhantomData<VI>,
-    view_containments: PhantomData<P_>,
-    view_indices: PhantomData<I>,
-    reshape_indices: PhantomData<Q>,
+    filter: PhantomData<Filter>,
+    views: PhantomData<Views>,
+    indices: PhantomData<Indices>,
 }
 
-impl<'a, C, R, F, FI, V, VI, P, I, Q> Folder<&'a mut Archetype<R>>
-    for ResultsFolder<C, C::Result, F, FI, V, VI, P, I, Q>
+impl<'a, Consumer, Registry, Filter, Views, Indices> Folder<&'a mut Archetype<Registry>>
+    for ResultsFolder<Consumer, Consumer::Result, Filter, Views, Indices>
 where
-    C: UnindexedConsumer<<<V::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
-    R: ContainsParQuery<'a, F, FI, V, VI, P, I, Q>,
-    V: ParViews<'a>,
+    Consumer:
+        UnindexedConsumer<<<Views::ParResults as ParResults>::Iterator as ParallelIterator>::Item>,
+    Registry: ContainsParQuery<'a, Filter, Views, Indices>,
+    Views: ParViews<'a>,
 {
-    type Result = C::Result;
+    type Result = Consumer::Result;
 
-    fn consume(self, archetype: &'a mut Archetype<R>) -> Self {
+    fn consume(self, archetype: &'a mut Archetype<Registry>) -> Self {
         // SAFETY: The `R` on which `filter()` is called is the same `R` over which the identifier
         // is generic over. Additionally, the identifier reference created here will not outlive
         // `archetype`.
         if unsafe {
-            <R as ContainsFilterSealed<And<V, F>, And<VI, FI>>>::filter(archetype.identifier())
+            <Registry as ContainsFilterSealed<
+                And<Views, Filter>,
+                And<Registry::ViewsFilterIndices, Registry::FilterIndices>,
+            >>::filter(archetype.identifier())
         } {
             let consumer = self.base.split_off_left();
             let result =
                 // SAFETY: Each component viewed by `V` is guaranteed to be within the `archetype`
                 // since the `filter` function in the if-statement returned `true`.
-                unsafe { archetype.par_view::<V, _, _, _>() }.reshape().into_parallel_iterator().drive_unindexed(consumer);
+                unsafe { archetype.par_view::<Views, _, _, _>() }.reshape().into_parallel_iterator().drive_unindexed(consumer);
 
             let previous = match self.previous {
                 None => Some(result),
@@ -283,11 +271,7 @@ where
 
                 filter: self.filter,
                 views: self.views,
-                filter_indices: self.filter_indices,
-                view_filter_indices: self.view_filter_indices,
-                view_containments: self.view_containments,
-                view_indices: self.view_indices,
-                reshape_indices: self.reshape_indices,
+                indices: self.indices,
             }
         } else {
             self

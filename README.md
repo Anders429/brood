@@ -75,7 +75,7 @@ Note that entities stored in `world` above can be made up of any subset of the `
 To operate on the entities stored in a `World`, a `System` must be used. `System`s are defined to operate on any entities containing a specified set of components, reading and modifying those components. An example system could be defined and run as follows:
 
 ``` rust
-use brood::{query::{filter, result, Views}, registry::ContainsQuery, system::System};
+use brood::{query::{filter, result, Views}, registry, system::System};
 
 struct UpdatePosition;
 
@@ -85,11 +85,12 @@ impl System for UpdatePosition {
     type ResourceViews: Views!();
     type EntryViews: Views!();
 
-    fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+    fn run<'a, R, S, I, E>(
         &mut self,
-        query_results: Result<R, S, result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>, Self::ResourceViews<'a>, Self::EntryViews<'a>, (EP, EI, EQ)>,
+        query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
     ) where
-        R: ContainsQuery<Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        R: registry::Registry,
+        I: Iterator<Item = Self::Views<'a>>,
     {
         for result!(position, velocity) in query_results.iter {
             position.x += velocity.x;
@@ -160,7 +161,8 @@ Note that there are two modes for serialization, depending on whether the serial
 To parallelize system operations on entities (commonly referred to as inner-parallelism), a `ParSystem` can be used instead of a standard `System`. This will allow the `ParSystem`'s operations to be spread across multiple CPUs. For example, a `ParSystem` can be defined as follows:
 
 ``` rust
-use brood::{entity, query::{filter, result, Views}, Registry, registry::ContainsParQuery, World, system::ParSystem};
+use brood::{entity, query::{filter, result, Views}, Registry, registry, World, system::ParSystem};
+use rayon::iter::ParallelIterator;
 
 struct Position {
     x: f32,
@@ -195,11 +197,12 @@ impl ParSystem for UpdatePosition {
     type ResourceViews: Views!();
     type EntryViews: Views!();
 
-    fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+    fn run<'a, R, S, I, E>(
         &mut self,
-        query_results: Result<R, S, result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>, Self::ResourceViews<'a>, Self::EntryViews<'a>, (EP, EI, EQ)>,
+        query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
     ) where
-        R: ContainsParQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        R: registry::Registry,
+        I: ParallelIterator<Item = Self::Views<'a>>,
     {
         query_results.iter.for_each(|result!(position, velocity)| {
             position.x += velocity.x;
@@ -219,7 +222,7 @@ Multiple `System`s and `ParSystem`s can be run in parallel as well by defining a
 Define and run a `Schedule` that contains multiple `System`s as follows:
 
 ``` rust
-use brood::{entity, query::{filter, result, Views}, Registry, registry::ContainsQuery, World, system::{schedule, schedule::task, System}};
+use brood::{entity, query::{filter, result, Views}, Registry, registry, World, system::{schedule, schedule::task, System}};
 
 struct Position {
     x: f32,
@@ -256,11 +259,12 @@ impl System for UpdatePosition {
     type ResourceViews: Views!();
     type EntryViews: Views!();
 
-    fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+    fn run<'a, R, S, I, E>(
         &mut self,
-        query_results: Result<R, S, result::Iter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>, Self::ResourceViews<'a>, Self::EntryViews<'a>, (EP, EI, EQ)>,
+        query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
     ) where
-        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        R: registry::Registry,
+        I: Iterator<Item = Self::Views<'a>>,
     {
         for result!(position, velocity) in query_results.iter {
             position.x += velocity.x;
@@ -277,11 +281,12 @@ impl System for UpdateIsMoving {
     type ResourceViews: Views!();
     type EntryViews: Views!();
 
-    fn run<'a, R, S, FI, VI, P, I, Q, EP, EI, EQ>(
+    fn run<'a, R, S, I, E>(
         &mut self,
-        query_results: Result<R, S, result::ParIter<'a, R, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>, Self::ResourceViews<'a>, Self::EntryViews<'a>, (EP, EI, EQ)>,
+        query_results: Result<R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
     ) where
-        R: ContainsQuery<'a, Self::Filter, FI, Self::Views<'a>, VI, P, I, Q>,
+        R: registry::Registry,
+        I: Iterator<Item = Self::Views<'a>>,
     {
         for result!(velocity, is_moving) in query_results.iter {
             is_moving.0 = velocity.x != 0.0 || velocity.y != 0.0;

@@ -35,6 +35,7 @@
 //! world.insert(entity!());
 //! ```
 //!
+//! [`Component`]: crate::component::Component
 //! [`Entity`]: crate::entity::Entity
 //! [`entity!`]: crate::entity!
 //! [`Identifier`]: crate::entity::Identifier
@@ -43,17 +44,15 @@
 
 pub(crate) mod allocator;
 
-mod get;
 mod identifier;
 mod sealed;
 
 pub use identifier::Identifier;
 
 pub(crate) use allocator::Allocator;
-pub(crate) use get::Get;
 
 use crate::{
-    component::Component,
+    component,
     hlist::define_null,
 };
 use sealed::Sealed;
@@ -87,10 +86,10 @@ pub trait Entity: Sealed + 'static {}
 
 impl Entity for Null {}
 
-impl<C, E> Entity for (C, E)
+impl<Component, Entity> self::Entity for (Component, Entity)
 where
-    C: Component,
-    E: Entity,
+    Component: component::Component,
+    Entity: self::Entity,
 {
 }
 

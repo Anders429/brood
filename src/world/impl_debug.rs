@@ -5,9 +5,9 @@ use crate::{
 };
 use core::fmt;
 
-impl<R, Resources> fmt::Debug for World<R, Resources>
+impl<Registry, Resources> fmt::Debug for World<Registry, Resources>
 where
-    R: registry::Debug,
+    Registry: registry::Debug,
     Resources: resource::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -32,7 +32,6 @@ pub(crate) mod contains;
 mod clone;
 mod debug;
 mod eq;
-mod get;
 mod sealed;
 #[cfg(feature = "serde")]
 mod serde;
@@ -60,7 +59,6 @@ pub use eq::{
 
 #[cfg(feature = "rayon")]
 pub(crate) use contains::ContainsParViews;
-pub(crate) use get::Get;
 #[cfg(feature = "rayon")]
 pub(crate) use sealed::CanonicalParViews;
 pub(crate) use sealed::{
@@ -70,7 +68,7 @@ pub(crate) use sealed::{
 };
 
 use crate::{
-    component::Component,
+    component,
     hlist::define_null_uninstantiable,
 };
 use sealed::Sealed;
@@ -105,10 +103,10 @@ pub trait Registry: Sealed + 'static {}
 
 impl Registry for Null {}
 
-impl<C, R> Registry for (C, R)
+impl<Component, Registry> self::Registry for (Component, Registry)
 where
-    C: Component,
-    R: Registry,
+    Component: component::Component,
+    Registry: self::Registry,
 {
 }
 

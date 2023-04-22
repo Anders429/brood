@@ -6,7 +6,6 @@ use super::{
 };
 use crate::{
     query::{
-        filter::Filter,
         view,
         view::Views,
         Query,
@@ -23,124 +22,31 @@ use crate::{
 };
 
 /// A task that can be run in a schedule.
-pub trait Task<
-    'a,
-    R,
-    Resources,
-    SFI,
-    SVI,
-    SP,
-    SI,
-    SQ,
-    ResourceViewsContainments,
-    ResourceViewsIndices,
-    ResourceViewsCanonicalContainments,
-    ResourceViewsReshapeIndices,
-    EntryViewsContainments,
-    EntryViewsIndices,
-    EntryViewsReshapeIndices,
-    EntryViewsInverseIndices,
-    EntryViewsOppositeContainments,
-    EntryViewsOppositeIndices,
-    EntryViewsOppositeReshapeIndices,
-    EntryViewsOppositeInverseIndices,
-    EntryContainments,
-    EntryIndices,
-    EntryReshapeIndices,
-> where
+pub trait Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
+where
     R: Registry,
 {
     /// The components viewed by this task.
-    type Views: Views<'a> + Filter;
+    type Views: Views<'a> + Send;
     /// A filter applied to the components viewed by this task.
-    type Filter: Filter;
+    type Filter;
 
     /// Executes the task over the given world.
     fn run(&mut self, world: SendableWorld<R, Resources>);
 }
 
-impl<
-        'a,
-        R,
-        Resources,
-        S,
-        SFI,
-        SVI,
-        SP,
-        SI,
-        SQ,
-        ResourceViewsContainments,
-        ResourceViewsIndices,
-        ResourceViewsCanonicalContainments,
-        ResourceViewsReshapeIndices,
-        EntryViewsContainments,
-        EntryViewsIndices,
-        EntryViewsReshapeIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeContainments,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeReshapeIndices,
-        EntryViewsOppositeInverseIndices,
-        EntryContainments,
-        EntryIndices,
-        EntryReshapeIndices,
-    >
-    Task<
-        'a,
-        R,
-        Resources,
-        SFI,
-        SVI,
-        SP,
-        SI,
-        SQ,
-        ResourceViewsContainments,
-        ResourceViewsIndices,
-        ResourceViewsCanonicalContainments,
-        ResourceViewsReshapeIndices,
-        EntryViewsContainments,
-        EntryViewsIndices,
-        EntryViewsReshapeIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeContainments,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeReshapeIndices,
-        EntryViewsOppositeInverseIndices,
-        EntryContainments,
-        EntryIndices,
-        EntryReshapeIndices,
-    > for System<S>
+impl<'a, R, Resources, S, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
+    Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
+    for System<S>
 where
     S: system::System + Send,
-    R: ContainsQuery<'a, S::Filter, SFI, S::Views<'a>, SVI, SP, SI, SQ>
-        + registry::ContainsViews<
-            'a,
-            S::EntryViews<'a>,
-            EntryContainments,
-            EntryIndices,
-            EntryReshapeIndices,
-        >,
+    R: ContainsQuery<'a, S::Filter, S::Views<'a>, QueryIndices>
+        + registry::ContainsViews<'a, S::EntryViews<'a>, EntryIndices>,
     Resources: 'a,
-    Resources: ContainsViews<
-        'a,
-        S::ResourceViews<'a>,
-        ResourceViewsContainments,
-        ResourceViewsIndices,
-        ResourceViewsCanonicalContainments,
-        ResourceViewsReshapeIndices,
-    >,
-    S::EntryViews<'a>: view::Disjoint<
-            S::Views<'a>,
-            R,
-            EntryViewsContainments,
-            EntryViewsIndices,
-            EntryViewsReshapeIndices,
-            EntryViewsInverseIndices,
-            EntryViewsOppositeContainments,
-            EntryViewsOppositeIndices,
-            EntryViewsOppositeReshapeIndices,
-            EntryViewsOppositeInverseIndices,
-        > + Views<'a>,
+    Resources: ContainsViews<'a, S::ResourceViews<'a>, ResourceViewsIndices>,
+    S::Views<'a>: Send,
+    S::ResourceViews<'a>: Send,
+    S::EntryViews<'a>: view::Disjoint<S::Views<'a>, R, DisjointIndices> + Views<'a> + Send,
 {
     type Views = S::Views<'a>;
     type Filter = S::Filter;
@@ -155,88 +61,18 @@ where
     }
 }
 
-impl<
-        'a,
-        P,
-        R,
-        Resources,
-        SFI,
-        SVI,
-        SP,
-        SI,
-        SQ,
-        ResourceViewsContainments,
-        ResourceViewsIndices,
-        ResourceViewsCanonicalContainments,
-        ResourceViewsReshapeIndices,
-        EntryViewsContainments,
-        EntryViewsIndices,
-        EntryViewsReshapeIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeContainments,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeReshapeIndices,
-        EntryViewsOppositeInverseIndices,
-        EntryContainments,
-        EntryIndices,
-        EntryReshapeIndices,
-    >
-    Task<
-        'a,
-        R,
-        Resources,
-        SFI,
-        SVI,
-        SP,
-        SI,
-        SQ,
-        ResourceViewsContainments,
-        ResourceViewsIndices,
-        ResourceViewsCanonicalContainments,
-        ResourceViewsReshapeIndices,
-        EntryViewsContainments,
-        EntryViewsIndices,
-        EntryViewsReshapeIndices,
-        EntryViewsInverseIndices,
-        EntryViewsOppositeContainments,
-        EntryViewsOppositeIndices,
-        EntryViewsOppositeReshapeIndices,
-        EntryViewsOppositeInverseIndices,
-        EntryContainments,
-        EntryIndices,
-        EntryReshapeIndices,
-    > for ParSystem<P>
+impl<'a, P, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
+    Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
+    for ParSystem<P>
 where
     P: system::ParSystem + Send,
-    R: ContainsParQuery<'a, P::Filter, SFI, P::Views<'a>, SVI, SP, SI, SQ>
-        + registry::ContainsViews<
-            'a,
-            P::EntryViews<'a>,
-            EntryContainments,
-            EntryIndices,
-            EntryReshapeIndices,
-        >,
+    R: ContainsParQuery<'a, P::Filter, P::Views<'a>, QueryIndices>
+        + registry::ContainsViews<'a, P::EntryViews<'a>, EntryIndices>,
     Resources: 'a,
-    Resources: ContainsViews<
-        'a,
-        P::ResourceViews<'a>,
-        ResourceViewsContainments,
-        ResourceViewsIndices,
-        ResourceViewsCanonicalContainments,
-        ResourceViewsReshapeIndices,
-    >,
-    P::EntryViews<'a>: view::Disjoint<
-            P::Views<'a>,
-            R,
-            EntryViewsContainments,
-            EntryViewsIndices,
-            EntryViewsReshapeIndices,
-            EntryViewsInverseIndices,
-            EntryViewsOppositeContainments,
-            EntryViewsOppositeIndices,
-            EntryViewsOppositeReshapeIndices,
-            EntryViewsOppositeInverseIndices,
-        > + Views<'a>,
+    Resources: ContainsViews<'a, P::ResourceViews<'a>, ResourceViewsIndices>,
+    P::Views<'a>: Send,
+    P::ResourceViews<'a>: Send,
+    P::EntryViews<'a>: view::Disjoint<P::Views<'a>, R, DisjointIndices> + Views<'a> + Send,
 {
     type Views = P::Views<'a>;
     type Filter = P::Filter;

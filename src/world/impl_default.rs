@@ -1,12 +1,12 @@
 use crate::{
-    registry::Registry,
+    registry,
     resource,
     World,
 };
 
-impl<R, Resources> Default for World<R, Resources>
+impl<Registry, Resources> Default for World<Registry, Resources>
 where
-    R: Registry,
+    Registry: registry::Registry,
     Resources: resource::Resources + Default,
 {
     fn default() -> Self {

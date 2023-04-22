@@ -2,11 +2,13 @@ use crate::{
     archetype,
     component::Component,
     entity,
+    hlist::{
+        Get,
+        Reshape,
+    },
     query::{
-        result,
         view,
         view::{
-            Reshape,
             Views,
             ViewsSealed,
         },
@@ -28,23 +30,37 @@ use core::{
     slice,
 };
 
-pub trait Sealed<'a, V, P, I, Q>: Registry
+pub trait Sealed<'a, Views, Indices>: Registry
 where
-    V: Views<'a>,
+    Views: view::Views<'a>,
 {
-    type Viewable: ContainsViewsOuter<'a, V, P, I, Q>;
+    type Containments;
+    type Indices;
+    type ReshapeIndices;
+    type Viewable: ContainsViewsOuter<
+        'a,
+        Views,
+        Self::Containments,
+        Self::Indices,
+        Self::ReshapeIndices,
+    >;
 
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     fn claims() -> Self::Claims;
 }
 
-impl<'a, T, V, P, I, Q> Sealed<'a, V, P, I, Q> for T
+impl<'a, Registry, Views, Containments, Indices, ReshapeIndices>
+    Sealed<'a, Views, (Containments, Indices, ReshapeIndices)> for Registry
 where
-    T: Registry,
-    V: Views<'a>,
-    (EntityIdentifierMarker, T): ContainsViewsOuter<'a, V, P, I, Q, Registry = T>,
+    Registry: registry::Registry,
+    Views: view::Views<'a>,
+    (EntityIdentifierMarker, Registry):
+        ContainsViewsOuter<'a, Views, Containments, Indices, ReshapeIndices, Registry = Registry>,
 {
+    type Containments = Containments;
+    type Indices = Indices;
+    type ReshapeIndices = ReshapeIndices;
     type Viewable = (EntityIdentifierMarker, Self);
 
     /// Return the dynamic claims over the components borrowed by the `Views`.
@@ -71,10 +87,10 @@ where
     /// The canonical form of the views `V`.
     type Canonical: Views<'a>
         + ViewsSealed<'a, Results = Self::CanonicalResults>
-        + view::Reshape<'a, V, Q>;
+        + Reshape<V, Q, view::Null>;
     /// The canonical form of the results of the views `V`. Equivalent to
     /// `Self::Canonical::Results`.
-    type CanonicalResults: result::Reshape<V::Results, Q>;
+    type CanonicalResults: Reshape<V::Results, Q, iter::Take<iter::Repeat<view::Null>>>;
 
     /// # Safety
     ///
@@ -117,7 +133,7 @@ where
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         archetype_identifier: archetype::identifier::Iter<R>,
-    ) -> <Self::Canonical as ViewsSealed<'a>>::MaybeUninit
+    ) -> V::MaybeUninit
     where
         R: Registry;
 
@@ -136,38 +152,39 @@ where
             'a,
             <R as ContainsViewsInner<
                 'a,
-                <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                <V as Get<entity::Identifier, I>>::Remainder,
                 P,
                 IS,
             >>::Canonical,
             P,
-        > + ContainsViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>,
-    V: Views<'a> + view::Get<'a, entity::Identifier, I>,
+        > + ContainsViewsInner<'a, <V as Get<entity::Identifier, I>>::Remainder, P, IS>,
+    V: Views<'a> + Get<entity::Identifier, I>,
+    V::Remainder: Views<'a>,
     <(
         entity::Identifier,
         <R as ContainsViewsInner<
             'a,
-            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            <V as Get<entity::Identifier, I>>::Remainder,
             P,
             IS,
         >>::Canonical,
-    ) as ViewsSealed<'a>>::Results: result::Reshape<<V as ViewsSealed<'a>>::Results, Q>,
+    ) as ViewsSealed<'a>>::Results: Reshape<<V as ViewsSealed<'a>>::Results, Q, iter::Take<iter::Repeat<view::Null>>>,
     (
         entity::Identifier,
         <R as ContainsViewsInner<
             'a,
-            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            <V as Get<entity::Identifier, I>>::Remainder,
             P,
             IS,
         >>::Canonical,
-    ): view::Reshape<'a, V, Q>
+    ): Reshape<V, Q, view::Null>
         + ViewsSealed<
             'a,
             Results = (
                 iter::Copied<slice::Iter<'a, entity::Identifier>>,
                 <<R as ContainsViewsInner<
                     'a,
-                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    <V as Get<entity::Identifier, I>>::Remainder,
                     P,
                     IS,
                 >>::Canonical as ViewsSealed<'a>>::Results,
@@ -176,7 +193,7 @@ where
                 view::Null,
                 <<R as ContainsViewsInner<
                     'a,
-                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    <V as Get<entity::Identifier, I>>::Remainder,
                     P,
                     IS,
                 >>::Canonical as ViewsSealed<'a>>::Indices,
@@ -185,19 +202,37 @@ where
                 entity::Identifier,
                 <<R as ContainsViewsInner<
                     'a,
-                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    <V as Get<entity::Identifier, I>>::Remainder,
                     P,
                     IS,
                 >>::Canonical as ViewsSealed<'a>>::MaybeUninit,
             ),
         >,
+        <(
+            entity::Identifier,
+            <R as ContainsViewsInner<
+                'a,
+                <V as Get<entity::Identifier, I>>::Remainder,
+                P,
+                IS,
+            >>::Canonical,
+        ) as ViewsSealed<'a>>::Indices: Reshape<V::Indices, Q, view::Null>,
+        <(
+            entity::Identifier,
+            <R as ContainsViewsInner<
+                'a,
+                <V as Get<entity::Identifier, I>>::Remainder,
+                P,
+                IS,
+            >>::Canonical,
+        ) as ViewsSealed<'a>>::MaybeUninit: Reshape<V::MaybeUninit, Q, view::Null>,
 {
     type Registry = R;
     type Canonical = (
         entity::Identifier,
         <R as ContainsViewsInner<
             'a,
-            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            <V as Get<entity::Identifier, I>>::Remainder,
             P,
             IS,
         >>::Canonical,
@@ -259,7 +294,7 @@ where
         entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         archetype_identifier: archetype::identifier::Iter<R_>,
-    ) -> <Self::Canonical as ViewsSealed<'a>>::MaybeUninit
+    ) -> V::MaybeUninit
     where
         R_: Registry,
     {
@@ -275,7 +310,7 @@ where
             // `Vec<C>`s of length `length` for each of the components identified by
             // `archetype_identifier`. `index` is guaranteed to be less than `length`.
             unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) },
-        )
+        ).reshape()
     }
 
     #[cfg(feature = "rayon")]
@@ -285,28 +320,19 @@ where
     }
 
     fn indices() -> V::Indices {
-        let canonical_indices = (
+        (
             view::Null,
             <R as CanonicalViews<
                 'a,
                 <R as ContainsViewsInner<
                     'a,
-                    <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+                    <V as Get<entity::Identifier, I>>::Remainder,
                     P,
                     IS,
                 >>::Canonical,
                 P,
             >>::indices::<R>(),
-        );
-        <(
-            entity::Identifier,
-            <R as ContainsViewsInner<
-                'a,
-                <V as view::Get<'a, entity::Identifier, I>>::Remainder,
-                P,
-                IS,
-            >>::Canonical,
-        )>::reshape_indices(canonical_indices)
+        ).reshape()
     }
 }
 
@@ -316,8 +342,12 @@ where
     R: CanonicalViews<'a, <R as ContainsViewsInner<'a, V, P, I>>::Canonical, P>
         + ContainsViewsInner<'a, V, P, I>,
     <<R as ContainsViewsInner<'a, V, P, I>>::Canonical as ViewsSealed<'a>>::Results:
-        result::Reshape<<V as ViewsSealed<'a>>::Results, Q>,
-    <R as ContainsViewsInner<'a, V, P, I>>::Canonical: view::Reshape<'a, V, Q>,
+        Reshape<<V as ViewsSealed<'a>>::Results, Q, iter::Take<iter::Repeat<view::Null>>>,
+    <R as ContainsViewsInner<'a, V, P, I>>::Canonical: Reshape<V, Q, view::Null>,
+    <<R as ContainsViewsInner<'a, V, P, I>>::Canonical as ViewsSealed<'a>>::Indices:
+        Reshape<V::Indices, Q, view::Null>,
+    <<R as ContainsViewsInner<'a, V, P, I>>::Canonical as ViewsSealed<'a>>::MaybeUninit:
+        Reshape<V::MaybeUninit, Q, view::Null>,
     V: Views<'a>,
 {
     type Registry = R;
@@ -361,12 +391,12 @@ where
         _entity_identifiers: (*mut entity::Identifier, usize),
         length: usize,
         archetype_identifier: archetype::identifier::Iter<R_>,
-    ) -> <Self::Canonical as ViewsSealed<'a>>::MaybeUninit
+    ) -> V::MaybeUninit
     where
         R_: Registry,
     {
         // SAFETY: The safety contract of this function applies to this function call.
-        unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) }
+        unsafe { R::view_one_maybe_uninit(index, columns, length, archetype_identifier) }.reshape()
     }
 
     #[cfg(feature = "rayon")]
@@ -376,8 +406,7 @@ where
     }
 
     fn indices() -> V::Indices {
-        let canonical_indices = R::indices::<R>();
-        Self::Canonical::reshape_indices(canonical_indices)
+        R::indices::<R>().reshape()
     }
 }
 
@@ -395,24 +424,26 @@ impl<'a> ContainsViewsInner<'a, view::Null, Null, Null> for registry::Null {
 impl<'a, C, I, IS, P, R, V> ContainsViewsInner<'a, V, (&'a Contained, P), (I, IS)> for (C, R)
 where
     C: Component,
-    R: ContainsViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>,
-    V: Views<'a> + view::Get<'a, &'a C, I>,
+    R: ContainsViewsInner<'a, <V as Get<&'a C, I>>::Remainder, P, IS>,
+    V: Views<'a> + Get<&'a C, I>,
+    V::Remainder: Views<'a>,
 {
     type Canonical = (
         &'a C,
-        <R as ContainsViewsInner<'a, <V as view::Get<'a, &'a C, I>>::Remainder, P, IS>>::Canonical,
+        <R as ContainsViewsInner<'a, <V as Get<&'a C, I>>::Remainder, P, IS>>::Canonical,
     );
 }
 
 impl<'a, C, I, IS, P, R, V> ContainsViewsInner<'a, V, (&'a mut Contained, P), (I, IS)> for (C, R)
 where
     C: Component,
-    R: ContainsViewsInner<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>,
-    V: Views<'a> + view::Get<'a, &'a mut C, I>,
+    R: ContainsViewsInner<'a, <V as Get<&'a mut C, I>>::Remainder, P, IS>,
+    V: Views<'a> + Get<&'a mut C, I>,
+    V::Remainder: Views<'a>,
 {
     type Canonical = (
         &'a mut C,
-        <R as ContainsViewsInner<'a, <V as view::Get<'a, &'a mut C, I>>::Remainder, P, IS>>::Canonical,
+        <R as ContainsViewsInner<'a, <V as Get<&'a mut C, I>>::Remainder, P, IS>>::Canonical,
     );
 }
 
@@ -420,33 +451,29 @@ impl<'a, C, I, IS, P, R, V> ContainsViewsInner<'a, V, (Option<&'a Contained>, P)
     for (C, R)
 where
     C: Component,
-    R: ContainsViewsInner<'a, <V as view::Get<'a, Option<&'a C>, I>>::Remainder, P, IS>,
-    V: Views<'a> + view::Get<'a, Option<&'a C>, I>,
+    R: ContainsViewsInner<'a, <V as Get<Option<&'a C>, I>>::Remainder, P, IS>,
+    V: Views<'a> + Get<Option<&'a C>, I>,
+    V::Remainder: Views<'a>,
 {
-    type Canonical =
-        (
-            Option<&'a C>,
-            <R as ContainsViewsInner<
-                'a,
-                <V as view::Get<'a, Option<&'a C>, I>>::Remainder,
-                P,
-                IS,
-            >>::Canonical,
-        );
+    type Canonical = (
+        Option<&'a C>,
+        <R as ContainsViewsInner<'a, <V as Get<Option<&'a C>, I>>::Remainder, P, IS>>::Canonical,
+    );
 }
 
 impl<'a, C, I, IS, P, R, V> ContainsViewsInner<'a, V, (Option<&'a mut Contained>, P), (I, IS)>
     for (C, R)
 where
     C: Component,
-    R: ContainsViewsInner<'a, <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder, P, IS>,
-    V: Views<'a> + view::Get<'a, Option<&'a mut C>, I>,
+    R: ContainsViewsInner<'a, <V as Get<Option<&'a mut C>, I>>::Remainder, P, IS>,
+    V: Views<'a> + Get<Option<&'a mut C>, I>,
+    V::Remainder: Views<'a>,
 {
     type Canonical = (
         Option<&'a mut C>,
         <R as ContainsViewsInner<
             'a,
-            <V as view::Get<'a, Option<&'a mut C>, I>>::Remainder,
+            <V as Get<Option<&'a mut C>, I>>::Remainder,
             P,
             IS,
         >>::Canonical,
@@ -456,14 +483,15 @@ where
 impl<'a, I, IS, P, V, R> ContainsViewsInner<'a, V, (Contained, P), (I, IS)>
     for (EntityIdentifierMarker, R)
 where
-    R: ContainsViewsInner<'a, <V as view::Get<'a, entity::Identifier, I>>::Remainder, P, IS>,
-    V: Views<'a> + view::Get<'a, entity::Identifier, I>,
+    R: ContainsViewsInner<'a, <V as Get<entity::Identifier, I>>::Remainder, P, IS>,
+    V: Views<'a> + Get<entity::Identifier, I>,
+    V::Remainder: Views<'a>,
 {
     type Canonical = (
         entity::Identifier,
         <R as ContainsViewsInner<
             'a,
-            <V as view::Get<'a, entity::Identifier, I>>::Remainder,
+            <V as Get<entity::Identifier, I>>::Remainder,
             P,
             IS,
         >>::Canonical,

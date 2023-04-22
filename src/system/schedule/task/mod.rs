@@ -11,7 +11,7 @@ use crate::hlist::define_null;
 define_null!();
 
 /// A task that implements [`System`].
-pub struct System<S>(pub S);
+pub struct System<System>(pub System);
 
 /// A task that implements [`ParSystem`].
-pub struct ParSystem<P>(pub P);
+pub struct ParSystem<ParSystem>(pub ParSystem);

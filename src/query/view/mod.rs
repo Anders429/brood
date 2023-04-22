@@ -53,12 +53,10 @@ pub(crate) mod resource;
 
 mod contains;
 mod disjoint;
-mod get;
 #[cfg(feature = "rayon")]
 mod merge;
 #[cfg(feature = "rayon")]
 mod par;
-mod reshape;
 mod sealed;
 mod subset;
 
@@ -76,7 +74,6 @@ pub(crate) use claim::{
     Claim,
     Claims,
 };
-pub(crate) use get::Get;
 #[cfg(feature = "rayon")]
 pub(crate) use merge::Merge;
 #[cfg(feature = "rayon")]
@@ -84,11 +81,10 @@ pub(crate) use par::{
     ParViewsSeal,
     RepeatNone,
 };
-pub(crate) use reshape::Reshape;
 pub(crate) use sealed::ViewsSealed;
 
 use crate::{
-    component::Component,
+    component,
     entity,
     hlist::define_null,
 };
@@ -140,13 +136,13 @@ use sealed::ViewSealed;
 /// [`World`]: crate::world::World
 pub trait View<'a>: ViewSealed<'a> {}
 
-impl<'a, C> View<'a> for &'a C where C: Component {}
+impl<'a, Component> View<'a> for &'a Component where Component: component::Component {}
 
-impl<'a, C> View<'a> for &'a mut C where C: Component {}
+impl<'a, Component> View<'a> for &'a mut Component where Component: component::Component {}
 
-impl<'a, C> View<'a> for Option<&'a C> where C: Component {}
+impl<'a, Component> View<'a> for Option<&'a Component> where Component: component::Component {}
 
-impl<'a, C> View<'a> for Option<&'a mut C> where C: Component {}
+impl<'a, Component> View<'a> for Option<&'a mut Component> where Component: component::Component {}
 
 impl<'a> View<'a> for entity::Identifier {}
 
@@ -185,10 +181,10 @@ pub trait Views<'a>: ViewsSealed<'a> {}
 
 impl<'a> Views<'a> for Null {}
 
-impl<'a, V, W> Views<'a> for (V, W)
+impl<'a, View, Views> self::Views<'a> for (View, Views)
 where
-    V: View<'a>,
-    W: Views<'a>,
+    View: self::View<'a>,
+    Views: self::Views<'a>,
 {
 }
 

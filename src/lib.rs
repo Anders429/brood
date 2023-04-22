@@ -100,6 +100,7 @@
 
 #![no_std]
 #![cfg_attr(doc_cfg, feature(doc_cfg, decl_macro))]
+#![cfg_attr(coverage_nightly, feature(no_coverage))]
 #![warn(
     clippy::expect_used,
     clippy::indexing_slicing,

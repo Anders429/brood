@@ -163,10 +163,7 @@ mod tests {
                 Token::StructEnd,
             ])
         );
-        let mut deserializer = Deserializer::builder()
-            .tokens(tokens)
-            .self_describing(false)
-            .build();
+        let mut deserializer = Deserializer::builder().tokens(tokens).build();
         assert_ok_eq!(Identifier::deserialize(&mut deserializer), identifier);
     }
 
@@ -182,7 +179,6 @@ mod tests {
                 Token::U64(0),
                 Token::StructEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -203,7 +199,6 @@ mod tests {
                 Token::U64(0),
                 Token::StructEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -224,7 +219,6 @@ mod tests {
                 Token::U64(0),
                 Token::Field("index"),
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -245,7 +239,6 @@ mod tests {
                 Token::U64(0),
                 Token::Field("generation"),
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -264,7 +257,6 @@ mod tests {
                 },
                 Token::Field("unknown"),
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -289,10 +281,7 @@ mod tests {
                 Token::SeqEnd,
             ])
         );
-        let mut deserializer = Deserializer::builder()
-            .tokens(tokens)
-            .self_describing(false)
-            .build();
+        let mut deserializer = Deserializer::builder().tokens(tokens).build();
         assert_ok_eq!(Identifier::deserialize(&mut deserializer), identifier);
     }
 
@@ -300,7 +289,6 @@ mod tests {
     fn deserialize_from_seq_no_items() {
         let mut deserializer = Deserializer::builder()
             .tokens(Tokens(vec![Token::Seq { len: Some(0) }, Token::SeqEnd]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -317,7 +305,6 @@ mod tests {
                 Token::U64(1),
                 Token::SeqEnd,
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -335,7 +322,6 @@ mod tests {
                 Token::U64(2),
                 Token::U64(3),
             ]))
-            .self_describing(false)
             .build();
 
         assert_err_eq!(

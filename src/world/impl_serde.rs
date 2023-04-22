@@ -20,9 +20,9 @@ use serde::{
     Serializer,
 };
 
-impl<R, Resources> serde::Serialize for World<R, Resources>
+impl<Registry, Resources> serde::Serialize for World<Registry, Resources>
 where
-    R: registry::Serialize,
+    Registry: registry::Serialize,
     Resources: resource::Resources + resource::Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -37,30 +37,30 @@ where
     }
 }
 
-impl<'de, R, Resources> serde::Deserialize<'de> for World<R, Resources>
+impl<'de, Registry, Resources> serde::Deserialize<'de> for World<Registry, Resources>
 where
-    R: registry::Deserialize<'de>,
+    Registry: registry::Deserialize<'de>,
     Resources: resource::Resources + resource::Deserialize<'de>,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
-        struct WorldVisitor<'de, R, Resources>
+        struct WorldVisitor<'de, Registry, Resources>
         where
-            R: registry::Deserialize<'de>,
+            Registry: registry::Deserialize<'de>,
         {
             lifetime: PhantomData<&'de ()>,
-            registry: PhantomData<R>,
+            registry: PhantomData<Registry>,
             resources: PhantomData<Resources>,
         }
 
-        impl<'de, R, Resources> Visitor<'de> for WorldVisitor<'de, R, Resources>
+        impl<'de, Registry, Resources> Visitor<'de> for WorldVisitor<'de, Registry, Resources>
         where
-            R: registry::Deserialize<'de>,
+            Registry: registry::Deserialize<'de>,
             Resources: resource::Resources + resource::Deserialize<'de>,
         {
-            type Value = World<R, Resources>;
+            type Value = World<Registry, Resources>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("serialized World")
@@ -91,7 +91,7 @@ where
 
         deserializer.deserialize_tuple(
             3,
-            WorldVisitor::<R, Resources> {
+            WorldVisitor::<Registry, Resources> {
                 lifetime: PhantomData,
                 registry: PhantomData,
                 resources: PhantomData,
@@ -168,10 +168,7 @@ mod tests {
                 Token::TupleEnd,
             ])
         );
-        let mut deserializer = Deserializer::builder()
-            .tokens(tokens)
-            .self_describing(false)
-            .build();
+        let mut deserializer = Deserializer::builder().tokens(tokens).build();
         assert_ok_eq!(
             World::<Registry, Resources!()>::deserialize(&mut deserializer),
             world
@@ -388,7 +385,6 @@ mod tests {
         let mut deserializer = Deserializer::builder()
             .tokens(tokens)
             .is_human_readable(false)
-            .self_describing(false)
             .build();
         assert_ok_eq!(
             World::<Registry, Resources!()>::deserialize(&mut deserializer),
@@ -429,10 +425,7 @@ mod tests {
                 Token::TupleEnd,
             ])
         );
-        let mut deserializer = Deserializer::builder()
-            .tokens(tokens)
-            .self_describing(false)
-            .build();
+        let mut deserializer = Deserializer::builder().tokens(tokens).build();
         assert_ok_eq!(
             World::<Registry!(), _>::deserialize(&mut deserializer),
             world
@@ -444,7 +437,6 @@ mod tests {
         let mut deserializer = Deserializer::builder()
             .tokens(Tokens(vec![Token::Tuple { len: 0 }, Token::TupleEnd]))
             .is_human_readable(false)
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -464,7 +456,6 @@ mod tests {
                 Token::TupleEnd,
             ]))
             .is_human_readable(false)
-            .self_describing(false)
             .build();
 
         assert_err_eq!(
@@ -495,7 +486,6 @@ mod tests {
                 Token::TupleEnd,
             ]))
             .is_human_readable(false)
-            .self_describing(false)
             .build();
 
         assert_err_eq!(

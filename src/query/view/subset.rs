@@ -93,8 +93,8 @@ where
 impl<'a, SubView, SubViews, Views, Index, Indices> Sealed<'a, Views, (Index, Indices)>
     for (SubView, SubViews)
 where
-    Views: Get<'a, SubView, Index> + view::Views<'a>,
-    <Views as Get<'a, SubView, Index>>::Remainder: view::Views<'a>,
+    Views: SubViewable<'a, SubView, Index> + view::Views<'a>,
+    <Views as SubViewable<'a, SubView, Index>>::Remainder: view::Views<'a>,
     SubViews: Sealed<'a, Views::Remainder, Indices>,
 {
     unsafe fn view<Registry>(
@@ -121,7 +121,7 @@ where
 
 /// This `Get` implementation follows the "subset" rules defined for views. If the subview is
 /// contained within the superview, it can be found with this `Get` implementation.
-pub trait Get<'a, View, Index>: view::Views<'a> + Sized {
+pub trait SubViewable<'a, View, Index>: view::Views<'a> + Sized {
     type Remainder: view::Views<'a>;
 
     /// # Safety
@@ -144,7 +144,7 @@ pub trait Get<'a, View, Index>: view::Views<'a> + Sized {
         Registry: registry::Registry;
 }
 
-impl<'a, Component, Views> Get<'a, &'a Component, index::Index> for (&'a Component, Views)
+impl<'a, Component, Views> SubViewable<'a, &'a Component, index::Index> for (&'a Component, Views)
 where
     Self: view::Views<
         'a,
@@ -178,7 +178,8 @@ where
     }
 }
 
-impl<'a, Component, Views> Get<'a, &'a Component, index::Index> for (&'a mut Component, Views)
+impl<'a, Component, Views> SubViewable<'a, &'a Component, index::Index>
+    for (&'a mut Component, Views)
 where
     Self: view::Views<
         'a,
@@ -212,7 +213,8 @@ where
     }
 }
 
-impl<'a, Component, Views> Get<'a, &'a Component, index::Index> for (Option<&'a Component>, Views)
+impl<'a, Component, Views> SubViewable<'a, &'a Component, index::Index>
+    for (Option<&'a Component>, Views)
 where
     Self: view::Views<
         'a,
@@ -246,7 +248,7 @@ where
     }
 }
 
-impl<'a, Component, Views> Get<'a, &'a Component, index::Index>
+impl<'a, Component, Views> SubViewable<'a, &'a Component, index::Index>
     for (Option<&'a mut Component>, Views)
 where
     Self: view::Views<
@@ -281,7 +283,8 @@ where
     }
 }
 
-impl<'a, Component, Views> Get<'a, &'a mut Component, index::Index> for (&'a mut Component, Views)
+impl<'a, Component, Views> SubViewable<'a, &'a mut Component, index::Index>
+    for (&'a mut Component, Views)
 where
     Self: view::Views<
         'a,
@@ -315,7 +318,7 @@ where
     }
 }
 
-impl<'a, Component, Views> Get<'a, &'a mut Component, index::Index>
+impl<'a, Component, Views> SubViewable<'a, &'a mut Component, index::Index>
     for (Option<&'a mut Component>, Views)
 where
     Self: view::Views<
@@ -350,7 +353,8 @@ where
     }
 }
 
-impl<'a, Component, Views> Get<'a, Option<&'a Component>, index::Index> for (&'a Component, Views)
+impl<'a, Component, Views> SubViewable<'a, Option<&'a Component>, index::Index>
+    for (&'a Component, Views)
 where
     Self: view::Views<
         'a,
@@ -390,7 +394,7 @@ where
     }
 }
 
-impl<'a, Component, Views> Get<'a, Option<&'a Component>, index::Index>
+impl<'a, Component, Views> SubViewable<'a, Option<&'a Component>, index::Index>
     for (&'a mut Component, Views)
 where
     Self: view::Views<
@@ -431,7 +435,7 @@ where
     }
 }
 
-impl<'a, Component, Views> Get<'a, Option<&'a Component>, index::Index>
+impl<'a, Component, Views> SubViewable<'a, Option<&'a Component>, index::Index>
     for (Option<&'a Component>, Views)
 where
     Self: view::Views<
@@ -461,7 +465,7 @@ where
     }
 }
 
-impl<'a, Component, Views> Get<'a, Option<&'a Component>, index::Index>
+impl<'a, Component, Views> SubViewable<'a, Option<&'a Component>, index::Index>
     for (Option<&'a mut Component>, Views)
 where
     Self: view::Views<
@@ -495,7 +499,7 @@ where
     }
 }
 
-impl<'a, Component, Views> Get<'a, Option<&'a mut Component>, index::Index>
+impl<'a, Component, Views> SubViewable<'a, Option<&'a mut Component>, index::Index>
     for (&'a mut Component, Views)
 where
     Self: view::Views<
@@ -536,7 +540,7 @@ where
     }
 }
 
-impl<'a, Component, Views> Get<'a, Option<&'a mut Component>, index::Index>
+impl<'a, Component, Views> SubViewable<'a, Option<&'a mut Component>, index::Index>
     for (Option<&'a mut Component>, Views)
 where
     Self: view::Views<
@@ -566,7 +570,7 @@ where
     }
 }
 
-impl<'a, Views> Get<'a, entity::Identifier, index::Index> for (entity::Identifier, Views)
+impl<'a, Views> SubViewable<'a, entity::Identifier, index::Index> for (entity::Identifier, Views)
 where
     Self: view::Views<
         'a,
@@ -595,17 +599,20 @@ where
     }
 }
 
-impl<'a, View, OtherView, Views, Index> Get<'a, View, (Index,)> for (OtherView, Views)
+impl<'a, View, OtherView, Views, Index> SubViewable<'a, View, (Index,)> for (OtherView, Views)
 where
     Self: view::Views<
         'a,
         MaybeUninit = (OtherView::MaybeUninit, Views::MaybeUninit),
         Indices = (OtherView::Index, Views::Indices),
     >,
-    Views: Get<'a, View, Index> + view::Views<'a>,
+    Views: SubViewable<'a, View, Index> + view::Views<'a>,
     OtherView: view::View<'a>,
 {
-    type Remainder = (OtherView, <Views as Get<'a, View, Index>>::Remainder);
+    type Remainder = (
+        OtherView,
+        <Views as SubViewable<'a, View, Index>>::Remainder,
+    );
 
     unsafe fn view<Registry>(
         views: Self::MaybeUninit,

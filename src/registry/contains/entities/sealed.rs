@@ -1,7 +1,7 @@
 use crate::{
-    component::Component,
+    component,
     entities,
-    entities::Entities,
+    hlist::Get,
     registry,
     registry::{
         contains::{
@@ -26,22 +26,50 @@ use alloc::vec::Vec;
 /// This is generic over entities `E`, containments `P` (indicating whether each component is
 /// contained in the registry), and indices `I` (indicating the location of each component in the
 /// entity `E`).
-pub trait Sealed<E, P, Q, I>:
-    Canonical<<Self::Canonical as entities::Contains>::Entity, Q>
+pub trait Sealed<Entities, Indices>:
+    Canonical<<Self::Canonical as entities::Contains>::Entity, Self::CanonicalContainments>
 {
-    /// The canonical form of the entity `E`.
+    /// The canonical form of the entities.
     ///
     /// This type is guaranteed to be canonical with respect to the current registry, and that
     /// relationship is embodied by an impl of the `Canonical` trait on the current registry.
-    type Canonical: Entities;
+    type Canonical: entities::Entities;
+    type CanonicalContainments;
 
     /// Returns the canonical form of the entities, consuming the original entities.
-    fn canonical(entities: E) -> Self::Canonical;
+    fn canonical(entities: Entities) -> Self::Canonical;
 }
 
-impl<Q> Sealed<entities::Null, Null, Q, Null> for registry::Null
+impl<Registry, Entities, Containments, CanonicalContainments, Indices>
+    Sealed<Entities, (Containments, CanonicalContainments, Indices)> for Registry
 where
-    Self: Canonical<<entities::Null as entities::Contains>::Entity, Q>,
+    Registry: Expanded<Entities, Containments, CanonicalContainments, Indices>,
+{
+    type Canonical = Registry::Canonical;
+    type CanonicalContainments = CanonicalContainments;
+
+    fn canonical(entities: Entities) -> Self::Canonical {
+        Registry::canonical(entities)
+    }
+}
+
+pub trait Expanded<Entities, Containments, CanonicalContainments, Indices>:
+    Canonical<<Self::Canonical as entities::Contains>::Entity, CanonicalContainments>
+{
+    /// The canonical form of the entities.
+    ///
+    /// This type is guaranteed to be canonical with respect to the current registry, and that
+    /// relationship is embodied by an impl of the `Canonical` trait on the current registry.
+    type Canonical: entities::Entities;
+
+    /// Returns the canonical form of the entities, consuming the original entities.
+    fn canonical(entities: Entities) -> Self::Canonical;
+}
+
+impl<CanonicalContainments> Expanded<entities::Null, Null, CanonicalContainments, Null>
+    for registry::Null
+where
+    Self: Canonical<<entities::Null as entities::Contains>::Entity, CanonicalContainments>,
 {
     type Canonical = entities::Null;
 
@@ -50,45 +78,75 @@ where
     }
 }
 
-impl<C, E, I, P, Q, QS, R, IS> Sealed<E, (Contained, P), (Q, QS), (I, IS)> for (C, R)
+impl<
+        Component,
+        Registry,
+        Entities,
+        Containments,
+        CanonicalContainment,
+        CanonicalContainments,
+        Index,
+        Indices,
+    >
+    Expanded<
+        Entities,
+        (Contained, Containments),
+        (CanonicalContainment, CanonicalContainments),
+        (Index, Indices),
+    > for (Component, Registry)
 where
     Self: Canonical<
         <(
-            Vec<C>,
-            <R as Sealed<<E as entities::Get<C, I>>::Remainder, P, QS, IS>>::Canonical,
+            Vec<Component>,
+            <Registry as Expanded<
+                <Entities as Get<Vec<Component>, Index>>::Remainder,
+                Containments,
+                CanonicalContainments,
+                Indices,
+            >>::Canonical,
         ) as entities::Contains>::Entity,
-        (Q, QS),
+        (CanonicalContainment, CanonicalContainments),
     >,
-    R: Sealed<<E as entities::Get<C, I>>::Remainder, P, QS, IS>,
-    E: entities::Get<C, I>,
-    C: Component,
+    Registry: Expanded<
+        <Entities as Get<Vec<Component>, Index>>::Remainder,
+        Containments,
+        CanonicalContainments,
+        Indices,
+    >,
+    Entities: Get<Vec<Component>, Index>,
+    Component: component::Component,
 {
     type Canonical = (
-        Vec<C>,
-        <R as Sealed<<E as entities::Get<C, I>>::Remainder, P, QS, IS>>::Canonical,
+        Vec<Component>,
+        <Registry as Expanded<
+            <Entities as Get<Vec<Component>, Index>>::Remainder,
+            Containments,
+            CanonicalContainments,
+            Indices,
+        >>::Canonical,
     );
 
-    fn canonical(entities: E) -> Self::Canonical {
+    fn canonical(entities: Entities) -> Self::Canonical {
         let (component, remainder) = entities.get();
-        (component, R::canonical(remainder))
+        (component, Registry::canonical(remainder))
     }
 }
 
-impl<C, E, I, P, Q, QS, R> Sealed<E, (NotContained, P), (Q, QS), I> for (C, R)
+impl<Component, Registry, Entities, Containments, CanonicalContainment, CanonicalContainments, Indices> Expanded<Entities, (NotContained, Containments), (CanonicalContainment, CanonicalContainments), Indices> for (Component, Registry)
 where
-    Self: Canonical<<<R as Sealed<E, P, QS, I>>::Canonical as entities::Contains>::Entity, (Q, QS)>,
-    R: Sealed<E, P, QS, I>,
+    Self: Canonical<<<Registry as Expanded<Entities, Containments, CanonicalContainments, Indices>>::Canonical as entities::Contains>::Entity, (CanonicalContainment, CanonicalContainments)>,
+    Registry: Expanded<Entities, Containments, CanonicalContainments, Indices>,
 {
-    type Canonical = <R as Sealed<E, P, QS, I>>::Canonical;
+    type Canonical = <Registry as Expanded<Entities, Containments, CanonicalContainments, Indices>>::Canonical;
 
-    fn canonical(entities: E) -> Self::Canonical {
-        R::canonical(entities)
+    fn canonical(entities: Entities) -> Self::Canonical {
+        Registry::canonical(entities)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::Sealed;
     use crate::{
         entities,
         Registry,

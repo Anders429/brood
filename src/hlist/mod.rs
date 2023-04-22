@@ -1,3 +1,20 @@
+//! Generic 2-tuple heterogeneous list operations.
+//!
+//! A 2-tuple heterogeneous list is a list of nested 2-tuples containing unique types, with a
+//! `Null` type denoting the end of the list. For example, `(A, (B, (C, Null)))` is a heterogeneous
+//! list containing the unique types `A`, `B`, and `C`. 2-tuple heterogeneous lists are a
+//! fundamental building block of this library, allowing type lists of arbitrary size to be used.
+//!
+//! This module provides generic operations on heterogeneous lists. Operations specific to certain
+//! types of heterogeneous lists (for example, `View` lists or `Component` lists) are defined in
+//! their specific modules.
+
+mod get;
+mod reshape;
+
+pub(crate) use get::Get;
+pub(crate) use reshape::Reshape;
+
 macro_rules! define_null {
     () => {
         /// Represents the end of a heterogeneous list.
@@ -75,6 +92,8 @@ macro_rules! define_null_uninstantiable {
         pub enum Null {}
     };
 }
+
+define_null_uninstantiable!();
 
 pub(crate) use define_null;
 pub(crate) use define_null_uninstantiable;

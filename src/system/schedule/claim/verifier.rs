@@ -1,14 +1,11 @@
 use crate::{
     entity,
-    hlist::define_null,
-    query::view,
-    system::schedule::claim::{
-        decision,
-        get::{
-            registry,
-            views,
-        },
+    hlist::{
+        define_null,
+        Get,
     },
+    query::view,
+    system::schedule::claim::decision,
 };
 
 define_null!();
@@ -44,7 +41,7 @@ impl<'a, R, C> Verifier<'a, R, C, Null, Null> for view::Null {
 /// Not present in the claims.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (NotPresent, P)> for (&'a T, U)
 where
-    R: registry::Get<T, I>,
+    R: Get<T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = <U as Verifier<'a, R, C, IS, P>>::Decision;
@@ -53,7 +50,7 @@ where
 /// Not present in the claims.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (NotPresent, P)> for (&'a mut T, U)
 where
-    R: registry::Get<T, I>,
+    R: Get<T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = <U as Verifier<'a, R, C, IS, P>>::Decision;
@@ -62,7 +59,7 @@ where
 /// Not present in the claims.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (NotPresent, P)> for (Option<&'a T>, U)
 where
-    R: registry::Get<T, I>,
+    R: Get<T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = <U as Verifier<'a, R, C, IS, P>>::Decision;
@@ -72,7 +69,7 @@ where
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (NotPresent, P)>
     for (Option<&'a mut T>, U)
 where
-    R: registry::Get<T, I>,
+    R: Get<T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = <U as Verifier<'a, R, C, IS, P>>::Decision;
@@ -81,7 +78,7 @@ where
 /// Multiple immutable references are acceptable.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (ImmutImmut, P)> for (&'a T, U)
 where
-    C: views::Get<&'a T, I>,
+    C: Get<&'a T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = <U as Verifier<'a, R, C, IS, P>>::Decision;
@@ -90,7 +87,7 @@ where
 /// Multiple immutable references are acceptable.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (ImmutImmut, P)> for (Option<&'a T>, U)
 where
-    C: views::Get<&'a T, I>,
+    C: Get<&'a T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = <U as Verifier<'a, R, C, IS, P>>::Decision;
@@ -99,7 +96,7 @@ where
 /// Multiple immutable references are acceptable.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (ImmutOptionImmut, P)> for (&'a T, U)
 where
-    C: views::Get<Option<&'a T>, I>,
+    C: Get<Option<&'a T>, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = <U as Verifier<'a, R, C, IS, P>>::Decision;
@@ -109,7 +106,7 @@ where
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (ImmutOptionImmut, P)>
     for (Option<&'a T>, U)
 where
-    C: views::Get<Option<&'a T>, I>,
+    C: Get<Option<&'a T>, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = <U as Verifier<'a, R, C, IS, P>>::Decision;
@@ -130,7 +127,7 @@ where
 /// Previously borrowed as mutable.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (ImmutMut, P)> for (&'a T, U)
 where
-    C: views::Get<&'a mut T, I>,
+    C: Get<&'a mut T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = decision::Cut;
@@ -139,7 +136,7 @@ where
 /// Previously borrowed as mutable.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (ImmutOptionMut, P)> for (&'a T, U)
 where
-    C: views::Get<Option<&'a mut T>, I>,
+    C: Get<Option<&'a mut T>, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = decision::Cut;
@@ -148,7 +145,7 @@ where
 /// Previously borrowed as mutable.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (ImmutMut, P)> for (Option<&'a T>, U)
 where
-    C: views::Get<&'a mut T, I>,
+    C: Get<&'a mut T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = decision::Cut;
@@ -158,7 +155,7 @@ where
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (ImmutOptionMut, P)>
     for (Option<&'a T>, U)
 where
-    C: views::Get<Option<&'a mut T>, I>,
+    C: Get<Option<&'a mut T>, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = decision::Cut;
@@ -167,7 +164,7 @@ where
 /// Previously borrowed as mutable.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (MutMut, P)> for (&'a mut T, U)
 where
-    C: views::Get<&'a mut T, I>,
+    C: Get<&'a mut T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = decision::Cut;
@@ -176,7 +173,7 @@ where
 /// Previously borrowed as mutable.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (MutOptionMut, P)> for (&'a mut T, U)
 where
-    C: views::Get<Option<&'a mut T>, I>,
+    C: Get<Option<&'a mut T>, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = decision::Cut;
@@ -185,7 +182,7 @@ where
 /// Previously borrowed as mutable.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (MutMut, P)> for (Option<&'a mut T>, U)
 where
-    C: views::Get<&'a mut T, I>,
+    C: Get<&'a mut T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = decision::Cut;
@@ -195,7 +192,7 @@ where
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (MutOptionMut, P)>
     for (Option<&'a mut T>, U)
 where
-    C: views::Get<Option<&'a mut T>, I>,
+    C: Get<Option<&'a mut T>, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = decision::Cut;
@@ -204,7 +201,7 @@ where
 /// Previously borrowed as immutable.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (MutImmut, P)> for (&'a mut T, U)
 where
-    C: views::Get<&'a T, I>,
+    C: Get<&'a T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = decision::Cut;
@@ -213,7 +210,7 @@ where
 /// Previously borrowed as immutable.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (MutOptionImmut, P)> for (&'a mut T, U)
 where
-    C: views::Get<Option<&'a T>, I>,
+    C: Get<Option<&'a T>, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = decision::Cut;
@@ -222,7 +219,7 @@ where
 /// Previously borrowed as immutable.
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (MutImmut, P)> for (Option<&'a mut T>, U)
 where
-    C: views::Get<&'a T, I>,
+    C: Get<&'a T, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = decision::Cut;
@@ -232,7 +229,7 @@ where
 impl<'a, R, C, I, IS, T, U, P> Verifier<'a, R, C, (I, IS), (MutOptionImmut, P)>
     for (Option<&'a mut T>, U)
 where
-    C: views::Get<Option<&'a T>, I>,
+    C: Get<Option<&'a T>, I>,
     U: Verifier<'a, R, C, IS, P>,
 {
     type Decision = decision::Cut;

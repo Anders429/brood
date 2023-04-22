@@ -1,6 +1,5 @@
 pub(crate) mod decision;
 
-mod get;
 mod inverse;
 mod merger;
 mod verifier;

@@ -62,7 +62,7 @@ impl Filter for None {}
 
 /// Filter based on whether a [`Component`] is present in an entity.
 ///
-/// This filters out any entities which do not have the `Component` `C`. No borrow of the value `C`
+/// This filters out any entities which do not have the `Component`. No borrow of the `Component`
 /// from the entity is required.
 ///
 /// # Example'
@@ -77,18 +77,15 @@ impl Filter for None {}
 /// ```
 ///
 /// [`Component`]: crate::component::Component
-pub struct Has<C>
-where
-    C: Component,
-{
-    component: PhantomData<C>,
+pub struct Has<Component> {
+    component: PhantomData<Component>,
 }
 
-impl<C> Filter for Has<C> where C: Component {}
+impl<Component> Filter for Has<Component> {}
 
 /// Filter using the logical inverse of another [`Filter`].
 ///
-/// This filters out any entities which would not have been filtered by the `Filter` `F`.
+/// This filters out any entities which would not have been filtered by the `Filter`.
 ///
 /// # Example
 /// ``` rust
@@ -105,16 +102,16 @@ impl<C> Filter for Has<C> where C: Component {}
 /// ```
 ///
 /// [`Filter`]: crate::query::filter::Filter
-pub struct Not<F> {
-    filter: PhantomData<F>,
+pub struct Not<Filter> {
+    filter: PhantomData<Filter>,
 }
 
-impl<F> Filter for Not<F> where F: Filter {}
+impl<Filter> self::Filter for Not<Filter> where Filter: self::Filter {}
 
 /// Filter entities which are filtered by two [`Filter`]s.
 ///
-/// This filter is a logical `and` between two `Filter`s `F1` and `F2`. Any entity filtered out by
-/// either `Filter` will be filtered out by the `And` filter.
+/// This filter is a logical `and` between two `Filter`s `FilterA` and `FilterB`. Any entity
+/// filtered out by either `Filter` will be filtered out by the `And` filter.
 ///
 /// # Example
 /// ``` rust
@@ -133,22 +130,22 @@ impl<F> Filter for Not<F> where F: Filter {}
 /// ```
 ///
 /// [`Filter`]: crate::query::filter::Filter
-pub struct And<F1, F2> {
-    filter_1: PhantomData<F1>,
-    filter_2: PhantomData<F2>,
+pub struct And<FilterA, FilterB> {
+    filter_1: PhantomData<FilterA>,
+    filter_2: PhantomData<FilterB>,
 }
 
-impl<F1, F2> Filter for And<F1, F2>
+impl<FilterA, FilterB> Filter for And<FilterA, FilterB>
 where
-    F1: Filter,
-    F2: Filter,
+    FilterA: Filter,
+    FilterB: Filter,
 {
 }
 
 /// Filter entities which are filtered by one of two [`Filter`]s.
 ///
-/// This filter is a logical `or` between two `Filter`s `F1` and `F2`. Any entity filtered out by
-/// both `Filter`s will be filtered out by the `Or` filter.
+/// This filter is a logical `or` between two `Filter`s `FilterA` and `FilterB`. Any entity
+/// filtered out by both `Filter`s will be filtered out by the `Or` filter.
 ///
 /// # Example
 /// ``` rust
@@ -167,15 +164,15 @@ where
 /// ```
 ///
 /// [`Filter`]: crate::query::filter::Filter
-pub struct Or<F1, F2> {
-    filter_1: PhantomData<F1>,
-    filter_2: PhantomData<F2>,
+pub struct Or<FilterA, FilterB> {
+    filter_a: PhantomData<FilterA>,
+    filter_b: PhantomData<FilterB>,
 }
 
-impl<F1, F2> Filter for Or<F1, F2>
+impl<FilterA, FilterB> Filter for Or<FilterA, FilterB>
 where
-    F1: Filter,
-    F2: Filter,
+    FilterA: Filter,
+    FilterB: Filter,
 {
 }
 

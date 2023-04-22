@@ -1,16 +1,11 @@
 use crate::{
     archetype,
-    component::Component,
+    component,
     entity::allocator::Location,
+    hlist::Reshape,
     query::{
-        filter::{
-            And,
-            Filter,
-        },
-        view::{
-            Reshape,
-            Views,
-        },
+        filter::And,
+        view,
         Query,
     },
     registry,
@@ -18,7 +13,6 @@ use crate::{
         contains::filter::Sealed as ContainsFilterSealed,
         ContainsComponent,
         ContainsQuery,
-        Registry,
     },
     resource,
     world::World,
@@ -53,19 +47,22 @@ use core::fmt;
 /// [`entity::Identifier`]: crate::entity::Identifier
 /// [`entry`]: crate::World::entry()
 /// [`World`]: crate::World
-pub struct Entry<'a, R, Resources>
+pub struct Entry<'a, Registry, Resources>
 where
-    R: Registry,
+    Registry: registry::Registry,
 {
-    world: &'a mut World<R, Resources>,
-    location: Location<R>,
+    world: &'a mut World<Registry, Resources>,
+    location: Location<Registry>,
 }
 
-impl<'a, R, Resources> Entry<'a, R, Resources>
+impl<'a, Registry, Resources> Entry<'a, Registry, Resources>
 where
-    R: Registry,
+    Registry: registry::Registry,
 {
-    pub(crate) fn new(world: &'a mut World<R, Resources>, location: Location<R>) -> Self {
+    pub(crate) fn new(
+        world: &'a mut World<Registry, Resources>,
+        location: Location<Registry>,
+    ) -> Self {
         Self { world, location }
     }
 
@@ -93,12 +90,12 @@ where
     ///
     /// entry.add(Baz(1.5));
     /// ```
-    pub fn add<C, I>(&mut self, component: C)
+    pub fn add<Component, Index>(&mut self, component: Component)
     where
-        C: Component,
-        R: ContainsComponent<C, I>,
+        Component: component::Component,
+        Registry: ContainsComponent<Component, Index>,
     {
-        let component_index = R::LEN - R::INDEX - 1;
+        let component_index = Registry::LEN - Registry::INDEX - 1;
         if
         // SAFETY: The `component_index` obtained from `R::LEN - R::INDEX - 1` is guaranteed to be
         // a valid index into `self.location.identifier`, since an identifier has `R::LEN` bits.
@@ -142,7 +139,7 @@ where
             let identifier_buffer =
                 // SAFETY: Since `raw_identifier_buffer` was obtained from a valid identifier, it
                 // is of the proper length (which is `(R::LEN + 7) / 8`).
-                unsafe { archetype::Identifier::<R>::new(raw_identifier_buffer) };
+                unsafe { archetype::Identifier::<Registry>::new(raw_identifier_buffer) };
 
             // Insert to the corresponding archetype using the bytes and the new component.
             let archetype = self
@@ -166,14 +163,18 @@ where
             };
 
             // Update the location.
+            // SAFETY: The archetype is guaranteed to outlive the location, as archetype is stored
+            // in the same world where the location is stored. Additionally, the location stored in
+            // this entry will be outlived by archetype due to its lifetime guarantees.
+            let location = Location::new(unsafe { archetype.identifier() }, index);
             // SAFETY: `entity_identifier` is guaranteed at creation of this `Entry` to be
             // contained in `self.world.entity_allocator`.
             unsafe {
-                self.world.entity_allocator.modify_location_unchecked(
-                    entity_identifier,
-                    Location::new(archetype.identifier(), index),
-                );
+                self.world
+                    .entity_allocator
+                    .modify_location_unchecked(entity_identifier, location);
             }
+            self.location = location;
         }
     }
 
@@ -200,12 +201,12 @@ where
     ///
     /// entry.remove::<Foo, _>();
     /// ```
-    pub fn remove<C, I>(&mut self)
+    pub fn remove<Component, Index>(&mut self)
     where
-        C: Component,
-        R: ContainsComponent<C, I>,
+        Component: component::Component,
+        Registry: ContainsComponent<Component, Index>,
     {
-        let component_index = R::LEN - R::INDEX - 1;
+        let component_index = Registry::LEN - Registry::INDEX - 1;
         if
         // SAFETY: The `component_index` obtained from `R::LEN - R::INDEX - 1` is guaranteed to be
         // a valid index into `self.location.identifier`, since an identifier has `R::LEN` bits.
@@ -235,7 +236,7 @@ where
             let identifier_buffer =
                 // SAFETY: Since `raw_identifier_buffer` was obtained from a valid identifier, it
                 // is of the proper length (which is `(R::LEN + 7) / 8`).
-                unsafe { archetype::Identifier::<R>::new(raw_identifier_buffer) };
+                unsafe { archetype::Identifier::<Registry>::new(raw_identifier_buffer) };
 
             // Insert to the corresponding archetype using the bytes, skipping the removed
             // component.
@@ -252,21 +253,25 @@ where
                 // Also, the registry `R` is invariantly guaranteed by the invariants in `World` to
                 // not contain any duplicates.
                 unsafe {
-                archetype.push_from_buffer_skipping_component::<C>(
+                archetype.push_from_buffer_skipping_component::<Component>(
                     entity_identifier,
                     current_component_bytes.as_ptr(),
                 )
             };
 
             // Update the location.
+            // SAFETY: The archetype is guaranteed to outlive the location, as archetype is stored
+            // in the same world where the location is stored. Additionally, the location stored in
+            // this entry will be outlived by archetype due to its lifetime guarantees.
+            let location = Location::new(unsafe { archetype.identifier() }, index);
             // SAFETY: `entity_identifier` is guaranteed at creation of this `Entry` to be
             // contained in `self.world.entity_allocator`.
             unsafe {
-                self.world.entity_allocator.modify_location_unchecked(
-                    entity_identifier,
-                    Location::new(archetype.identifier(), index),
-                );
+                self.world
+                    .entity_allocator
+                    .modify_location_unchecked(entity_identifier, location);
             }
+            self.location = location;
         }
     }
 
@@ -306,20 +311,23 @@ where
     /// assert_eq!(bar.0, true);
     /// ```
     ///
+    /// [`Filter`]: crate::query::filter::Filter
     /// [`Views`]: trait@crate::query::view::Views
-    pub fn query<'b, V, F, VI, FI, P, I, Q>(
+    pub fn query<'b, Views, Filter, Indices>(
         &'b mut self,
-        #[allow(unused_variables)] query: Query<V, F>,
-    ) -> Option<V>
+        #[allow(unused_variables)] query: Query<Views, Filter>,
+    ) -> Option<Views>
     where
-        V: Views<'b> + Filter,
-        F: Filter,
-        R: ContainsQuery<'b, F, FI, V, VI, P, I, Q>,
+        Views: view::Views<'b>,
+        Registry: ContainsQuery<'b, Filter, Views, Indices>,
     {
         // SAFETY: The `R` on which `filter()` is called is the same `R` over which the identifier
         // is generic over.
         if unsafe {
-            <R as ContainsFilterSealed<And<F, V>, And<FI, VI>>>::filter(self.location.identifier)
+            <Registry as ContainsFilterSealed<
+                And<Filter, Views>,
+                And<Registry::FilterIndices, Registry::ViewsFilterIndices>,
+            >>::filter(self.location.identifier)
         } {
             Some(
                 // SAFETY: Since the archetype wasn't filtered out by the views, then each
@@ -333,7 +341,11 @@ where
                     self.world
                         .archetypes
                         .get_mut(self.location.identifier)?
-                        .view_row_unchecked::<V, P, I, Q>(self.location.index)
+                        .view_row_unchecked::<Views, (
+                            Registry::ViewsContainments,
+                            Registry::ViewsIndices,
+                            Registry::ViewsCanonicalContainments,
+                        )>(self.location.index)
                         .reshape()
                 },
             )
@@ -343,9 +355,9 @@ where
     }
 }
 
-impl<'a, R, Resources> fmt::Debug for Entry<'a, R, Resources>
+impl<'a, Registry, Resources> fmt::Debug for Entry<'a, Registry, Resources>
 where
-    R: registry::Debug,
+    Registry: registry::Debug,
     Resources: resource::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

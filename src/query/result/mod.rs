@@ -51,8 +51,6 @@
 
 #[cfg(feature = "rayon")]
 pub(crate) mod archetype_claims;
-pub(crate) mod get;
-pub(crate) mod reshape;
 
 mod iter;
 #[cfg(feature = "rayon")]
@@ -65,8 +63,6 @@ pub use par_iter::ParIter;
 
 #[cfg(feature = "rayon")]
 pub(crate) use archetype_claims::ArchetypeClaims;
-pub(crate) use get::Get;
-pub(crate) use reshape::Reshape;
 #[cfg(feature = "rayon")]
 pub(crate) use sealed::ParResults;
 pub(crate) use sealed::Results;
