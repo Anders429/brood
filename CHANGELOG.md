@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.9.0 - 2023-04-22
 ### Changed
 - `resource::ContainsViews` now only requires a single generic parameter for indices.
 - `World::view_resources()` now only requires a single generic parameter for indices.
