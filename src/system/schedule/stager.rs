@@ -1,11 +1,15 @@
 use crate::{
     hlist::define_null,
-    query::view,
+    query::{
+        filter::And,
+        view,
+    },
     registry::{
         contains::views::{
             ContainsViewsOuter,
             Sealed as ContainsViewsSealed,
         },
+        ContainsFilter,
         ContainsQuery,
         Registry,
     },
@@ -720,7 +724,8 @@ impl<
         (EntryIndices, EntryIndicesList),
     > for (T, U)
 where
-    R: ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
+    R: ContainsFilter<And<T::Views, T::Filter>, And<R::ViewsFilterIndices, R::FilterIndices>>
+        + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
     Resources: 'a,
     T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
         + Send

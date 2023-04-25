@@ -57,6 +57,7 @@ pub use eq::{
     PartialEq,
 };
 
+pub(crate) use contains::ContainsFilter;
 #[cfg(feature = "rayon")]
 pub(crate) use contains::ContainsParViews;
 #[cfg(feature = "rayon")]

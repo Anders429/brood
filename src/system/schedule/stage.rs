@@ -2,10 +2,11 @@ use crate::{
     archetype,
     hlist::define_null,
     query::{
+        filter::And,
         view::Claims,
-        Query,
     },
     registry::{
+        ContainsFilter,
         ContainsQuery,
         Registry,
     },
@@ -162,7 +163,8 @@ fn query_archetype_identifiers<
     borrowed_archetypes: &mut HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
 ) -> bool
 where
-    R: ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
+    R: ContainsFilter<And<T::Views, T::Filter>, And<R::ViewsFilterIndices, R::FilterIndices>>
+        + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
     Resources: 'a,
     T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>,
 {
@@ -172,7 +174,7 @@ where
         // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
         // rules.
         unsafe {
-            (*world.get()).query_archetype_claims(Query::<T::Views, T::Filter>::new())
+            (*world.get()).query_archetype_claims::<T::Views, T::Filter, And<T::Views, T::Filter>, QueryIndices, And<R::ViewsFilterIndices, R::FilterIndices>>()
         }
     {
         match merged_borrowed_archetypes.entry(identifier) {
@@ -206,7 +208,8 @@ fn query_archetype_identifiers_unchecked<
     world: SendableWorld<R, Resources>,
     borrowed_archetypes: &mut HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
 ) where
-    R: ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
+    R: ContainsFilter<And<T::Views, T::Filter>, And<R::ViewsFilterIndices, R::FilterIndices>>
+        + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
     Resources: 'a,
     T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>,
 {
@@ -214,7 +217,7 @@ fn query_archetype_identifiers_unchecked<
         // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
         // rules.
         unsafe {
-            (*world.get()).query_archetype_claims(Query::<T::Views, T::Filter>::new())
+            (*world.get()).query_archetype_claims::<T::Views, T::Filter, And<T::Views, T::Filter>, QueryIndices, And<R::ViewsFilterIndices, R::FilterIndices>>()
         }
     {
         borrowed_archetypes.insert_unique_unchecked(identifier, claims);
@@ -246,7 +249,8 @@ impl<
         (EntryIndices, EntryIndicesList),
     > for (&mut T, U)
 where
-    R: ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
+    R: ContainsFilter<And<T::Views, T::Filter>, And<R::ViewsFilterIndices, R::FilterIndices>>
+        + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
     Resources: 'a,
     T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
         + Send,

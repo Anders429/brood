@@ -3,13 +3,11 @@
 use crate::{
     archetype,
     archetypes,
-    query::{
-        filter::And,
-        view,
-    },
-    registry,
+    query::view,
     registry::{
+        self,
         contains::filter::Sealed as ContainsFilterSealed,
+        ContainsFilter,
         ContainsQuery,
     },
 };
@@ -19,18 +17,21 @@ use core::marker::PhantomData;
 ///
 /// This iterator returns key-value pairs of archetype identifiers and the list of claimed
 /// components for the given query on that archetype.
-pub struct ArchetypeClaims<'a, Registry, Filter, Views, Indices>
+pub struct ArchetypeClaims<'a, Registry, Views, QueryFilter, Filter, QueryIndices, FilterIndices>
 where
     Registry: registry::Registry,
 {
     archetypes_iter: archetypes::IterMut<'a, Registry>,
 
+    views: PhantomData<Views>,
+    query_filter: PhantomData<QueryFilter>,
     filter: PhantomData<Filter>,
-    view: PhantomData<Views>,
-    indices: PhantomData<Indices>,
+    query_indices: PhantomData<QueryIndices>,
+    filter_indices: PhantomData<FilterIndices>,
 }
 
-impl<'a, Registry, Filter, Views, Indices> ArchetypeClaims<'a, Registry, Filter, Views, Indices>
+impl<'a, Registry, Views, QueryFilter, Filter, QueryIndices, FilterIndices>
+    ArchetypeClaims<'a, Registry, Views, QueryFilter, Filter, QueryIndices, FilterIndices>
 where
     Registry: registry::Registry,
 {
@@ -43,18 +44,21 @@ where
         Self {
             archetypes_iter,
 
+            views: PhantomData,
+            query_filter: PhantomData,
             filter: PhantomData,
-            view: PhantomData,
-            indices: PhantomData,
+            query_indices: PhantomData,
+            filter_indices: PhantomData,
         }
     }
 }
 
-impl<'a, Registry, Filter, Views, Indices> Iterator
-    for ArchetypeClaims<'a, Registry, Filter, Views, Indices>
+impl<'a, Registry, Views, QueryFilter, Filter, QueryIndices, FilterIndices> Iterator
+    for ArchetypeClaims<'a, Registry, Views, QueryFilter, Filter, QueryIndices, FilterIndices>
 where
     Views: view::Views<'a>,
-    Registry: ContainsQuery<'a, Filter, Views, Indices>,
+    Registry:
+        ContainsFilter<Filter, FilterIndices> + ContainsQuery<'a, QueryFilter, Views, QueryIndices>,
 {
     type Item = (archetype::IdentifierRef<Registry>, Registry::Claims);
 
@@ -65,10 +69,9 @@ where
                 // identifier is generic over. Additionally, the identifier reference created here
                 // will not outlive `archetype`.
                 unsafe {
-                    <Registry as ContainsFilterSealed<
-                        And<Views, Filter>,
-                        And<Registry::ViewsFilterIndices, Registry::FilterIndices>,
-                    >>::filter(archetype.identifier())
+                    <Registry as ContainsFilterSealed<Filter, FilterIndices>>::filter(
+                        archetype.identifier(),
+                    )
                 }
             })
             .map(|archetype| {

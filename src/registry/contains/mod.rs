@@ -29,10 +29,9 @@ pub use par_query::ContainsParQuery;
 pub use query::ContainsQuery;
 pub use views::ContainsViews;
 
+pub(crate) use filter::ContainsFilter;
 #[cfg(feature = "rayon")]
 pub(crate) use par_views::ContainsParViews;
-
-use filter::ContainsFilter;
 
 /// Type marker for a component contained in an entity.
 pub enum Contained {}

@@ -44,10 +44,7 @@ use crate::{
 };
 #[cfg(feature = "rayon")]
 use crate::{
-    query::{
-        filter::And,
-        view::ParViews,
-    },
+    query::view::ParViews,
     registry::{
         contains::filter::ContainsFilter,
         ContainsParQuery,
@@ -460,13 +457,28 @@ where
     /// `Archetypes` to which they belong.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub(crate) unsafe fn query_archetype_claims<'a, Views, Filter, FilterIndices, Indices>(
+    pub(crate) unsafe fn query_archetype_claims<
+        'a,
+        Views,
+        QueryFilter,
+        Filter,
+        QueryIndices,
+        FilterIndices,
+    >(
         &'a mut self,
-        #[allow(unused_variables)] query: Query<Views, Filter>,
-    ) -> result::ArchetypeClaims<'a, Registry, Filter, Views, Indices>
+    ) -> result::ArchetypeClaims<
+        'a,
+        Registry,
+        Views,
+        QueryFilter,
+        Filter,
+        QueryIndices,
+        FilterIndices,
+    >
     where
         Views: view::Views<'a>,
-        Registry: ContainsFilter<And<Filter, Views>, FilterIndices>,
+        Registry: ContainsFilter<Filter, FilterIndices>
+            + ContainsQuery<'a, QueryFilter, Views, QueryIndices>,
     {
         // SAFETY: The safety contract here is upheld by the safety contract of this method.
         unsafe { result::ArchetypeClaims::new(self.archetypes.iter_mut()) }
