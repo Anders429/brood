@@ -2,12 +2,16 @@ use crate::{
     archetype,
     hlist::define_null,
     query::{
-        filter::And,
+        filter::{
+            And,
+            Or,
+        },
         view::Claims,
     },
     registry::{
         ContainsFilter,
         ContainsQuery,
+        ContainsViews,
         Registry,
     },
     system::schedule::{
@@ -36,6 +40,7 @@ pub trait Stage<
     ResourceViewsIndicesList,
     DisjointIndicesList,
     EntryIndicesList,
+    EntryViewsFilterIndicesList,
 >: Send where
     R: Registry,
 {
@@ -54,6 +59,7 @@ pub trait Stage<
         NextResourceViewsIndicesLists,
         NextDisjointIndicesList,
         NextEntryIndicesList,
+        NextEntryViewsFilterIndicesList,
     >(
         &mut self,
         world: SendableWorld<R, Resources>,
@@ -70,6 +76,7 @@ pub trait Stage<
             NextResourceViewsIndicesLists,
             NextDisjointIndicesList,
             NextEntryIndicesList,
+            NextEntryViewsFilterIndicesList,
         >;
 
     /// Attempt to run as many tasks within this stage as possible as add-ons to the previous
@@ -93,7 +100,7 @@ pub trait Stage<
     fn new_has_run() -> Self::HasRun;
 }
 
-impl<R, Resources> Stage<'_, R, Resources, Null, Null, Null, Null> for Null
+impl<R, Resources> Stage<'_, R, Resources, Null, Null, Null, Null, Null> for Null
 where
     R: Registry,
 {
@@ -106,6 +113,7 @@ where
         NextResourceViewsIndicesLists,
         NextDisjointIndicesList,
         NextEntryIndicesList,
+        NextEntryViewsFilterIndicesList,
     >(
         &mut self,
         world: SendableWorld<R, Resources>,
@@ -122,6 +130,7 @@ where
             NextResourceViewsIndicesLists,
             NextDisjointIndicesList,
             NextEntryIndicesList,
+            NextEntryViewsFilterIndicesList,
         >,
     {
         // Check if borrowed_archetypes is empty.
@@ -158,13 +167,17 @@ fn query_archetype_identifiers<
     ResourceViewsIndices,
     DisjointIndices,
     EntryIndices,
+    EntryViewsFilterIndices,
 >(
     world: SendableWorld<R, Resources>,
     borrowed_archetypes: &mut HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
 ) -> bool
 where
-    R: ContainsFilter<And<T::Views, T::Filter>, And<R::ViewsFilterIndices, R::FilterIndices>>
-        + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
+    R: ContainsFilter<
+            Or<And<T::Views, T::Filter>, T::EntryViewsFilter>,
+            Or<And<R::ViewsFilterIndices, R::FilterIndices>, EntryViewsFilterIndices>,
+        > + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>
+        + ContainsViews<'a, T::EntryViews, EntryIndices>,
     Resources: 'a,
     T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>,
 {
@@ -174,7 +187,7 @@ where
         // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
         // rules.
         unsafe {
-            (*world.get()).query_archetype_claims::<T::Views, T::Filter, And<T::Views, T::Filter>, QueryIndices, And<R::ViewsFilterIndices, R::FilterIndices>>()
+            (*world.get()).query_archetype_claims::<T::Views, T::Filter, Or<And<T::Views, T::Filter>, T::EntryViewsFilter>, T::EntryViews, QueryIndices, Or<And<R::ViewsFilterIndices, R::FilterIndices>, EntryViewsFilterIndices>, EntryIndices>()
         }
     {
         match merged_borrowed_archetypes.entry(identifier) {
@@ -204,12 +217,16 @@ fn query_archetype_identifiers_unchecked<
     ResourceViewsIndices,
     DisjointIndices,
     EntryIndices,
+    EntryViewsFilterIndices,
 >(
     world: SendableWorld<R, Resources>,
     borrowed_archetypes: &mut HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
 ) where
-    R: ContainsFilter<And<T::Views, T::Filter>, And<R::ViewsFilterIndices, R::FilterIndices>>
-        + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
+    R: ContainsFilter<
+            Or<And<T::Views, T::Filter>, T::EntryViewsFilter>,
+            Or<And<R::ViewsFilterIndices, R::FilterIndices>, EntryViewsFilterIndices>,
+        > + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>
+        + ContainsViews<'a, T::EntryViews, EntryIndices>,
     Resources: 'a,
     T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>,
 {
@@ -217,7 +234,7 @@ fn query_archetype_identifiers_unchecked<
         // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
         // rules.
         unsafe {
-            (*world.get()).query_archetype_claims::<T::Views, T::Filter, And<T::Views, T::Filter>, QueryIndices, And<R::ViewsFilterIndices, R::FilterIndices>>()
+            (*world.get()).query_archetype_claims::<T::Views, T::Filter, Or<And<T::Views, T::Filter>, T::EntryViewsFilter>, T::EntryViews, QueryIndices, Or<And<R::ViewsFilterIndices, R::FilterIndices>, EntryViewsFilterIndices>, EntryIndices>()
         }
     {
         borrowed_archetypes.insert_unique_unchecked(identifier, claims);
@@ -238,6 +255,8 @@ impl<
         DisjointIndicesList,
         EntryIndices,
         EntryIndicesList,
+        EntryViewsFilterIndices,
+        EntryViewsFilterIndicesList,
     >
     Stage<
         'a,
@@ -247,10 +266,14 @@ impl<
         (ResourceViewsIndices, ResourceViewsIndicesList),
         (DisjointIndices, DisjointIndicesList),
         (EntryIndices, EntryIndicesList),
+        (EntryViewsFilterIndices, EntryViewsFilterIndicesList),
     > for (&mut T, U)
 where
-    R: ContainsFilter<And<T::Views, T::Filter>, And<R::ViewsFilterIndices, R::FilterIndices>>
-        + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
+    R: ContainsFilter<
+            Or<And<T::Views, T::Filter>, T::EntryViewsFilter>,
+            Or<And<R::ViewsFilterIndices, R::FilterIndices>, EntryViewsFilterIndices>,
+        > + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>
+        + ContainsViews<'a, T::EntryViews, EntryIndices>,
     Resources: 'a,
     T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
         + Send,
@@ -262,6 +285,7 @@ where
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >,
 {
     type HasRun = (bool, U::HasRun);
@@ -273,6 +297,7 @@ where
         NextResourceViewsIndicesLists,
         NextDisjointIndicesList,
         NextEntryIndices,
+        NextEntryViewsFilterIndicesList,
     >(
         &mut self,
         world: SendableWorld<R, Resources>,
@@ -289,6 +314,7 @@ where
             NextResourceViewsIndicesLists,
             NextDisjointIndicesList,
             NextEntryIndices,
+            NextEntryViewsFilterIndicesList,
         >,
     {
         // Determine whether this task still needs to run, or if it has been run as part of a
@@ -310,6 +336,7 @@ where
                         ResourceViewsIndices,
                         DisjointIndices,
                         EntryIndices,
+                        EntryViewsFilterIndices,
                     >(world, &mut borrowed_archetypes);
 
                     self.1
@@ -335,6 +362,7 @@ where
             ResourceViewsIndices,
             DisjointIndices,
             EntryIndices,
+            EntryViewsFilterIndices,
         >(world, &mut borrowed_archetypes)
         {
             rayon::join(

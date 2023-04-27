@@ -3,12 +3,19 @@
 use crate::{
     archetype,
     archetypes,
-    query::view,
+    query::{
+        view,
+        view::Claims,
+    },
+    registry,
     registry::{
-        self,
-        contains::filter::Sealed as ContainsFilterSealed,
+        contains::{
+            filter::Sealed as ContainsFilterSealed,
+            views::Sealed as ContainsViewsSealed,
+        },
         ContainsFilter,
         ContainsQuery,
+        ContainsViews,
     },
 };
 use core::marker::PhantomData;
@@ -17,8 +24,17 @@ use core::marker::PhantomData;
 ///
 /// This iterator returns key-value pairs of archetype identifiers and the list of claimed
 /// components for the given query on that archetype.
-pub struct ArchetypeClaims<'a, Registry, Views, QueryFilter, Filter, QueryIndices, FilterIndices>
-where
+pub struct ArchetypeClaims<
+    'a,
+    Registry,
+    Views,
+    QueryFilter,
+    Filter,
+    EntryViews,
+    QueryIndices,
+    FilterIndices,
+    EntryViewsIndices,
+> where
     Registry: registry::Registry,
 {
     archetypes_iter: archetypes::IterMut<'a, Registry>,
@@ -26,12 +42,34 @@ where
     views: PhantomData<Views>,
     query_filter: PhantomData<QueryFilter>,
     filter: PhantomData<Filter>,
+    entry_views: PhantomData<EntryViews>,
     query_indices: PhantomData<QueryIndices>,
     filter_indices: PhantomData<FilterIndices>,
+    entry_views_indices: PhantomData<EntryViewsIndices>,
 }
 
-impl<'a, Registry, Views, QueryFilter, Filter, QueryIndices, FilterIndices>
-    ArchetypeClaims<'a, Registry, Views, QueryFilter, Filter, QueryIndices, FilterIndices>
+impl<
+        'a,
+        Registry,
+        Views,
+        QueryFilter,
+        Filter,
+        EntryViews,
+        QueryIndices,
+        FilterIndices,
+        EntryViewsIndices,
+    >
+    ArchetypeClaims<
+        'a,
+        Registry,
+        Views,
+        QueryFilter,
+        Filter,
+        EntryViews,
+        QueryIndices,
+        FilterIndices,
+        EntryViewsIndices,
+    >
 where
     Registry: registry::Registry,
 {
@@ -47,18 +85,42 @@ where
             views: PhantomData,
             query_filter: PhantomData,
             filter: PhantomData,
+            entry_views: PhantomData,
             query_indices: PhantomData,
             filter_indices: PhantomData,
+            entry_views_indices: PhantomData,
         }
     }
 }
 
-impl<'a, Registry, Views, QueryFilter, Filter, QueryIndices, FilterIndices> Iterator
-    for ArchetypeClaims<'a, Registry, Views, QueryFilter, Filter, QueryIndices, FilterIndices>
+impl<
+        'a,
+        Registry,
+        Views,
+        QueryFilter,
+        Filter,
+        EntryViews,
+        QueryIndices,
+        FilterIndices,
+        EntryViewsIndices,
+    > Iterator
+    for ArchetypeClaims<
+        'a,
+        Registry,
+        Views,
+        QueryFilter,
+        Filter,
+        EntryViews,
+        QueryIndices,
+        FilterIndices,
+        EntryViewsIndices,
+    >
 where
     Views: view::Views<'a>,
-    Registry:
-        ContainsFilter<Filter, FilterIndices> + ContainsQuery<'a, QueryFilter, Views, QueryIndices>,
+    EntryViews: view::Views<'a>,
+    Registry: ContainsFilter<Filter, FilterIndices>
+        + ContainsQuery<'a, QueryFilter, Views, QueryIndices>
+        + ContainsViews<'a, EntryViews, EntryViewsIndices>,
 {
     type Item = (archetype::IdentifierRef<Registry>, Registry::Claims);
 
@@ -79,7 +141,22 @@ where
                     // SAFETY: The `IdentifierRef` created here is guaranteed to outlive
                     // `archetype`, so long as the safety contract at construction is upheld.
                     unsafe { archetype.identifier() },
-                    Registry::claims(),
+                    unsafe {
+                        <Registry as ContainsViewsSealed<
+                            'a,
+                            Views,
+                            (
+                                Registry::ViewsContainments,
+                                Registry::ViewsIndices,
+                                Registry::ViewsCanonicalContainments,
+                            ),
+                        >>::claims()
+                        .merge_unchecked(&<Registry as ContainsViewsSealed<
+                            'a,
+                            EntryViews,
+                            EntryViewsIndices,
+                        >>::claims())
+                    },
                 )
             })
     }

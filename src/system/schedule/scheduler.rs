@@ -27,6 +27,7 @@ pub trait Scheduler<
     ResourceViewsIndicesLists,
     DisjointIndicesLists,
     EntryIndicesLists,
+    EntryViewsFilterIndicesLists,
 > where
     R: Registry,
 {
@@ -38,6 +39,7 @@ pub trait Scheduler<
         ResourceViewsIndicesLists,
         DisjointIndicesLists,
         EntryIndicesLists,
+        EntryViewsFilterIndicesLists,
     >;
 
     fn as_stages(&'a mut self) -> Self::Stages;
@@ -51,6 +53,7 @@ impl<'a, R, Resources>
         Null,
         Null,
         Null,
+        stages::Null,
         stages::Null,
         stages::Null,
         stages::Null,
@@ -99,6 +102,8 @@ impl<
         DisjointIndicesLists,
         EntryIndicesList,
         EntryIndicesLists,
+        EntryViewsFilterIndicesList,
+        EntryViewsFilterIndicesLists,
     >
     Scheduler<
         'a,
@@ -115,6 +120,7 @@ impl<
         (ResourceViewsIndicesList, ResourceViewsIndicesLists),
         (DisjointIndicesList, DisjointIndicesLists),
         (EntryIndicesList, EntryIndicesLists),
+        (EntryViewsFilterIndicesList, EntryViewsFilterIndicesLists),
     > for (T, U)
 where
     (T, U): Stager<
@@ -134,6 +140,7 @@ where
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >,
     <(T, U) as Stager<
         'a,
@@ -152,6 +159,7 @@ where
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >>::Remainder: Scheduler<
         'a,
         R,
@@ -167,6 +175,7 @@ where
         ResourceViewsIndicesLists,
         DisjointIndicesLists,
         EntryIndicesLists,
+        EntryViewsFilterIndicesLists,
     >,
     R: Registry + 'a,
     Resources: 'a,
@@ -181,6 +190,7 @@ where
     ResourceViewsIndicesList: 'a,
     DisjointIndicesList: 'a,
     EntryIndicesList: 'a,
+    EntryViewsFilterIndicesList: 'a,
 {
     type Stages = (
         <(T, U) as Stager<
@@ -200,6 +210,7 @@ where
             ResourceViewsIndicesList,
             DisjointIndicesList,
             EntryIndicesList,
+            EntryViewsFilterIndicesList,
         >>::Stage,
         <<(T, U) as Stager<
             'a,
@@ -218,6 +229,7 @@ where
             ResourceViewsIndicesList,
             DisjointIndicesList,
             EntryIndicesList,
+            EntryViewsFilterIndicesList,
         >>::Remainder as Scheduler<
             'a,
             R,
@@ -233,6 +245,7 @@ where
             ResourceViewsIndicesLists,
             DisjointIndicesLists,
             EntryIndicesLists,
+            EntryViewsFilterIndicesLists,
         >>::Stages,
     );
 

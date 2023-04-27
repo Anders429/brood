@@ -462,8 +462,10 @@ where
         Views,
         QueryFilter,
         Filter,
+        EntryViews,
         QueryIndices,
         FilterIndices,
+        EntryViewsIndices,
     >(
         &'a mut self,
     ) -> result::ArchetypeClaims<
@@ -472,13 +474,17 @@ where
         Views,
         QueryFilter,
         Filter,
+        EntryViews,
         QueryIndices,
         FilterIndices,
+        EntryViewsIndices,
     >
     where
         Views: view::Views<'a>,
+        EntryViews: view::Views<'a>,
         Registry: ContainsFilter<Filter, FilterIndices>
-            + ContainsQuery<'a, QueryFilter, Views, QueryIndices>,
+            + ContainsQuery<'a, QueryFilter, Views, QueryIndices>
+            + registry::ContainsViews<'a, EntryViews, EntryViewsIndices>,
     {
         // SAFETY: The safety contract here is upheld by the safety contract of this method.
         unsafe { result::ArchetypeClaims::new(self.archetypes.iter_mut()) }
@@ -2548,6 +2554,100 @@ mod tests {
         world.extend(entities!((A(0), C(0)); 1000));
 
         let mut schedule = schedule!(task::System(Foo), task::System(Bar), task::System(Baz));
+
+        world.run_schedule(&mut schedule);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn schedule_dynamic_optimization_entry_views() {
+        #[derive(Clone)]
+        struct A(u32);
+        #[derive(Clone)]
+        struct B(u32);
+        #[derive(Clone)]
+        struct C(u32);
+
+        type Registry = Registry!(A, B, C);
+
+        struct Foo;
+
+        impl System for Foo {
+            type Views<'a> = Views!(entity::Identifier);
+            type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!(&'a mut A, &'a mut B);
+
+            fn run<'a, R, S, I, E>(
+                &mut self,
+                mut query_results: Result<
+                    'a,
+                    R,
+                    S,
+                    I,
+                    Self::ResourceViews<'a>,
+                    Self::EntryViews<'a>,
+                    E,
+                >,
+            ) where
+                R: registry::ContainsViews<'a, Self::EntryViews<'a>, E>,
+                I: Iterator<Item = Self::Views<'a>>,
+            {
+                for result!(identifier) in query_results.iter {
+                    if let Some(result!(b)) = query_results
+                        .entries
+                        .entry(identifier)
+                        .map(|mut entry| entry.query(Query::<Views!(&mut B)>::new()))
+                        .flatten()
+                    {
+                        b.0 += 1;
+                    }
+                }
+            }
+        }
+
+        struct Bar;
+
+        impl System for Bar {
+            type Views<'a> = Views!(entity::Identifier);
+            type Filter = filter::None;
+            type ResourceViews<'a> = Views!();
+            type EntryViews<'a> = Views!(&'a mut A, &'a mut C);
+
+            fn run<'a, R, S, I, E>(
+                &mut self,
+                mut query_results: Result<
+                    'a,
+                    R,
+                    S,
+                    I,
+                    Self::ResourceViews<'a>,
+                    Self::EntryViews<'a>,
+                    E,
+                >,
+            ) where
+                R: registry::ContainsViews<'a, Self::EntryViews<'a>, E>,
+                I: Iterator<Item = Self::Views<'a>>,
+            {
+                for result!(identifier) in query_results.iter {
+                    if let Some(result!(c)) = query_results
+                        .entries
+                        .entry(identifier)
+                        .map(|mut entry| entry.query(Query::<Views!(&mut C)>::new()))
+                        .flatten()
+                    {
+                        c.0 += 1;
+                    }
+                }
+            }
+        }
+
+        let mut world = World::<Registry>::new();
+
+        world.extend(entities!((B(0)); 1000));
+        world.extend(entities!((C(0)); 1000));
+
+        let mut schedule = schedule!(task::System(Foo), task::System(Bar));
 
         world.run_schedule(&mut schedule);
     }

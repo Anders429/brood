@@ -22,6 +22,7 @@ pub trait Stages<
     ResourceViewsIndicesLists,
     DisjointIndicesLists,
     EntryIndicesLists,
+    EntryViewsFilterIndicesLists,
 >: Send where
     R: Registry,
 {
@@ -61,7 +62,7 @@ pub trait Stages<
     fn new_has_run() -> Self::HasRun;
 }
 
-impl<R, Resources> Stages<'_, R, Resources, Null, Null, Null, Null> for Null
+impl<R, Resources> Stages<'_, R, Resources, Null, Null, Null, Null, Null> for Null
 where
     R: Registry,
 {
@@ -96,6 +97,8 @@ impl<
         DisjointIndicesLists,
         EntryIndicesList,
         EntryIndicesLists,
+        EntryViewsFilterIndicesList,
+        EntryViewsFilterIndicesLists,
     >
     Stages<
         'a,
@@ -105,6 +108,7 @@ impl<
         (ResourceViewsIndicesList, ResourceViewsIndicesLists),
         (DisjointIndicesList, DisjointIndicesLists),
         (EntryIndicesList, EntryIndicesLists),
+        (EntryViewsFilterIndicesList, EntryViewsFilterIndicesLists),
     > for (T, U)
 where
     R: Registry,
@@ -116,6 +120,7 @@ where
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >,
     U: Stages<
         'a,
@@ -125,6 +130,7 @@ where
         ResourceViewsIndicesLists,
         DisjointIndicesLists,
         EntryIndicesLists,
+        EntryViewsFilterIndicesLists,
     >,
 {
     type HasRun = T::HasRun;
