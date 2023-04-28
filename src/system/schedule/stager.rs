@@ -17,6 +17,7 @@ use crate::{
         ContainsViews,
         Registry,
     },
+    resource,
     system::{
         schedule::{
             claim::{
@@ -56,6 +57,7 @@ pub trait Stager<
     EntryViewsFilterIndicesList,
 > where
     R: Registry,
+    Resources: resource::Resources,
 {
     type Stage: Stage<
         'a,
@@ -94,6 +96,7 @@ impl<'a, R, Resources, C, ResourcesClaims>
     > for task::Null
 where
     R: Registry,
+    Resources: resource::Resources,
 {
     type Stage = stage::Null;
     type Remainder = task::Null;
@@ -161,6 +164,7 @@ where
         T::EntryViews<'a>,
         RightMergeIndices
     >,
+    Resources: resource::Resources,
     <R as ContainsViewsSealed<'a, T::Views<'a>, LeftMergeIndices>>::Viewable: view::Merge<
         <<R as ContainsViewsSealed<
             'a,
@@ -447,6 +451,7 @@ impl<
 where
     T::EntryViews<'a>: view::Views<'a>,
     R: ContainsViewsSealed<'a, T::Views<'a>, LeftMergeIndices> + ContainsViewsSealed<'a, T::EntryViews<'a>, RightMergeIndices>,
+    Resources: resource::Resources,
     <R as ContainsViewsSealed<'a, T::Views<'a>, LeftMergeIndices>>::Viewable: view::Merge<<<R as ContainsViewsSealed<'a, T::Views<'a>, LeftMergeIndices>>::Viewable as ContainsViewsOuter<'a, T::Views<'a>,
     <R as ContainsViewsSealed<'a, T::Views<'a>, LeftMergeIndices>>::Containments,
     <R as ContainsViewsSealed<'a, T::Views<'a>, LeftMergeIndices>>::Indices,
@@ -650,6 +655,7 @@ pub trait Cutoff<
     EntryViewsFilterIndicesList,
 > where
     R: Registry,
+    Resources: resource::Resources,
 {
     type Stage: Stage<
         'a,
@@ -689,6 +695,7 @@ impl<'a, R, Resources, T, C, ResourcesClaims>
     > for T
 where
     R: Registry,
+    Resources: resource::Resources,
     T: 'a,
 {
     type Stage = stage::Null;
@@ -753,6 +760,8 @@ where
         > + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>
         + ContainsViews<'a, T::EntryViews, EntryIndices>,
     Resources: 'a,
+    Resources:
+        resource::Resources + resource::ContainsViews<'a, T::ResourceViews, ResourceViewsIndices>,
     T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
         + Send
         + 'a,

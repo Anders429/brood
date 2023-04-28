@@ -1,6 +1,7 @@
 use crate::{
     hlist::define_null,
     registry::Registry,
+    resource,
     system::schedule::{
         claim,
         stages,
@@ -30,6 +31,7 @@ pub trait Scheduler<
     EntryViewsFilterIndicesLists,
 > where
     R: Registry,
+    Resources: resource::Resources,
 {
     type Stages: Stages<
         'a,
@@ -65,6 +67,7 @@ impl<'a, R, Resources>
     > for task::Null
 where
     R: Registry,
+    Resources: resource::Resources,
 {
     type Stages = stages::Null;
 
@@ -178,6 +181,7 @@ where
         EntryViewsFilterIndicesLists,
     >,
     R: Registry + 'a,
+    Resources: resource::Resources,
     Resources: 'a,
     I: 'a,
     P: 'a,

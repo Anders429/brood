@@ -2,6 +2,7 @@ use crate::{
     archetype,
     hlist::define_null,
     registry::Registry,
+    resource,
     system::schedule::{
         sendable::SendableWorld,
         Stage,
@@ -25,6 +26,7 @@ pub trait Stages<
     EntryViewsFilterIndicesLists,
 >: Send where
     R: Registry,
+    Resources: resource::Resources,
 {
     /// A list of booleans indicating whether each task within the first stage has already been run.
     type HasRun: Send;
@@ -55,6 +57,7 @@ pub trait Stages<
         &mut self,
         world: SendableWorld<R, Resources>,
         borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
+        resource_claims: Resources::Claims,
     ) -> Self::HasRun;
 
     /// Creates a new default set of booleans to indicate that each task within the first stage has
@@ -65,6 +68,7 @@ pub trait Stages<
 impl<R, Resources> Stages<'_, R, Resources, Null, Null, Null, Null, Null> for Null
 where
     R: Registry,
+    Resources: resource::Resources,
 {
     type HasRun = Null;
 
@@ -74,6 +78,7 @@ where
         &mut self,
         _world: SendableWorld<R, Resources>,
         _borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
+        _resource_claims: Resources::Claims,
     ) -> Self::HasRun {
         Null
     }
@@ -112,6 +117,7 @@ impl<
     > for (T, U)
 where
     R: Registry,
+    Resources: resource::Resources,
     T: Stage<
         'a,
         R,
@@ -141,6 +147,7 @@ where
             // SAFETY: The pointer provided here is unique, being created from a mutable reference.
             unsafe { SendableWorld::new(world) },
             HashMap::default(),
+            Resources::Claims::default(),
             has_run,
             &mut self.1,
         );
@@ -151,10 +158,14 @@ where
         &mut self,
         world: SendableWorld<R, Resources>,
         borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
+        resource_claims: Resources::Claims,
     ) -> Self::HasRun {
         // SAFETY: The safety contract of this method call is upheld by the safety contract of this
         // method.
-        unsafe { self.0.run_add_ons(world, borrowed_archetypes) }
+        unsafe {
+            self.0
+                .run_add_ons(world, borrowed_archetypes, resource_claims)
+        }
     }
 
     fn new_has_run() -> Self::HasRun {

@@ -14,6 +14,7 @@ use crate::{
         ContainsViews,
         Registry,
     },
+    resource,
     system::schedule::{
         sendable::SendableWorld,
         Task,
@@ -43,6 +44,7 @@ pub trait Stage<
     EntryViewsFilterIndicesList,
 >: Send where
     R: Registry,
+    Resources: resource::Resources,
 {
     /// A list of booleans indicating whether each task within the stage has already been run.
     type HasRun: Send;
@@ -64,6 +66,7 @@ pub trait Stage<
         &mut self,
         world: SendableWorld<R, Resources>,
         borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
+        resource_claims: Resources::Claims,
         has_run: Self::HasRun,
         next_stage: &mut N,
     ) -> N::HasRun
@@ -93,6 +96,7 @@ pub trait Stage<
         &mut self,
         world: SendableWorld<R, Resources>,
         borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
+        resource_claims: Resources::Claims,
     ) -> Self::HasRun;
 
     /// Creates a new default set of booleans to indicate that each task within the stage has not
@@ -103,6 +107,7 @@ pub trait Stage<
 impl<R, Resources> Stage<'_, R, Resources, Null, Null, Null, Null, Null> for Null
 where
     R: Registry,
+    Resources: resource::Resources,
 {
     type HasRun = Null;
 
@@ -118,6 +123,7 @@ where
         &mut self,
         world: SendableWorld<R, Resources>,
         borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
+        resource_claims: Resources::Claims,
         _has_run: Self::HasRun,
         next_stage: &mut N,
     ) -> N::HasRun
@@ -141,7 +147,7 @@ where
             // Run tasks from next stage that can be parallelized dynamically.
             // SAFETY: The safety contract of this method call is upheld by the safety contract of
             // this method.
-            unsafe { next_stage.run_add_ons(world, borrowed_archetypes) }
+            unsafe { next_stage.run_add_ons(world, borrowed_archetypes, resource_claims) }
         }
     }
 
@@ -149,6 +155,7 @@ where
         &mut self,
         _world: SendableWorld<R, Resources>,
         _borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
+        _resource_claims: Resources::Claims,
     ) -> Self::HasRun {
         Null
     }
@@ -274,7 +281,9 @@ where
             Or<And<R::ViewsFilterIndices, R::FilterIndices>, EntryViewsFilterIndices>,
         > + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>
         + ContainsViews<'a, T::EntryViews, EntryIndices>,
-    Resources: 'a,
+    Resources: resource::Resources
+        + resource::ContainsViews<'a, T::ResourceViews, ResourceViewsIndices>
+        + 'a,
     T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
         + Send,
     U: Stage<
@@ -302,6 +311,7 @@ where
         &mut self,
         world: SendableWorld<R, Resources>,
         mut borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
+        resource_claims: Resources::Claims,
         has_run: Self::HasRun,
         next_stage: &mut N,
     ) -> N::HasRun
@@ -320,8 +330,13 @@ where
         // Determine whether this task still needs to run, or if it has been run as part of a
         // previous stage.
         if has_run.0 {
-            self.1
-                .run(world, borrowed_archetypes, has_run.1, next_stage)
+            self.1.run(
+                world,
+                borrowed_archetypes,
+                resource_claims,
+                has_run.1,
+                next_stage,
+            )
         } else {
             rayon::join(
                 // Continue scheduling tasks. Note that the first task is executed on the
@@ -339,8 +354,18 @@ where
                         EntryViewsFilterIndices,
                     >(world, &mut borrowed_archetypes);
 
-                    self.1
-                        .run(world, borrowed_archetypes, has_run.1, next_stage)
+                    // SAFETY: The resource claims are compatible because they are in the same
+                    // stage.
+                    let resource_claims =
+                        unsafe { resource_claims.merge_unchecked(&Resources::claims()) };
+
+                    self.1.run(
+                        world,
+                        borrowed_archetypes,
+                        resource_claims,
+                        has_run.1,
+                        next_stage,
+                    )
                 },
                 // Execute the current task.
                 || self.0.run(world),
@@ -353,36 +378,55 @@ where
         &mut self,
         world: SendableWorld<R, Resources>,
         mut borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
+        resource_claims: Resources::Claims,
     ) -> Self::HasRun {
-        if query_archetype_identifiers::<
-            R,
-            Resources,
-            T,
-            QueryIndices,
-            ResourceViewsIndices,
-            DisjointIndices,
-            EntryIndices,
-            EntryViewsFilterIndices,
-        >(world, &mut borrowed_archetypes)
-        {
-            rayon::join(
-                || {
-                    (
-                        true,
-                        // SAFETY: The safety contract of this method call is upheld by the safety
-                        // contract of this method.
-                        unsafe { self.1.run_add_ons(world, borrowed_archetypes) },
-                    )
-                },
-                || self.0.run(world),
-            )
-            .0
+        if let Some(resource_claims) = Resources::claims().try_merge(&resource_claims) {
+            if query_archetype_identifiers::<
+                R,
+                Resources,
+                T,
+                QueryIndices,
+                ResourceViewsIndices,
+                DisjointIndices,
+                EntryIndices,
+                EntryViewsFilterIndices,
+            >(world, &mut borrowed_archetypes)
+            {
+                rayon::join(
+                    || {
+                        (
+                            true,
+                            // SAFETY: The safety contract of this method call is upheld by the
+                            // safety contract of this method.
+                            unsafe {
+                                self.1
+                                    .run_add_ons(world, borrowed_archetypes, resource_claims)
+                            },
+                        )
+                    },
+                    || self.0.run(world),
+                )
+                .0
+            } else {
+                (
+                    false,
+                    // SAFETY: The safety contract of this method call is upheld by the safety
+                    // contract of this method.
+                    unsafe {
+                        self.1
+                            .run_add_ons(world, borrowed_archetypes, resource_claims)
+                    },
+                )
+            }
         } else {
             (
                 false,
                 // SAFETY: The safety contract of this method call is upheld by the safety contract
                 // of this method.
-                unsafe { self.1.run_add_ons(world, borrowed_archetypes) },
+                unsafe {
+                    self.1
+                        .run_add_ons(world, borrowed_archetypes, resource_claims)
+                },
             )
         }
     }

@@ -1,5 +1,6 @@
 use crate::{
     registry::Registry,
+    resource,
     system::schedule::{
         Scheduler,
         Stages,
@@ -9,6 +10,7 @@ use crate::{
 pub trait Sealed<'a, R, Resources, Indices>
 where
     R: Registry,
+    Resources: resource::Resources,
 {
     type QueryIndicesLists;
     type ResourceViewsIndicesLists;
@@ -68,6 +70,7 @@ impl<
     > for T
 where
     R: Registry,
+    Resources: resource::Resources,
     T: Scheduler<
         'a,
         R,

@@ -742,6 +742,7 @@ where
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub fn run_schedule<'a, Schedule, Indices>(&mut self, schedule: &'a mut Schedule)
     where
+        Resources: resource::Resources,
         Schedule: schedule::Schedule<'a, Registry, Resources, Indices>,
     {
         schedule

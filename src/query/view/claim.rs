@@ -56,6 +56,12 @@ impl Claim {
     }
 }
 
+impl Default for Claim {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
 /// A list of claims on the components contained in a heterogeneous list.
 ///
 /// This is most commonly a list of claims for the components of a `Registry`.
