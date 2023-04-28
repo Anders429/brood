@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+### Fixed
+- Dynamic scheduling now respects both `EntryViews` and `ResourceViews`.
 
 ## 0.9.0 - 2023-04-22
 ### Changed
