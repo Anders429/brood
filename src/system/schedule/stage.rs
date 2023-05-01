@@ -192,7 +192,8 @@ where
 
     for (identifier, claims) in
         // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
-        // rules.
+        // rules. Additionally, the views within the task are guaranteed to be valid and
+        // compatible.
         unsafe {
             (*world.get()).query_archetype_claims::<T::Views, T::Filter, Or<And<T::Views, T::Filter>, T::EntryViewsFilter>, T::EntryViews, QueryIndices, Or<And<R::ViewsFilterIndices, R::FilterIndices>, EntryViewsFilterIndices>, EntryIndices>()
         }
@@ -239,7 +240,8 @@ fn query_archetype_identifiers_unchecked<
 {
     for (identifier, claims) in
         // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
-        // rules.
+        // rules. Additionally, the views within the task are guaranteed to be valid and
+        // compatible.
         unsafe {
             (*world.get()).query_archetype_claims::<T::Views, T::Filter, Or<And<T::Views, T::Filter>, T::EntryViewsFilter>, T::EntryViews, QueryIndices, Or<And<R::ViewsFilterIndices, R::FilterIndices>, EntryViewsFilterIndices>, EntryIndices>()
         }
@@ -354,9 +356,9 @@ where
                         EntryViewsFilterIndices,
                     >(world, &mut borrowed_archetypes);
 
-                    // SAFETY: The resource claims are compatible because they are in the same
-                    // stage.
                     let resource_claims =
+                        // SAFETY: The resource claims are compatible because they are in the same
+                        // stage.
                         unsafe { resource_claims.merge_unchecked(&Resources::claims()) };
 
                     self.1.run(

@@ -78,6 +78,8 @@ where
     /// # Safety
     /// The `archetype::IdentifierRef`s over which this iterator iterates must not outlive the
     /// `Archetypes` to which they belong.
+    ///
+    /// The views and entry views must be compatible with each other.
     pub(crate) unsafe fn new(archetypes_iter: archetypes::IterMut<'a, Registry>) -> Self {
         Self {
             archetypes_iter,
@@ -141,6 +143,8 @@ where
                     // SAFETY: The `IdentifierRef` created here is guaranteed to outlive
                     // `archetype`, so long as the safety contract at construction is upheld.
                     unsafe { archetype.identifier() },
+                    // SAFETY: The views and entry views are compatible, meaning merging them is
+                    // always defined.
                     unsafe {
                         <Registry as ContainsViewsSealed<
                             'a,

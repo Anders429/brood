@@ -455,6 +455,8 @@ where
     /// # Safety
     /// The `archetype::IdentifierRef`s over which this iterator iterates must not outlive the
     /// `Archetypes` to which they belong.
+    ///
+    /// The views and entry views must be compatible with each other.
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     pub(crate) unsafe fn query_archetype_claims<
