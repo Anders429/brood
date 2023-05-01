@@ -1,5 +1,10 @@
-/// Given a list of resource views, and a list of resources (not guaranteed to be in the same
-/// order), we return the borrowed resources as specified by the views.
+//! Given a list of resource views, and a list of resources (not guaranteed to be in the same
+//! order), we return the borrowed resources as specified by the views.
+#[cfg(feature = "rayon")]
+use crate::query::view::{
+    claim,
+    claim::Claim,
+};
 use crate::{
     query::{
         view,
@@ -24,8 +29,12 @@ impl<'a, Resources, Views, Indices> ContainsViews<'a, Views, Indices> for Resour
 {
 }
 
-pub trait Sealed<'a, Views, Indices> {
+pub trait Sealed<'a, Views, Indices>: resource::Resources {
     fn view(&'a mut self) -> Views;
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    fn claims() -> Self::Claims;
 }
 
 impl<'a, Resources, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>
@@ -36,13 +45,24 @@ where
     fn view(&'a mut self) -> Views {
         self.view()
     }
+
+    #[cfg(feature = "rayon")]
+    fn claims() -> Self::Claims {
+        Self::claims()
+    }
 }
 
-pub trait Expanded<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices> {
+pub trait Expanded<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>:
+    resource::Resources
+{
     /// The canonical form of the `Views` with respect to the resources.
     type Canonical: Reshape<Views, ReshapeIndices>;
 
     fn view(&'a mut self) -> Views;
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
+    fn claims() -> Self::Claims;
 }
 
 impl<'a, ReshapeIndices> Expanded<'a, view::Null, Null, Null, Null, ReshapeIndices>
@@ -54,6 +74,11 @@ where
 
     fn view(&'a mut self) -> view::Null {
         view::Null
+    }
+
+    #[cfg(feature = "rayon")]
+    fn claims() -> Self::Claims {
+        claim::Null
     }
 }
 
@@ -76,12 +101,18 @@ impl<
         ReshapeIndices,
     > for (Resource, Resources)
 where
+    Resource: resource::Resource,
     Resources: Expanded<'a, Views, Containments, Indices, CanonicalContainments, ReshapeIndices>,
 {
     type Canonical = Resources::Canonical;
 
     fn view(&'a mut self) -> Views {
         self.1.view()
+    }
+
+    #[cfg(feature = "rayon")]
+    fn claims() -> Self::Claims {
+        (Claim::None, Resources::claims())
     }
 }
 
@@ -127,5 +158,14 @@ where
 
     fn view(&'a mut self) -> Views {
         CanonicalViews::view(self).reshape()
+    }
+
+    #[cfg(feature = "rayon")]
+    fn claims() -> Self::Claims {
+        <Self as CanonicalViews<
+            'a,
+            (Views::View, Resources::Canonical),
+            (CanonicalContainment, CanonicalContainments),
+        >>::claims()
     }
 }

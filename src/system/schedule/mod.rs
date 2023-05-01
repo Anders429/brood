@@ -95,6 +95,7 @@ pub(crate) use stages::Stages;
 use crate::{
     doc,
     registry,
+    resource,
 };
 use scheduler::Scheduler;
 use sealed::Sealed;
@@ -118,12 +119,14 @@ pub trait Schedule<'a, Registry, Resources, Indices>:
     Sealed<'a, Registry, Resources, Indices>
 where
     Registry: registry::Registry,
+    Resources: resource::Resources,
 {
 }
 
 impl<'a, T, Registry, Resources, Indices> Schedule<'a, Registry, Resources, Indices> for T
 where
     Registry: registry::Registry,
+    Resources: resource::Resources,
     T: Sealed<'a, Registry, Resources, Indices>,
 {
 }

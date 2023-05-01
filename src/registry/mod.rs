@@ -58,7 +58,10 @@ pub use eq::{
 };
 
 #[cfg(feature = "rayon")]
-pub(crate) use contains::ContainsParViews;
+pub(crate) use contains::{
+    ContainsFilter,
+    ContainsParViews,
+};
 #[cfg(feature = "rayon")]
 pub(crate) use sealed::CanonicalParViews;
 pub(crate) use sealed::{

@@ -25,7 +25,7 @@ impl Claim {
     ///
     /// If the claims are compatible, meaning they can both exist at the same time, they are merged
     /// together into a single claim. If they are incompatible, `None` is returned.
-    pub(crate) fn try_merge(self, other: Self) -> Option<Self> {
+    fn try_merge(self, other: Self) -> Option<Self> {
         match self {
             Self::None => Some(other),
             Self::Immutable => {
@@ -44,6 +44,22 @@ impl Claim {
             }
         }
     }
+
+    /// Merge two claims on a single component column without checking that they are compatible.
+    ///
+    /// # Safety
+    /// The two claims must be compatible, meaning they can both exist at the same time. Otherwise,
+    /// this function will cause undefined behavior.
+    unsafe fn merge_unchecked(self, other: Self) -> Self {
+        // SAFETY: The claims are compatible, so this value will always be `Some`.
+        unsafe { self.try_merge(other).unwrap_unchecked() }
+    }
+}
+
+impl Default for Claim {
+    fn default() -> Self {
+        Self::None
+    }
 }
 
 /// A list of claims on the components contained in a heterogeneous list.
@@ -55,11 +71,22 @@ pub trait Claims: Sized {
     /// If the claims are compatible, meaning they can both exist at the same time, they are merged
     /// together into a single list. If they are incompatible, `None` is returned.
     fn try_merge(self, other: &Self) -> Option<Self>;
+
+    /// Merge two lists of claims without checking that they are compatible.
+    ///
+    /// # Safety
+    /// The two lists of claims must be compatible, meaning they can both exist at the same time.
+    /// Otherwise, this function will cause undefined behavior.
+    unsafe fn merge_unchecked(self, other: &Self) -> Self;
 }
 
 impl Claims for Null {
     fn try_merge(self, _other: &Self) -> Option<Self> {
         Some(self)
+    }
+
+    unsafe fn merge_unchecked(self, _other: &Self) -> Self {
+        self
     }
 }
 
@@ -69,6 +96,16 @@ where
 {
     fn try_merge(self, other: &Self) -> Option<Self> {
         Some((self.0.try_merge(other.0)?, self.1.try_merge(&other.1)?))
+    }
+
+    unsafe fn merge_unchecked(self, other: &Self) -> Self {
+        // SAFETY: The lists of claims are compatible.
+        unsafe {
+            (
+                self.0.merge_unchecked(other.0),
+                self.1.merge_unchecked(&other.1),
+            )
+        }
     }
 }
 
@@ -178,5 +215,86 @@ mod tests {
                 Claim::Mutable,
                 (Claim::Mutable, (Claim::Immutable, (Claim::None, Null)))
             )));
+    }
+
+    #[test]
+    fn claim_merge_unchecked_none_none() {
+        assert_eq!(
+            unsafe { Claim::None.merge_unchecked(Claim::None) },
+            Claim::None
+        );
+    }
+
+    #[test]
+    fn claim_merge_unchecked_none_immutable() {
+        assert_eq!(
+            unsafe { Claim::None.merge_unchecked(Claim::Immutable) },
+            Claim::Immutable
+        );
+    }
+
+    #[test]
+    fn claim_merge_unchecked_none_mutable() {
+        assert_eq!(
+            unsafe { Claim::None.merge_unchecked(Claim::Mutable) },
+            Claim::Mutable
+        );
+    }
+
+    #[test]
+    fn claim_merge_unchecked_immutable_none() {
+        assert_eq!(
+            unsafe { Claim::Immutable.merge_unchecked(Claim::None) },
+            Claim::Immutable
+        );
+    }
+
+    #[test]
+    fn claim_merge_unchecked_immutable_immutable() {
+        assert_eq!(
+            unsafe { Claim::Immutable.merge_unchecked(Claim::Immutable) },
+            Claim::Immutable
+        );
+    }
+
+    #[test]
+    fn claim_merge_unchecked_mutable_none() {
+        assert_eq!(
+            unsafe { Claim::Mutable.merge_unchecked(Claim::None) },
+            Claim::Mutable
+        );
+    }
+
+    #[test]
+    fn claims_merge_unchecked_null() {
+        assert_eq!(unsafe { Null.merge_unchecked(&Null) }, Null);
+    }
+
+    #[test]
+    fn claims_merge_unchecked_single_element() {
+        assert_eq!(
+            unsafe { (Claim::None, Null).merge_unchecked(&(Claim::Mutable, Null)) },
+            (Claim::Mutable, Null)
+        );
+    }
+
+    #[test]
+    fn claims_merge_unchecked_multiple_elements() {
+        assert_eq!(
+            unsafe {
+                (
+                    Claim::None,
+                    (Claim::Immutable, (Claim::Immutable, (Claim::Mutable, Null))),
+                )
+                    .merge_unchecked(&(
+                        Claim::Mutable,
+                        (Claim::None, (Claim::Immutable, (Claim::None, Null))),
+                    ))
+            },
+            (
+                Claim::Mutable,
+                (Claim::Immutable, (Claim::Immutable, (Claim::Mutable, Null)))
+            )
+        );
     }
 }

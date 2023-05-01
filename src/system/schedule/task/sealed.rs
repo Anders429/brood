@@ -7,7 +7,10 @@ use super::{
 use crate::{
     query::{
         view,
-        view::Views,
+        view::{
+            Views,
+            ViewsSealed,
+        },
         Query,
     },
     registry,
@@ -30,6 +33,12 @@ where
     type Views: Views<'a> + Send;
     /// A filter applied to the components viewed by this task.
     type Filter;
+    /// The views on resources for this task.
+    type ResourceViews;
+    /// The entry views on components for this task.
+    type EntryViews: Views<'a>;
+    /// The entry views filter on components for this task.
+    type EntryViewsFilter;
 
     /// Executes the task over the given world.
     fn run(&mut self, world: SendableWorld<R, Resources>);
@@ -50,6 +59,9 @@ where
 {
     type Views = S::Views<'a>;
     type Filter = S::Filter;
+    type ResourceViews = S::ResourceViews<'a>;
+    type EntryViews = S::EntryViews<'a>;
+    type EntryViewsFilter = <S::EntryViews<'a> as ViewsSealed<'a>>::EntryFilter;
 
     fn run(&mut self, world: SendableWorld<R, Resources>) {
         // Query world using system.
@@ -76,6 +88,9 @@ where
 {
     type Views = P::Views<'a>;
     type Filter = P::Filter;
+    type ResourceViews = P::ResourceViews<'a>;
+    type EntryViews = P::EntryViews<'a>;
+    type EntryViewsFilter = <P::EntryViews<'a> as ViewsSealed<'a>>::EntryFilter;
 
     fn run(&mut self, world: SendableWorld<R, Resources>) {
         // Query world using system.

@@ -1,14 +1,23 @@
 use crate::{
     hlist::define_null,
-    query::view,
+    query::{
+        filter::{
+            And,
+            Or,
+        },
+        view,
+    },
     registry::{
         contains::views::{
             ContainsViewsOuter,
             Sealed as ContainsViewsSealed,
         },
+        ContainsFilter,
         ContainsQuery,
+        ContainsViews,
         Registry,
     },
+    resource,
     system::{
         schedule::{
             claim::{
@@ -45,8 +54,10 @@ pub trait Stager<
     ResourceViewsIndicesList,
     DisjointIndicesList,
     EntryIndicesList,
+    EntryViewsFilterIndicesList,
 > where
     R: Registry,
+    Resources: resource::Resources,
 {
     type Stage: Stage<
         'a,
@@ -56,6 +67,7 @@ pub trait Stager<
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >;
     type Remainder;
 
@@ -80,9 +92,11 @@ impl<'a, R, Resources, C, ResourcesClaims>
         stage::Null,
         stage::Null,
         stage::Null,
+        stage::Null,
     > for task::Null
 where
     R: Registry,
+    Resources: resource::Resources,
 {
     type Stage = stage::Null;
     type Remainder = task::Null;
@@ -118,6 +132,7 @@ impl<
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >
     Stager<
         'a,
@@ -136,6 +151,7 @@ impl<
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     > for (task::System<T>, U)
 where
     T::EntryViews<'a>: view::Views<'a>,
@@ -148,6 +164,7 @@ where
         T::EntryViews<'a>,
         RightMergeIndices
     >,
+    Resources: resource::Resources,
     <R as ContainsViewsSealed<'a, T::Views<'a>, LeftMergeIndices>>::Viewable: view::Merge<
         <<R as ContainsViewsSealed<
             'a,
@@ -291,6 +308,7 @@ where
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >,
 {
     type Stage = <(task::System<T>, U) as Cutoff<
@@ -333,6 +351,7 @@ where
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >>::Stage;
     type Remainder = <(task::System<T>, U) as Cutoff<
         'a,
@@ -374,6 +393,7 @@ where
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >>::Remainder;
 
     #[inline]
@@ -407,6 +427,7 @@ impl<
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >
     Stager<
         'a,
@@ -425,10 +446,12 @@ impl<
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     > for (task::ParSystem<T>, U)
 where
     T::EntryViews<'a>: view::Views<'a>,
     R: ContainsViewsSealed<'a, T::Views<'a>, LeftMergeIndices> + ContainsViewsSealed<'a, T::EntryViews<'a>, RightMergeIndices>,
+    Resources: resource::Resources,
     <R as ContainsViewsSealed<'a, T::Views<'a>, LeftMergeIndices>>::Viewable: view::Merge<<<R as ContainsViewsSealed<'a, T::Views<'a>, LeftMergeIndices>>::Viewable as ContainsViewsOuter<'a, T::Views<'a>,
     <R as ContainsViewsSealed<'a, T::Views<'a>, LeftMergeIndices>>::Containments,
     <R as ContainsViewsSealed<'a, T::Views<'a>, LeftMergeIndices>>::Indices,
@@ -517,6 +540,7 @@ where
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >,
 {
     type Stage = <(task::ParSystem<T>, U) as Cutoff<
@@ -559,6 +583,7 @@ where
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >>::Stage;
     type Remainder = <(task::ParSystem<T>, U) as Cutoff<
         'a,
@@ -600,6 +625,7 @@ where
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >>::Remainder;
 
     #[inline]
@@ -626,8 +652,10 @@ pub trait Cutoff<
     ResourceViewsIndicesList,
     DisjointIndicesList,
     EntryIndicesList,
+    EntryViewsFilterIndicesList,
 > where
     R: Registry,
+    Resources: resource::Resources,
 {
     type Stage: Stage<
         'a,
@@ -637,6 +665,7 @@ pub trait Cutoff<
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >;
     type Remainder;
 
@@ -662,9 +691,11 @@ impl<'a, R, Resources, T, C, ResourcesClaims>
         stage::Null,
         stage::Null,
         stage::Null,
+        stage::Null,
     > for T
 where
     R: Registry,
+    Resources: resource::Resources,
     T: 'a,
 {
     type Stage = stage::Null;
@@ -699,6 +730,8 @@ impl<
         DisjointIndicesList,
         EntryIndices,
         EntryIndicesList,
+        EntryViewsFilterIndices,
+        EntryViewsFilterIndicesList,
     >
     Cutoff<
         'a,
@@ -718,10 +751,17 @@ impl<
         (ResourceViewsIndices, ResourceViewsIndicesList),
         (DisjointIndices, DisjointIndicesList),
         (EntryIndices, EntryIndicesList),
+        (EntryViewsFilterIndices, EntryViewsFilterIndicesList),
     > for (T, U)
 where
-    R: ContainsQuery<'a, T::Filter, T::Views, QueryIndices>,
+    R: ContainsFilter<
+            Or<And<T::Views, T::Filter>, T::EntryViewsFilter>,
+            Or<And<R::ViewsFilterIndices, R::FilterIndices>, EntryViewsFilterIndices>,
+        > + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>
+        + ContainsViews<'a, T::EntryViews, EntryIndices>,
     Resources: 'a,
+    Resources:
+        resource::Resources + resource::ContainsViews<'a, T::ResourceViews, ResourceViewsIndices>,
     T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
         + Send
         + 'a,
@@ -742,6 +782,7 @@ where
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >,
 {
     type Stage = (
@@ -763,6 +804,7 @@ where
             ResourceViewsIndicesList,
             DisjointIndicesList,
             EntryIndicesList,
+            EntryViewsFilterIndicesList,
         >>::Stage,
     );
     type Remainder = <U as Stager<
@@ -782,6 +824,7 @@ where
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >>::Remainder;
 
     #[inline]

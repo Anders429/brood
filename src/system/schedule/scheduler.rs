@@ -1,6 +1,7 @@
 use crate::{
     hlist::define_null,
     registry::Registry,
+    resource,
     system::schedule::{
         claim,
         stages,
@@ -27,8 +28,10 @@ pub trait Scheduler<
     ResourceViewsIndicesLists,
     DisjointIndicesLists,
     EntryIndicesLists,
+    EntryViewsFilterIndicesLists,
 > where
     R: Registry,
+    Resources: resource::Resources,
 {
     type Stages: Stages<
         'a,
@@ -38,6 +41,7 @@ pub trait Scheduler<
         ResourceViewsIndicesLists,
         DisjointIndicesLists,
         EntryIndicesLists,
+        EntryViewsFilterIndicesLists,
     >;
 
     fn as_stages(&'a mut self) -> Self::Stages;
@@ -59,9 +63,11 @@ impl<'a, R, Resources>
         stages::Null,
         stages::Null,
         stages::Null,
+        stages::Null,
     > for task::Null
 where
     R: Registry,
+    Resources: resource::Resources,
 {
     type Stages = stages::Null;
 
@@ -99,6 +105,8 @@ impl<
         DisjointIndicesLists,
         EntryIndicesList,
         EntryIndicesLists,
+        EntryViewsFilterIndicesList,
+        EntryViewsFilterIndicesLists,
     >
     Scheduler<
         'a,
@@ -115,6 +123,7 @@ impl<
         (ResourceViewsIndicesList, ResourceViewsIndicesLists),
         (DisjointIndicesList, DisjointIndicesLists),
         (EntryIndicesList, EntryIndicesLists),
+        (EntryViewsFilterIndicesList, EntryViewsFilterIndicesLists),
     > for (T, U)
 where
     (T, U): Stager<
@@ -134,6 +143,7 @@ where
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >,
     <(T, U) as Stager<
         'a,
@@ -152,6 +162,7 @@ where
         ResourceViewsIndicesList,
         DisjointIndicesList,
         EntryIndicesList,
+        EntryViewsFilterIndicesList,
     >>::Remainder: Scheduler<
         'a,
         R,
@@ -167,8 +178,10 @@ where
         ResourceViewsIndicesLists,
         DisjointIndicesLists,
         EntryIndicesLists,
+        EntryViewsFilterIndicesLists,
     >,
     R: Registry + 'a,
+    Resources: resource::Resources,
     Resources: 'a,
     I: 'a,
     P: 'a,
@@ -181,6 +194,7 @@ where
     ResourceViewsIndicesList: 'a,
     DisjointIndicesList: 'a,
     EntryIndicesList: 'a,
+    EntryViewsFilterIndicesList: 'a,
 {
     type Stages = (
         <(T, U) as Stager<
@@ -200,6 +214,7 @@ where
             ResourceViewsIndicesList,
             DisjointIndicesList,
             EntryIndicesList,
+            EntryViewsFilterIndicesList,
         >>::Stage,
         <<(T, U) as Stager<
             'a,
@@ -218,6 +233,7 @@ where
             ResourceViewsIndicesList,
             DisjointIndicesList,
             EntryIndicesList,
+            EntryViewsFilterIndicesList,
         >>::Remainder as Scheduler<
             'a,
             R,
@@ -233,6 +249,7 @@ where
             ResourceViewsIndicesLists,
             DisjointIndicesLists,
             EntryIndicesLists,
+            EntryViewsFilterIndicesLists,
         >>::Stages,
     );
 
