@@ -2726,6 +2726,77 @@ mod tests {
 
     #[cfg(feature = "rayon")]
     #[test]
+    fn schedule_dynamic_optimization_compatible_resource_views_with_multiple_resource_views() {
+        #[derive(Clone)]
+        struct A(u32);
+        #[derive(Clone)]
+        struct B(u32);
+        #[derive(Clone)]
+        struct C(u32);
+
+        type Registry = Registry!(A, B, C);
+
+        struct Foo;
+
+        impl System for Foo {
+            type Views<'a> = Views!(&'a mut A, &'a mut B);
+            type Filter = filter::None;
+            type ResourceViews<'a> = Views!(&'a B);
+            type EntryViews<'a> = Views!();
+
+            fn run<'a, R, S, I, E>(
+                &mut self,
+                _query_results: Result<
+                    'a,
+                    R,
+                    S,
+                    I,
+                    Self::ResourceViews<'a>,
+                    Self::EntryViews<'a>,
+                    E,
+                >,
+            ) where
+                R: registry::ContainsViews<'a, Self::EntryViews<'a>, E>,
+                I: Iterator<Item = Self::Views<'a>>,
+            {
+            }
+        }
+
+        struct Bar;
+
+        impl System for Bar {
+            type Views<'a> = Views!(&'a mut A, &'a mut C);
+            type Filter = filter::None;
+            type ResourceViews<'a> = Views!(&'a B);
+            type EntryViews<'a> = Views!();
+
+            fn run<'a, R, S, I, E>(
+                &mut self,
+                _query_results: Result<
+                    'a,
+                    R,
+                    S,
+                    I,
+                    Self::ResourceViews<'a>,
+                    Self::EntryViews<'a>,
+                    E,
+                >,
+            ) where
+                R: registry::ContainsViews<'a, Self::EntryViews<'a>, E>,
+                I: Iterator<Item = Self::Views<'a>>,
+            {
+            }
+        }
+
+        let mut world = World::<Registry, _>::with_resources(resources!(A(0), B(0), C(0)));
+
+        let mut schedule = schedule!(task::System(Foo), task::System(Bar));
+
+        world.run_schedule(&mut schedule);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
     fn schedule_dynamic_optimization_incompatible_resource_views() {
         #[derive(Clone)]
         struct A(u32);
