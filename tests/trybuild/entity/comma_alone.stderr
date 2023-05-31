@@ -3,9 +3,3 @@ error: no rules expected the token `,`
   |
 4 |     let entity = entity!(,);
   |                          ^ no rules expected this token in macro call
-  |
-note: while trying to match meta-variable `$component:expr`
- --> src/entity/mod.rs
-  |
-  |     ($component:expr $(,$components:expr)* $(,)?) => {
-  |      ^^^^^^^^^^^^^^^
