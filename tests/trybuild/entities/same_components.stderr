@@ -2,4 +2,4 @@ error[E0308]: mismatched types
  --> tests/trybuild/entities/same_components.rs:9:42
   |
 9 |     let entities = entities!((A, B), (A, C));
-  |                                          ^ expected `B`, found `C`
+  |                                          ^ expected struct `B`, found struct `C`

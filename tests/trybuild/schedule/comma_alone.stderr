@@ -3,9 +3,3 @@ error: no rules expected the token `,`
   |
 4 |     let schedule = schedule!(,);
   |                              ^ no rules expected this token in macro call
-  |
-note: while trying to match meta-variable `$task:expr`
- --> src/system/schedule/mod.rs
-  |
-  |         ($task:expr $(,$tasks:expr)* $(,)?) => (
-  |          ^^^^^^^^^^
