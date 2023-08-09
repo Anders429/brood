@@ -439,7 +439,7 @@ where
             }
         }
 
-        for (&type_id, identifier) in self.type_id_lookup.iter() {
+        for (&type_id, identifier) in &self.type_id_lookup {
             cloned_archetypes.type_id_lookup.insert(
                 type_id,
                 // SAFETY: Each identifier in `self.type_id_lookup` is guaranteed to be found in
@@ -515,7 +515,7 @@ where
         //
         // Note that no type id entries are removed here. New ones are just added, since the old
         // archetypes were just cleared, not removed entirely.
-        for (&type_id, identifier) in source.type_id_lookup.iter() {
+        for (&type_id, identifier) in &source.type_id_lookup {
             self.type_id_lookup.insert(
                 type_id,
                 // SAFETY: Each identifier in `source.type_id_lookup` is guaranteed to be found in
