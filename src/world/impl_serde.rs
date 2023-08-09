@@ -112,6 +112,7 @@ mod tests {
     use alloc::vec;
     use claims::{
         assert_err_eq,
+        assert_ok,
         assert_ok_eq,
     };
     use serde::{
@@ -492,5 +493,24 @@ mod tests {
             World::<Registry, Resources!()>::deserialize(&mut deserializer),
             Error::invalid_length(2, &"serialized World")
         );
+    }
+
+    #[test]
+    fn deserialize_then_mutate() {
+        let mut world = World::<Registry>::new();
+        world.insert(entity!(A(0)));
+
+        let serializer = Serializer::builder().build();
+        let tokens = assert_ok!(world.serialize(&serializer));
+
+        let mut deserializer = Deserializer::builder().tokens(tokens).build();
+        let mut deserialized_world = assert_ok!(World::<Registry, Resources!()>::deserialize(
+            &mut deserializer
+        ));
+
+        world.insert(entity!(A(1)));
+        deserialized_world.insert(entity!(A(1)));
+
+        assert_eq!(world, deserialized_world);
     }
 }
