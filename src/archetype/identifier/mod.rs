@@ -318,11 +318,7 @@ where
     R: Registry,
 {
     fn clone(&self) -> Self {
-        Self {
-            registry: PhantomData,
-
-            pointer: self.pointer,
-        }
+        *self
     }
 }
 
