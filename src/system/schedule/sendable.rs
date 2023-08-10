@@ -30,7 +30,7 @@ where
     R: Registry,
 {
     fn clone(&self) -> Self {
-        Self(self.0)
+        *self
     }
 }
 
