@@ -186,9 +186,6 @@ where
         }
     }
 
-    /// # Safety
-    /// `component_map` must contain an entry for each component in the entity `E`. Each entry must
-    /// correspond to its component's location in the registry `R`.
     pub(crate) unsafe fn get_mut_or_insert_new_for_entity<E, P>(&mut self) -> &mut Archetype<R>
     where
         E: Entity,
@@ -209,48 +206,51 @@ where
                 None => unsafe { unreachable_unchecked() },
             }
         } else {
-            let identifier = R::create_archetype_identifier();
+            // Although type id lookup failed, that doesn't mean the archetype does not exist. We
+            // instead look up by the raw slice using `foreign_identifier_lookup`.
+            let identifier_buffer = R::create_archetype_identifier();
 
-            let hash = Self::make_hash(
-                // SAFETY: The `IdentifierRef` obtained here does not live longer than the
-                // `identifier_buffer`.
-                unsafe { identifier.as_ref() },
-                &self.hash_builder,
-            );
-
-            if let Some(archetype_bucket) = self.raw_archetypes.find(
-                hash,
-                Self::equivalent_identifier(
-                    // SAFETY: The `IdentifierRef` obtained here does not live longer than the
-                    // `identifier_buffer`.
-                    unsafe { identifier.as_ref() },
-                ),
+            let archetype = if let Some(&identifier) = self.foreign_identifier_lookup.get(
+                // SAFETY: The slice created here does not outlive the `identifier_buffer`.
+                unsafe { identifier_buffer.as_slice() },
             ) {
-                // SAFETY: This reference to the archetype contained in this bucket is unique.
-                unsafe { archetype_bucket.as_mut() }
+                if let Some(archetype) = self.raw_archetypes.get_mut(
+                    Self::make_hash(identifier, &self.hash_builder),
+                    Self::equivalent_identifier(identifier),
+                ) {
+                    archetype
+                } else {
+                    // SAFETY: Since the identifier was present in `foreign_identifier_lookup`, it
+                    // is guaranteed to have an associated `archetype`.
+                    unsafe { unreachable_unchecked() }
+                }
             } else {
-                self.type_id_lookup.insert(
-                    TypeId::of::<E>(),
-                    // SAFETY: The `IdentifierRef` obtained here does not live longer than the
-                    // `identifier_buffer`.
-                    unsafe { identifier.as_ref() },
-                );
-                // SAFETY: Since the archetype is not contained anywhere in this container, it is
-                // invariantly guaranteed that the identifier is not contained in
-                // `foreign_identifier_lookup` either. Additionally, both the slice and
-                // `IdentifierRef` created here do not outlive `identifier`.
+                // SAFETY: This identifier has already been verified to not be contained in
+                // `foreign_identifier_lookup`. Additionally, the slice and `IdentifierRef` created
+                // here will not outlive the `identifier_buffer`.
                 unsafe {
                     self.foreign_identifier_lookup.insert_unique_unchecked(
-                        &*(identifier.as_slice() as *const [u8]),
-                        identifier.as_ref(),
+                        &*(identifier_buffer.as_slice() as *const [u8]),
+                        identifier_buffer.as_ref(),
                     );
                 }
                 self.raw_archetypes.insert_entry(
-                    hash,
-                    Archetype::new(identifier),
+                    // SAFETY: The `IdentifierRef` created here does not outlive the
+                    // `identifier_buffer`.
+                    Self::make_hash(unsafe { identifier_buffer.as_ref() }, &self.hash_builder),
+                    Archetype::new(identifier_buffer),
                     Self::make_hasher(&self.hash_builder),
                 )
-            }
+            };
+
+            self.type_id_lookup.insert(
+                TypeId::of::<E>(),
+                // SAFETY: The `IdentifierRef` obtained here does not live longer than the
+                // `identifier_buffer`.
+                unsafe { archetype.identifier() },
+            );
+
+            archetype
         }
     }
 
@@ -439,7 +439,7 @@ where
             }
         }
 
-        for (&type_id, identifier) in self.type_id_lookup.iter() {
+        for (&type_id, identifier) in &self.type_id_lookup {
             cloned_archetypes.type_id_lookup.insert(
                 type_id,
                 // SAFETY: Each identifier in `self.type_id_lookup` is guaranteed to be found in
@@ -515,7 +515,7 @@ where
         //
         // Note that no type id entries are removed here. New ones are just added, since the old
         // archetypes were just cleared, not removed entirely.
-        for (&type_id, identifier) in source.type_id_lookup.iter() {
+        for (&type_id, identifier) in &source.type_id_lookup {
             self.type_id_lookup.insert(
                 type_id,
                 // SAFETY: Each identifier in `source.type_id_lookup` is guaranteed to be found in

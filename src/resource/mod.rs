@@ -37,6 +37,8 @@
 //! [`System`]: crate::system::System
 //! [`World`]: crate::World
 
+#[cfg(feature = "rayon")]
+mod claim;
 #[cfg(feature = "serde")]
 mod de;
 mod debug;
@@ -57,6 +59,8 @@ pub use debug::Debug;
 #[cfg(feature = "serde")]
 pub use ser::Serialize;
 
+#[cfg(feature = "rayon")]
+pub(crate) use claim::Claims;
 #[cfg(feature = "serde")]
 pub(crate) use de::Deserializer;
 pub(crate) use debug::Debugger;
@@ -137,11 +141,16 @@ mod impl_resources {
 }
 
 mod sealed {
+    #[cfg(feature = "rayon")]
+    use super::Claims;
     use super::{
         Length,
         Null,
     };
 
+    #[cfg(feature = "rayon")]
+    pub trait Sealed: Length + Claims {}
+    #[cfg(not(feature = "rayon"))]
     pub trait Sealed: Length {}
 
     impl Sealed for Null {}

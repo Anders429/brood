@@ -2,6 +2,7 @@ use crate::{
     component::Component,
     entity,
     query::{
+        filter,
         result::Results,
         view::Null,
     },
@@ -17,6 +18,7 @@ pub trait ViewSealed<'a> {
     type Result: Iterator<Item = Self>;
     type Index;
     type MaybeUninit;
+    type EntryFilter;
 }
 
 impl<'a, C> ViewSealed<'a> for &'a C
@@ -26,6 +28,7 @@ where
     type Result = slice::Iter<'a, C>;
     type Index = usize;
     type MaybeUninit = MaybeUninit<Self>;
+    type EntryFilter = filter::Has<C>;
 }
 
 impl<'a, C> ViewSealed<'a> for &'a mut C
@@ -35,6 +38,7 @@ where
     type Result = slice::IterMut<'a, C>;
     type Index = usize;
     type MaybeUninit = MaybeUninit<Self>;
+    type EntryFilter = filter::Has<C>;
 }
 
 impl<'a, C> ViewSealed<'a> for Option<&'a C>
@@ -47,6 +51,7 @@ where
     >;
     type Index = usize;
     type MaybeUninit = Self;
+    type EntryFilter = filter::Has<C>;
 }
 
 impl<'a, C> ViewSealed<'a> for Option<&'a mut C>
@@ -59,24 +64,28 @@ where
     >;
     type Index = usize;
     type MaybeUninit = Self;
+    type EntryFilter = filter::Has<C>;
 }
 
 impl<'a> ViewSealed<'a> for entity::Identifier {
     type Result = iter::Copied<slice::Iter<'a, Self>>;
     type Index = Null;
     type MaybeUninit = Self;
+    type EntryFilter = filter::Not<filter::None>;
 }
 
 pub trait ViewsSealed<'a> {
     type Results: Results<View = Self>;
     type Indices;
     type MaybeUninit;
+    type EntryFilter;
 }
 
 impl<'a> ViewsSealed<'a> for Null {
     type Results = iter::Take<iter::Repeat<Null>>;
     type Indices = Null;
     type MaybeUninit = Null;
+    type EntryFilter = filter::Not<filter::None>;
 }
 
 impl<'a, V, W> ViewsSealed<'a> for (V, W)
@@ -87,4 +96,5 @@ where
     type Results = (V::Result, W::Results);
     type Indices = (V::Index, W::Indices);
     type MaybeUninit = (V::MaybeUninit, W::MaybeUninit);
+    type EntryFilter = filter::Or<W::EntryFilter, V::EntryFilter>;
 }

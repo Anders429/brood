@@ -1,5 +1,6 @@
 use crate::{
     registry::Registry,
+    resource,
     system::schedule::{
         Scheduler,
         Stages,
@@ -9,11 +10,13 @@ use crate::{
 pub trait Sealed<'a, R, Resources, Indices>
 where
     R: Registry,
+    Resources: resource::Resources,
 {
     type QueryIndicesLists;
     type ResourceViewsIndicesLists;
     type DisjointIndicesLists;
     type EntryIndicesLists;
+    type EntryViewsFilterIndicesLists;
     type Stages: Stages<
         'a,
         R,
@@ -22,6 +25,7 @@ where
         Self::ResourceViewsIndicesLists,
         Self::DisjointIndicesLists,
         Self::EntryIndicesLists,
+        Self::EntryViewsFilterIndicesLists,
     >;
 
     fn as_stages(&'a mut self) -> Self::Stages;
@@ -43,6 +47,7 @@ impl<
         ResourceViewsIndicesLists,
         DisjointIndicesLists,
         EntryIndicesLists,
+        EntryViewsFilterIndicesLists,
     >
     Sealed<
         'a,
@@ -60,10 +65,12 @@ impl<
             ResourceViewsIndicesLists,
             DisjointIndicesLists,
             EntryIndicesLists,
+            EntryViewsFilterIndicesLists,
         ),
     > for T
 where
     R: Registry,
+    Resources: resource::Resources,
     T: Scheduler<
         'a,
         R,
@@ -79,12 +86,14 @@ where
         ResourceViewsIndicesLists,
         DisjointIndicesLists,
         EntryIndicesLists,
+        EntryViewsFilterIndicesLists,
     >,
 {
     type QueryIndicesLists = QueryIndicesLists;
     type ResourceViewsIndicesLists = ResourceViewsIndicesLists;
     type DisjointIndicesLists = DisjointIndicesLists;
     type EntryIndicesLists = EntryIndicesLists;
+    type EntryViewsFilterIndicesLists = EntryViewsFilterIndicesLists;
     type Stages = <T as Scheduler<
         'a,
         R,
@@ -100,6 +109,7 @@ where
         ResourceViewsIndicesLists,
         DisjointIndicesLists,
         EntryIndicesLists,
+        EntryViewsFilterIndicesLists,
     >>::Stages;
 
     #[inline]

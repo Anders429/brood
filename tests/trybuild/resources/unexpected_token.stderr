@@ -3,9 +3,3 @@ error: no rules expected the token `+`
   |
 8 |     let resources = resources!(A, + B);
   |                                   ^ no rules expected this token in macro call
-  |
-note: while trying to match meta-variable `$resources:expr`
- --> src/resource/mod.rs
-  |
-  |     ($resource:expr $(,$resources:expr)* $(,)?) => {
-  |                        ^^^^^^^^^^^^^^^

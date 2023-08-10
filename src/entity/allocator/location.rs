@@ -59,10 +59,7 @@ where
     R: Registry,
 {
     fn clone(&self) -> Self {
-        Self {
-            identifier: self.identifier,
-            index: self.index,
-        }
+        *self
     }
 }
 

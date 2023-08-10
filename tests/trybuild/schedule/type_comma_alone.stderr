@@ -3,9 +3,3 @@ error: no rules expected the token `,`
   |
 3 | type Schedule = Schedule!(,);
   |                           ^ no rules expected this token in macro call
-  |
-note: while trying to match meta-variable `$task:ty`
- --> src/system/schedule/mod.rs
-  |
-  |             ($task:ty $(,$tasks:ty)* $(,)?) => (
-  |              ^^^^^^^^

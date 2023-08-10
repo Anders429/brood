@@ -145,7 +145,7 @@ impl<Views, Filters, ResourceViews, EntryViews> Clone
     for Query<Views, Filters, ResourceViews, EntryViews>
 {
     fn clone(&self) -> Self {
-        Self::new()
+        *self
     }
 }
 
