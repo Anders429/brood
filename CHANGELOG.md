@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.9.1 - 2023-08-09
 ### Fixed
 - Dynamic scheduling now respects both `EntryViews` and `ResourceViews`.
 - Mutating a deserialized `World` no longer creates duplicate `Archetype`s, instead correctly looking up the existing deserialized `Archetype`.
