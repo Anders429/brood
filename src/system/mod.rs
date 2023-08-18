@@ -68,10 +68,8 @@ pub use schedule::Schedule;
 
 use crate::{
     query::{
-        filter,
         view,
         Result,
-        Views,
     },
     registry::ContainsViews,
 };
@@ -210,6 +208,10 @@ pub trait System {
 #[cfg(feature = "rayon")]
 mod private {
     use super::*;
+    use crate::query::{
+        filter,
+        Views,
+    };
     use rayon::iter::ParallelIterator;
 
     pub struct Null;
