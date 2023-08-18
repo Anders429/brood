@@ -1,5 +1,6 @@
+pub(crate) mod views;
+
 mod resource;
-mod views;
 
 pub use resource::ContainsResource;
 pub use views::ContainsViews;

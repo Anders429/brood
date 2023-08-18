@@ -1,5 +1,0 @@
-error: no rules expected the token `+`
-  --> tests/trybuild/schedule/type_unexpected_token.rs:39:44
-   |
-39 | type Schedule = Schedule!(task::System<A>, + task::System<B>,);
-   |                                            ^ no rules expected this token in macro call

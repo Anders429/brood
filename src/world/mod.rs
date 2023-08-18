@@ -50,8 +50,8 @@ use crate::{
         ContainsParQuery,
     },
     system::{
-        schedule,
         schedule::Stages,
+        Schedule,
     },
 };
 use alloc::vec::Vec;
@@ -673,8 +673,6 @@ where
     ///     },
     ///     registry,
     ///     system::{
-    ///         schedule,
-    ///         schedule::task,
     ///         Schedule,
     ///         System,
     ///     },
@@ -731,7 +729,7 @@ where
     /// }
     ///
     /// // Define schedule.
-    /// let mut schedule = schedule!(task::System(SystemA), task::System(SystemB));
+    /// let mut schedule = Schedule::builder().system(SystemA).system(SystemB).build();
     ///
     /// let mut world = World::<Registry>::new();
     /// world.insert(entity!(Foo(42), Bar(100)));
@@ -739,17 +737,16 @@ where
     /// world.run_schedule(&mut schedule);
     /// ```
     ///
-    /// [`Schedule`]: trait@crate::system::schedule::Schedule
+    /// [`Schedule`]: crate::system::schedule::Schedule
     #[cfg(feature = "rayon")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
-    pub fn run_schedule<'a, Schedule, Indices>(&mut self, schedule: &'a mut Schedule)
-    where
-        Resources: resource::Resources,
-        Schedule: schedule::Schedule<'a, Registry, Resources, Indices>,
+    pub fn run_schedule<'a, Stages, Indices>(
+        &mut self,
+        schedule: &mut Schedule<Stages, Registry, Resources>,
+    ) where
+        Stages: self::Stages<'a, Registry, Resources, Indices>,
     {
-        schedule
-            .as_stages()
-            .run(self, Schedule::Stages::new_has_run());
+        schedule.run(self);
     }
 
     /// Returns `true` if the world contains an entity identified by `entity_identifier`.
@@ -1112,10 +1109,7 @@ mod tests {
     #[cfg(feature = "rayon")]
     use crate::system::ParSystem;
     #[cfg(feature = "rayon")]
-    use crate::system::{
-        schedule,
-        schedule::task,
-    };
+    use crate::system::Schedule;
     use crate::{
         entities,
         entity,
@@ -2407,7 +2401,10 @@ mod tests {
         world.insert(entity!(B('b')));
         world.insert(entity!());
 
-        let mut schedule = schedule!(task::System(TestSystem), task::ParSystem(TestParSystem));
+        let mut schedule = Schedule::builder()
+            .system(TestSystem)
+            .par_system(TestParSystem)
+            .build();
 
         world.run_schedule(&mut schedule);
     }
@@ -2471,7 +2468,7 @@ mod tests {
         world.extend(entities!((A(0), B(0)); 1000));
         world.extend(entities!((A(0), C(0)); 1000));
 
-        let mut schedule = schedule!(task::System(Foo), task::System(Bar));
+        let mut schedule = Schedule::builder().system(Foo).system(Bar).build();
 
         world.run_schedule(&mut schedule);
     }
@@ -2556,7 +2553,11 @@ mod tests {
         world.extend(entities!((A(0), B(0)); 1000));
         world.extend(entities!((A(0), C(0)); 1000));
 
-        let mut schedule = schedule!(task::System(Foo), task::System(Bar), task::System(Baz));
+        let mut schedule = Schedule::builder()
+            .system(Foo)
+            .system(Bar)
+            .system(Baz)
+            .build();
 
         world.run_schedule(&mut schedule);
     }
@@ -2650,7 +2651,7 @@ mod tests {
         world.extend(entities!((B(0)); 1000));
         world.extend(entities!((C(0)); 1000));
 
-        let mut schedule = schedule!(task::System(Foo), task::System(Bar));
+        let mut schedule = Schedule::builder().system(Foo).system(Bar).build();
 
         world.run_schedule(&mut schedule);
     }
@@ -2721,7 +2722,7 @@ mod tests {
 
         let mut world = World::<Registry, _>::with_resources(resources!(A(0)));
 
-        let mut schedule = schedule!(task::System(Foo), task::System(Bar));
+        let mut schedule = Schedule::builder().system(Foo).system(Bar).build();
 
         world.run_schedule(&mut schedule);
     }
@@ -2792,7 +2793,7 @@ mod tests {
 
         let mut world = World::<Registry, _>::with_resources(resources!(A(0), B(0), C(0)));
 
-        let mut schedule = schedule!(task::System(Foo), task::System(Bar));
+        let mut schedule = Schedule::builder().system(Foo).system(Bar).build();
 
         world.run_schedule(&mut schedule);
     }
@@ -2865,7 +2866,7 @@ mod tests {
 
         let mut world = World::<Registry!(), _>::with_resources(resources!(A(0), B(0), C(0)));
 
-        let mut schedule = schedule!(task::System(Foo), task::System(Bar));
+        let mut schedule = Schedule::builder().system(Foo).system(Bar).build();
 
         world.run_schedule(&mut schedule);
     }

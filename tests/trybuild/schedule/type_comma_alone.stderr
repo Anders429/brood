@@ -1,5 +1,0 @@
-error: no rules expected the token `,`
- --> tests/trybuild/schedule/type_comma_alone.rs:3:27
-  |
-3 | type Schedule = Schedule!(,);
-  |                           ^ no rules expected this token in macro call

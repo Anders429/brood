@@ -49,7 +49,7 @@
 //! Defining `System`s allows for reuse of querying logic in multiple places, as well as combining
 //! `System`s together within a `Schedule` to allow them to be run in parallel.
 //!
-//! [`Schedule`]: trait@crate::system::schedule::Schedule
+//! [`Schedule`]: crate::system::schedule::Schedule
 //! [`System`]: crate::system::System
 //! [`World`]: crate::world::World
 
@@ -64,15 +64,14 @@ mod par;
 pub use par::ParSystem;
 #[cfg(feature = "rayon")]
 #[doc(inline)]
-pub use schedule::{
-    inner::Schedule,
-    schedule,
-};
+pub use schedule::Schedule;
 
 use crate::{
     query::{
-        view::Views,
+        filter,
+        view,
         Result,
+        Views,
     },
     registry::ContainsViews,
 };
@@ -136,7 +135,7 @@ pub trait System {
     /// The filter to apply to queries run by this system.
     type Filter;
     /// The views on components this system should operate on.
-    type Views<'a>: Views<'a>;
+    type Views<'a>: view::Views<'a>;
     /// Views on resources.
     ///
     /// The system will have access to the resources requested here when run.
@@ -148,7 +147,7 @@ pub trait System {
     /// The views here must be [`Disjoint`] with `Self::Views`
     ///
     /// [`Disjoint`]: crate::query::view::Disjoint
-    type EntryViews<'a>: Views<'a>;
+    type EntryViews<'a>: view::Views<'a>;
 
     /// Logic to be run over the query result.
     ///
@@ -207,3 +206,48 @@ pub trait System {
         R: ContainsViews<'a, Self::EntryViews<'a>, E>,
         I: Iterator<Item = Self::Views<'a>>;
 }
+
+#[cfg(feature = "rayon")]
+mod private {
+    use super::*;
+    use rayon::iter::ParallelIterator;
+
+    pub struct Null;
+
+    impl System for Null {
+        type Filter = filter::None;
+        type Views<'a> = Views!();
+        type EntryViews<'a> = Views!();
+        type ResourceViews<'a> = Views!();
+
+        fn run<'a, R, S, I, E>(
+            &mut self,
+            _query_result: Result<'a, R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
+        ) where
+            R: ContainsViews<'a, Self::EntryViews<'a>, E>,
+            I: Iterator<Item = Self::Views<'a>>,
+        {
+            unreachable!()
+        }
+    }
+
+    impl ParSystem for Null {
+        type Filter = filter::None;
+        type Views<'a> = Views!();
+        type EntryViews<'a> = Views!();
+        type ResourceViews<'a> = Views!();
+
+        fn run<'a, R, S, I, E>(
+            &mut self,
+            _query_result: Result<'a, R, S, I, Self::ResourceViews<'a>, Self::EntryViews<'a>, E>,
+        ) where
+            R: ContainsViews<'a, Self::EntryViews<'a>, E>,
+            I: ParallelIterator<Item = Self::Views<'a>>,
+        {
+            unreachable!()
+        }
+    }
+}
+
+#[cfg(feature = "rayon")]
+pub(crate) use private::Null;

@@ -1,5 +1,0 @@
-error: no rules expected the token `,`
- --> tests/trybuild/schedule/comma_alone.rs:4:30
-  |
-4 |     let schedule = schedule!(,);
-  |                              ^ no rules expected this token in macro call

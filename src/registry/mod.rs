@@ -67,6 +67,7 @@ pub(crate) use sealed::CanonicalParViews;
 pub(crate) use sealed::{
     Canonical,
     CanonicalViews,
+    Claims,
     Length,
 };
 

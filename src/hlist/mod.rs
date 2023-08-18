@@ -93,7 +93,7 @@ macro_rules! define_null_uninstantiable {
     };
 }
 
-define_null_uninstantiable!();
+define_null!();
 
 pub(crate) use define_null;
 pub(crate) use define_null_uninstantiable;

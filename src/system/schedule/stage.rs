@@ -1,439 +1,168 @@
 use crate::{
-    archetype,
-    hlist::define_null,
-    query::{
-        filter::{
-            And,
-            Or,
-        },
-        view::Claims,
-    },
-    registry::{
-        ContainsFilter,
-        ContainsQuery,
-        ContainsViews,
-        Registry,
-    },
+    hlist::Null,
+    query::view,
+    registry,
+    registry::Registry,
     resource,
-    system::schedule::{
-        sendable::SendableWorld,
-        Task,
+    system::{
+        schedule::Task,
+        ParSystem,
+        System,
     },
-};
-use fnv::FnvBuildHasher;
-use hashbrown::{
-    hash_map,
-    HashMap,
+    world::World,
 };
 
-use super::Stages;
+pub enum Stage<System, ParSystem> {
+    Start(Task<System, ParSystem>),
+    Continue(Task<System, ParSystem>),
+}
 
-define_null!();
-
-/// A stage within a schedule.
+/// A heterogeneous list of stages.
 ///
-/// A single stage contains only tasks that can always be run in parallel.
-pub trait Stage<
-    'a,
-    R,
-    Resources,
-    QueryIndicesList,
-    ResourceViewsIndicesList,
-    DisjointIndicesList,
-    EntryIndicesList,
-    EntryViewsFilterIndicesList,
->: Send where
-    R: Registry,
-    Resources: resource::Resources,
+/// A list of stages is a list of tasks that has been annotated with stage boundary information. It
+/// is created when building a schedule.
+pub trait Stages<'a, Registry, Resources, Indices>:
+    Sealed<'a, Registry, Resources, Indices>
 {
-    /// A list of booleans indicating whether each task within the stage has already been run.
-    type HasRun: Send;
-
-    /// Run all of the tasks within this stage in parallel.
-    ///
-    /// After the tasks have been scheduled to run, tasks within the following stage will also
-    /// be attempted to be scheduled. Any tasks that are dynamically found to be able to run in
-    /// parallel with the current tasks will be executed as well.
-    fn run<
-        'b,
-        N,
-        NextQueryIndicesLists,
-        NextResourceViewsIndicesLists,
-        NextDisjointIndicesList,
-        NextEntryIndicesList,
-        NextEntryViewsFilterIndicesList,
-    >(
-        &mut self,
-        world: SendableWorld<R, Resources>,
-        borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
-        resource_claims: Resources::Claims,
-        has_run: Self::HasRun,
-        next_stage: &mut N,
-    ) -> N::HasRun
-    where
-        N: Stages<
-            'b,
-            R,
-            Resources,
-            NextQueryIndicesLists,
-            NextResourceViewsIndicesLists,
-            NextDisjointIndicesList,
-            NextEntryIndicesList,
-            NextEntryViewsFilterIndicesList,
-        >;
-
-    /// Attempt to run as many tasks within this stage as possible as add-ons to the previous
-    /// stage.
-    ///
-    /// `borrowed_archetypes` contains a set of dynamic claims that are already borrowed by the
-    /// previous stage. This method respects those claims when evaluating whether new tasks can be
-    /// executed.
-    ///
-    /// # Safety
-    /// `borrowed_archetypes` must accurately represent the dynamic claims already made on the
-    /// component columns within `world`.
-    unsafe fn run_add_ons(
-        &mut self,
-        world: SendableWorld<R, Resources>,
-        borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
-        resource_claims: Resources::Claims,
-    ) -> Self::HasRun;
-
-    /// Creates a new default set of booleans to indicate that each task within the stage has not
-    /// been run.
-    fn new_has_run() -> Self::HasRun;
 }
 
-impl<R, Resources> Stage<'_, R, Resources, Null, Null, Null, Null, Null> for Null
+impl<'a, Stages, Registry, Resources, Indices> self::Stages<'a, Registry, Resources, Indices>
+    for Stages
 where
-    R: Registry,
-    Resources: resource::Resources,
+    Stages: Sealed<'a, Registry, Resources, Indices>,
 {
-    type HasRun = Null;
+}
 
-    fn run<
-        'b,
-        N,
-        NextQueryIndicesLists,
-        NextResourceViewsIndicesLists,
-        NextDisjointIndicesList,
-        NextEntryIndicesList,
-        NextEntryViewsFilterIndicesList,
-    >(
-        &mut self,
-        world: SendableWorld<R, Resources>,
-        borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
-        resource_claims: Resources::Claims,
-        _has_run: Self::HasRun,
-        next_stage: &mut N,
-    ) -> N::HasRun
+pub struct SendPtr<T>(pub(crate) *mut T);
+
+unsafe impl<T> Send for SendPtr<T> {}
+
+unsafe impl<T> Sync for SendPtr<T> {}
+
+impl<T> Clone for SendPtr<T> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<T> Copy for SendPtr<T> {}
+
+pub trait Sealed<'a, Registry, Resources, Indices>: Send {
+    fn run(&mut self, world: SendPtr<World<Registry, Resources>>)
     where
-        N: Stages<
-            'b,
-            R,
-            Resources,
-            NextQueryIndicesLists,
-            NextResourceViewsIndicesLists,
-            NextDisjointIndicesList,
-            NextEntryIndicesList,
-            NextEntryViewsFilterIndicesList,
-        >,
-    {
-        // Check if borrowed_archetypes is empty.
-        // If so, it is better to just run the next stage directly.
-        if borrowed_archetypes.is_empty() {
-            N::new_has_run()
-        } else {
-            // Run tasks from next stage that can be parallelized dynamically.
-            // SAFETY: The safety contract of this method call is upheld by the safety contract of
-            // this method.
-            unsafe { next_stage.run_add_ons(world, borrowed_archetypes, resource_claims) }
-        }
-    }
-
-    unsafe fn run_add_ons(
-        &mut self,
-        _world: SendableWorld<R, Resources>,
-        _borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
-        _resource_claims: Resources::Claims,
-    ) -> Self::HasRun {
-        Null
-    }
-
-    fn new_has_run() -> Self::HasRun {
-        Null
-    }
+        Registry: self::Registry;
+    fn defer(&mut self, world: SendPtr<World<Registry, Resources>>)
+    where
+        Registry: self::Registry;
+    fn run_current(&mut self, world: SendPtr<World<Registry, Resources>>)
+    where
+        Registry: self::Registry;
 }
 
-fn query_archetype_identifiers<
-    'a,
-    R,
-    Resources,
-    T,
-    QueryIndices,
-    ResourceViewsIndices,
-    DisjointIndices,
-    EntryIndices,
-    EntryViewsFilterIndices,
->(
-    world: SendableWorld<R, Resources>,
-    borrowed_archetypes: &mut HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
-) -> bool
-where
-    R: ContainsFilter<
-            Or<And<T::Views, T::Filter>, T::EntryViewsFilter>,
-            Or<And<R::ViewsFilterIndices, R::FilterIndices>, EntryViewsFilterIndices>,
-        > + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>
-        + ContainsViews<'a, T::EntryViews, EntryIndices>,
-    Resources: 'a,
-    T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>,
-{
-    let mut merged_borrowed_archetypes = borrowed_archetypes.clone();
-
-    for (identifier, claims) in
-        // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
-        // rules. Additionally, the views within the task are guaranteed to be valid and
-        // compatible.
-        unsafe {
-            (*world.get()).query_archetype_claims::<T::Views, T::Filter, Or<And<T::Views, T::Filter>, T::EntryViewsFilter>, T::EntryViews, QueryIndices, Or<And<R::ViewsFilterIndices, R::FilterIndices>, EntryViewsFilterIndices>, EntryIndices>()
-        }
+impl<Registry, Resources> Sealed<'_, Registry, Resources, Null> for Null {
+    fn run(&mut self, _world: SendPtr<World<Registry, Resources>>)
+    where
+        Registry: self::Registry,
     {
-        match merged_borrowed_archetypes.entry(identifier) {
-            hash_map::Entry::Occupied(mut entry) => {
-                if let Some(merged_claims) = claims.try_merge(entry.get()) {
-                    entry.insert(merged_claims);
-                } else {
-                    return false;
-                }
-            }
-            hash_map::Entry::Vacant(entry) => {
-                entry.insert(claims);
-            }
-        }
     }
-
-    *borrowed_archetypes = merged_borrowed_archetypes;
-    true
-}
-
-fn query_archetype_identifiers_unchecked<
-    'a,
-    R,
-    Resources,
-    T,
-    QueryIndices,
-    ResourceViewsIndices,
-    DisjointIndices,
-    EntryIndices,
-    EntryViewsFilterIndices,
->(
-    world: SendableWorld<R, Resources>,
-    borrowed_archetypes: &mut HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
-) where
-    R: ContainsFilter<
-            Or<And<T::Views, T::Filter>, T::EntryViewsFilter>,
-            Or<And<R::ViewsFilterIndices, R::FilterIndices>, EntryViewsFilterIndices>,
-        > + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>
-        + ContainsViews<'a, T::EntryViews, EntryIndices>,
-    Resources: 'a,
-    T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>,
-{
-    for (identifier, claims) in
-        // SAFETY: The access to the world's archetype identifiers follows Rust's borrowing
-        // rules. Additionally, the views within the task are guaranteed to be valid and
-        // compatible.
-        unsafe {
-            (*world.get()).query_archetype_claims::<T::Views, T::Filter, Or<And<T::Views, T::Filter>, T::EntryViewsFilter>, T::EntryViews, QueryIndices, Or<And<R::ViewsFilterIndices, R::FilterIndices>, EntryViewsFilterIndices>, EntryIndices>()
-        }
+    fn defer(&mut self, _world: SendPtr<World<Registry, Resources>>)
+    where
+        Registry: self::Registry,
     {
-        borrowed_archetypes.insert_unique_unchecked(identifier, claims);
+    }
+    fn run_current(&mut self, _world: SendPtr<World<Registry, Resources>>)
+    where
+        Registry: self::Registry,
+    {
     }
 }
 
 impl<
         'a,
-        R,
+        Stages,
+        System,
+        ParSystem,
+        Registry,
         Resources,
-        T,
-        U,
         QueryIndices,
-        QueryIndicesList,
-        ResourceViewsIndices,
-        ResourceViewsIndicesList,
+        ResourceViewIndices,
         DisjointIndices,
-        DisjointIndicesList,
         EntryIndices,
-        EntryIndicesList,
-        EntryViewsFilterIndices,
-        EntryViewsFilterIndicesList,
+        ParQueryIndices,
+        ParResourceViewIndices,
+        ParDisjointIndices,
+        ParEntryIndices,
+        Indices,
     >
-    Stage<
+    Sealed<
         'a,
-        R,
+        Registry,
         Resources,
-        (QueryIndices, QueryIndicesList),
-        (ResourceViewsIndices, ResourceViewsIndicesList),
-        (DisjointIndices, DisjointIndicesList),
-        (EntryIndices, EntryIndicesList),
-        (EntryViewsFilterIndices, EntryViewsFilterIndicesList),
-    > for (&mut T, U)
+        (
+            QueryIndices,
+            ResourceViewIndices,
+            DisjointIndices,
+            EntryIndices,
+            ParQueryIndices,
+            ParResourceViewIndices,
+            ParDisjointIndices,
+            ParEntryIndices,
+            Indices,
+        ),
+    > for (Stage<System, ParSystem>, Stages)
 where
-    R: ContainsFilter<
-            Or<And<T::Views, T::Filter>, T::EntryViewsFilter>,
-            Or<And<R::ViewsFilterIndices, R::FilterIndices>, EntryViewsFilterIndices>,
-        > + ContainsQuery<'a, T::Filter, T::Views, QueryIndices>
-        + ContainsViews<'a, T::EntryViews, EntryIndices>,
-    Resources: resource::Resources
-        + resource::ContainsViews<'a, T::ResourceViews, ResourceViewsIndices>
+    Stages: Sealed<'a, Registry, Resources, Indices>,
+    Registry: registry::ContainsQuery<'a, System::Filter, System::Views<'a>, QueryIndices>
+        + registry::ContainsViews<'a, System::EntryViews<'a>, EntryIndices>
+        + registry::ContainsParQuery<'a, ParSystem::Filter, ParSystem::Views<'a>, ParQueryIndices>
+        + registry::ContainsViews<'a, ParSystem::EntryViews<'a>, ParEntryIndices>
         + 'a,
-    T: Task<'a, R, Resources, QueryIndices, ResourceViewsIndices, DisjointIndices, EntryIndices>
-        + Send,
-    U: Stage<
-        'a,
-        R,
-        Resources,
-        QueryIndicesList,
-        ResourceViewsIndicesList,
-        DisjointIndicesList,
-        EntryIndicesList,
-        EntryViewsFilterIndicesList,
-    >,
+    Resources: resource::ContainsViews<'a, System::ResourceViews<'a>, ResourceViewIndices>
+        + resource::ContainsViews<'a, ParSystem::ResourceViews<'a>, ParResourceViewIndices>
+        + 'a,
+    System: self::System + Send,
+    System::Views<'a>: Send,
+    System::ResourceViews<'a>: Send,
+    System::EntryViews<'a>: view::Disjoint<System::Views<'a>, Registry, DisjointIndices> + Send,
+    ParSystem: self::ParSystem + Send,
+    ParSystem::Views<'a>: Send,
+    ParSystem::ResourceViews<'a>: Send,
+    ParSystem::EntryViews<'a>:
+        view::Disjoint<ParSystem::Views<'a>, Registry, ParDisjointIndices> + Send,
 {
-    type HasRun = (bool, U::HasRun);
-
-    fn run<
-        'b,
-        N,
-        NextQueryIndicesLists,
-        NextResourceViewsIndicesLists,
-        NextDisjointIndicesList,
-        NextEntryIndices,
-        NextEntryViewsFilterIndicesList,
-    >(
-        &mut self,
-        world: SendableWorld<R, Resources>,
-        mut borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
-        resource_claims: Resources::Claims,
-        has_run: Self::HasRun,
-        next_stage: &mut N,
-    ) -> N::HasRun
+    fn run(&mut self, world: SendPtr<World<Registry, Resources>>)
     where
-        N: Stages<
-            'b,
-            R,
-            Resources,
-            NextQueryIndicesLists,
-            NextResourceViewsIndicesLists,
-            NextDisjointIndicesList,
-            NextEntryIndices,
-            NextEntryViewsFilterIndicesList,
-        >,
+        Registry: self::Registry,
     {
-        // Determine whether this task still needs to run, or if it has been run as part of a
-        // previous stage.
-        if has_run.0 {
-            self.1.run(
-                world,
-                borrowed_archetypes,
-                resource_claims,
-                has_run.1,
-                next_stage,
-            )
-        } else {
-            rayon::join(
-                // Continue scheduling tasks. Note that the first task is executed on the
-                // current thread.
-                || {
-                    // Track all archetypes that are being directly borrowed by this task.
-                    query_archetype_identifiers_unchecked::<
-                        R,
-                        Resources,
-                        T,
-                        QueryIndices,
-                        ResourceViewsIndices,
-                        DisjointIndices,
-                        EntryIndices,
-                        EntryViewsFilterIndices,
-                    >(world, &mut borrowed_archetypes);
-
-                    let resource_claims =
-                        // SAFETY: The resource claims are compatible because they are in the same
-                        // stage.
-                        unsafe { resource_claims.merge_unchecked(&Resources::claims()) };
-
-                    self.1.run(
-                        world,
-                        borrowed_archetypes,
-                        resource_claims,
-                        has_run.1,
-                        next_stage,
-                    )
-                },
-                // Execute the current task.
-                || self.0.run(world),
-            )
-            .0
-        }
+        self.defer(world);
+        self.run_current(world);
     }
 
-    unsafe fn run_add_ons(
-        &mut self,
-        world: SendableWorld<R, Resources>,
-        mut borrowed_archetypes: HashMap<archetype::IdentifierRef<R>, R::Claims, FnvBuildHasher>,
-        resource_claims: Resources::Claims,
-    ) -> Self::HasRun {
-        if let Some(resource_claims) = Resources::claims().try_merge(&resource_claims) {
-            if query_archetype_identifiers::<
-                R,
-                Resources,
-                T,
-                QueryIndices,
-                ResourceViewsIndices,
-                DisjointIndices,
-                EntryIndices,
-                EntryViewsFilterIndices,
-            >(world, &mut borrowed_archetypes)
-            {
-                rayon::join(
-                    || {
-                        (
-                            true,
-                            // SAFETY: The safety contract of this method call is upheld by the
-                            // safety contract of this method.
-                            unsafe {
-                                self.1
-                                    .run_add_ons(world, borrowed_archetypes, resource_claims)
-                            },
-                        )
-                    },
-                    || self.0.run(world),
-                )
-                .0
-            } else {
-                (
-                    false,
-                    // SAFETY: The safety contract of this method call is upheld by the safety
-                    // contract of this method.
-                    unsafe {
-                        self.1
-                            .run_add_ons(world, borrowed_archetypes, resource_claims)
-                    },
-                )
+    fn defer(&mut self, world: SendPtr<World<Registry, Resources>>)
+    where
+        Registry: self::Registry,
+    {
+        match self.0 {
+            Stage::Start(_) => {
+                self.1.run(world);
             }
-        } else {
-            (
-                false,
-                // SAFETY: The safety contract of this method call is upheld by the safety contract
-                // of this method.
-                unsafe {
-                    self.1
-                        .run_add_ons(world, borrowed_archetypes, resource_claims)
-                },
-            )
+            Stage::Continue(_) => {
+                self.1.defer(world);
+            }
         }
     }
 
-    fn new_has_run() -> Self::HasRun {
-        (false, U::new_has_run())
+    fn run_current(&mut self, world: SendPtr<World<Registry, Resources>>)
+    where
+        Registry: self::Registry,
+    {
+        match &mut self.0 {
+            Stage::Start(task) => {
+                task.run(world);
+            }
+            Stage::Continue(task) => {
+                rayon::join(|| self.1.run_current(world), || task.run(world));
+            }
+        }
     }
 }

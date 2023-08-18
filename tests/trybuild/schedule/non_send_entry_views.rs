@@ -1,9 +1,4 @@
-use brood::{query::{Views, filter, Result}, registry, World, Registry, system::{System, schedule}};
-// This import is technically unused, since the macro fails to compile before it would be consumed.
-// I'm leaving it here, though, for completeness; user code would use this module, and these tests
-// should do their best to simulate user code.
-#[allow(unused_imports)]
-use brood::system::schedule::task;
+use brood::{query::{Views, filter, Result}, registry, World, Registry, system::{System, Schedule}};
 use std::rc::Rc;
 
 struct A;
@@ -30,7 +25,7 @@ impl System for Foo {
 fn main() {
     let mut world = World::<Registry!(Rc<A>)>::new();
 
-    let schedule = schedule!(task::System(Foo));
+    let mut schedule = Schedule::builder().system(Foo).build();
 
     world.run_schedule(&mut schedule);
 }
