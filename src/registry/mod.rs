@@ -62,12 +62,15 @@ pub(crate) use contains::{
     ContainsFilter,
     ContainsParViews,
 };
-#[cfg(feature = "rayon")]
-pub(crate) use sealed::{CanonicalParViews, Claims};
 pub(crate) use sealed::{
     Canonical,
     CanonicalViews,
     Length,
+};
+#[cfg(feature = "rayon")]
+pub(crate) use sealed::{
+    CanonicalParViews,
+    Claims,
 };
 
 use crate::{
