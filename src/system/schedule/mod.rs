@@ -22,6 +22,8 @@
 //!         Schedule,
 //!         System,
 //!     },
+//!     Registry,
+//!     World,
 //! };
 //!
 //! // Define components.
@@ -71,7 +73,10 @@
 //!     }
 //! }
 //!
-//! let schedule = Schedule::builder().system(SystemA).system(SystemB).build();
+//! let mut schedule = Schedule::builder().system(SystemA).system(SystemB).build();
+//!
+//! let mut world = World::<Registry!(Foo, Bar, Baz)>::new();
+//! world.run_schedule(&mut schedule);
 //! ```
 //!
 //! [`ParSystem`]: crate::system::ParSystem
@@ -118,6 +123,8 @@ use task::Task;
 ///         Schedule,
 ///         System,
 ///     },
+///     Registry,
+///     World,
 /// };
 ///
 /// // Define components.
@@ -167,7 +174,10 @@ use task::Task;
 ///     }
 /// }
 ///
-/// let schedule = Schedule::builder().system(SystemA).system(SystemB).build();
+/// let mut schedule = Schedule::builder().system(SystemA).system(SystemB).build();
+///
+/// let mut world = World::<Registry!(Foo, Bar, Baz)>::new();
+/// world.run_schedule(&mut schedule);
 /// ```
 pub struct Schedule<Stages, Registry, Resources>(
     Stages,
@@ -177,13 +187,6 @@ pub struct Schedule<Stages, Registry, Resources>(
 
 impl<Registry, Resources> Schedule<Null, Registry, Resources> {
     /// Creates an empty [`Builder`].
-    ///
-    /// # Example
-    /// ```
-    /// use brood::system::Schedule;
-    ///
-    /// let builder = Schedule::builder();
-    /// ```
     pub fn builder() -> Builder<Null, Registry, Resources> {
         Builder::new()
     }
@@ -222,6 +225,8 @@ impl<Stages, Registry, Resources> Schedule<Stages, Registry, Resources> {
 ///         Schedule,
 ///         System,
 ///     },
+///     Registry,
+///     World,
 /// };
 ///
 /// // Define components.
@@ -271,7 +276,10 @@ impl<Stages, Registry, Resources> Schedule<Stages, Registry, Resources> {
 ///     }
 /// }
 ///
-/// let schedule = Schedule::builder().system(SystemA).system(SystemB).build();
+/// let mut schedule = Schedule::builder().system(SystemA).system(SystemB).build();
+///
+/// let mut world = World::<Registry!(Foo, Bar, Baz)>::new();
+/// world.run_schedule(&mut schedule);
 /// ```
 ///
 /// [`ParSystem`]: crate::system::ParSystem
